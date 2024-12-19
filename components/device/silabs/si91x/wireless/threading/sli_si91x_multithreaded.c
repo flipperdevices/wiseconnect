@@ -266,10 +266,6 @@ void si91x_event_handler_thread(const void *args)
     event = osEventFlagsWait(si91x_async_events, event_mask, osFlagsWaitAny, osWaitForever);
     //    event = si91x_host_wait_for_async_event(event_mask, osWaitForever);
 
-    if ((event & NCP_HOST_THREAD_EXIT_EVENT) != 0) {
-      break;
-    }
-
     if ((event & NCP_HOST_WLAN_NOTIFICATION_EVENT) != 0) {
       // Process WLAN notification events
       while (sl_si91x_host_queue_status(&cmd_queues[SI91X_WLAN_CMD].event_queue) != 0) {
