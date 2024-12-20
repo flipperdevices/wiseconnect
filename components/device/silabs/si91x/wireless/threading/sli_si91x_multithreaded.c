@@ -260,12 +260,14 @@ void si91x_event_handler_thread(const void *args)
   sli_si91x_queue_packet_t *data = NULL;
   uint16_t frame_status          = 0;
   const uint32_t event_mask      = (NCP_HOST_WLAN_NOTIFICATION_EVENT | NCP_HOST_NETWORK_NOTIFICATION_EVENT
-                               | NCP_HOST_SOCKET_NOTIFICATION_EVENT | NCP_HOST_SOCKET_DATA_NOTIFICATION_EVENT);
+                               | NCP_HOST_SOCKET_NOTIFICATION_EVENT | NCP_HOST_SOCKET_DATA_NOTIFICATION_EVENT | NCP_HOST_THREAD_EXIT_EVENT);
 
   while (1) {
     event = osEventFlagsWait(si91x_async_events, event_mask, osFlagsWaitAny, osWaitForever);
     //    event = si91x_host_wait_for_async_event(event_mask, osWaitForever);
-
+    if ((event & NCP_HOST_THREAD_EXIT_EVENT) != 0) {
+      break;
+    }
     if ((event & NCP_HOST_WLAN_NOTIFICATION_EVENT) != 0) {
       // Process WLAN notification events
       while (sl_si91x_host_queue_status(&cmd_queues[SI91X_WLAN_CMD].event_queue) != 0) {
@@ -1481,12 +1483,14 @@ void si91x_bus_thread(const void *args)
     if (event & SL_SI91X_TERMINATE_BUS_THREAD_EVENT) {
       // Clear the termination event flag
       event &= ~SL_SI91X_TERMINATE_BUS_THREAD_EVENT;
+    
+    //Todo off silabs exit thread
+    break;
+    //   // Acknowledge the termination request
+    //   osEventFlagsSet(si91x_events, SL_SI91X_TERMINATE_BUS_THREAD_EVENT_ACK);
 
-      // Acknowledge the termination request
-      osEventFlagsSet(si91x_events, SL_SI91X_TERMINATE_BUS_THREAD_EVENT_ACK);
-
-      // Terminate the current thread
-      osThreadTerminate(osThreadGetId());
+    //   // Terminate the current thread
+    //   osThreadTerminate(osThreadGetId());
     }
   }
   //To suppress warning unused parameter, no code effect

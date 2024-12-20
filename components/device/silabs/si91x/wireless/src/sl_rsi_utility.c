@@ -1113,20 +1113,22 @@ sl_status_t sl_si91x_platform_deinit(void)
   if (NULL != si91x_thread) {
     // Signal the thread to terminate
     osEventFlagsSet(si91x_events, SL_SI91X_TERMINATE_BUS_THREAD_EVENT);
-
-    // Wait for thread termination acknowledgment
-    osStatus_t stat = osEventFlagsWait(si91x_events, SL_SI91X_TERMINATE_BUS_THREAD_EVENT_ACK, osFlagsWaitAny, 5000);
-    if (stat == osErrorTimeout) {
-      // Return timeout if acknowledgment is not received
-      return SL_STATUS_TIMEOUT;
-    }
+    
+    //Todo off silabs exit thread
+    osThreadTerminate(si91x_thread);
+    // // Wait for thread termination acknowledgment
+    // osStatus_t stat = osEventFlagsWait(si91x_events, SL_SI91X_TERMINATE_BUS_THREAD_EVENT_ACK, osFlagsWaitAny, 5000);
+    // if (stat == osErrorTimeout) {
+    //   // Return timeout if acknowledgment is not received
+    //   return SL_STATUS_TIMEOUT;
+    // }
 
     si91x_thread = NULL;
   }
 
   // Terminate SI91X event handler thread
   if (NULL != si91x_event_thread) {
-    sl_si91x_host_set_async_event(NCP_HOST_THREAD_EXIT_EVENT);
+    osEventFlagsSet(si91x_async_events, NCP_HOST_THREAD_EXIT_EVENT);
     osThreadTerminate(si91x_event_thread);
     si91x_event_thread = NULL;
   }
