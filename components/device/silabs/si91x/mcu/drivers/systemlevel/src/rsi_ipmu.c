@@ -463,14 +463,17 @@ void RSI_Configure_Ipmu_Mode(void)
   /*configures chip supply mode to HP-LDO */
   configure_ipmu_mode(HP_LDO_MODE);
 #else
-  /* Read the temperature; if it is within the range of 0 to 60 degrees, switch the chip supply to SCDC mode. Otherwise, maintain the default LDO supply mode.*/
-  sl_si91x_bjt_temperature_sensor_init(sl_bjt_channel_config, sl_bjt_config);
-  sl_si91x_bjt_temperature_sensor_read_data(&temperature);
-  sl_si91x_bjt_temperature_sensor_deinit(sl_bjt_config);
-  if ((temperature > 0) && (temperature <= 60)) {
+//Toto OFF temperature sensor
+  (void)temperature;
+  
+  // /* Read the temperature; if it is within the range of 0 to 60 degrees, switch the chip supply to SCDC mode. Otherwise, maintain the default LDO supply mode.*/
+  // sl_si91x_bjt_temperature_sensor_init(sl_bjt_channel_config, sl_bjt_config);
+  // sl_si91x_bjt_temperature_sensor_read_data(&temperature);
+  // sl_si91x_bjt_temperature_sensor_deinit(sl_bjt_config);
+  // if ((temperature > 0) && (temperature <= 60)) {
     /*configures chip supply mode to SCDC */
     configure_ipmu_mode(SCDC_MODE);
-  }
+  // }
 #endif
 }
 void update_efuse_system_configs(int data, uint32_t config_ptr[])
