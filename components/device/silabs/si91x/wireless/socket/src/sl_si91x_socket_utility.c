@@ -858,7 +858,7 @@ sl_status_t si91x_socket_event_handler(sl_status_t status,
       sli_si91x_flush_socket_data_queues_based_on_queue_type(index);
 
       if (user_remote_socket_termination_callback != NULL) {
-        user_remote_socket_termination_callback(socket->id,
+        user_remote_socket_termination_callback(index,
                                                 socket->local_address.sin6_port,
                                                 remote_socket_closure->sent_bytes_count);
       }
