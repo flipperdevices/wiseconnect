@@ -1149,10 +1149,11 @@ sl_status_t sl_si91x_platform_deinit(void)
     osMutexDelete(cmd_queues[i].mutex);
     cmd_queues[i].mutex = NULL;
   }
-
-  // Delete malloc/free mutex
-  osMutexDelete(malloc_free_mutex);
-  malloc_free_mutex = NULL;
+  
+  //Todo doesn't need to delete the mutex, it is deleted further in the code
+  // // Delete malloc/free mutex
+  // osMutexDelete(malloc_free_mutex);
+  // malloc_free_mutex = NULL;
   return SL_STATUS_OK;
 }
 
