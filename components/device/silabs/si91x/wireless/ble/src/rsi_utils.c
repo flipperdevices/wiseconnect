@@ -29,6 +29,9 @@
 /*
   Include files
  */
+#ifdef _GNU_SOURCE
+#undef _GNU_SOURCE
+#endif
 #define _GNU_SOURCE /* pull in string library() on Linux */
 #include "rsi_common.h"
 #include <string.h>
@@ -51,15 +54,14 @@
  * @param[in]    val  - Data to convert 
  * @return       void 
  */
-void rsi_uint16_to_2bytes(uint8_t *dBuf, uint16_t val)
-{
-  if (rsi_driver_cb->endian == IS_LITTLE_ENDIAN) {
-    dBuf[0] = val & 0x00ff;
-    dBuf[1] = (val >> 8) & 0x00ff;
-  } else {
-    dBuf[1] = val & 0x00ff;
-    dBuf[0] = (val >> 8) & 0x00ff;
-  }
+void rsi_uint16_to_2bytes(uint8_t* dBuf, uint16_t val) {
+    if(rsi_driver_cb->endian == IS_LITTLE_ENDIAN) {
+        dBuf[0] = val & 0x00ff;
+        dBuf[1] = (val >> 8) & 0x00ff;
+    } else {
+        dBuf[1] = val & 0x00ff;
+        dBuf[0] = (val >> 8) & 0x00ff;
+    }
 }
 
 /*=============================================================================*/
@@ -71,19 +73,18 @@ void rsi_uint16_to_2bytes(uint8_t *dBuf, uint16_t val)
  * @return          void  
  */
 
-void rsi_uint32_to_4bytes(uint8_t *dBuf, uint32_t val)
-{
-  if (rsi_driver_cb->endian == IS_LITTLE_ENDIAN) {
-    dBuf[0] = val & 0x000000ff;
-    dBuf[1] = (val >> 8) & 0x000000ff;
-    dBuf[2] = (val >> 16) & 0x000000ff;
-    dBuf[3] = (val >> 24) & 0x000000ff;
-  } else {
-    dBuf[3] = val & 0x000000ff;
-    dBuf[2] = (val >> 8) & 0x000000ff;
-    dBuf[1] = (val >> 16) & 0x000000ff;
-    dBuf[0] = (val >> 24) & 0x000000ff;
-  }
+void rsi_uint32_to_4bytes(uint8_t* dBuf, uint32_t val) {
+    if(rsi_driver_cb->endian == IS_LITTLE_ENDIAN) {
+        dBuf[0] = val & 0x000000ff;
+        dBuf[1] = (val >> 8) & 0x000000ff;
+        dBuf[2] = (val >> 16) & 0x000000ff;
+        dBuf[3] = (val >> 24) & 0x000000ff;
+    } else {
+        dBuf[3] = val & 0x000000ff;
+        dBuf[2] = (val >> 8) & 0x000000ff;
+        dBuf[1] = (val >> 16) & 0x000000ff;
+        dBuf[0] = (val >> 24) & 0x000000ff;
+    }
 }
 
 /*=============================================================================*/
@@ -93,19 +94,18 @@ void rsi_uint32_to_4bytes(uint8_t *dBuf, uint32_t val)
  * @param[in]   dBuf - Pointer to a buffer to get the data from       
  * @return      Converted 16 bit data  
  */
-uint16_t rsi_bytes2R_to_uint16(const uint8_t *dBuf)
-{
-  uint16_t val;
-  if (rsi_driver_cb->endian == IS_LITTLE_ENDIAN) {
-    val = dBuf[1];
-    val <<= 8;
-    val |= dBuf[0] & 0x000000ff;
-  } else {
-    val = dBuf[0];
-    val <<= 8;
-    val |= dBuf[1] & 0x000000ff;
-  }
-  return val;
+uint16_t rsi_bytes2R_to_uint16(const uint8_t* dBuf) {
+    uint16_t val;
+    if(rsi_driver_cb->endian == IS_LITTLE_ENDIAN) {
+        val = dBuf[1];
+        val <<= 8;
+        val |= dBuf[0] & 0x000000ff;
+    } else {
+        val = dBuf[0];
+        val <<= 8;
+        val |= dBuf[1] & 0x000000ff;
+    }
+    return val;
 }
 
 /*=============================================================================*/
@@ -116,30 +116,29 @@ uint16_t rsi_bytes2R_to_uint16(const uint8_t *dBuf)
  * @return       Converted 32 bit data
  */
 
-uint32_t rsi_bytes4R_to_uint32(const uint8_t *dBuf)
-{
-  // the 32-bit value to return
-  uint32_t val;
+uint32_t rsi_bytes4R_to_uint32(const uint8_t* dBuf) {
+    // the 32-bit value to return
+    uint32_t val;
 
-  if (rsi_driver_cb->endian == IS_LITTLE_ENDIAN) {
-    val = dBuf[3];
-    val <<= 8;
-    val |= dBuf[2] & 0x000000ff;
-    val <<= 8;
-    val |= dBuf[1] & 0x000000ff;
-    val <<= 8;
-    val |= dBuf[0] & 0x000000ff;
-  } else {
-    val = dBuf[0];
-    val <<= 8;
-    val |= dBuf[1] & 0x000000ff;
-    val <<= 8;
-    val |= dBuf[2] & 0x000000ff;
-    val <<= 8;
-    val |= dBuf[3] & 0x000000ff;
-  }
+    if(rsi_driver_cb->endian == IS_LITTLE_ENDIAN) {
+        val = dBuf[3];
+        val <<= 8;
+        val |= dBuf[2] & 0x000000ff;
+        val <<= 8;
+        val |= dBuf[1] & 0x000000ff;
+        val <<= 8;
+        val |= dBuf[0] & 0x000000ff;
+    } else {
+        val = dBuf[0];
+        val <<= 8;
+        val |= dBuf[1] & 0x000000ff;
+        val <<= 8;
+        val |= dBuf[2] & 0x000000ff;
+        val <<= 8;
+        val |= dBuf[3] & 0x000000ff;
+    }
 
-  return val;
+    return val;
 }
 
 /*==============================================*/
@@ -150,16 +149,12 @@ uint32_t rsi_bytes4R_to_uint32(const uint8_t *dBuf)
  * @return     hex number 
  */
 
-int8_t rsi_ascii_hex2num(int8_t ascii_hex_in)
-{
-  if ((ascii_hex_in >= '0') && (ascii_hex_in <= '9'))
-    return (ascii_hex_in - '0');
-  if ((ascii_hex_in >= 'A') && (ascii_hex_in <= 'F'))
-    return (ascii_hex_in - 'A' + 10);
-  if ((ascii_hex_in >= 'a') && (ascii_hex_in <= 'f'))
-    return (ascii_hex_in - 'a' + 10);
+int8_t rsi_ascii_hex2num(int8_t ascii_hex_in) {
+    if((ascii_hex_in >= '0') && (ascii_hex_in <= '9')) return (ascii_hex_in - '0');
+    if((ascii_hex_in >= 'A') && (ascii_hex_in <= 'F')) return (ascii_hex_in - 'A' + 10);
+    if((ascii_hex_in >= 'a') && (ascii_hex_in <= 'f')) return (ascii_hex_in - 'a' + 10);
 
-  return RSI_SUCCESS;
+    return RSI_SUCCESS;
 }
 
 /*=============================================================================*/
@@ -169,15 +164,14 @@ int8_t rsi_ascii_hex2num(int8_t ascii_hex_in)
  * @param[in]   cBuf - ASCII hex notation string
  * @return      Integer Value
  */
-int8_t rsi_char_hex2dec(int8_t *cBuf)
-{
-  int8_t k       = 0;
-  size_t buf_len = 0;
-  buf_len        = strlen((char *)cBuf);
-  for (uint8_t i = 0; i < buf_len; i++) {
-    k = ((k * 16) + rsi_ascii_hex2num(cBuf[i]));
-  }
-  return k;
+int8_t rsi_char_hex2dec(int8_t* cBuf) {
+    int8_t k = 0;
+    size_t buf_len = 0;
+    buf_len = strlen((char*)cBuf);
+    for(uint8_t i = 0; i < buf_len; i++) {
+        k = ((k * 16) + rsi_ascii_hex2num(cBuf[i]));
+    }
+    return k;
 }
 
 /*=============================================================================*/
@@ -189,35 +183,36 @@ int8_t rsi_char_hex2dec(int8_t *cBuf)
  * @return         Hex address 
  */
 
-uint8_t *rsi_ascii_dev_address_to_6bytes_rev(uint8_t *hex_addr, int8_t *ascii_mac_address)
-{
-  uint8_t cBufPos; // which char in the ASCII representation
-  uint8_t byteNum; // which byte in the 32Bithex_address
-  int8_t cBuf[6];  // temporary buffer
+uint8_t* rsi_ascii_dev_address_to_6bytes_rev(uint8_t* hex_addr, int8_t* ascii_mac_address) {
+    uint8_t cBufPos; // which char in the ASCII representation
+    uint8_t byteNum; // which byte in the 32Bithex_address
+    int8_t cBuf[6]; // temporary buffer
 
-  byteNum        = 5;
-  cBufPos        = 0;
-  size_t buf_len = 0;
+    byteNum = 5;
+    cBufPos = 0;
+    size_t buf_len = 0;
 #ifndef __ZEPHYR__
-  buf_len = sl_strnlen((char *)ascii_mac_address, MAX_MAC_ADDRESS_STRING_LENGTH);
+    buf_len = sl_strnlen((char*)ascii_mac_address, MAX_MAC_ADDRESS_STRING_LENGTH);
 #else
-  buf_len = strnlen((char *)ascii_mac_address, MAX_MAC_ADDRESS_STRING_LENGTH);
+    buf_len = strnlen((char*)ascii_mac_address, MAX_MAC_ADDRESS_STRING_LENGTH);
 #endif
-  for (uint8_t i = 0; i < buf_len; i++) {
-    // this will take care of the first 5 octets
-    if (ascii_mac_address[i] == ':') {                                 // we are at the end of the address octet
-      cBuf[cBufPos]       = 0;                                         // terminate the string
-      cBufPos             = 0;                                         // reset for the next char
-      hex_addr[byteNum--] = (uint8_t)rsi_char_hex2dec((int8_t *)cBuf); // convert the strint to an integer
-    } else {
-      cBuf[cBufPos++] = ascii_mac_address[i];
+    for(uint8_t i = 0; i < buf_len; i++) {
+        // this will take care of the first 5 octets
+        if(ascii_mac_address[i] == ':') { // we are at the end of the address octet
+            cBuf[cBufPos] = 0; // terminate the string
+            cBufPos = 0; // reset for the next char
+            hex_addr[byteNum--] =
+                (uint8_t)rsi_char_hex2dec((int8_t*)cBuf); // convert the strint to an integer
+        } else {
+            cBuf[cBufPos++] = ascii_mac_address[i];
+        }
     }
-  }
-  // handle the last octet            // we are at the end of the string with no .
-  cBuf[cBufPos]     = 0x00;                                      // terminate the string
-  hex_addr[byteNum] = (uint8_t)rsi_char_hex2dec((int8_t *)cBuf); // convert the strint to an integer
+    // handle the last octet            // we are at the end of the string with no .
+    cBuf[cBufPos] = 0x00; // terminate the string
+    hex_addr[byteNum] =
+        (uint8_t)rsi_char_hex2dec((int8_t*)cBuf); // convert the strint to an integer
 
-  return hex_addr;
+    return hex_addr;
 }
 
 /*=============================================================================*/
@@ -228,11 +223,10 @@ uint8_t *rsi_ascii_dev_address_to_6bytes_rev(uint8_t *hex_addr, int8_t *ascii_ma
  * @return      Ascii value for given hex value
  */
 
-int8_t hex_to_ascii(uint8_t hex_num)
-{
-  uint8_t ascii = 0;
+int8_t hex_to_ascii(uint8_t hex_num) {
+    uint8_t ascii = 0;
 
-  switch (hex_num & 0x0F) {
+    switch(hex_num & 0x0F) {
     case 0:
     case 1:
     case 2:
@@ -243,8 +237,8 @@ int8_t hex_to_ascii(uint8_t hex_num)
     case 7:
     case 8:
     case 9:
-      ascii = (hex_num & 0x0F) + '0';
-      return ascii;
+        ascii = (hex_num & 0x0F) + '0';
+        return ascii;
 
     case 0xa:
     case 0xb:
@@ -252,13 +246,13 @@ int8_t hex_to_ascii(uint8_t hex_num)
     case 0xd:
     case 0xe:
     case 0xf:
-      ascii = (hex_num & 0x0F) - 10 + 'A';
-      return ascii;
+        ascii = (hex_num & 0x0F) - 10 + 'A';
+        return ascii;
     default:
-      break;
-  }
+        break;
+    }
 
-  return ascii;
+    return ascii;
 }
 
 /*=============================================================================*/
@@ -270,19 +264,18 @@ int8_t hex_to_ascii(uint8_t hex_num)
  * @return          Converted ASCII mac address 
  */
 
-uint8_t *rsi_6byte_dev_address_to_ascii(uint8_t *ascii_mac_address, const uint8_t *hex_addr)
-{
-  uint8_t cBufPos; // which char in the ASCII representation
+uint8_t* rsi_6byte_dev_address_to_ascii(uint8_t* ascii_mac_address, const uint8_t* hex_addr) {
+    uint8_t cBufPos; // which char in the ASCII representation
 
-  cBufPos = 0;
-  for (int8_t i = 5; i >= 0; i--) {
-    ascii_mac_address[cBufPos++] = hex_to_ascii(hex_addr[i] >> 4);
-    ascii_mac_address[cBufPos++] = hex_to_ascii(hex_addr[i]);
-    if (i != 0) {
-      ascii_mac_address[cBufPos++] = ':';
+    cBufPos = 0;
+    for(int8_t i = 5; i >= 0; i--) {
+        ascii_mac_address[cBufPos++] = hex_to_ascii(hex_addr[i] >> 4);
+        ascii_mac_address[cBufPos++] = hex_to_ascii(hex_addr[i]);
+        if(i != 0) {
+            ascii_mac_address[cBufPos++] = ':';
+        }
     }
-  }
-  return ascii_mac_address;
+    return ascii_mac_address;
 }
 
 /*=========================================================================*/
@@ -293,10 +286,9 @@ uint8_t *rsi_6byte_dev_address_to_ascii(uint8_t *ascii_mac_address, const uint8_
  * @return      Converted Upper case character  
  */
 
-uint8_t convert_lower_case_to_upper_case(uint8_t lwrcase)
-{
-  uint8_t digit = (lwrcase >= 'a' && lwrcase <= 'f') ? (lwrcase - 0x20) : lwrcase;
-  return (digit >= 'A' && digit <= 'F') ? digit - 0x37 : digit - '0';
+uint8_t convert_lower_case_to_upper_case(uint8_t lwrcase) {
+    uint8_t digit = (lwrcase >= 'a' && lwrcase <= 'f') ? (lwrcase - 0x20) : lwrcase;
+    return (digit >= 'A' && digit <= 'F') ? digit - 0x37 : digit - '0';
 }
 
 /*=========================================================================*/
@@ -309,15 +301,14 @@ uint8_t convert_lower_case_to_upper_case(uint8_t lwrcase)
  * @return      void   
  */
 
-void string2array(uint8_t *dst, const uint8_t *src, uint32_t length)
-{
-  for (uint32_t i = 0, j = 0; i < (length * 2) && j < length; i += 2, j++)
-    if (src[i] && src[i + 1]) {
-      dst[j] = (uint8_t)((convert_lower_case_to_upper_case(src[i])) * 16);
-      dst[j] += convert_lower_case_to_upper_case(src[i + 1]);
-    } else {
-      dst[j] = 0;
-    }
+void string2array(uint8_t* dst, const uint8_t* src, uint32_t length) {
+    for(uint32_t i = 0, j = 0; i < (length * 2) && j < length; i += 2, j++)
+        if(src[i] && src[i + 1]) {
+            dst[j] = (uint8_t)((convert_lower_case_to_upper_case(src[i])) * 16);
+            dst[j] += convert_lower_case_to_upper_case(src[i + 1]);
+        } else {
+            dst[j] = 0;
+        }
 }
 /*=========================================================================*/
 /**
@@ -328,31 +319,30 @@ void string2array(uint8_t *dst, const uint8_t *src, uint32_t length)
  * @return     String 
  */
 
-uint8_t *rsi_itoa(uint32_t val, uint8_t *str)
-{
-  int16_t ii = 0;
-  int16_t jj = 0;
-  uint8_t tmp[10];
-  if (val == 0) {
-    // if value is zero then handling
-    str[jj] = '0';
-    jj++;
+uint8_t* rsi_itoa(uint32_t val, uint8_t* str) {
+    int16_t ii = 0;
+    int16_t jj = 0;
+    uint8_t tmp[10];
+    if(val == 0) {
+        // if value is zero then handling
+        str[jj] = '0';
+        jj++;
+        str[jj] = '\0';
+        return str;
+    }
+
+    while(val) {
+        tmp[ii] = '0' + (val % 10);
+        val /= 10;
+        ii++;
+    }
+
+    for(jj = 0, ii--; ii >= 0; ii--, jj++) {
+        str[jj] = tmp[ii];
+    }
     str[jj] = '\0';
+
     return str;
-  }
-
-  while (val) {
-    tmp[ii] = '0' + (val % 10);
-    val /= 10;
-    ii++;
-  }
-
-  for (jj = 0, ii--; ii >= 0; ii--, jj++) {
-    str[jj] = tmp[ii];
-  }
-  str[jj] = '\0';
-
-  return str;
 }
 
 /*=========================================================================*/
@@ -362,23 +352,22 @@ uint8_t *rsi_itoa(uint32_t val, uint8_t *str)
  * @param[in]   str - This is the string representation of an integral number 
  * @return      Converted Integer  
  */
-int32_t rsi_atoi(const int8_t *str)
-{
-  int32_t res              = 0;
-  int32_t i                = 0;
-  uint32_t negative_number = 0;
+int32_t rsi_atoi(const int8_t* str) {
+    int32_t res = 0;
+    int32_t i = 0;
+    uint32_t negative_number = 0;
 
-  if (str[i] == '-') {
-    negative_number = 1;
-    i++;
-  }
-  for (; (str[i] >= '0') && (str[i] <= '9'); ++i)
-    res = res * 10 + str[i] - '0';
+    if(str[i] == '-') {
+        negative_number = 1;
+        i++;
+    }
+    for(; (str[i] >= '0') && (str[i] <= '9'); ++i)
+        res = res * 10 + str[i] - '0';
 
-  if (negative_number) {
-    res *= -1;
-  }
-  return res;
+    if(negative_number) {
+        res *= -1;
+    }
+    return res;
 }
 
 /*=============================================================================*/
@@ -388,16 +377,12 @@ int32_t rsi_atoi(const int8_t *str)
  * @param[in]  ascii_hex_in - ASCII hex input  
  * @return     hex num  
  */
-int8_t asciihex_2_num(int8_t ascii_hex_in)
-{
-  if ((ascii_hex_in >= '0') && (ascii_hex_in <= '9'))
-    return (ascii_hex_in - '0');
-  if ((ascii_hex_in >= 'A') && (ascii_hex_in <= 'F'))
-    return (ascii_hex_in - 'A' + 10);
-  if ((ascii_hex_in >= 'a') && (ascii_hex_in <= 'f'))
-    return (ascii_hex_in - 'a' + 10);
+int8_t asciihex_2_num(int8_t ascii_hex_in) {
+    if((ascii_hex_in >= '0') && (ascii_hex_in <= '9')) return (ascii_hex_in - '0');
+    if((ascii_hex_in >= 'A') && (ascii_hex_in <= 'F')) return (ascii_hex_in - 'A' + 10);
+    if((ascii_hex_in >= 'a') && (ascii_hex_in <= 'f')) return (ascii_hex_in - 'a' + 10);
 
-  return RSI_SUCCESS;
+    return RSI_SUCCESS;
 }
 
 /*=============================================================================*/
@@ -407,15 +392,14 @@ int8_t asciihex_2_num(int8_t ascii_hex_in)
  * @param[in]   cBuf - ASCII hex notation string.
  * @return      value in integer  
  */
-int8_t rsi_charhex_2_dec(int8_t *cBuf)
-{
-  int8_t k       = 0;
-  size_t buf_len = 0;
-  buf_len        = strlen((char *)cBuf);
-  for (uint8_t i = 0; i < buf_len; i++) {
-    k = ((k * 16) + asciihex_2_num(cBuf[i]));
-  }
-  return k;
+int8_t rsi_charhex_2_dec(int8_t* cBuf) {
+    int8_t k = 0;
+    size_t buf_len = 0;
+    buf_len = strlen((char*)cBuf);
+    for(uint8_t i = 0; i < buf_len; i++) {
+        k = ((k * 16) + asciihex_2_num(cBuf[i]));
+    }
+    return k;
 }
 
 /*=============================================================================*/
@@ -426,33 +410,34 @@ int8_t rsi_charhex_2_dec(int8_t *cBuf)
  * @param[out]      hexAddr               - Converted hex address is returned here.
  * @return          void 
  */
-void rsi_ascii_mac_address_to_6bytes(uint8_t *hexAddr, int8_t *asciiMacAddress)
-{
-  uint8_t cBufPos; // which char in the ASCII representation
-  uint8_t byteNum; // which byte in the 32BitHexAddress
-  int8_t cBuf[6];  // temporary buffer
+void rsi_ascii_mac_address_to_6bytes(uint8_t* hexAddr, int8_t* asciiMacAddress) {
+    uint8_t cBufPos; // which char in the ASCII representation
+    uint8_t byteNum; // which byte in the 32BitHexAddress
+    int8_t cBuf[6]; // temporary buffer
 
-  byteNum        = 0;
-  cBufPos        = 0;
-  size_t buf_len = 0;
+    byteNum = 0;
+    cBufPos = 0;
+    size_t buf_len = 0;
 #ifndef __ZEPHYR__
-  buf_len = sl_strnlen((char *)asciiMacAddress, MAX_MAC_ADDRESS_STRING_LENGTH);
+    buf_len = sl_strnlen((char*)asciiMacAddress, MAX_MAC_ADDRESS_STRING_LENGTH);
 #else
-  buf_len = strnlen((char *)asciiMacAddress, MAX_MAC_ADDRESS_STRING_LENGTH);
+    buf_len = strnlen((char*)asciiMacAddress, MAX_MAC_ADDRESS_STRING_LENGTH);
 #endif
-  for (uint8_t i = 0; i < buf_len; i++) {
-    // this will take care of the first 5 octets
-    if (asciiMacAddress[i] == ':') {                                   // we are at the end of the address octet
-      cBuf[cBufPos]      = 0;                                          // terminate the string
-      cBufPos            = 0;                                          // reset for the next char
-      hexAddr[byteNum++] = (uint8_t)rsi_charhex_2_dec((int8_t *)cBuf); // convert the strint to an integer
-    } else {
-      cBuf[cBufPos++] = asciiMacAddress[i];
+    for(uint8_t i = 0; i < buf_len; i++) {
+        // this will take care of the first 5 octets
+        if(asciiMacAddress[i] == ':') { // we are at the end of the address octet
+            cBuf[cBufPos] = 0; // terminate the string
+            cBufPos = 0; // reset for the next char
+            hexAddr[byteNum++] =
+                (uint8_t)rsi_charhex_2_dec((int8_t*)cBuf); // convert the strint to an integer
+        } else {
+            cBuf[cBufPos++] = asciiMacAddress[i];
+        }
     }
-  }
-  // handle the last octet                  // we are at the end of the string with no .
-  cBuf[cBufPos]    = 0x00;                                       // terminate the string
-  hexAddr[byteNum] = (uint8_t)rsi_charhex_2_dec((int8_t *)cBuf); // convert the strint to an integer
+    // handle the last octet                  // we are at the end of the string with no .
+    cBuf[cBufPos] = 0x00; // terminate the string
+    hexAddr[byteNum] =
+        (uint8_t)rsi_charhex_2_dec((int8_t*)cBuf); // convert the strint to an integer
 }
 
 /*=============================================================================*/
@@ -463,43 +448,42 @@ void rsi_ascii_mac_address_to_6bytes(uint8_t *hexAddr, int8_t *asciiMacAddress)
  * @param[out]    hexAddr         - Output value is passed back in the 4-byte Hex Address.
  * @return        void  
  */
-void rsi_ascii_dot_address_to_4bytes(uint8_t *hexAddr, int8_t *asciiDotAddress)
-{
-  uint8_t cBufPos;
-  // which char in the ASCII representation
-  uint8_t byteNum;
-  // which byte in the 32BitHexAddress
-  int8_t cBuf[4];
-  // character buffer
+void rsi_ascii_dot_address_to_4bytes(uint8_t* hexAddr, int8_t* asciiDotAddress) {
+    uint8_t cBufPos;
+    // which char in the ASCII representation
+    uint8_t byteNum;
+    // which byte in the 32BitHexAddress
+    int8_t cBuf[4];
+    // character buffer
 
-  byteNum        = 0;
-  cBufPos        = 0;
-  size_t buf_len = 0;
+    byteNum = 0;
+    cBufPos = 0;
+    size_t buf_len = 0;
 #ifndef __ZEPHYR__
-  buf_len = sl_strnlen((char *)asciiDotAddress, MAX_MAC_ADDRESS_STRING_LENGTH);
+    buf_len = sl_strnlen((char*)asciiDotAddress, MAX_MAC_ADDRESS_STRING_LENGTH);
 #else
-  buf_len = strnlen((char *)asciiDotAddress, MAX_MAC_ADDRESS_STRING_LENGTH);
+    buf_len = strnlen((char*)asciiDotAddress, MAX_MAC_ADDRESS_STRING_LENGTH);
 #endif
-  for (uint8_t i = 0; i < buf_len; i++) {
-    // this will take care of the first 3 octets
-    if (asciiDotAddress[i] == '.') {
-      // we are at the end of the address octet
-      cBuf[cBufPos] = 0;
-      // terminate the string
-      cBufPos = 0;
-      // reset for the next char
-      hexAddr[byteNum++] = (uint8_t)rsi_atoi(cBuf);
-      // convert the strint to an integer
-    } else {
-      cBuf[cBufPos++] = asciiDotAddress[i];
+    for(uint8_t i = 0; i < buf_len; i++) {
+        // this will take care of the first 3 octets
+        if(asciiDotAddress[i] == '.') {
+            // we are at the end of the address octet
+            cBuf[cBufPos] = 0;
+            // terminate the string
+            cBufPos = 0;
+            // reset for the next char
+            hexAddr[byteNum++] = (uint8_t)rsi_atoi(cBuf);
+            // convert the strint to an integer
+        } else {
+            cBuf[cBufPos++] = asciiDotAddress[i];
+        }
     }
-  }
-  // handle the last octet
-  // we are at the end of the string with no .
-  cBuf[cBufPos] = 0x00;
-  // terminate the string
-  // convert the strint to an integer
-  hexAddr[byteNum] = (uint8_t)rsi_atoi(cBuf);
+    // handle the last octet
+    // we are at the end of the string with no .
+    cBuf[cBufPos] = 0x00;
+    // terminate the string
+    // convert the strint to an integer
+    hexAddr[byteNum] = (uint8_t)rsi_atoi(cBuf);
 }
 /**
  * @fn         uint64_t ip_to_reverse_hex(const char *ip)
@@ -507,44 +491,43 @@ void rsi_ascii_dot_address_to_4bytes(uint8_t *hexAddr, int8_t *asciiDotAddress)
  * @param[in]  ip - IP address to convert. 
  * @return     IP address in reverse Hex format.
  */
-uint64_t ip_to_reverse_hex(const char *ip)
-{
-  uint64_t ip_hex  = 0;
-  char ip_copy[16] = { '\0' }; // To hold a copy of the IP string (assuming IPv4)
-  const char *token;
-  char *saveptr; //Pointer required by strtok_r
-  int octet;
-  int octet_count = 0;
-  int ip_len      = 0;
-  if (ip == NULL) {
-    return 0x00000000;
-  }
-  ip_len = strlen(ip);
-  if (ip_len >= (int)sizeof(ip_copy)) {
-    return 0x00000000;
-  }
-  ip_copy[ip_len] = '\0'; // Ensure null termination
-  strncpy(ip_copy, ip, ip_len);
-  if (ip_copy[ip_len] != '\0') {
+uint64_t ip_to_reverse_hex(const char* ip) {
+    uint64_t ip_hex = 0;
+    char ip_copy[16] = {'\0'}; // To hold a copy of the IP string (assuming IPv4)
+    const char* token;
+    char* saveptr; //Pointer required by strtok_r
+    int octet;
+    int octet_count = 0;
+    int ip_len = 0;
+    if(ip == NULL) {
+        return 0x00000000;
+    }
+    ip_len = strlen(ip);
+    if(ip_len >= (int)sizeof(ip_copy)) {
+        return 0x00000000;
+    }
     ip_copy[ip_len] = '\0'; // Ensure null termination
-  }
-
-  token = strtok_r(ip_copy, ".", &saveptr);
-
-  while (token != NULL) {
-    octet = strtol(token, NULL, 10);
-    if (octet < 0 || octet > 255) {
-      return 0x00000000; // Return 0 on invalid IP
+    strncpy(ip_copy, ip, ip_len);
+    if(ip_copy[ip_len] != '\0') {
+        ip_copy[ip_len] = '\0'; // Ensure null termination
     }
 
-    ip_hex |= (uint64_t)octet << (octet_count * 8);
-    octet_count++;
-    token = strtok_r(NULL, ".", &saveptr);
-  }
-  if (octet_count != 4) {
-    return 0x00000000;
-  }
-  return ip_hex;
+    token = strtok_r(ip_copy, ".", &saveptr);
+
+    while(token != NULL) {
+        octet = strtol(token, NULL, 10);
+        if(octet < 0 || octet > 255) {
+            return 0x00000000; // Return 0 on invalid IP
+        }
+
+        ip_hex |= (uint64_t)octet << (octet_count * 8);
+        octet_count++;
+        token = strtok_r(NULL, ".", &saveptr);
+    }
+    if(octet_count != 4) {
+        return 0x00000000;
+    }
+    return ip_hex;
 }
 /*=============================================================================*/
 /**
@@ -554,9 +537,10 @@ uint64_t ip_to_reverse_hex(const char *ip)
  * @return     Unsigned integer in host byte order
  */
 // network to host long
-uint32_t rsi_ntohl(uint32_t a)
-{
-  return (((a & 0xff000000) >> 24) | ((a & 0x00ff0000) >> 8) | ((a & 0x0000ff00) << 8) | ((a & 0x000000ff) << 24));
+uint32_t rsi_ntohl(uint32_t a) {
+    return (
+        ((a & 0xff000000) >> 24) | ((a & 0x00ff0000) >> 8) | ((a & 0x0000ff00) << 8) |
+        ((a & 0x000000ff) << 24));
 }
 
 /** @} */
