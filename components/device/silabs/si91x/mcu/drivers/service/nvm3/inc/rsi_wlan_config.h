@@ -161,9 +161,9 @@
 //!RSI_ENABLE or RSI_DISABLE to set RTS threshold config
 #define RSI_WLAN_CONFIG_ENABLE RSI_ENABLE
 
-#define CONFIG_RTSTHRESHOLD 1
+#define SLI_CONFIG_RTSTHRESHOLD 1
 
-#define RSI_RTS_THRESHOLD 2346
+#define SLI_RTS_THRESHOLD 2346
 
 /*=======================================================================*/
 
@@ -276,7 +276,7 @@
 #define RSI_SSL_VERSION 0
 
 //! ssl ciphers
-#define RSI_SSL_CIPHERS SSL_ALL_CIPHERS
+#define RSI_SSL_CIPHERS SL_SI91X_TLS_DEFAULT_CIPHERS
 
 //! Enable TCP over SSL with TLS version depends on remote side
 #define PROTOCOL_DFLT_VERSION BIT(0)

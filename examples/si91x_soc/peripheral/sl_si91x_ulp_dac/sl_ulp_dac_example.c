@@ -52,7 +52,7 @@ typedef enum {
 } ulp_dac_enum_t;
 
 static ulp_dac_enum_t ulp_dac_current_mode  = ULP_DAC_PROCESS_ACTION;
-static sl_power_state_t current_power_state = SL_SI91X_POWER_MANAGER_PS4;
+static sl_power_state_t current_power_state = SL_SI91X_POWER_MANAGER_PS3;
 
 /*******************************************************************************
  *************************** LOCAL VARIABLES   *******************************
@@ -246,10 +246,11 @@ void sl_ulp_dac_example_process_action(void)
         }
         DEBUGOUT("Data deinit \n");
         ulp_dac_current_mode = ULP_DAC_TRANSMISSION_COMPLETED;
-      } else if (current_power_state == SL_SI91X_POWER_MANAGER_PS4) {
-        DEBUGOUT("Switching the adc from PS4 -> PS2 state\n");
+      } else if (current_power_state == SL_SI91X_POWER_MANAGER_PS3) {
+        DEBUGOUT("Switching the dac from PS3 -> PS2 state\n");
         // Control power management by adjusting clock references and shutting
         // down the power supply
+        // This function is for demonstration purpose only. For more details, refer to the README file.
         sl_si91x_wireless_shutdown();
         status = sl_si91x_power_manager_add_ps_requirement(SL_SI91X_POWER_MANAGER_PS2);
         /* Due to calling trim_efuse API om power manager it will change the clock
@@ -270,7 +271,7 @@ void sl_ulp_dac_example_process_action(void)
         ulp_dac_current_mode           = ULP_DAC_PROCESS_ACTION;
         dac_ps4_to_ps2_transition_done = true;
       } else if (current_power_state == SL_SI91X_POWER_MANAGER_PS2) {
-        DEBUGOUT("Switching the adc from PS2 -> PS4 state\n");
+        DEBUGOUT("Switching the dac from PS2 -> PS4 state\n");
         status = sl_si91x_power_manager_add_ps_requirement(SL_SI91X_POWER_MANAGER_PS4);
         if (status != SL_STATUS_OK) {
           DEBUGOUT("sl_si91x_power_manager_add_ps_requirement: Error Code : %lu \n", status);
@@ -337,10 +338,9 @@ static void configure_ps2_power_state(void)
                                                                      // management
   config.ulpss_ram_banks = SL_SI91X_POWER_MANAGER_ULPSS_RAM_BANK_2 | SL_SI91X_POWER_MANAGER_ULPSS_RAM_BANK_3;
   // Ored value for ulpss peripheral.
-  peri.ulpss_peripheral = SL_SI91X_POWER_MANAGER_ULPSS_PG_MISC | SL_SI91X_POWER_MANAGER_ULPSS_PG_CAP
-                          | SL_SI91X_POWER_MANAGER_ULPSS_PG_SSI | SL_SI91X_POWER_MANAGER_ULPSS_PG_I2S
-                          | SL_SI91X_POWER_MANAGER_ULPSS_PG_I2C | SL_SI91X_POWER_MANAGER_ULPSS_PG_IR
-                          | SL_SI91X_POWER_MANAGER_ULPSS_PG_FIM;
+  peri.ulpss_peripheral = SL_SI91X_POWER_MANAGER_ULPSS_PG_MISC | SL_SI91X_POWER_MANAGER_ULPSS_PG_SSI
+                          | SL_SI91X_POWER_MANAGER_ULPSS_PG_I2S | SL_SI91X_POWER_MANAGER_ULPSS_PG_I2C
+                          | SL_SI91X_POWER_MANAGER_ULPSS_PG_IR | SL_SI91X_POWER_MANAGER_ULPSS_PG_FIM;
   // Ored value for npss peripheral.
   peri.npss_peripheral = SL_SI91X_POWER_MANAGER_NPSS_PG_MCUWDT | SL_SI91X_POWER_MANAGER_NPSS_PG_MCUPS
                          | SL_SI91X_POWER_MANAGER_NPSS_PG_MCUTS | SL_SI91X_POWER_MANAGER_NPSS_PG_MCUSTORE2

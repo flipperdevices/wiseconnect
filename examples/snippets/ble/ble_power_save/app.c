@@ -39,7 +39,7 @@
 #include "sl_si91x_driver.h"
 #include "app.h"
 
-#if ((SL_SI91X_TICKLESS_MODE == 0) && defined SLI_SI91X_MCU_INTERFACE && ENABLE_POWER_SAVE)
+#if ((SL_SI91X_TICKLESS_MODE == 0) && defined SLI_SI91X_MCU_INTERFACE && ENABLE_NWP_POWER_SAVE)
 #include "sl_si91x_m4_ps.h"
 #include "sl_si91x_power_manager.h"
 #endif
@@ -55,8 +55,8 @@
 /*=======================================================================*/
 //!    Application powersave configurations
 /*=======================================================================*/
-#if ENABLE_POWER_SAVE
-sl_wifi_performance_profile_t wifi_profile = { .profile = ASSOCIATED_POWER_SAVE_LOW_LATENCY };
+#if ENABLE_NWP_POWER_SAVE
+sl_wifi_performance_profile_v2_t wifi_profile = { .profile = ASSOCIATED_POWER_SAVE_LOW_LATENCY };
 
 #ifdef SLI_SI91X_MCU_INTERFACE
 void fpuInit(void);
@@ -80,7 +80,7 @@ static uint8_t rsi_app_resp_get_dev_addr[RSI_DEV_ADDR_LEN]      = { 0 };
 static rsi_ble_event_conn_status_t rsi_app_connected_device     = { 0 };
 static rsi_ble_event_disconnect_t rsi_app_disconnected_device   = { 0 };
 uint8_t rsi_ble_states_bitmap;
-osSemaphoreId_t ble_slave_conn_sem;
+osSemaphoreId_t ble_peripheral_conn_sem;
 osSemaphoreId_t ble_main_task_sem;
 static volatile uint32_t ble_app_event_map;
 static volatile uint32_t ble_app_event_map1;
@@ -292,7 +292,7 @@ void rsi_ble_on_connect_event(rsi_ble_event_conn_status_t *resp_conn)
   rsi_ble_app_set_event(RSI_APP_EVENT_CONNECTED);
 
   //! unblock connection semaphore
-  osSemaphoreRelease(ble_slave_conn_sem);
+  osSemaphoreRelease(ble_peripheral_conn_sem);
 }
 
 /*==============================================*/
@@ -309,7 +309,7 @@ void rsi_ble_on_disconnect_event(rsi_ble_event_disconnect_t *resp_disconnect, ui
 {
   UNUSED_PARAMETER(reason); //This statement is added only to resolve compilation warning, value is unchanged
   memcpy(&rsi_app_disconnected_device, resp_disconnect, sizeof(rsi_ble_event_disconnect_t));
-  //! Comparing Remote slave bd address to check the scan bitmap
+  //! Comparing Remote peripheral bd address to check the scan bitmap
   if (!(memcmp(remote_dev_bd_addr, (uint8_t *)resp_disconnect->dev_addr, 6))) {
     CLR_BIT1(rsi_ble_states_bitmap, RSI_SCAN_STATE);
   } else {
@@ -334,12 +334,12 @@ void rsi_ble_on_enhance_conn_status_event(rsi_ble_event_enhance_conn_status_t *r
   rsi_app_connected_device.status = resp_enh_conn->status;
   rsi_ble_app_set_event(RSI_APP_EVENT_CONNECTED);
   //! unblock connection semaphore
-  if (ble_slave_conn_sem) {
-    osSemaphoreRelease(ble_slave_conn_sem);
+  if (ble_peripheral_conn_sem) {
+    osSemaphoreRelease(ble_peripheral_conn_sem);
   }
 }
 
-#if ENABLE_POWER_SAVE
+#if ENABLE_NWP_POWER_SAVE
 /*==============================================*/
 /**
  * @fn         rsi_initiate_power_save
@@ -363,7 +363,7 @@ int32_t rsi_initiate_power_save(void)
   }
 
   //! initiating power save in wlan mode
-  status = sl_wifi_set_performance_profile(&wifi_profile);
+  status = sl_wifi_set_performance_profile_v2(&wifi_profile);
   if (status != SL_STATUS_OK) {
     LOG_PRINT("\r\n Failed to initiate power save in Wi-Fi mode :%ld\r\n", status);
     return status;
@@ -454,7 +454,7 @@ void ble_app_task(void *argument)
   }
   LOG_PRINT("\n Get local name: %s\n", rsi_app_resp_get_local_name.name);
 
-  ble_slave_conn_sem = osSemaphoreNew(1, 0, NULL);
+  ble_peripheral_conn_sem = osSemaphoreNew(1, 0, NULL);
 
 #if ((BLE_ROLE == PERIPHERAL_ROLE) || (BLE_ROLE == DUAL_ROLE))
   //! prepare advertise data //local/device name
@@ -485,7 +485,7 @@ void ble_app_task(void *argument)
   }
   SET_BIT1(rsi_ble_states_bitmap, RSI_SCAN_STATE);
 #endif
-#if ENABLE_POWER_SAVE
+#if ENABLE_NWP_POWER_SAVE
   if (!powersave_cmd_given) {
     LOG_PRINT("\r\n Initiating PowerSave\r\n");
     status = rsi_initiate_power_save();
@@ -507,7 +507,7 @@ void ble_app_task(void *argument)
     temp_event_map = rsi_ble_app_get_event();
     if (temp_event_map == RSI_FAILURE) {
       //! if events are not received loop will be continued.
-#if ((SL_SI91X_TICKLESS_MODE == 0) && (defined SLI_SI91X_MCU_INTERFACE && ENABLE_POWER_SAVE))
+#if ((SL_SI91X_TICKLESS_MODE == 0) && (defined SLI_SI91X_MCU_INTERFACE && ENABLE_NWP_POWER_SAVE))
       //! if events are not received loop will be continued.
 
       if ((!(P2P_STATUS_REG & TA_wakeup_M4)) && (ble_app_event_map == 0) && (ble_app_event_map1 == 0)) {
@@ -541,8 +541,8 @@ void ble_app_task(void *argument)
           return;
         }
 
-        if (ble_slave_conn_sem) {
-          osSemaphoreAcquire(ble_slave_conn_sem, 10000);
+        if (ble_peripheral_conn_sem) {
+          osSemaphoreAcquire(ble_peripheral_conn_sem, 10000);
         }
         // need to give sufficient time to connect to remote device
         osDelay(10000);
@@ -575,7 +575,7 @@ void ble_app_task(void *argument)
         rsi_ble_app_clear_event(RSI_APP_EVENT_DISCONNECTED);
 
         LOG_PRINT("\n Keep module in to active state \n");
-#if ENABLE_POWER_SAVE
+#if ENABLE_NWP_POWER_SAVE
         LOG_PRINT("\r\n Keep module in to active state \r\n");
         //! initiating Active mode in BT mode
         status = rsi_bt_power_save_profile(RSI_ACTIVE, PSP_TYPE);
@@ -586,7 +586,7 @@ void ble_app_task(void *argument)
 
         //! initiating power save in wlan mode
         wifi_profile.profile = HIGH_PERFORMANCE;
-        status               = sl_wifi_set_performance_profile(&wifi_profile);
+        status               = sl_wifi_set_performance_profile_v2(&wifi_profile);
         if (status != SL_STATUS_OK) {
           LOG_PRINT("\r\n Failed to keep module in HIGH_PERFORMANCE mode \r\n");
           return;
@@ -617,7 +617,7 @@ scan:
           }
           SET_BIT1(rsi_ble_states_bitmap, RSI_SCAN_STATE);
         }
-#if ENABLE_POWER_SAVE
+#if ENABLE_NWP_POWER_SAVE
         LOG_PRINT("\r\n Keep module in to power save \r\n");
         status = rsi_bt_power_save_profile(PSP_MODE, PSP_TYPE);
         if (status != RSI_SUCCESS) {
@@ -626,7 +626,7 @@ scan:
 
         //! initiating power save in wlan mode
         wifi_profile.profile = ASSOCIATED_POWER_SAVE;
-        status               = sl_wifi_set_performance_profile(&wifi_profile);
+        status               = sl_wifi_set_performance_profile_v2(&wifi_profile);
         if (status != SL_STATUS_OK) {
           LOG_PRINT("\r\n Failed to keep module in power save \r\n");
           return;

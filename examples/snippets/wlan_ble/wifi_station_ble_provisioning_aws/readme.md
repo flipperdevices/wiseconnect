@@ -44,16 +44,13 @@ In Tickless Mode, the device enters sleep based on the idle time set by the sche
   - To enable wakeup based on button press, configure the PM Wakeup Source and enable the GPIO Wakeup in the software components.
 
 - **Alarm-based Wakeup**:
-  - ALARM timer-based - In this method, an ALARM timer is run that wakes the M4 processor up periodically every **ALARM_PERIODIC_TIME** time period.
-  - To enable wakeup based on Alarm, configure the PM Wakeup Source and enable the Calendar Wakeup in the software components.
-  - By default, the alarm time is set to 5 seconds. Users can configure this as needed when enabling Calendar Wakeup in the PM Wakeup Source Configuration.
+  - ALARM timer-based - In this method, an ALARM timer is run that wakes the M4 processor up periodically every **PUBLISH_PERIODICITY** time period.
 
 After M4 processor wakes up via any of the above processes, the application publishes the **MQTT_publish_QOS0_PAYLOAD** message on the **MQTT_TOPIC2** topic.
 
-If macro **SL_SI91X_TICKLESS_MODE** is disabled, then the M4 processor does not go to sleep. A timer is run with a periodicity of **PUBLISH_PERIODICITY** milliseconds. The application publishes the **MQTT_publish_QOS0_PAYLOAD** message on the **MQTT_TOPIC2** topic in the following cases:
+If the **SL_SI91X_TICKLESS_MODE** macro is disabled, for alarm-based wakeup, configure the Power Manager (PM) wakeup source and enable the calendar wakeup within the software components. By default, the alarm is set to trigger after 30 seconds, but you can modify this setting as needed when enabling the calendar wakeup in the PM wakeup source.
 
-- Once in every **PUBLISH_PERIODICITY** time period.
-- When an incoming publish is received by the application.
+![PM Wakeup Source Configuration](resources/readme/pm_wakeup_configuration.png)
 
 **NCP Mode**:
 
@@ -160,7 +157,7 @@ For SoC Mode only:
    **Note:** You can change the topic names, which are `aws_status` and `si91x_status`.
 
 ```c
-#define ENABLE_POWER_SAVE         1                 //! Set this macro to 1 for enabling NWP power save.
+#define ENABLE_NWP_POWER_SAVE         1                 //! Set this macro to 1 for enabling NWP power save.
 
 #define PUBLISH_PERIODICITY       (30000)          // Configure this macro to publish data every 30 seconds (this works only in NCP with and without POWERSAVE and in SOC without POWERSAVE).
 ```
@@ -426,6 +423,9 @@ For NCP mode, following defines have to enabled manually in preprocessor setting
 - Ensure to update the certificate names in the **IoT_Client_Init_Params** structure before calling the **aws_iot_mqtt_init()** API.
 
 - The Starfield Root CA certificate used by your Wi-Fi device to verify the AWS server is already included in the WiSeConnect 3 SDK at `<SDK>/resources/certificates`; no additional setup is required.
+
+  > **NOTE :**
+  > Support for the SNI extension has been added to the AWS SDK, ensuring it is set by the client when connecting to an AWS server using TLS 1.3. This is handled internally by the AWS SDK and does not affect compatibility with other TLS versions.
 
   > **NOTE :**
   > Amazon uses [Starfield Technologies](https://www.starfieldtech.com/) to secure the AWS website, the WiSeConnect SDK includes the [Starfield CA Certificate](https://github.com/SiliconLabs/wiseconnect/tree/master/resources/certificates/aws_starfield_ca.pem.h).

@@ -17,13 +17,12 @@ filter:
       - Intermediate
 sdk:
   id: simplicity_sdk
-  version:  "2024.12.1"
+  version:  "2025.6.0"
 sdk_extension:
   - id: wiseconnect3_sdk
-    version: 3.4.1
+    version: 3.5.0
 source:
   - path: app.c
-  - path: main.c
   - path: ble_app.c
   - path: wifi_app.c
   - path: i2c_leader_example.c
@@ -38,7 +37,7 @@ define:
   - name: SL_SI91X_PRINT_DBG_LOG
   - name: SLI_SI91X_SOCKETS
 component:
-  - id: sl_system
+  - id: sl_main
   - id: freertos
   - id: freertos_heap_4
   - id: syscalls
@@ -71,6 +70,10 @@ component:
     from: wiseconnect3_sdk
   - id: gpio_npss_component
     from: wiseconnect3_sdk
+  - id: wireless_wakeup_ulp_component
+    from: wiseconnect3_sdk
+  - id: calendar_ulp_component
+    from: wiseconnect3_sdk
 requires:
   - name: device_needs_ram_execution
     condition:
@@ -85,6 +88,12 @@ configuration:
     value: "1"
   - name: SL_ENABLE_GPIO_WAKEUP_SOURCE
     value: '1'
+  - name: SL_ENABLE_CALENDAR_WAKEUP_SOURCE
+    value: '1'
+  - name: ENABLE_ALARM
+    value: '1'
+  - name: ALARM_TIME_MSEC
+    value: '30000'
 readme:
   - path: readme.md
 other_file:
@@ -119,6 +128,7 @@ other_file:
   - path: resources/readme/aws_create_policy.png
   - path: resources/readme/aws_iot_mqtt_host_url.png
   - path: resources/readme/dut_scan_result.png
+  - path: resources/readme/pm_wakeup_configuration.png
 ui_hints:
   highlight:
     - path: readme.md

@@ -197,6 +197,9 @@ static const console_descriptive_command_t _start_dhcp_command = {
   .handler       = start_dhcp_command_handler,
   .argument_list = { CONSOLE_OPTIONAL_ARG('i', CONSOLE_ENUM_ARG(sl_ip_address_type_t)),
                      CONSOLE_OPTIONAL_ARG('m', CONSOLE_ENUM_ARG(sl_ip_management_t)),
+                     CONSOLE_OPTIONAL_ARG('a', CONSOLE_ARG_IP_ADDRESS),
+                     CONSOLE_OPTIONAL_ARG('g', CONSOLE_ARG_IP_ADDRESS),
+                     CONSOLE_OPTIONAL_ARG('n', CONSOLE_ARG_IP_ADDRESS),
                      CONSOLE_ARG_END }
 };
 
@@ -1482,12 +1485,16 @@ static const console_descriptive_command_t _ble_per_receive_command = { .descrip
                                                                           CONSOLE_ARG_END } };
 
 extern sl_status_t rsi_bt_per_stats_command_handler(console_args_t *arguments);
-static const char *_bt_per_stats_arg_help[] = {};
+static const char *_bt_per_stats_arg_help[] = {
+  0,
+};
 
-static const console_descriptive_command_t _bt_per_stats_command = { .description   = "Read the BLE PER statistics",
-                                                                     .argument_help = _bt_per_stats_arg_help,
-                                                                     .handler       = rsi_bt_per_stats_command_handler,
-                                                                     .argument_list = { CONSOLE_ARG_END } };
+static const console_descriptive_command_t _bt_per_stats_command = {
+  .description   = "Read the BLE PER statistics",
+  .argument_help = _bt_per_stats_arg_help,
+  .handler       = rsi_bt_per_stats_command_handler,
+  .argument_list = { CONSOLE_OPTIONAL_ARG('t', CONSOLE_ARG_UINT), CONSOLE_ARG_END }
+};
 
 extern sl_status_t rsi_bt_get_local_name_command_handler(console_args_t *arguments);
 static const char *_bt_get_local_name_arg_help[] = {};

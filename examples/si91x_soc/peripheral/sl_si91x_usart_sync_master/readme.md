@@ -138,31 +138,15 @@ For details on the project folder structure, see the [WiSeConnect Examples](http
 >
 >- Add data_in buffer to watch window for checking receive data.
 
-## Configuring SOCPLL clock
+## Configuring higher clock
 
-For baud rates higher than 2 million, configure the SOCPLL clock by completing the following steps:
-
-1. In the `usart_sync_example.c` file (path: /$project/usart_sync_example.c), add the following lines of code.
-
-    ```c
-    #include "rsi_rom_clks.h"
-
-    #define SOC_PLL_CLK             120000000 // SOC_PLL clock frequency
-    #define SOC_PLL_REF_CLK         40000000 // SOC_PLL reference clock frequency
-    ```
-
-2. Configure PLL clocks as shown below
-
-    ```c
-    RSI_CLK_SetSocPllFreq(M4CLK, SOC_PLL_CLK, SOC_PLL_REF_CLK); //To configure SOCPLL clock frequency
-    ```
-
-3. Change the clock source to USART_SOCPLLCLK in `RTE_Device_917.h` (/$project/config/RTE_Device_917.h).
+For baud rates higher than 2 million, change the clock source to USART_SOCPLLCLK in `RTE_Device_917.h` (/$project/config/RTE_Device_917.h):
 
     ```C
-    #define RTE_USART0_CLK_SRC  // for UART1
+    #define RTE_USART0_CLK_SRC   
     ```
 
 > **Note:**
 >
 > - Interrupt handlers are implemented in the driver layer, and user callbacks are provided for custom code. If you want to write your own interrupt handler instead of using the default one, make the driver interrupt handler a weak handler. Then, copy the necessary code from the driver handler to your custom interrupt handler.
+> - By default, Request to Send (RTS) and Clear to Send (CTS) flow control signals are disabled in the UART driver UC, and their corresponding GPIO pins are not assigned in the Pintool. If you enable RTS/CTS in the Driver UC, you must manually configure and assign the appropriate GPIO pins in the Pintool to ensure proper hardware flow control functionality.

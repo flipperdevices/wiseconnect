@@ -39,6 +39,10 @@
 #include "uio.h"
 #include "netinet_in.h"
 
+#ifdef __cplusplus
+extern "C" {	
+#endif
+
 #ifndef	_SOCKLEN_T_DEFINED_
 #define	_SOCKLEN_T_DEFINED_
 typedef	__socklen_t	socklen_t;	/* length type for network syscalls */
@@ -122,6 +126,9 @@ typedef	__sa_family_t	sa_family_t;	/* sockaddr address family type */
 #define	SL_SO_HIGH_PERFORMANCE_SOCKET	0x1027	///< Enables high-performance socket.
 #define SL_SO_TLS_SNI                  0x1028  ///< Passes SNI extension for SSL socket.
 #define SL_SO_TLS_ALPN                 0x1029  ///< Passes ALPN extension for SSL socket.
+#define SL_SO_MSS                      0x102A  ///< Sets the Maximum Segment Size (MSS) for a socket.
+#define SL_SO_SOCK_VAP_ID              0x102B  ///< Sets the VAP ID for a socket.
+#define SL_SO_MAXRETRY                 0x102C  ///< Sets the maximum number of retries for a socket.
 /** @} */
 
 /*
@@ -731,5 +738,9 @@ int close(int socket_id);
 
 /** @} */
 /* __END_DECLS */
+
+#ifdef __cplusplus
+}	
+#endif
 
 #endif /* !COMPONENTS_BSD_SOCKET_INC_SOCKET_H_ */
