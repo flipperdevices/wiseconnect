@@ -14,7 +14,7 @@
 
 ## Purpo/sescope
 
-- This example project demonstrates blinky application (GPIO/LED toggle) executing from PSRAM. By default, the Text segment, Data segment, BSS segment, Stack and Heap are placed in PSRAM.
+- This example project demonstrates blinky application (GPIO/LED toggle) executing from PSRAM. By default, the Text and Data segments are placed in PSRAM.
 
 ## Prerequisites/Setup Requirements
 
@@ -46,7 +46,7 @@ For details on the project folder structure, see the [WiSeConnect Examples](http
 
 ## Application Build Environment
 
-- Configure the following parameter in main.c file, update/modify following macro if required
+- Configure the following parameter in app.c file, update/modify following macro if required
 
   ```C
     #define RSI_BLINK_RATE //  configured for 10 ticks per second   

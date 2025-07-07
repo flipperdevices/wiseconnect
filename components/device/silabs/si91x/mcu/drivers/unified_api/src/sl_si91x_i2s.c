@@ -204,11 +204,7 @@ sl_status_t sl_si91x_i2s_config_transmit_receive(sl_i2s_handle_t i2s_handle, sl_
 {
   sl_status_t status = SL_STATUS_OK;
   int32_t error_status;
-  uint8_t i2s_resolution[I2S_RESOLUTION_COUNT]        = { SL_I2S_RESOLUTION_12,
-                                                          SL_I2S_RESOLUTION_16,
-                                                          SL_I2S_RESOLUTION_20,
-                                                          SL_I2S_RESOLUTION_24,
-                                                          SL_I2S_RESOLUTION_32 };
+  uint8_t i2s_resolution[I2S_RESOLUTION_COUNT] = { SL_I2S_RESOLUTION_16, SL_I2S_RESOLUTION_24, SL_I2S_RESOLUTION_32 };
   uint32_t i2s_sampling_rate[I2S_SAMPLING_RATE_COUNT] = {
     SL_I2S_SAMPLING_RATE_8000,  SL_I2S_SAMPLING_RATE_11025, SL_I2S_SAMPLING_RATE_16000, SL_I2S_SAMPLING_RATE_22050,
     SL_I2S_SAMPLING_RATE_24000, SL_I2S_SAMPLING_RATE_32000, SL_I2S_SAMPLING_RATE_44100, SL_I2S_SAMPLING_RATE_48000,
@@ -246,11 +242,6 @@ sl_status_t sl_si91x_i2s_config_transmit_receive(sl_i2s_handle_t i2s_handle, sl_
       status = SL_STATUS_INVALID_PARAMETER;
       break;
     }
-    if (xfer_config->protocol != SL_I2S_PROTOCOL) {
-      //Invalid SAI protocol
-      status = SL_STATUS_INVALID_PARAMETER;
-      break;
-    }
     if ((xfer_config->sync != SL_I2S_SYNC) && (xfer_config->sync != SL_I2S_ASYNC)) {
       //Invalid SYNC mode
       status = SL_STATUS_INVALID_PARAMETER;
@@ -262,7 +253,8 @@ sl_status_t sl_si91x_i2s_config_transmit_receive(sl_i2s_handle_t i2s_handle, sl_
       status = SL_STATUS_INVALID_PARAMETER;
       break;
     }
-    if ((xfer_config->transfer_type != SL_I2S_TRANSMIT) && (xfer_config->transfer_type != SL_I2S_RECEIVE)) {
+    if ((xfer_config->transfer_type != SL_I2S_TRANSMIT) && (xfer_config->transfer_type != SL_I2S_RECEIVE)
+        && (xfer_config->transfer_type != SL_MIC_ICS43434_RECEIVE)) {
       //Invalid transfer type
       status = SL_STATUS_INVALID_PARAMETER;
       break;
@@ -282,8 +274,8 @@ sl_status_t sl_si91x_i2s_config_transmit_receive(sl_i2s_handle_t i2s_handle, sl_
       status = SL_STATUS_INVALID_PARAMETER;
       break;
     }
-    if (((xfer_config->resolution <= 16) && (xfer_config->data_size == 32))) {
-      //Invalid combination of resolution and data size. 16 and 12 bit resolutions should
+    if (((xfer_config->resolution == 16) && (xfer_config->data_size == 32))) {
+      //Invalid combination of resolution and data size. 16 bit resolution should
       //use uint16_t data types for transfer
       status = SL_STATUS_INVALID_PARAMETER;
       break;
@@ -305,6 +297,52 @@ sl_status_t sl_si91x_i2s_config_transmit_receive(sl_i2s_handle_t i2s_handle, sl_
       }
     }
 #endif
+    if (xfer_config->transfer_type == SL_I2S_TRANSMIT) {
+      if (i2s_handle == &Driver_SAI0) {
+        //Disable I2S0 Tx channel and reset the Tx FIFO
+#ifdef SL_I2S0_CHANNEL
+        I2S0->CHANNEL_CONFIG[SL_I2S0_CHANNEL].I2S_TER_b.TXCHEN = 0;
+        I2S0->CHANNEL_CONFIG[SL_I2S0_CHANNEL].I2S_TFF_b.TXCHFR = 1;
+#else
+        I2S0->CHANNEL_CONFIG[0].I2S_TER_b.TXCHEN = 0;
+        I2S0->CHANNEL_CONFIG[0].I2S_TFF_b.TXCHFR = 1;
+#endif
+#ifndef I2S_LOOP_BACK
+        if (master_mode_i2s0 == I2S_MASTER_CONFIG) {
+          master_mode_i2s0 = I2S_MASTER_CONFIG_TX;
+        }
+#endif
+      } else {
+        //Disable ULP_I2S Tx channel and reset the Tx FIFO
+        I2S1->CHANNEL_CONFIG[0].I2S_TER_b.TXCHEN = 0;
+        I2S1->CHANNEL_CONFIG[0].I2S_TFF_b.TXCHFR = 1;
+#ifdef SL_I2S0_CHANNEL
+        I2S0->CHANNEL_CONFIG[SL_I2S0_CHANNEL].I2S_TFF_b.TXCHFR = 1;
+#else
+        I2S0->CHANNEL_CONFIG[0].I2S_TFF_b.TXCHFR = 1;
+#endif
+#ifndef I2S_LOOP_BACK
+        if (master_mode_ulp_i2s == I2S_MASTER_CONFIG) {
+          master_mode_ulp_i2s = I2S_MASTER_CONFIG_TX;
+        }
+#endif
+      }
+    } else {
+      if (i2s_handle == &Driver_SAI0) {
+        //Disable I2S0 Rx channel and reset the Rx FIFO
+#ifdef SL_I2S0_CHANNEL
+        I2S0->CHANNEL_CONFIG[SL_I2S0_CHANNEL].I2S_RER_b.RXCHEN = 0;
+        I2S0->CHANNEL_CONFIG[SL_I2S0_CHANNEL].I2S_RFF_b.RXCHFR = 1;
+#else
+        I2S0->CHANNEL_CONFIG[0].I2S_RER_b.RXCHEN = 0;
+        I2S0->CHANNEL_CONFIG[0].I2S_RFF_b.RXCHFR = 1;
+#endif
+      } else {
+        //Disable ULP_I2S Rx channel and reset the Rx FIFO
+        I2S1->CHANNEL_CONFIG[0].I2S_RER_b.RXCHEN = 0;
+        I2S1->CHANNEL_CONFIG[0].I2S_RFF_b.RXCHFR = 1;
+      }
+    }
     // CMSIS API for Tx/Rx config is called and the arm error code returned from
     // the API is converted to SL error code via convert_arm_to_sl_error_code function.
     error_status = ((sl_i2s_driver_t *)i2s_handle)
@@ -356,7 +394,7 @@ sl_status_t sl_si91x_i2s_transmit_data(sl_i2s_handle_t i2s_handle, const void *d
 #ifdef SL_I2S0_CHANNEL
       resolution = I2S0->CHANNEL_CONFIG[SL_I2S0_CHANNEL].I2S_TCR_b.WLEN;
 #else
-      resolution                               = I2S0->CHANNEL_CONFIG[0].I2S_TCR_b.WLEN;
+      resolution = I2S0->CHANNEL_CONFIG[0].I2S_TCR_b.WLEN;
 #endif
     } else {
       resolution = I2S1->CHANNEL_CONFIG[0].I2S_TCR_b.WLEN;
@@ -368,35 +406,6 @@ sl_status_t sl_si91x_i2s_transmit_data(sl_i2s_handle_t i2s_handle, const void *d
         status = SL_STATUS_INVALID_PARAMETER;
         break;
       }
-    }
-    if (i2s_handle == &Driver_SAI0) {
-      //Disable I2S0 Tx channel and reset the Tx FIFO
-#ifdef SL_I2S0_CHANNEL
-      I2S0->CHANNEL_CONFIG[SL_I2S0_CHANNEL].I2S_TER_b.TXCHEN = 0;
-      I2S0->CHANNEL_CONFIG[SL_I2S0_CHANNEL].I2S_TFF_b.TXCHFR = 1;
-#else
-      I2S0->CHANNEL_CONFIG[0].I2S_TER_b.TXCHEN = 0;
-      I2S0->CHANNEL_CONFIG[0].I2S_TFF_b.TXCHFR = 1;
-#endif
-#ifndef I2S_LOOP_BACK
-      if (master_mode_i2s0 == I2S_MASTER_CONFIG) {
-        master_mode_i2s0 = I2S_MASTER_CONFIG_TX;
-      }
-#endif
-    } else {
-      //Disable ULP_I2S Tx channel and reset the Tx FIFO
-      I2S1->CHANNEL_CONFIG[0].I2S_TER_b.TXCHEN = 0;
-      I2S1->CHANNEL_CONFIG[0].I2S_TFF_b.TXCHFR = 1;
-#ifdef SL_I2S0_CHANNEL
-      I2S0->CHANNEL_CONFIG[SL_I2S0_CHANNEL].I2S_TFF_b.TXCHFR = 1;
-#else
-      I2S0->CHANNEL_CONFIG[0].I2S_TFF_b.TXCHFR = 1;
-#endif
-#ifndef I2S_LOOP_BACK
-      if (master_mode_ulp_i2s == I2S_MASTER_CONFIG) {
-        master_mode_ulp_i2s = I2S_MASTER_CONFIG_TX;
-      }
-#endif
     }
     // CMSIS API for I2S send/receive is called and the arm error code returned from
     // the API is converted to SL error code via convert_arm_to_sl_error_code function.
@@ -435,7 +444,7 @@ sl_status_t sl_si91x_i2s_receive_data(sl_i2s_handle_t i2s_handle, const void *da
 #ifdef SL_I2S0_CHANNEL
       resolution = I2S0->CHANNEL_CONFIG[SL_I2S0_CHANNEL].I2S_RCR_b.WLEN;
 #else
-      resolution                               = I2S0->CHANNEL_CONFIG[0].I2S_RCR_b.WLEN;
+      resolution = I2S0->CHANNEL_CONFIG[0].I2S_RCR_b.WLEN;
 #endif
     } else {
       resolution = I2S1->CHANNEL_CONFIG[0].I2S_RCR_b.WLEN;

@@ -76,8 +76,8 @@ The application can be configured to suit your requirements and development envi
        ```
   - Configure the following macros to set the number of peripheral and central connections that can be made
        ```c
-       #define RSI_BLE_MAX_NBR_SLAVES    1
-       #define RSI_BLE_MAX_NBR_MASTERS   1
+       #define RSI_BLE_MAX_NBR_PERIPHERALS    1
+       #define RSI_BLE_MAX_NBR_CENTRALS   1
        ```
   - Fill the name of the peripheral to be connected to in the following macro
        ```c
@@ -99,12 +99,12 @@ The application can be configured to suit your requirements and development envi
 
     - By default, The application is configured without power save.
        ```c
-       #define ENABLE_POWER_SAVE 0
+       #define ENABLE_NWP_POWER_SAVE 0
        ```
 
     - If user wants to run the application in power save, modify the following configuration.
        ```c
-       #define ENABLE_POWER_SAVE 1
+       #define ENABLE_NWP_POWER_SAVE 1
        ```
 
   - The desired parameters are provided following. User can also modify the parameters as per their needs and requirements.

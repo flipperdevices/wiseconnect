@@ -26,24 +26,22 @@ The Wireless Test application is a Command-Line Interface (CLI) application desi
 - A Micro-coaxial connector plug to SMA-female cable (RF connector) for connecting the U.Fl port of the Si917 radio board to the Spectrum Analyzer or Signal Generator.
 - **SoC Mode**:
   - Standalone
-    - BRD4002A Wireless Pro Kit Mainboard [SI-MB4002A]
+    - BRD4002A Wireless Pro Kit Mainboard [SI-MB4002A](https://www.silabs.com/development-tools/wireless/wireless-pro-kit-mainboard?tab=overview)
     - Radio Boards 
-  	  - BRD4338A [SiWx917-RB4338A]
+  	  - BRD4338A [SiWx917-RB4338A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-rb4338a-wifi-6-bluetooth-le-soc-radio-board?tab=overview)
       - BRD4339B [SiWx917-RB4339B]
   	  - BRD4340A [SiWx917-RB4340A]
   	  - BRD4343A [SiWx917-RB4343A]
   - Kits
   	- SiWx917 Pro Kit [Si917-PK6031A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-pro-kit?tab=overview)
-  	- SiWx917 Pro Kit [Si917-PK6032A]
-    - SiWx917 AC1 Module Explorer Kit (BRD2708A)
   	
 - **NCP Mode**:
   - Standalone
-    - BRD4002A Wireless Pro Kit Mainboard [SI-MB4002A]
+    - BRD4002A Wireless Pro Kit Mainboard [SI-MB4002A](https://www.silabs.com/development-tools/wireless/wireless-pro-kit-mainboard?tab=overview)
     - EFR32xG24 Wireless 2.4 GHz +10 dBm Radio Board [xG24-RB4186C](https://www.silabs.com/development-tools/wireless/xg24-rb4186c-efr32xg24-wireless-gecko-radio-board?tab=overview)
     - NCP Expansion Kit with NCP Radio Boards
-      - (BRD4346A + BRD8045A) [SiWx917-EB4346A]
-      - (BRD4357A + BRD8045A) [SiWx917-EB4357A]
+      - [BRD4346A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-rb4346a-wifi-6-bluetooth-le-soc-4mb-flash-radio-board?tab=overview) + [BRD8045C](https://www.silabs.com/development-tools/wireless/wi-fi/shield-adapter-board-for-co-processor-radio-boards?tab=overview)
+      - [BRD4357A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4357a-wi-fi-6-bluetooth-le-4mb-flash-radio-board-for-rcp-and-ncp-modules?tab=overview) + [BRD8045C](https://www.silabs.com/development-tools/wireless/wi-fi/shield-adapter-board-for-co-processor-radio-boards?tab=overview)
   - Kits
   	- EFR32xG24 Pro Kit +10 dBm [xG24-PK6009A](https://www.silabs.com/development-tools/wireless/efr32xg24-pro-kit-10-dbm?tab=overview)  
   - Interface and Host MCU Supported
@@ -52,7 +50,7 @@ The Wireless Test application is a Command-Line Interface (CLI) application desi
 
 ### Software Requirements
 
-- Simplicity Studio
+- Simplicity Studio IDE - [Simplicity Studio IDE](https://www.silabs.com/developer-tools/simplicity-studio)
 - A Serial terminal software such as [Serial Debug Assistant](https://apps.microsoft.com/detail/9NBLGGH43HDM?rtc=1&hl=en-in&gl=in)
 
 Note : The user can also use the Simplicity studio’s console window for sending and receiving the CLI command but it is recommended to use Serial Debug Assistant for ease of the command usage.
@@ -60,18 +58,33 @@ Note : The user can also use the Simplicity studio’s console window for sendin
 
 ### Setup Diagram
 
-- The figure below shows the setup and the connections for the WLAN RF testing.
+#### SoC
 
-![Figure: Setup Diagram SoC Mode for wireless_test Example for WLAN RF test](resources/readme/cli_wifi_ble_setup.png)
+- The following figure shows the setup and the connections for the WLAN RF testing.
 
-- The figure below shows the setup and the connections for SiWG917 in Station mode.
+  ![Figure: Setup Diagram SoC Mode for wireless_test Example for WLAN RF test](resources/readme/cli_wifi_ble_setup.png)
 
-![Figure: Setup Diagram SoC Mode for wireless_test Example for Station Mode](resources/readme/sta.png)
+- The following figure shows the setup and the connections for SiWG917 in Station mode.
 
-- The figure below shows the setup and the connections for SiWG917 in BLE Advertising mode.
+  ![Figure: Setup Diagram SoC Mode for wireless_test Example for Station Mode](resources/readme/sta.png)
 
-![Figure: Setup Diagram SoC Mode for wireless_test Example for Advertising](resources/readme/cli_ble.png)
+- The following figure shows the setup and the connections for SiWG917 in BLE Advertising mode.
 
+  ![Figure: Setup Diagram SoC Mode for wireless_test Example for Advertising](resources/readme/cli_ble.png)
+
+#### NCP
+
+- The following figure shows the setup and the connections for the WLAN RF testing.
+
+  ![Figure: Setup Diagram NCP Mode for wireless_test Example for WLAN RF test](resources/readme/cli_wifi_ble_setup_ncp.png)
+
+- The following figure shows the setup and the connections for SiWG917 (NCP) in Station mode.
+
+  ![Figure: Setup Diagram NCP Mode for wireless_test Example for Station Mode](resources/readme/sta_ncp.png)
+
+- The following figure shows the setup and the connections for SiWG917 (NCP) in BLE Advertising mode.
+
+  ![Figure: Setup Diagram NCP Mode for wireless_test Example for Advertising](resources/readme/cli_ble_ncp.png)
 
 ## Getting Started
 
@@ -213,6 +226,7 @@ reset
 5. [Station ping](#below-are-the-cli-commands-for-connecting-to-the-access-point--router-and-pinging-the-gateway)
 6. [Calibration - Gain offset correction](#steps--commands-to-run-the-gain-offset-correction)
 7. [Calibration - Frequency offset correction](#commands-to-run-the-frequency-offset-correction)
+8. [Gain Table Update](#gain-table-update)
 
 
 ### **Below are the commands to run the RF test example.**
@@ -468,6 +482,14 @@ scan all the access points available in the vicinity respectively.
 5. sl_net_ping 8.8.8.8 ipv4 64   or sl_net_ping 192.168.1.1 ipv4 64
 
 
+### **Below are the CLI commands used to connect to an access point/router and configure a static IP address**
+
+**![Prints](resources/readme/configure_static_ip_address.png)**
+
+1. wifi_init -i client
+2. wifi_scan
+3. wifi_connect SILABS_AP -p 12345678  
+4. start_dhcp -i ipv4 -m static -a 192.168.31.108 -g 192.168.31.1 -n 255.255.255.0 
 
 ## Steps to create a CLI command based on the application available in the release. 
 
@@ -552,6 +574,33 @@ si91x_calibration_write 64 0 0 -2 -c 0 -t 1
 
 The above command will increase the Transmit power to 1 dBm in channel 11.
 
+
+
+## **Gain Table Update**
+Update user gain table
+
+**Syntax:**
+```perl
+wifi_update_gain_table <band> <bandwidth>
+```
+
+|Parameter       |Description                                                                                |
+|----------------|-------------------------------------------------------------------------------------------|
+|*band*          |Wi-Fi radio band (1 - 2.4 GHz)                                                             |
+|*bandwidth*     |Channel bandwidth (0 - 20 MHz)                                                             |
+
+**Example:**
+```perl
+wifi_update_gain_table 1 0
+```
+
+### **Steps to update user gain table**
+
+1. Initialize --->  wifi_init -i transmit_test
+2. Antenna command ---> wifi_set_antenna -i client -a 0
+3. Update gain table command ---> wifi_update_gain_table 1 0
+4. Transmit test command ---> wifi_transmit_test_start 18 0 100 0 1
+
 **Note:** To update the gain table, configure the gain_table_payload[] of sl_wifi_update_gain_table_command_handler in wifi_command.c file.
 
 **Note:** For changing the UART instance of the wireless_test example, see the VCOM section of the [Software Reference Manual](https://github.com/SiliconLabs/wiseconnect/blob/v3.3.1/docs/software-reference/manuals/siwx91x-software-reference-manual.md).
@@ -622,12 +671,15 @@ ble_per_receive <enable> <phy_rate> <channel> [-a <ant_sel>] [-c <rf_chain>]
 >```
 
 ### **bt_per_stats**
-Read BLE transmit and receive statistics
+Read BLE transmit & receive statistics
 
 **Syntax:**
 ```perl
-bt_per_stats
+bt_per_stats [-t <time_duration>]
 ```
+|Parameter       |Description                                                                                |
+|----------------|-------------------------------------------------------------------------------------------|
+|*time_duration*        |Time duration in seconds             |
 
 **Response Structure:**
 ```perl
@@ -664,6 +716,7 @@ bt_per_stats
   // Dummy array of length 5
   uint16_t dummy[5];
 ```
+**Note:** The "tx_dones" parameter will return 0 in continuous mode.
 
 **Example:**
 ```perl

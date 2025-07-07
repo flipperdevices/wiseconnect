@@ -35,6 +35,8 @@
 /** 
  * \addtogroup NET_INTERFACE_FUNCTIONS Network Interface
  * 
+ * @note To manage the network interface lifecycle correctly, it's important to use functions like sl_net_init(), sl_net_up(), sl_net_down(), and sl_net_deinit() as intended.
+ *       Improper sequencing or combining sl_net_* and sl_wifi_* API functions without following the recommended order may lead to unpredictable or undefined behavior.
  * @note Stack overflows may occur if you invoke functions or use your own variables or data structures while handling callbacks.
  *       Please configure the stack size by modifying the pre-processor macro `SL_SI91X_EVENT_HANDLER_STACK_SIZE` as
  *       per your application's requirements. See [here](https://docs.silabs.com/wiseconnect/latest/wiseconnect-developers-guide-prog-preprocessor-build-settings/list-of-preprocessor-build-settings)
@@ -72,7 +74,7 @@
  *   Function pointer to the network event handler callback of @ref sl_net_event_handler_t type
  * 
  * @return
- *  sl_status_t. See [Status Codes](https://docs.silabs.com/gecko-platform/latest/platform-common/status) and [Additional Status Codes](../wiseconnect-api-reference-guide-err-codes/sl-additional-status-errors) for details.
+ *  sl_status_t. See [Status Codes](https://docs.silabs.com/gecko-platform/latest/platform-common/status) and [WiSeConnect Status Codes](../wiseconnect-api-reference-guide-err-codes/wiseconnect-status-codes) for details.
  * @note 
  *  For Wi-Fi events, sl_net uses the wifi callback framework. Register the corresponding Wi-Fi event handlers using [sl_wifi_set_callback](../wiseconnect-api-reference-guide-wi-fi/wifi-callback-framework#sl-wifi-set-callback) API.
  * @note
@@ -80,6 +82,9 @@
  *  In this case, \p network_context should refer to a valid @ref sl_net_wifi_lwip_context_t variable.
  * @note
  *  In SoC mode, wireless initialization must be completed before using the NVM3 APIs in the common flash, as flash write and erase operations require communication between the NWP & M4.
+ * @note
+ * It is recommended not to access the interfaces once the @ref sl_net_deinit is performed to avoid unintented behavior.
+ * It is recommended to avoid using other sl_net_interface_t during sl_net_init.
  ******************************************************************************/
 sl_status_t sl_net_init(sl_net_interface_t interface,
                         const void *configuration,
@@ -88,22 +93,27 @@ sl_status_t sl_net_init(sl_net_interface_t interface,
 
 /***************************************************************************/ /**
  * @brief
- *   De-initialize a network interface.
+ *   De-initializes network interfaces.
  * 
- * This function de-initializes the specified network interface, releasing any resources that were allocated during initialization.
+ * This function de-initializes any network interfaces that were created, and releases any resources that were allocated during initialization.
  * 
  *  After this, the user will not receive callbacks related to events.
  * 
- *  For the `SL_NET_WIFI_CLIENT_INTERFACE` and `SL_NET_WIFI_AP_INTERFACE` interface, this function ensures proper shutdown of the Wi-Fi driver, soft resets the NWP, and releases resources.
  * 
  * @pre Pre-conditions:
  * - @ref sl_net_init should be called before this API.
  * 
  * @param[in] interface
- *   Interface identified by @ref sl_net_interface_t.
+ *   This function de-initializes both Access Point and Station interfaces, regardless of the specified interface.
+ *   The interface is identified by @ref sl_net_interface_t.
  * 
  * @return
- *   sl_status_t. See [Status Codes](https://docs.silabs.com/gecko-platform/latest/platform-common/status) and [Additional Status Codes](../wiseconnect-api-reference-guide-err-codes/sl-additional-status-errors) for details.
+ *   sl_status_t. See [Status Codes](https://docs.silabs.com/gecko-platform/latest/platform-common/status) and [WiSeConnect Status Codes](../wiseconnect-api-reference-guide-err-codes/wiseconnect-status-codes) for details.
+ *
+ * @note
+ * This function should not be called after an M4 OTA firmware upgrade, as it only resets the TA while the M4 application continues to run, which could cause unexpected issues. Instead, use [sl_si91x_soc_nvic_reset()](../wiseconnect-api-reference-guide-common/soft-reset-functions#sl-si91x-soc-nvic-reset) to perform a complete reset of both the TA and M4.
+ * @note
+ * It is recommended not to access the interfaces once the sl_net_deinit is performed to avoid unintended behavior.
  ******************************************************************************/
 sl_status_t sl_net_deinit(sl_net_interface_t interface);
 
@@ -129,7 +139,7 @@ sl_status_t sl_net_deinit(sl_net_interface_t interface);
  *   Network profile identifier for the specific interface of type @ref sl_net_profile_id_t
  * 
  * @return
- *   sl_status_t. See [Status Codes](https://docs.silabs.com/gecko-platform/latest/platform-common/status) and [Additional Status Codes](../wiseconnect-api-reference-guide-err-codes/sl-additional-status-errors) for details.
+ *   sl_status_t. See [Status Codes](https://docs.silabs.com/gecko-platform/latest/platform-common/status) and [WiSeConnect Status Codes](../wiseconnect-api-reference-guide-err-codes/wiseconnect-status-codes) for details.
  * 
  * @note
  * By default, profile and credential configurations in sl_net_defaults.h are used by SDK.
@@ -137,6 +147,8 @@ sl_status_t sl_net_deinit(sl_net_interface_t interface);
  * To enable support for both IPv4 and IPv6, the ip.type in the profile should be set to (SL_IPV4|SL_IPV6).
  * @note
  * The user can define their profile and credential configurations for an interface by calling @ref sl_net_set_profile and @ref sl_net_set_credential APIs before calling @ref sl_net_up API.
+ * @note
+ * The user is advised to reset the NWP with @ref sl_net_deinit() if this API fails with error SL_STATUS_TIMEOUT.
  * ******************************************************************************/
 sl_status_t sl_net_up(sl_net_interface_t interface, sl_net_profile_id_t profile_id);
 
@@ -159,7 +171,7 @@ sl_status_t sl_net_up(sl_net_interface_t interface, sl_net_profile_id_t profile_
  * 
   * @return
  *   sl_status_t. See [Status Codes](https://docs.silabs.com/gecko-platform/latest/platform-common/status) 
- *   and [Additional Status Codes](../wiseconnect-api-reference-guide-err-codes/sl-additional-status-errors) for details.
+ *   and [WiSeConnect Status Codes](../wiseconnect-api-reference-guide-err-codes/wiseconnect-status-codes) for details.
  ******************************************************************************/
 sl_status_t sl_net_down(sl_net_interface_t interface);
 
@@ -241,7 +253,7 @@ sl_status_t sl_net_get_ip_address(sl_net_interface_t interface, sl_net_ip_addres
  *   Pointer to profile data of type @ref sl_net_profile_t.
  * 
  * @return
- *   sl_status_t. See [Status Codes](https://docs.silabs.com/gecko-platform/latest/platform-common/status) and [Additional Status Codes](../wiseconnect-api-reference-guide-err-codes/sl-additional-status-errors) for details.
+ *   sl_status_t. See [Status Codes](https://docs.silabs.com/gecko-platform/latest/platform-common/status) and [WiSeConnect Status Codes](../wiseconnect-api-reference-guide-err-codes/wiseconnect-status-codes) for details.
  ******************************************************************************/
 sl_status_t sl_net_set_profile(sl_net_interface_t interface, sl_net_profile_id_t id, const sl_net_profile_t *profile);
 
@@ -267,7 +279,7 @@ sl_status_t sl_net_set_profile(sl_net_interface_t interface, sl_net_profile_id_t
  *   Pointer to @ref sl_net_profile_t object that will store the retrieved profile data.
  * 
  * @return
- *   sl_status_t. See [Status Codes](https://docs.silabs.com/gecko-platform/latest/platform-common/status) and [Additional Status Codes](../wiseconnect-api-reference-guide-err-codes/sl-additional-status-errors) for details.
+ *   sl_status_t. See [Status Codes](https://docs.silabs.com/gecko-platform/latest/platform-common/status) and [WiSeConnect Status Codes](../wiseconnect-api-reference-guide-err-codes/wiseconnect-status-codes) for details.
  ******************************************************************************/
 sl_status_t sl_net_get_profile(sl_net_interface_t interface, sl_net_profile_id_t id, sl_net_profile_t *profile);
 
@@ -289,7 +301,7 @@ sl_status_t sl_net_get_profile(sl_net_interface_t interface, sl_net_profile_id_t
  *   Profile storage index / identifier of type @ref sl_net_profile_id_t.
  * 
  * @return
- *   sl_status_t. See [Status Codes](https://docs.silabs.com/gecko-platform/latest/platform-common/status) and [Additional Status Codes](../wiseconnect-api-reference-guide-err-codes/sl-additional-status-errors) for details.
+ *   sl_status_t. See [Status Codes](https://docs.silabs.com/gecko-platform/latest/platform-common/status) and [WiSeConnect Status Codes](../wiseconnect-api-reference-guide-err-codes/wiseconnect-status-codes) for details.
  ******************************************************************************/
 sl_status_t sl_net_delete_profile(sl_net_interface_t interface, sl_net_profile_id_t id);
 
@@ -326,7 +338,7 @@ sl_status_t sl_net_delete_profile(sl_net_interface_t interface, sl_net_profile_i
  *   Length of the credential data object.
  * 
  * @return
- *   sl_status_t. See [Status Codes](https://docs.silabs.com/gecko-platform/latest/platform-common/status) and [Additional Status Codes](../wiseconnect-api-reference-guide-err-codes/sl-additional-status-errors) for details.
+ *   sl_status_t. See [Status Codes](https://docs.silabs.com/gecko-platform/latest/platform-common/status) and [WiSeConnect Status Codes](../wiseconnect-api-reference-guide-err-codes/wiseconnect-status-codes) for details.
  *   If the credential is NULL or the credential length is zero, this API will return an error `SL_STATUS_INVALID_PARAMETER`.
  * @note
  * - Certificates should follow the standard array format.  
@@ -336,6 +348,7 @@ sl_status_t sl_net_delete_profile(sl_net_interface_t interface, sl_net_profile_i
  * - Text outside the prefix and postfix lines is ignored and can be used for metadata.
  * - The above mentioned Headers and Footers might vary 
  * - This API does not support the OPEN Security type for Wi-Fi client credentials.
+ * - When configuring AP or client interfaces in open security mode, the credential ID must be set to `SL_NET_NO_CREDENTIAL_ID`.
  ******************************************************************************/
 sl_status_t sl_net_set_credential(sl_net_credential_id_t id,
                                   sl_net_credential_type_t type,
@@ -367,7 +380,7 @@ sl_status_t sl_net_set_credential(sl_net_credential_id_t id,
  *   out: Number of bytes written.
  * 
  * @return
- *   sl_status_t. See [Status Codes](https://docs.silabs.com/gecko-platform/latest/platform-common/status) and [Additional Status Codes](../wiseconnect-api-reference-guide-err-codes/sl-additional-status-errors) for details.
+ *   sl_status_t. See [Status Codes](https://docs.silabs.com/gecko-platform/latest/platform-common/status) and [WiSeConnect Status Codes](../wiseconnect-api-reference-guide-err-codes/wiseconnect-status-codes) for details.
  * 
  * @note
  *   Currently, @ref SL_NET_CERTIFICATE and @ref SL_NET_SIGNING_CERTIFICATE are not supported for retrieval.
@@ -396,7 +409,7 @@ sl_status_t sl_net_get_credential(sl_net_credential_id_t id,
  *   Network credential type as identified by @ref sl_net_credential_type_t.
  * 
  * @return
- *   sl_status_t. See [Status Codes](https://docs.silabs.com/gecko-platform/latest/platform-common/status) and [Additional Status Codes](../wiseconnect-api-reference-guide-err-codes/sl-additional-status-errors) for details.
+ *   sl_status_t. See [Status Codes](https://docs.silabs.com/gecko-platform/latest/platform-common/status) and [WiSeConnect Status Codes](../wiseconnect-api-reference-guide-err-codes/wiseconnect-status-codes) for details.
  ******************************************************************************/
 sl_status_t sl_net_delete_credential(sl_net_credential_id_t id, sl_net_credential_type_t type);
 
@@ -464,7 +477,7 @@ sl_status_t sl_net_inet_addr(const char *addr, uint32_t *value);
  * @param[in] ip_address
  *   Multicast IP address of type [sl_ip_address_t](../wiseconnect-api-reference-guide-nwk-mgmt/sl-ip-address-t).
  * @return
- *   sl_status_t. See [Status Codes](https://docs.silabs.com/gecko-platform/latest/platform-common/status) and [Additional Status Codes](../wiseconnect-api-reference-guide-err-codes/sl-additional-status-errors) for details.
+ *   sl_status_t. See [Status Codes](https://docs.silabs.com/gecko-platform/latest/platform-common/status) and [WiSeConnect Status Codes](../wiseconnect-api-reference-guide-err-codes/wiseconnect-status-codes) for details.
  ******************************************************************************/
 sl_status_t sl_net_join_multicast_address(sl_net_interface_t interface, const sl_ip_address_t *ip_address);
 
@@ -485,7 +498,7 @@ sl_status_t sl_net_join_multicast_address(sl_net_interface_t interface, const sl
  * @param[in] ip_address
  *   Multicast IP address of type [sl_ip_address_t](../wiseconnect-api-reference-guide-nwk-mgmt/sl-ip-address-t).
  * @return
- *   sl_status_t. See [Status Codes](https://docs.silabs.com/gecko-platform/latest/platform-common/status) and [Additional Status Codes](../wiseconnect-api-reference-guide-err-codes/sl-additional-status-errors) for details.
+ *   sl_status_t. See [Status Codes](https://docs.silabs.com/gecko-platform/latest/platform-common/status) and [WiSeConnect Status Codes](../wiseconnect-api-reference-guide-err-codes/wiseconnect-status-codes) for details.
  ******************************************************************************/
 sl_status_t sl_net_leave_multicast_address(sl_net_interface_t interface, const sl_ip_address_t *ip_address);
 
