@@ -1575,7 +1575,7 @@ void sli_si91x_async_rx_event_handler_thread(const void *args)
   uint32_t wait_time = 0; // Variable to set wait time for event flag checking.
   const uint32_t event_mask =
     (NCP_HOST_WLAN_NOTIFICATION_EVENT | NCP_HOST_NETWORK_NOTIFICATION_EVENT | NCP_HOST_SOCKET_NOTIFICATION_EVENT
-     | NCP_HOST_SOCKET_DATA_NOTIFICATION_EVENT | NCP_HOST_BLE_NOTIFICATION_EVENT);
+     | NCP_HOST_SOCKET_DATA_NOTIFICATION_EVENT | NCP_HOST_BLE_NOTIFICATION_EVENT | NCP_HOST_THREAD_EXIT_EVENT);
 
   // Infinite loop to handle incoming events
   while (1) {
@@ -1583,6 +1583,10 @@ void sli_si91x_async_rx_event_handler_thread(const void *args)
     wait_time = (event == 0) ? osWaitForever : 0;
     event |= osEventFlagsWait(si91x_async_events, event_mask, osFlagsWaitAny, wait_time);
 
+    if ((event & NCP_HOST_THREAD_EXIT_EVENT) != 0) {
+      break;
+    }
+    
     // Check and process WLAN notification events
     if (event & NCP_HOST_WLAN_NOTIFICATION_EVENT) {
       sli_si91x_process_wifi_events();

@@ -47,9 +47,6 @@
 
 //! @cond Doxygen_Suppress
 
-//todo: check does he interfere with others?
-#define NCP_HOST_THREAD_EXIT_EVENT (1 << 15) // Indicates the thread exit event
-
 /// Low Transmit Power Threshold for Wi-Fi.
 #define SLI_SI91X_LOW_TRANSMIT_POWER_THRESHOLD 6
 

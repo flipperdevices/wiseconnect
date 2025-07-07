@@ -76,6 +76,9 @@
 // Indicates RX response received for BLE command type
 #define NCP_HOST_BT_RESPONSE_EVENT SL_SI91X_RESPONSE_FLAG(SLI_SI91X_BT_CMD)
 
+//todo: check does he interfere with others?
+#define NCP_HOST_THREAD_EXIT_EVENT (1 << 15) // Indicates the thread exit event
+
 // Triggered by IRQ to indicate something to read
 #define SL_SI91X_NCP_HOST_BUS_RX_EVENT           SL_SI91X_EXTRA_EVENT_FLAG(0)
 #define SL_SI91X_SOCKET_DATA_TX_PENDING_EVENT    SL_SI91X_EXTRA_EVENT_FLAG(1)

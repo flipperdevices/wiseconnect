@@ -165,6 +165,7 @@ osThreadId_t si91x_event_thread     = 0;
 osEventFlagsId_t si91x_events       = 0;
 osEventFlagsId_t si91x_async_events = 0;
 osMutexId_t malloc_free_mutex       = 0;
+extern osThreadId_t command_engine_ID;
 
 #ifdef SL_SI91X_SIDE_BAND_CRYPTO
 osMutexId_t side_band_crypto_mutex = 0;
@@ -1109,6 +1110,11 @@ sl_status_t sli_si91x_platform_deinit(void)
 
   // Terminate Command Engine thread
   sli_wifi_command_engine_deinit();
+  //Todo: Fix end proccess
+  if (command_engine_ID != NULL) {
+      osThreadTerminate(command_engine_ID);
+      command_engine_ID = NULL;
+  }
 
   // Terminate SI91X event handler thread
   if (NULL != si91x_event_thread) {

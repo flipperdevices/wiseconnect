@@ -43,7 +43,8 @@
 /******************************************************
  *               Variable Definitions
  ******************************************************/
-static osThreadId_t command_engine_ID = 0;
+//static osThreadId_t command_engine_ID = 0;
+osThreadId_t command_engine_ID = NULL; // Initialize to NULL for thread ID
 
 /******************************************************
  *               Function Declarations
@@ -78,22 +79,22 @@ void sli_wifi_command_engine_init(void)
 
 void sli_wifi_command_engine_deinit(void)
 {
-  uint32_t events_received = 0;
+  //uint32_t events_received = 0;
   sli_wifi_event_handler_deinit();
 
   if (NULL != command_engine_ID) {
     // Signal the thread to terminate
     sli_wifi_command_engine_set_event(SLI_WLAN_TERMINATE_THREAD_EVENT);
 
-    // Wait for thread termination acknowledgment
-    events_received = sli_wifi_command_engine_wait_for_event(SLI_WLAN_TERMINATE_THREAD_ACK_EVENT, 5000);
-    if (0 == events_received) {
-      // Return timeout if acknowledgment is not received
-      //return SL_STATUS_TIMEOUT;
-      return;
-    }
+    // // Wait for thread termination acknowledgment
+    // events_received = sli_wifi_command_engine_wait_for_event(SLI_WLAN_TERMINATE_THREAD_ACK_EVENT, 5000);
+    // if (0 == events_received) {
+    //   // Return timeout if acknowledgment is not received
+    //   //return SL_STATUS_TIMEOUT;
+    //   return;
+    // }
 
-    command_engine_ID = NULL;
+    //command_engine_ID = NULL;
   }
 
   return;
@@ -117,11 +118,14 @@ void sli_wifi_command_engine(void *args)
       // Clear the termination event flag
       events_received &= ~SLI_WLAN_TERMINATE_THREAD_EVENT;
 
-      // Acknowledge the termination request
-      sli_wifi_command_engine_set_event(SLI_WLAN_TERMINATE_THREAD_ACK_EVENT);
+      //Todo off silabs exit thread
+      break;
 
-      // Terminate the current thread
-      osThreadTerminate(osThreadGetId());
+      // // Acknowledge the termination request
+      // sli_wifi_command_engine_set_event(SLI_WLAN_TERMINATE_THREAD_ACK_EVENT);
+
+      // // Terminate the current thread
+      // osThreadTerminate(osThreadGetId());
     }
 
     sli_wifi_handle_event(&events_received);
