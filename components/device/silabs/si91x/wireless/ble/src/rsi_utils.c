@@ -29,6 +29,9 @@
 /*
   Include files
  */
+#ifdef _GNU_SOURCE
+#undef _GNU_SOURCE
+#endif
 #define _GNU_SOURCE /* pull in string library() on Linux */
 #include "rsi_common.h"
 #include <string.h>
