@@ -13,7 +13,7 @@ The WiSeConnect 3 (versions 3.5.2 and later) SDK is the next-generation API for 
 
 ## Release Notes
 
-The release notes for this release are located at: [Wi-Fi 6 + BLE (WiSeConnect 3) SDK Version 3.5.2 (September 25, 2025) - Release Notes](https://docs.silabs.com/wiseconnect/3.5.2/sisdk-wifi-release-notes/).
+The release notes for this release are located at: [Wi-Fi 6 + BLE (WiSeConnect 3) SDK Version 3.5.2 (September 29, 2025) - Release Notes](https://docs.silabs.com/wiseconnect/3.5.2/sisdk-wifi-release-notes/).
 
 ## Licensing
 
