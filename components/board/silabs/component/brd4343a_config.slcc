@@ -19,6 +19,10 @@
       file_id: RTE_Device_917
     path: brd4343a/RTE_Device_917.h
   - override:
+      component: "%extension-wiseconnect3_sdk%board_configuration_headers"
+      file_id: sl_gpio_board
+    path: brd4343a/sl_gpio_board.h
+  - override:
       component: "%extension-wiseconnect3_sdk%sl_si91x_led_917"
       file_id: led_config
       instance: led0
@@ -28,6 +32,26 @@
       file_id: led_config
       instance: led1
     path: brd4343a/sl_si91x_led_init_led1_config.h
+  - override:
+      component: "%extension-wiseconnect3_sdk%sdc_instance"
+      file_id: sdc_config
+      instance: channel_1
+    path: common_config/sl_si91x_sdc_init_channel_1_config.h
+  - override:
+      component: "%extension-wiseconnect3_sdk%sdc_instance"
+      file_id: sdc_config
+      instance: channel_2
+    path: common_config/sl_si91x_sdc_init_channel_2_config.h
+  - override:
+      component: "%extension-wiseconnect3_sdk%sdc_instance"
+      file_id: sdc_config
+      instance: channel_3
+    path: common_config/sl_si91x_sdc_init_channel_3_config.h
+  - override:
+      component: "%extension-wiseconnect3_sdk%sdc_instance"
+      file_id: sdc_config
+      instance: channel_4
+    path: common_config/sl_si91x_sdc_init_channel_4_config.h       
   - override:
       component: "%extension-wiseconnect3_sdk%adc_instance"
       file_id: adc_config
