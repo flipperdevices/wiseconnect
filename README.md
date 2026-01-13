@@ -2,7 +2,7 @@
 
 ⚠️ <span style="color: red;"><b>**IMPORTANT NOTICE**</b></span> ⚠️
 
-For 4.0.0 and future releases, this repo will not contain/will not be updated with the latest release content. Users are requested to follow the following workflows.
+Starting with version 4.0.0 and all future releases, this repository will no longer be updated with the latest release content. Please follow the workflows below.
 
 </div>
 
