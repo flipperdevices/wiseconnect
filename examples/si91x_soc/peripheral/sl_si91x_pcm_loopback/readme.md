@@ -2,16 +2,22 @@
 
 ## Table of Contents
 
-- [Purpose/Scope](#purposescope)
-- [Overview](#overview)
-- [About Example Code](#about-example-code)
-- [Prerequisites/Setup Requirements](#prerequisitessetup-requirements)
-  - [Hardware Requirements](#hardware-requirements)
-  - [Software Requirements](#software-requirements)
-  - [Setup Diagram](#setup-diagram)
-- [Getting Started](#getting-started)
-- [Application Build Environment](#application-build-environment)
-- [Test the Application](#test-the-application)
+- [SL PCM LOOPBACK](#sl-pcm-loopback)
+  - [Table of Contents](#table-of-contents)
+  - [Purpose/Scope](#purposescope)
+  - [Overview](#overview)
+  - [About Example Code](#about-example-code)
+  - [Prerequisites/Setup Requirements](#prerequisitessetup-requirements)
+    - [Hardware Requirements](#hardware-requirements)
+    - [Software Requirements](#software-requirements)
+    - [Setup Diagram](#setup-diagram)
+  - [Getting Started](#getting-started)
+  - [Application Build Environment](#application-build-environment)
+    - [General Configuration](#general-configuration)
+    - [Using ULP\_PCM Instance](#using-ulp_pcm-instance)
+    - [Pin Configuration](#pin-configuration)
+    - [Pin Description](#pin-description)
+  - [Test the Application](#test-the-application)
 
 ## Purpose/Scope
 
@@ -20,7 +26,7 @@
 ## Overview
 
 - Supports programmable audio data resolutions of 16, 24, and 32 bits.
-- Supported audio sampling rates are 8, 11.025, 16, 22.05, snf 24 Khz.
+- Supported audio sampling rates are 8, 11.025, 16, 22.05, and 24 kHz.
 - Supports Master and Slave modes.
 - Full duplex communication with independent transmitter and receiver.
 - Programmable FIFO thresholds with a maximum FIFO depth of 8 and support for DMA.
@@ -76,20 +82,35 @@ For details on the project folder structure, see the [WiSeConnect Examples](http
 1. Configure UC from the slcp component.
 2. Open **sl_si91x_pcm_loopback.slcp** project file, select the **software component** tab, and search for **PCM** in the search bar.
 
-
 ### General Configuration
 
-Using the configuration wizard, configure parameters like:
+Using the configuration wizard, configure parameters as follows:
 
 - `SL_PCM0_RESOLUTION`: PCM resolution can be configured through this macro. Valid resolution values are 16, 24, and 32 bits.
-- `SL_PCM0_SAMPLING_RATE`: PCM sampling rate can be configured through this macro. Valid sampling rate values are 8kHz, 11.025, 16, 22.05, and 24 kHz.
+- `SL_PCM0_SAMPLING_RATE`: PCM sampling rate can be configured through this macro. Valid sampling rate values are 8 kHz, 11.025, 16, 22.05, and 24 kHz.
 
 Configuration files are generated in the **config** folder. If not changed, the code will run on default UC values.
 
-Configure the following macros in `pcm_loopback_example.c` file and update/modify them if required.
+Configure the following macros in [`pcm_loopback.c`](https://github.com/SiliconLabs/wiseconnect/blob/master/examples/si91x_soc/peripheral/sl_si91x_pcm_loopback/pcm_loopback.c) file and update/modify them if required.
 
   ```C
   #define PCM_LOOPBACK_BUFFER_SIZE 1024    ///< Transmit/Receive buffer size
+  ```
+
+- If the resolution is changed to 24-bit or 32-bit, update the typedef for `pcm_data_size_t` to `uint32_t` instead of `uint16_t` to accommodate the larger data size - 
+
+ ```C
+ typedef uint32_t pcm_data_size_t;
+ ```
+
+### Using ULP_PCM Instance
+
+To use the ULP_PCM instance instead of the default PCM0 instance:
+
+- Change the `PCM_INSTANCE` macro value to `ULP_PCM` in pcm_loopback_exmaple.c:
+
+  ```C
+  #define PCM_INSTANCE ULP_PCM
   ```
 
 ### Pin Configuration
@@ -111,6 +132,8 @@ Configure the following macros in `pcm_loopback_example.c` file and update/modif
   > - SiWx917: `RTE_Device_917.h` (path: /$project/config/RTE_Device_917.h)
   > - SiWx915: `RTE_Device_915.h` (path: /$project/config/RTE_Device_915.h)
 
+> **Note**: For recommended settings, see the [recommendations guide](https://docs.silabs.com/wiseconnect/latest/wiseconnect-developers-guide-prog-recommended-settings/).
+
 ## Test the Application
 
 Refer to the instructions [here](https://docs.silabs.com/wiseconnect/latest/wiseconnect-getting-started/) to:
@@ -119,7 +142,7 @@ Refer to the instructions [here](https://docs.silabs.com/wiseconnect/latest/wise
 2. The application transmits data and receives it in loopback mode.
 3. After successful program execution, the prints in the serial console look as shown below.
 
-   ![Output](resources/readme/loopback_output.png)
+   ![Figure: Output](resources/readme/loopback_output.png)
 
 > **Note:**
 >

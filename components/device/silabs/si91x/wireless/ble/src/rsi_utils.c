@@ -40,6 +40,9 @@
 #endif
 #define MAX_MAC_ADDRESS_STRING_LENGTH  17
 #define MAX_IPV4_ADDRESS_STRING_LENGTH 15
+
+char *strtok_r(char *, const char *, char **);
+
 /*
   Global defines
  */
