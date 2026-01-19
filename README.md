@@ -1,3 +1,29 @@
+<div align="center">
+
+⚠️ <span style="color: red;"><b>**IMPORTANT NOTICE**</b></span> ⚠️
+
+Starting with version 4.0.0 and all future releases, this repository will no longer be updated with the latest release content. Please follow the workflows below.
+
+</div>
+
+### Development Workflows
+
+To develop with the WiSeConnect SDK, follow one of the workflows below based on your preferred development environment:
+
+#### 1. **Simplicity Studio IDE**
+
+For a GUI development environment with integrated tools:
+
+- [Simplicity Studio 6 User Guide](https://docs.silabs.com/ssv6ug/latest/ssv6ug-overview/)
+
+#### 2. **Command Line Development**
+
+For advanced users who prefer command-line based workflows:
+
+- [Command Line Development Guide](https://docs.silabs.com/command-line-development/latest/ssv6-command-line-development/)
+
+<br>
+
 # WiSeConnect™ 3 SDK
 
 The Silicon Labs WiSeConnect™ software development kit (SDK) offers an application programming interface (API) for use with the SiWx91x™ chipset family for Wi-Fi and Bluetooth Low Energy (BLE) connectivity.
