@@ -50,8 +50,8 @@ An archive of all documents associated with the latest release of WiSeConnect™
 
 ### Software Reference
 
-  - See the [Getting Started](https://docs.silabs.com/wiseconnect/3.5.2/wiseconnect-getting-started) section to run your first example.
-  - See the [Examples](https://docs.silabs.com/wiseconnect/3.5.2/wiseconnect-examples) section to explore all the available examples.
+  - See the [Getting Started](https://docs.silabs.com/wiseconnect/latest/wiseconnect-getting-started) section to run your first example.
+  - See the [Examples](https://docs.silabs.com/wiseconnect/latest/wiseconnect-examples) section to explore all the available examples.
   - See our [Migration Guide](https://docs.silabs.com/wiseconnect/3.5.2/wiseconnect-developers-guide-migr-guides-overview/migrating-from-v3-5-1) for information on porting your WiSeConnect v3.5.1 application to WiSeConnect v3.5.2
   - [API Reference Guide](https://docs.silabs.com/wiseconnect/latest/wiseconnect-api-reference-guide-summary)
   - [SiWx917 Software Reference Manual](docs/software-reference/manuals/siwx91x-software-reference-manual.md)
