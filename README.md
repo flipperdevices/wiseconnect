@@ -28,7 +28,7 @@ For advanced users who prefer command-line based workflows:
 
 The Silicon Labs WiSeConnect™ software development kit (SDK) offers an application programming interface (API) for use with the SiWx91x™ chipset family for Wi-Fi and Bluetooth Low Energy (BLE) connectivity.
 
-The WiSeConnect (versions 3.5.2 and later) SDK is the next-generation API for Silicon Labs customers that replaces WiSeConnect 2 (versions earlier than 3.0.0) with modular design and organization of features into configurable components.
+The WiSeConnect SDK is the next-generation API for Silicon Labs customers providing modular design and organization of features into configurable components.
 
 - [Release Notes](#release-notes)
 - [Licensing](#licensing)
