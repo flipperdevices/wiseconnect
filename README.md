@@ -46,7 +46,7 @@ The release notes for this release are located at: [Wi-Fi 6 + BLE (WiSeConnect) 
 WiSeConnect SDK is covered by one of several different licenses. The default license is the [Master Software License Agreement](https://www.silabs.com/about-us/legal/master-software-license-agreement) (MSLA), which applies unless otherwise noted. See [here](license.md) for full details.
 
 ## Documentation
-An archive of all documents associated with the latest release of WiSeConnect™ SDK can be found in [Releases](https://github.com/SiliconLabs/wiseconnect/releases). The online WiSeConnect SDK documentation is available [here](https://docs.silabs.com/wiseconnect/3.5.2).
+An archive of all documents associated with the latest release of WiSeConnect™ SDK can be found in [Releases](https://github.com/SiliconLabs/wiseconnect/releases). The online WiSeConnect SDK documentation is available [here](https://docs.silabs.com/wiseconnect/latest/).
 
 ### Software Reference
 
