@@ -783,7 +783,7 @@ sl_status_t sl_si91x_driver_raw_send_command(uint8_t command,
   status = sl_si91x_allocate_data_buffer(&buffer,
                                          (void **)&packet,
                                          sizeof(sl_wifi_system_packet_t) + data_length,
-                                         SLI_WIFI_ALLOCATE_COMMAND_BUFFER_WAIT_TIME);
+                                         SLI_WIFI_ALLOCATE_RAW_BUFFER_WAIT_TIME);
   VERIFY_STATUS_AND_RETURN(status);
 
   // If the packet is not allocated successfully, return an allocation failed error
