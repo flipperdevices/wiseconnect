@@ -154,6 +154,10 @@
 #define SLI_WIFI_ALLOCATE_COMMAND_BUFFER_WAIT_TIME 1000 // 1 second to wait for a command buffer
 #endif
 
+#ifndef SLI_WIFI_ALLOCATE_RAW_BUFFER_WAIT_TIME
+#define SLI_WIFI_ALLOCATE_RAW_BUFFER_WAIT_TIME (200) // 200 ms to wait for a raw data buffer
+#endif
+
 //STM 32 Init Sequence
 #define SLI_SI91X_INIT_CMD 0x005c4a12
 
