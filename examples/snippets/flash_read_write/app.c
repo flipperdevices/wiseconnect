@@ -69,9 +69,8 @@ static void application_start(void *argument);
  *               Function Definitions
  ******************************************************/
 
-void app_init(const void *unused)
+void app_init(void)
 {
-  UNUSED_PARAMETER(unused);
   osThreadNew((osThreadFunc_t)application_start, NULL, &thread_attributes);
 }
 

@@ -291,7 +291,7 @@ static void i2c_receive_data(uint8_t *data, uint32_t data_length, uint16_t follo
 static void i2c_clock_init(I2C_TypeDef *i2c)
 {
   if ((uint32_t)i2c == I2C2_BASE) {
-#if defined(SLI_SI917) || defined(SLI_SI915)
+#ifdef SLI_SI917
     // Powering up the peripheral.
     RSI_PS_M4ssPeriPowerUp(M4SS_PWRGATE_ULP_EFUSE_PERI);
 #else
@@ -302,7 +302,7 @@ static void i2c_clock_init(I2C_TypeDef *i2c)
     RSI_CLK_I2CClkConfig(M4CLK, 1, I2C1_INSTAN);
   }
   if ((uint32_t)i2c == I2C2_BASE) {
-#if defined(SLI_SI917) || defined(SLI_SI915)
+#ifdef SLI_SI917
     // Powering up the peripheral.
     RSI_PS_M4ssPeriPowerUp(M4SS_PWRGATE_ULP_EFUSE_PERI);
 #else
