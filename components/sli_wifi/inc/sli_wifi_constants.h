@@ -36,6 +36,9 @@
 #ifndef SLI_WIFI_ALLOCATE_COMMAND_BUFFER_WAIT_TIME
 #define SLI_WIFI_ALLOCATE_COMMAND_BUFFER_WAIT_TIME 1000 // 1 second to wait for a command buffer
 #endif
+#ifndef SLI_WIFI_ALLOCATE_RAW_BUFFER_WAIT_TIME
+#define SLI_WIFI_ALLOCATE_RAW_BUFFER_WAIT_TIME (200) // 200 ms to wait for a raw data buffer
+#endif
 #define SLI_WLAN_MGMT_Q 4
 #define SLI_BT_Q        2
 
