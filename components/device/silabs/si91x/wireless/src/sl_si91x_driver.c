@@ -771,7 +771,7 @@ sl_status_t sl_si91x_driver_raw_send_command(uint8_t command,
   // Allocate a buffer for the command with appropriate size
   status = sli_buffer_manager_allocate_buffer(SLI_BUFFER_MANAGER_CE_DATA_POOL,
                                               SLI_BUFFER_MANAGER_ALLOCATION_TYPE_DEDICATED,
-                                              SLI_WIFI_ALLOCATE_COMMAND_BUFFER_WAIT_TIME,
+                                              SLI_WIFI_ALLOCATE_RAW_BUFFER_WAIT_TIME,
                                               (sli_buffer_t)&packet);
   VERIFY_STATUS_AND_RETURN(status);
 
