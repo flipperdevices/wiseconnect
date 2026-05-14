@@ -165,9 +165,26 @@ typedef struct {
 
 } sli_si91x_mqtt_client_command_request_t;
 
+// Structure for the first chunk or single MQTT message from firmware
 typedef struct SL_ATTRIBUTE_PACKED {
+  // MQTT flags containing retained status (bit 0), QoS level (bits 1-2), duplicate flag (bit 3), and more data indicator (bit 4)
   uint16_t mqtt_flags;
+  // Length of payload in this chunk
   uint16_t current_chunk_length;
+  // Length of topic string (only present in first chunk)
   uint16_t topic_length;
+  // Total payload length across all chunks (only present in first chunk)
+  uint32_t total_length;
+  // Flexible array member containing topic followed by payload chunk
   uint8_t data[];
 } sli_si91x_mqtt_client_received_message_t;
+
+// Structure for subsequent chunks (2nd onwards) of a fragmented MQTT message
+typedef struct SL_ATTRIBUTE_PACKED {
+  // MQTT flags containing retained status (bit 0), QoS level (bits 1-2), duplicate flag (bit 3), and more data indicator (bit 4)
+  uint16_t mqtt_flags;
+  // Length of payload in this chunk
+  uint16_t current_chunk_length;
+  // Flexible array member containing payload chunk only (no topic in subsequent chunks)
+  uint8_t data[];
+} sli_si91x_mqtt_client_received_chunk_t;

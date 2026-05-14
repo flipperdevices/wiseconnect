@@ -2215,6 +2215,10 @@ int32_t rsi_ble_extended_connect_with_params(void *ble_extended_conn_params)
  *            !0  = failure \n
  * @section description
  * This function is used to read minimum and maximum transmit powers supported by the controller based on the country region.
+ * Limitation for ACx Boards:
+ * This API must be invoked only after BLE on-air activity has started (e.g. advertising or scanning).
+ * For dynamic TX power Control, first initiate BLE on-air activity, then call this API.
+ * After that, stop the ongoing on-air activity, update the TX power and finally restart the BLE on-air activity to apply the changes.
  */
 
 int32_t rsi_ble_read_transmit_power(void *resp)

@@ -194,7 +194,7 @@ static const sl_wifi_device_configuration_t station_init_configuration = {
                    .bt_feature_bit_map = 0,
                    .ext_tcp_ip_feature_bit_map =
                      (SL_SI91X_EXT_FEAT_HTTP_OTAF_SUPPORT | SL_SI91X_EXT_TCP_IP_SSL_16K_RECORD
-                      | SL_SI91X_CONFIG_FEAT_EXTENTION_VALID),
+                      | SL_SI91X_CONFIG_FEAT_EXTENSION_VALID),
                    .ble_feature_bit_map     = 0,
                    .ble_ext_feature_bit_map = 0,
                    .config_feature_bit_map  = 0 }

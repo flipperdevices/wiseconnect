@@ -466,7 +466,7 @@ SECTIONS
 	. = _last_psram_location;
 	_classified_bss_ = _last_ram_location;
 	
-	.classified_bss :
+	.classified_bss (NOLOAD) :
 	{
 		_classified_bss_section_start_ = .;
 		

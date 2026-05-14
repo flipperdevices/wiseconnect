@@ -239,6 +239,7 @@ typedef struct {
   uint8_t network_type;  ///< Network type of the AP
   uint8_t ssid[34];      ///< SSID of the AP
   uint8_t bssid[6];      ///< BSSID of the AP
+  uint16_t seen_count;   ///< Number of times the same AP was observed in the received frames
 } sl_wifi_extended_scan_result_t;
 
 /// Extended Wi-Fi scan result parameters
@@ -321,7 +322,11 @@ typedef struct {
     trigger_level_change; ///< RSSI delta change threshold to trigger background scan for roaming. If the current RSSI value drops by this delta amount from the previous measurement, a background scan is triggered to find better APs for potential roaming.
   uint16_t active_channel_time;  ///< Time spent on each channel during active scan (milliseconds)
   uint16_t passive_channel_time; ///< Time spent on each channel during passive scan (milliseconds)
-  uint8_t enable_instant_scan;   ///< Flag to start advanced scan immediately
+  union {
+    uint8_t enable_instant_scan; ///< Flag to start advanced scan immediately
+    uint8_t
+      advanced_scan_bitmap; ///< Bitmap of advanced scan flags: BIT(0) - Enable Instant Scan, BIT(6) - Enable Non-periodic Scan, BIT(7) - Enable Extended Scan Results
+  };
   uint8_t
     enable_multi_probe; ///< Flag to send multiple probes to AP. If the value is set to 1, a probe request would be sent to all access points in addition to the connected SSID.
 } sl_wifi_advanced_scan_configuration_t;

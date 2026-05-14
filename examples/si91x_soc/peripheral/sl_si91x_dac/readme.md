@@ -131,8 +131,8 @@ Refer to the instructions [here](https://docs.silabs.com/wiseconnect/latest/wise
        ![Figure: dac_fifo_analyzer_output](resources/readme/dac_fifo_analyzer_output.png)
 
 > **Note:**
-> - In the [`dac_example.c`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.1-content-for-docs/examples/si91x_soc/peripheral/sl_si91x_dac/dac_example.c) file, locate the 'STATIC_MODE' macro. If the DAC operation mode is set to Static, make sure to set the value to '1' for this macro. If the FIFO mode is selected, substitute '0' for this macro.
-> - BUFFER_SIZE should be '1' for DAC static mode in [`dac_example.c`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.1-content-for-docs/examples/si91x_soc/peripheral/sl_si91x_dac/dac_example.c).
+> - In the [`dac_example.c`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.2-content-for-docs/examples/si91x_soc/peripheral/sl_si91x_dac/dac_example.c) file, locate the 'STATIC_MODE' macro. If the DAC operation mode is set to Static, make sure to set the value to '1' for this macro. If the FIFO mode is selected, substitute '0' for this macro.
+> - BUFFER_SIZE should be '1' for DAC static mode in [`dac_example.c`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.2-content-for-docs/examples/si91x_soc/peripheral/sl_si91x_dac/dac_example.c).
 > - Use following formula to find equivalent output analog voltage of DAC
 >
 >         DAC_output = ((input sample/(2^10)) * Vref Voltage);

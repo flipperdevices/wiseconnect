@@ -114,7 +114,7 @@ Refer to the instructions [here](https://docs.silabs.com/wiseconnect/latest/wise
 
 To esstablish the TCP Server with firmware file on remote PC, follow the steps below:
 
- 1. Copy the TCP server application [firmware_update_tcp_server_9117.c](https://github.com/SiliconLabs/wiseconnect-wifi-bt-sdk/tree/v4.0.1-content-for-docs/examples/featured/firmware_update/firmware_update_tcp_server_9117.c) provided with the application source to a Linux PC connected to the Wi-Fi access point.
+ 1. Copy the TCP server application [firmware_update_tcp_server_9117.c](https://github.com/SiliconLabs/wiseconnect-wifi-bt-sdk/tree/v4.0.2-content-for-docs/examples/featured/firmware_update/firmware_update_tcp_server_9117.c) provided with the application source to a Linux PC connected to the Wi-Fi access point.
   2. Compile the application.
 
   > `user@linux:~$ gcc firmware_update_tcp_server.c` -o ota_server.bin

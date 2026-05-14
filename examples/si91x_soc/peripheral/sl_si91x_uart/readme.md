@@ -35,7 +35,7 @@
 
 ## About Example Code
 
-- [`uart_example.c`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.1-content-for-docs/examples/si91x_soc/peripheral/sl_si91x_uart/uart_example.c) - This example code demonstrates how to configure the UART to send and receive data.
+- [`uart_example.c`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.2-content-for-docs/examples/si91x_soc/peripheral/sl_si91x_uart/uart_example.c) - This example code demonstrates how to configure the UART to send and receive data.
 - In this example, first UART gets initialized if it is not initialized already with clock and DMA configurations if DMA is enabled using [sl_si91x_usart_init](https://docs.silabs.com/wiseconnect/latest/wiseconnect-api-reference-guide-si91x-peripherals/usart#sl-si91x-usart-init).  
 **Note:** If the UART/USART instance is already selected for debug output logs, initialization will return `SL_STATUS_NOT_AVAILABLE`.
 - After UART initialization, the UART is configured with the default configurations from UC along with the UART transmit and receive lines using [sl_si91x_usart_set_configuration](https://docs.silabs.com/wiseconnect/latest/wiseconnect-api-reference-guide-si91x-peripherals/usart#sl-si91x-usart-set-configuration).

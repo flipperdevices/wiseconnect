@@ -173,8 +173,31 @@ void print_char_buffer(char *buffer, uint32_t buffer_length)
 void mqtt_client_error_event_handler(void *client, sl_mqtt_client_error_status_t *error)
 {
   UNUSED_PARAMETER(client);
-  LOG_PRINT("Terminating program, Error: %d\r\n", *error);
-  mqtt_client_cleanup();
+
+  switch (*error) {
+    case SL_MQTT_CLIENT_RECEIVE_FAILED:
+      LOG_PRINT("MQTT Error: Message receive failed.\r\n");
+      break;
+
+    case SL_MQTT_CLIENT_RECEIVE_PAYLOAD_TOO_LARGE:
+      LOG_PRINT("MQTT Error: Received payload exceeds max size (%u bytes). "
+                "Increase SL_MQTT_CLIENT_MAX_RX_PAYLOAD_SIZE.\r\n",
+                SL_MQTT_CLIENT_MAX_RX_PAYLOAD_SIZE);
+      break;
+
+    case SL_MQTT_CLIENT_RECEIVE_MEMORY_ALLOCATION_FAILED:
+      LOG_PRINT("MQTT Error: Failed to allocate memory for message reassembly.\r\n");
+      break;
+
+    case SL_MQTT_CLIENT_RECEIVE_DATA_CORRUPTED:
+      LOG_PRINT("MQTT Error: Data corruption detected during message reassembly.\r\n");
+      break;
+
+    default:
+      LOG_PRINT("Terminating program, Error: %d\r\n", *error);
+      mqtt_client_cleanup();
+      break;
+  }
 }
 
 void mqtt_client_event_handler(void *client, sl_mqtt_client_event_t event, void *event_data, void *context)

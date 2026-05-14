@@ -99,7 +99,7 @@ For details on the project folder structure, see the [WiSeConnect Examples](http
 
 The BJT temperature sensor requires specific configuration of the ADC and OPAMP subsystems. The following list describes the key parameters and their purposes:
 
-**Configure the following parameters in [`sl_si91x_bjt_temperature_sensor.c`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.1-content-for-docs/components/device/silabs/si91x/mcu/drivers/unified_api/src/sl_si91x_bjt_temperature_sensor.c) file:**
+**Configure the following parameters in [`sl_si91x_bjt_temperature_sensor.c`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.2-content-for-docs/components/device/silabs/si91x/mcu/drivers/unified_api/src/sl_si91x_bjt_temperature_sensor.c) file:**
 
 ```c
 #define CHANNEL_NUMBER             0       // ADC channel number

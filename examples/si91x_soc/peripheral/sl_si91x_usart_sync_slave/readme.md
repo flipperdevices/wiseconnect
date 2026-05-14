@@ -39,7 +39,7 @@ This application demonstrates how to configure the Universal Synchronous/Asynchr
 
 ## About Example Code
 
-- [`usart_sync_example.c`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.1-content-for-docs/examples/si91x_soc/peripheral/sl_si91x_usart_sync_slave/usart_sync_example.c) – Demonstrates configuring the USART to send and receive data in synchronous slave mode.
+- [`usart_sync_example.c`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.2-content-for-docs/examples/si91x_soc/peripheral/sl_si91x_usart_sync_slave/usart_sync_example.c) – Demonstrates configuring the USART to send and receive data in synchronous slave mode.
 - In this example, first USART gets initialized if not already initialized with clock and DMA configurations using [`sl_si91x_usart_init`](https://docs.silabs.com/wiseconnect/latest/wiseconnect-api-reference-guide-si91x-peripherals/usart#sl-si91x-usart-init).  
 **Note:** If the UART/USART instance is already selected for debug output logs, initialization returns `SL_STATUS_NOT_AVAILABLE` (informational; the example continues using the existing instance).
 - After initialization, USART configured (clock, pins, synchronous mode, etc.) using [`sl_si91x_usart_set_configuration()`](https://docs.silabs.com/wiseconnect/latest/wiseconnect-api-reference-guide-si91x-peripherals/usart#sl-si91x-usart-set-configuration) either from UC parameters or from user-defined macros.
@@ -49,7 +49,7 @@ This application demonstrates how to configure the Universal Synchronous/Asynchr
 
 ### Configuration Macros
 
-The header file [`usart_sync_example.h`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.1-content-for-docs/examples/si91x_soc/peripheral/sl_si91x_usart_sync_slave/usart_sync_example.h) exposes build-time macros:
+The header file [`usart_sync_example.h`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.2-content-for-docs/examples/si91x_soc/peripheral/sl_si91x_usart_sync_slave/usart_sync_example.h) exposes build-time macros:
 
 | Macro | Purpose | Effect if Disabled | Error Returned? |
 |-------|---------|--------------------|-----------------|
@@ -102,7 +102,11 @@ For details on the project folder structure, see the [WiSeConnect Examples](http
 
   ![Figure: Selecting UC](resources/uc_screen/usart_uc.png)
 
+- By default, `USART0 SYNC Mode` is disabled in UC. Enable it for synchronous communication.
+- By default, the CLK pin is not configured in UC. Select the required CLK pin.
 - Connect the boards: master clock (GPIO_8 or GPIO_25) ↔ slave clock, master TX (GPIO_30) → slave RX (GPIO_29), slave TX (GPIO_30) → master RX (GPIO_29). (Clock direction is from master to slave.)
+
+> **Note:** **USART0 SCLK fractional divider mode** in the USART Universal Configurator (Fractional vs Clock swallow) has **no effect** when the peripheral runs in **synchronous** mode; it applies to asynchronous baud-clock generation. For this example, timing is governed by synchronous operation and the **CLK** supplied by the master, not that UC field.
 
 ### Pin Configuration of the WPK[BRD4002A] Base Board, and with BRD4338A radio board
 

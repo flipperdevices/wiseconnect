@@ -36,6 +36,25 @@
 #include "sl_wifi_device.h"
 #include "sl_si91x_socket_utility.h"
 
+/******************************************************
+ *               Configurable Macros
+ ******************************************************/
+
+/**
+ * @brief Maximum allowed MQTT RX payload size for large message reassembly.
+ * @note This defines the maximum payload size that the SDK will accept for reassembly.
+ *       - Default: 8192 bytes (8 KB)
+ *       - You override this value by defining SL_MQTT_CLIENT_MAX_RX_PAYLOAD_SIZE
+ *         in your application or project configuration before including MQTT headers.
+ *       - Set to 0 to disable large payload reassembly. Fragmented messages will be discarded,
+ *         but small messages that fit within a single chunk will still be received normally.
+ *       - Memory is allocated dynamically (using malloc) only when large messages are received
+ *          and is freed immediately after the message is delivered to the application.
+ */
+#ifndef SL_MQTT_CLIENT_MAX_RX_PAYLOAD_SIZE
+#define SL_MQTT_CLIENT_MAX_RX_PAYLOAD_SIZE 8192
+#endif
+
 typedef enum MQTTStatus {
   MQTTSuccess = 0,     /**< Function completed successfully. */
   MQTTBadParameter,    /**< At least one parameter was invalid. */
@@ -128,7 +147,11 @@ typedef enum {
   SL_MQTT_CLIENT_SUBSCRIBE_FAILED,    ///< Error status indicating that the MQTT client failed to subscribe to a topic.
   SL_MQTT_CLIENT_UNSUBSCRIBED_FAILED, ///< Error status indicating that the MQTT client failed to unsubscribe from a topic.
   SL_MQTT_CLIENT_DISCONNECT_FAILED, ///< Error status indicating that the MQTT client failed to disconnect from the broker.
-  SL_MQTT_CLIENT_UNKNOWN_ERROR      ///< Error status indicating that an unknown error occurred in the MQTT client.
+  SL_MQTT_CLIENT_RECEIVE_FAILED,    ///< Error status indicating that the MQTT message receive operation failed.
+  SL_MQTT_CLIENT_RECEIVE_PAYLOAD_TOO_LARGE, ///< Error status indicating that the received payload exceeds SL_MQTT_CLIENT_MAX_RX_PAYLOAD_SIZE.
+  SL_MQTT_CLIENT_RECEIVE_MEMORY_ALLOCATION_FAILED, ///< Error status indicating that memory allocation failed during message reassembly.
+  SL_MQTT_CLIENT_RECEIVE_DATA_CORRUPTED, ///< Error status indicating data corruption during message reassembly (e.g., buffer overflow, invalid lengths).
+  SL_MQTT_CLIENT_UNKNOWN_ERROR ///< Error status indicating that an unknown error occurred in the MQTT client.
 } sl_mqtt_client_error_status_t;
 
 /**
@@ -210,8 +233,9 @@ typedef struct {
   uint8_t *topic;             ///< Pointer to the topic name. Must not be NULL.
   uint16_t
     topic_length; ///< Length of the topic name. It should not exceed 202 bytes that includes NULL termination character.
-  uint8_t *content;        ///< Pointer to the message content. Must not be NULL.
-  uint32_t content_length; ///< Length of the message content. It should not exceed 1024 bytes.
+  uint8_t *content; ///< Pointer to the message content. Must not be NULL.
+  uint32_t
+    content_length; ///< Length of the message content. For RX, the SDK automatically reassembles fragmented payloads.
 } sl_mqtt_client_message_t;
 
 /**

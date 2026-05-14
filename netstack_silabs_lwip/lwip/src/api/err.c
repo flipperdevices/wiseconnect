@@ -65,6 +65,7 @@ static const int err_to_errno_table[] = {
   EIO            /* ERR_ARG        -16     Illegal argument.        */
 };
 
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 int
 err_to_errno(err_t err)
 {

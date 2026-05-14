@@ -235,7 +235,7 @@ Follow the steps below for successful execution of the application:
 > Multiple MQTT client instances can be created.
 > If mosquitto isn't allowing external connections to the broker, add the following lines in **mosquitto.conf** file:
 
-  ```c
+  ```conf
   listener 1883
   allow_anonymous true
   ```
@@ -243,10 +243,10 @@ Follow the steps below for successful execution of the application:
 
 >For SSL support add this configuration in mosquitto.conf
 
-  ```c
+  ```conf
    listener 8883
    allow_anonymous true
-#Paths to SSL / TLS certificates
+   # Paths to SSL / TLS certificates
    cafile   resources/certificates/ca-cert.pem
    certfile resources/certificates/server-cert.pem
    keyfile  resources/certificates/server-key.pem

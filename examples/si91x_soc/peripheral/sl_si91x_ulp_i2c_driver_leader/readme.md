@@ -112,7 +112,7 @@ For details on the project folder structure, see the [WiSeConnect Examples](http
 - If project built without selecting configurations, it will take default values from UC.
 - Configure mode, operating-mode and transfer-type of I2C instance using respective instance UC.
 - Change 'Operating Mode' as per bus-speed requirement.
-- After above UC configurations also configure following macros in [`i2c_leader_example.c`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.1-content-for-docs/examples/si91x_soc/peripheral/sl_si91x_i2c_driver_leader/i2c_leader_example.c) file and update/modify following macros if required.
+- After above UC configurations also configure following macros in [`i2c_leader_example.c`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.2-content-for-docs/examples/si91x_soc/peripheral/sl_si91x_i2c_driver_leader/i2c_leader_example.c) file and update/modify following macros if required.
 
   ```C
     #define FOLLOWER_I2C_ADDR        // Update I2C follower address

@@ -50,7 +50,7 @@ The following configurations are used in this example:
 
 ## About Example Code
 
- - [`analog_comparator_example.c`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.1-content-for-docs/examples/si91x_soc/peripheral/sl_si91x_analog_comparator/analog_comparator_example.c) - This example file demonstrates how to use analog comparator to compare external pin inputs, external pin input to internal voltages, and internal voltages.
+ - [`analog_comparator_example.c`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.2-content-for-docs/examples/si91x_soc/peripheral/sl_si91x_analog_comparator/analog_comparator_example.c) - This example file demonstrates how to use analog comparator to compare external pin inputs, external pin input to internal voltages, and internal voltages.
 - In this example, the first analog comparator is initialized by enabling clocks through [sl_si91x_analog_comparator_init](https://docs.silabs.com/wiseconnect/latest/wiseconnect-api-reference-guide-si91x-peripherals/analogcomp#sl-si91x-analog-comparator-init) API.
 - Sets non-inverting, inverting inputs, hysterisis value and filter for the comparator used through [sl_si91x_analog_comparator_set_configurations](https://docs.silabs.com/wiseconnect/latest/wiseconnect-api-reference-guide-si91x-peripherals/analogcomp#sl-si91x-analog-comparator-set-configurations) API (inputs are configured as per the usecase macros enabled).
 - Registers callback for comparator interrupts and enable its interrupts through [sl_si91x_analog_comparator_register_callback](https://docs.silabs.com/wiseconnect/latest/wiseconnect-api-reference-guide-si91x-peripherals/analogcomp#sl-si91x-analog-comparator-register-callback) API:
@@ -183,10 +183,10 @@ For details on the project folder structure, see the [WiSeConnect Examples](http
   will produce a fixed output of 1.2v only
   
     // Change below macro value to change resistor bank output voltage, 
-    // for possible values see [sl_analog_comparator_threshold_values_t](https://docs.silabs.com/wiseconnect/latest/wiseconnect-api-reference-guide-si91x-peripherals/analogcomp#sl-analog-comparator-threshold-values-t) enum present in [`sl_si91x_analog_comparator.h`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.1-content-for-docs/components/device/silabs/si91x/mcu/drivers/unified_api/inc/sl_si91x_analog_comparator.h) file.
+    // for possible values see [sl_analog_comparator_threshold_values_t](https://docs.silabs.com/wiseconnect/latest/wiseconnect-api-reference-guide-si91x-peripherals/analogcomp#sl-analog-comparator-threshold-values-t) enum present in [`sl_si91x_analog_comparator.h`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.2-content-for-docs/components/device/silabs/si91x/mcu/drivers/unified_api/inc/sl_si91x_analog_comparator.h) file.
     #define THRESHOLD_VALUE 
     // Change below macro value to change reference scaler output voltage, 
-    // for possible values see [sl_analog_comparator_scale_factor_values_t](https://docs.silabs.com/wiseconnect/latest/wiseconnect-api-reference-guide-si91x-peripherals/analogcomp#sl-analog-comparator-scale-factor-values-t) present in [`sl_si91x_analog_comparator.h`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.1-content-for-docs/components/device/silabs/si91x/mcu/drivers/unified_api/inc/sl_si91x_analog_comparator.h) file. 
+    // for possible values see [sl_analog_comparator_scale_factor_values_t](https://docs.silabs.com/wiseconnect/latest/wiseconnect-api-reference-guide-si91x-peripherals/analogcomp#sl-analog-comparator-scale-factor-values-t) present in [`sl_si91x_analog_comparator.h`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.2-content-for-docs/components/device/silabs/si91x/mcu/drivers/unified_api/inc/sl_si91x_analog_comparator.h) file. 
     #define SCALE_FACT_VAL
     
   

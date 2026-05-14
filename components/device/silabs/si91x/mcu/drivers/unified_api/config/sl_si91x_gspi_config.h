@@ -53,7 +53,7 @@ extern "C" {
 // <i> Selection of the GSPI Mode.
 #define SL_GSPI_CLOCK_MODE SL_GSPI_MODE_0
 
-// <o SL_GSPI_BITRATE> Bit Rate (Bits/Second) <1-116000000>
+// <o SL_GSPI_BITRATE> Bit Rate (Bits/Second) <2000-116000000>
 // <i> Default: 10000000
 #define SL_GSPI_BITRATE 10000000
 

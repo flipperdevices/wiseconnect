@@ -446,6 +446,7 @@ done_socket(struct lwip_sock *sock)
 #endif /* LWIP_NETCONN_FULLDUPLEX */
 
 /* Translate a socket 'int' into a pointer (only fails if the index is invalid) */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 static struct lwip_sock *
 tryget_socket_unconn_nouse(int fd)
 {
@@ -464,6 +465,7 @@ lwip_socket_dbg_get_socket(int fd)
 }
 
 /* Translate a socket 'int' into a pointer (only fails if the index is invalid) */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 static struct lwip_sock *
 tryget_socket_unconn(int fd)
 {
@@ -477,6 +479,7 @@ tryget_socket_unconn(int fd)
 }
 
 /* Like tryget_socket_unconn(), but called under SYS_ARCH_PROTECT lock. */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 static struct lwip_sock *
 tryget_socket_unconn_locked(int fd)
 {
@@ -495,6 +498,7 @@ tryget_socket_unconn_locked(int fd)
  * @param fd externally used socket index
  * @return struct lwip_sock for the socket or NULL if not found
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 static struct lwip_sock *
 tryget_socket(int fd)
 {
@@ -514,6 +518,7 @@ tryget_socket(int fd)
  * @param fd externally used socket index
  * @return struct lwip_sock for the socket or NULL if not found
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 static struct lwip_sock *
 get_socket(int fd)
 {
@@ -956,6 +961,7 @@ lwip_listen(int s, int backlog)
  * until "len" bytes are received or we're otherwise done.
  * Keeps sock->lastdata for peeking or partly copying.
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 static ssize_t
 lwip_recv_tcp(struct lwip_sock *sock, void *mem, size_t len, int flags)
 {
@@ -1092,6 +1098,7 @@ lwip_sock_make_addr(struct netconn *conn, ip_addr_t *fromaddr, u16_t port,
 
 #if LWIP_TCP
 /* Helper function to get a tcp socket's remote address info */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 static int
 lwip_recv_tcp_from(struct lwip_sock *sock, struct sockaddr *from, socklen_t *fromlen, const char *dbg_fn, int dbg_s, ssize_t dbg_ret)
 {
@@ -1124,6 +1131,7 @@ lwip_recv_tcp_from(struct lwip_sock *sock, struct sockaddr *from, socklen_t *fro
 /* Helper function to receive a netbuf from a udp or raw netconn.
  * Keeps sock->lastdata for peeking.
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 static err_t
 lwip_recvfrom_udp_raw(struct lwip_sock *sock, int flags, struct msghdr *msg, u16_t *datagram_len, int dbg_s)
 {
@@ -1235,6 +1243,7 @@ lwip_recvfrom_udp_raw(struct lwip_sock *sock, int flags, struct msghdr *msg, u16
   return ERR_OK;
 }
 
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 ssize_t
 lwip_recvfrom(int s, void *mem, size_t len, int flags,
               struct sockaddr *from, socklen_t *fromlen)
@@ -1311,12 +1320,14 @@ lwip_readv(int s, const struct iovec *iov, int iovcnt)
   return lwip_recvmsg(s, &msg, 0);
 }
 
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 ssize_t
 lwip_recv(int s, void *mem, size_t len, int flags)
 {
   return lwip_recvfrom(s, mem, len, flags, NULL, NULL);
 }
 
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 ssize_t
 lwip_recvmsg(int s, struct msghdr *message, int flags)
 {
@@ -1418,6 +1429,7 @@ lwip_recvmsg(int s, struct msghdr *message, int flags)
 #endif /* LWIP_UDP || LWIP_RAW */
 }
 
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 ssize_t
 lwip_send(int s, const void *data, size_t size, int flags)
 {
@@ -1458,6 +1470,7 @@ lwip_send(int s, const void *data, size_t size, int flags)
   return (err == ERR_OK ? (ssize_t)written : -1);
 }
 
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 ssize_t
 lwip_sendmsg(int s, const struct msghdr *msg, int flags)
 {
@@ -1621,6 +1634,7 @@ sendmsg_emsgsize:
 #endif /* LWIP_UDP || LWIP_RAW */
 }
 
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 ssize_t
 lwip_sendto(int s, const void *data, size_t size, int flags,
             const struct sockaddr *to, socklen_t tolen)
@@ -2000,6 +2014,7 @@ lwip_select_dec_sockets_used(int maxfdp, fd_set *used_sockets)
 #define lwip_select_dec_sockets_used(maxfdp1, used_sockets)
 #endif /* LWIP_NETCONN_FULLDUPLEX */
 
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 int
 lwip_select(int maxfdp1, fd_set *readset, fd_set *writeset, fd_set *exceptset,
             struct timeval *timeout)
@@ -2520,6 +2535,7 @@ lwip_poll_should_wake(const struct lwip_select_cb *scb, int fd, int has_recveven
  *   NETCONN_EVT_ERROR
  * This requirement will be asserted in select_check_waiters()
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 static void
 event_callback(struct netconn *conn, enum netconn_evt evt, u16_t len)
 {
@@ -2620,6 +2636,7 @@ event_callback(struct netconn *conn, enum netconn_evt evt, u16_t len)
  * select_cb_list during our UNPROTECT/PROTECT. We use a generational counter to
  * detect this change and restart the list walk. The list is expected to be small
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 static void select_check_waiters(int s, int has_recvevent, int has_sendevent, int has_errevent)
 {
   struct lwip_select_cb *scb;

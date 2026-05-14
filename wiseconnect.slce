@@ -1,7 +1,7 @@
 id: wiseconnect3_sdk
 label: Wiseconnect
 description: WiSeConnect extension for the Simplicity SDK (formerly Gecko SDK)
-version: 4.0.1
+version: 4.0.2
 component_path:
  - path: components/board/silabs/component
  - path: components/device/silabs/si91x/mcu
@@ -107,13 +107,13 @@ component_path:
  - path: netstack_silabs_lwip/component
 documentation:
  - docset: platform_siwx91x
-   version: 4.0.1
+   version: 4.0.2
  - docset: wifi
-   version: 4.0.1
+   version: 4.0.2
  - docset: platform_nwp_siwx91x
-   version: 4.0.1
+   version: 4.0.2
  - docset: bluetooth_le_siwx91x
-   version: 4.0.1
+   version: 4.0.2
  - docset: unknown
    version: 0.0.0
 upgrade_manifest:

@@ -172,6 +172,8 @@ uint32_t app_buff_index = 0;
 volatile uint8_t http_rsp_received = 0;
 volatile uint8_t end_of_file       = 0;
 sl_status_t callback_status        = SL_STATUS_OK;
+int32_t offset                     = 0;
+int32_t chunk_length               = 0;
 /******************************************************
  *               Function Declarations
  ******************************************************/
@@ -247,8 +249,9 @@ sl_status_t http_client_application(void)
   sl_http_client_configuration_t client_configuration = { 0 };
   sl_http_client_request_t client_request             = { 0 };
   int32_t total_put_data_len                          = sizeof(sl_index) - 1;
-  int32_t offset                                      = 0;
-  int32_t chunk_length                                = 0;
+
+  offset       = 0;
+  chunk_length = 0;
 
   //! Set HTTP Client credentials
   uint16_t username_length = strlen(HTTP_CLIENT_USERNAME);
@@ -346,6 +349,13 @@ sl_status_t http_client_application(void)
       } else {
         CLEAN_HTTP_CLIENT_IF_FAILED(status, &client_handle, HTTP_SYNC_RESPONSE);
       }
+    } else {
+      /* All chunks sent; wait for final PUT response (end_of_data) from firmware.
+       * That response triggers put_delete() in the callback. Proceeding to GET before
+       * this would send GET while NWP still has PUT client active (firmware status 0x15). */
+      http_rsp_received = 0;
+      status            = http_response_status(&http_rsp_received);
+      CLEAN_HTTP_CLIENT_IF_FAILED(status, &client_handle, HTTP_ASYNC_RESPONSE);
     }
   }
 
@@ -471,7 +481,8 @@ sl_status_t http_get_response_callback_handler(const sl_http_client_t *client,
       || (get_response->http_response_code >= 400 && get_response->http_response_code <= 599
           && get_response->http_response_code != 0)) {
     http_rsp_received = HTTP_FAILURE_RESPONSE;
-    callback_status   = SL_STATUS_FAIL;
+    /* Keep actual firmware status for diagnostics (e.g. 0x10015 = invalid state after PUT). */
+    callback_status = get_response->status;
     return get_response->status;
   }
 
@@ -544,6 +555,10 @@ sl_status_t http_response_status(volatile uint8_t *response)
 
 static void reset_http_handles(void)
 {
-  app_buff_index = 0;
-  end_of_file    = 0;
+  app_buff_index    = 0;
+  end_of_file       = 0;
+  http_rsp_received = 0;
+  callback_status   = SL_STATUS_OK;
+  offset            = 0;
+  chunk_length      = 0;
 }

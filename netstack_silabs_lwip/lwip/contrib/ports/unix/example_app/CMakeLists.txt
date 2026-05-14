@@ -3,6 +3,7 @@ include(${LWIP_DIR}/contrib/ports/CMakeCommon.cmake)
 set (LWIP_INCLUDE_DIRS
     "${LWIP_DIR}/src/include"
     "${LWIP_DIR}/contrib/"
+    "${LWIP_DIR}/contrib/ports/silabs"
     "${LWIP_DIR}/contrib/ports/unix/port/include"
     "${LWIP_DIR}/contrib/examples/example_app"
 )

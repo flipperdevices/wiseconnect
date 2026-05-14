@@ -256,6 +256,7 @@ lwip_standard_chksum(const void *dataptr, int len)
 #endif
 
 /** Parts of the pseudo checksum which are common to IPv4 and IPv6 */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 static u16_t
 inet_cksum_pseudo_base(struct pbuf *p, u8_t proto, u16_t proto_len, u32_t acc)
 {
@@ -306,6 +307,7 @@ inet_cksum_pseudo_base(struct pbuf *p, u8_t proto, u16_t proto_len, u32_t acc)
  * @param proto_len length of the ip data part (used for checksum of pseudo header)
  * @return checksum (as u16_t) to be saved directly in the protocol header
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 u16_t
 inet_chksum_pseudo(struct pbuf *p, u8_t proto, u16_t proto_len,
                    const ip4_addr_t *src, const ip4_addr_t *dest)
@@ -339,6 +341,7 @@ inet_chksum_pseudo(struct pbuf *p, u8_t proto, u16_t proto_len,
  * @param dest destination ipv6 address (used for checksum of pseudo header)
  * @return checksum (as u16_t) to be saved directly in the protocol header
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 u16_t
 ip6_chksum_pseudo(struct pbuf *p, u8_t proto, u16_t proto_len,
                   const ip6_addr_t *src, const ip6_addr_t *dest)
@@ -375,6 +378,7 @@ ip6_chksum_pseudo(struct pbuf *p, u8_t proto, u16_t proto_len,
  * @param proto_len length of the ip data part (used for checksum of pseudo header)
  * @return checksum (as u16_t) to be saved directly in the protocol header
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 u16_t
 ip_chksum_pseudo(struct pbuf *p, u8_t proto, u16_t proto_len,
                  const ip_addr_t *src, const ip_addr_t *dest)
@@ -395,6 +399,7 @@ ip_chksum_pseudo(struct pbuf *p, u8_t proto, u16_t proto_len,
 }
 
 /** Parts of the pseudo checksum which are common to IPv4 and IPv6 */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 static u16_t
 inet_cksum_pseudo_partial_base(struct pbuf *p, u8_t proto, u16_t proto_len,
                                u16_t chksum_len, u32_t acc)
@@ -452,6 +457,7 @@ inet_cksum_pseudo_partial_base(struct pbuf *p, u8_t proto, u16_t proto_len,
  * @param proto_len length of the ip data part (used for checksum of pseudo header)
  * @return checksum (as u16_t) to be saved directly in the protocol header
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 u16_t
 inet_chksum_pseudo_partial(struct pbuf *p, u8_t proto, u16_t proto_len,
                            u16_t chksum_len, const ip4_addr_t *src, const ip4_addr_t *dest)
@@ -487,6 +493,7 @@ inet_chksum_pseudo_partial(struct pbuf *p, u8_t proto, u16_t proto_len,
  * @param dest destination ipv6 address (used for checksum of pseudo header)
  * @return checksum (as u16_t) to be saved directly in the protocol header
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 u16_t
 ip6_chksum_pseudo_partial(struct pbuf *p, u8_t proto, u16_t proto_len,
                           u16_t chksum_len, const ip6_addr_t *src, const ip6_addr_t *dest)
@@ -522,6 +529,7 @@ ip6_chksum_pseudo_partial(struct pbuf *p, u8_t proto, u16_t proto_len,
  * @param proto_len length of the ip data part (used for checksum of pseudo header)
  * @return checksum (as u16_t) to be saved directly in the protocol header
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 u16_t
 ip_chksum_pseudo_partial(struct pbuf *p, u8_t proto, u16_t proto_len,
                          u16_t chksum_len, const ip_addr_t *src, const ip_addr_t *dest)
@@ -551,6 +559,7 @@ ip_chksum_pseudo_partial(struct pbuf *p, u8_t proto, u16_t proto_len,
  * @return checksum (as u16_t) to be saved directly in the protocol header
  */
 
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 u16_t
 inet_chksum(const void *dataptr, u16_t len)
 {
@@ -564,6 +573,7 @@ inet_chksum(const void *dataptr, u16_t len)
  * @param p pbuf chain over that the checksum should be calculated
  * @return checksum (as u16_t) to be saved directly in the protocol header
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 u16_t
 inet_chksum_pbuf(struct pbuf *p)
 {

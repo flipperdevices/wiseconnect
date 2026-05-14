@@ -46,7 +46,7 @@
 ## About Example Code
 
 - This example demonstrates the Config Timer as a Input Capture and Output Compare. Output Compare Values are updated using DMA.
-- Configure the following macros in `config_timer_icu_ocu_example.h`[(https://github.com/SiliconLabs/wiseconnect/blob/v4.0.1-content-for-docs/examples/si91x_soc/peripheral/sl_si91x_ct_icu_ocu_with_dma/config_timer_icu_ocu_example.h)]to change the application use case.Two macros are present: CT_COUNTER_INPUT_EVENT_USECASE and CT_COUNTER_DMA_MODE_USECASE. By default, the input capture use case is enabled.
+- Configure the following macros in `config_timer_icu_ocu_example.h`[(https://github.com/SiliconLabs/wiseconnect/blob/v4.0.2-content-for-docs/examples/si91x_soc/peripheral/sl_si91x_ct_icu_ocu_with_dma/config_timer_icu_ocu_example.h)]to change the application use case.Two macros are present: CT_COUNTER_INPUT_EVENT_USECASE and CT_COUNTER_DMA_MODE_USECASE. By default, the input capture use case is enabled.
 - Enable only one of the following use case macros at a time.
   - If **CT_COUNTER_INPUT_EVENT_USECASE** is enabled:
     - The Config Timer is initialized using [sl_si91x_config_timer_init()](https://docs.silabs.com/wiseconnect/latest/wiseconnect-api-reference-guide-si91x-peripherals/config-timer#sl-si91x-config-timer-init) API.
@@ -103,14 +103,14 @@ For details on the project folder structure, see the [WiSeConnect Examples](http
 
 ## Application Build Environment
 
-- Configure the following macros in 'config_timer_icu_ocu_example.h'[(https://github.com/SiliconLabs/wiseconnect/blob/v4.0.1-content-for-docs/examples/si91x_soc/peripheral/sl_si91x_ct_icu_ocu_with_dma/config_timer_icu_ocu_example.h)]file to change the application use case (enable exactly only one at a time).
+- Configure the following macros in 'config_timer_icu_ocu_example.h'[(https://github.com/SiliconLabs/wiseconnect/blob/v4.0.2-content-for-docs/examples/si91x_soc/peripheral/sl_si91x_ct_icu_ocu_with_dma/config_timer_icu_ocu_example.h)]file to change the application use case (enable exactly only one at a time).
 
   ```C
     #define CT_COUNTER_DMA_MODE_USECASE   1      -  To run DMA counter mode
     #define CT_COUNTER_INPUT_EVENT_USECASE 1     -  To run input event mode
   ```
   - Also enable the relevant CT (Config Timer) configuration settings required for the PWM DMA mode use case to ensure proper operation of the timer in DMA-driven PWM output mode.
-- In the `config_timer_icu_ocu_example.c`[(https://github.com/SiliconLabs/wiseconnect/blob/v4.0.1-content-for-docs/examples/si91x_soc/peripheral/sl_si91x_ct_icu_ocu_with_dma/config_timer_icu_ocu_example.c)] file, configure the "TIME_PERIOD_VALUE" macro to facilitate user-defined adjustments of the time period value. Modify or update the following macro as necessary to allow flexible customization of the timer's period and compare value.
+- In the `config_timer_icu_ocu_example.c`[(https://github.com/SiliconLabs/wiseconnect/blob/v4.0.2-content-for-docs/examples/si91x_soc/peripheral/sl_si91x_ct_icu_ocu_with_dma/config_timer_icu_ocu_example.c)] file, configure the "TIME_PERIOD_VALUE" macro to facilitate user-defined adjustments of the time period value. Modify or update the following macro as necessary to allow flexible customization of the timer's period and compare value.
 
   ```C
    #define TIME_PERIOD_VALUE     1000         // Time period in microseconds
@@ -139,7 +139,7 @@ For details on the project folder structure, see the [WiSeConnect Examples](http
 |    input-0    | GPIO_25 |     P25       | 
 
 ### Macros for CT Configurations
-In the `config_timer_icu_ocu_example.c`[(https://github.com/SiliconLabs/wiseconnect/blob/v4.0.1-content-for-docs/examples/si91x_soc/peripheral/sl_si91x_ct_icu_ocu_with_dma/config_timer_icu_ocu_example.c)] file, these are the following macros.
+In the `config_timer_icu_ocu_example.c`[(https://github.com/SiliconLabs/wiseconnect/blob/v4.0.2-content-for-docs/examples/si91x_soc/peripheral/sl_si91x_ct_icu_ocu_with_dma/config_timer_icu_ocu_example.c)] file, these are the following macros.
 
 - \ref SL_CT_MODE_32BIT_ENABLE_MACRO , for possible values refer \ref sl_config_timer_mode_t
 - \ref SL_COUNTER0_DIRECTION_MACRO , for possible values refer \ref sl_counter0_direction_t

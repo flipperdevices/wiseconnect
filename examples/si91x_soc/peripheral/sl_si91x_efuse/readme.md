@@ -31,7 +31,7 @@
 
 ## About Example Code
 
-- [`efuse_example.c`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.1-content-for-docs/examples/si91x_soc/peripheral/sl_si91x_efuse/efuse_example.c) demonstrates how to program the efuse to write and read the data in various modes.
+- [`efuse_example.c`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.2-content-for-docs/examples/si91x_soc/peripheral/sl_si91x_efuse/efuse_example.c) demonstrates how to program the efuse to write and read the data in various modes.
 - In this example, first version information of efuse is checked.
 - Initialize the efuse if it's not initialized already using [sl_si91x_efuse_init](https://docs.silabs.com/wiseconnect/latest/wiseconnect-api-reference-guide-si91x-peripherals/efuse#sl-si91x-efuse-init), in efuse initialization the efuse and efuse clock is enabled.
 - After efuse initialization, we will set and get the address and then read the data from the efuse address after writing the data into the efuse.
@@ -80,7 +80,7 @@ For details on the project folder structure, see the [WiSeConnect Examples](http
 
 ### Application Configuration Parameters
 
-- Configure the following macros in [`efuse_example.c`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.1-content-for-docs/examples/si91x_soc/peripheral/sl_si91x_efuse/efuse_example.c) file and update/modify following macros if required. The chip set provides 256 efuse bits as one-time programmable memory location. These bits are 32-bit addressing with each address containing 8-bits. The 255th efuse bit is reserved with a default value to '1'.
+- Configure the following macros in [`efuse_example.c`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.2-content-for-docs/examples/si91x_soc/peripheral/sl_si91x_efuse/efuse_example.c) file and update/modify following macros if required. The chip set provides 256 efuse bits as one-time programmable memory location. These bits are 32-bit addressing with each address containing 8-bits. The 255th efuse bit is reserved with a default value to '1'.
 
   ```C
     #define WRITE_ADD_1         0x00001        // efuse address 1

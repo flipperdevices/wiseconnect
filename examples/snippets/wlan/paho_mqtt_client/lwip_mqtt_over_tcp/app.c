@@ -56,6 +56,10 @@
 #define MQTT_BROKER_IP "192.168.50.129" // Replace with your Mosquitto broker IP address
 #endif
 
+// TLS hostname for SNI and server cert verification. Replace with the same value as your
+// broker's certificate CN/SAN (e.g. "broker.example.com") or broker IP string if cert uses IP in SAN.
+#define MQTT_BROKER_TLS_HOSTNAME "example.com"
+
 //MQTT Broker port
 #define MQTT_BROKER_PORT  1883 // Standard MQTT port
 #define MQTTS_BROKER_PORT 8883 // Standard MQTTS (TLS) port
@@ -320,8 +324,6 @@ int paho_mqtt_demo()
   print_sl_ip_address(&mqtt_client->server_ip);
 #endif
   printf("\nSSL enabled: %s\n", enable_ssl ? "Yes" : "No");
-
-  // Fill TLS certificates only via configure_tls_certificates API
   if (enable_ssl) {
     mqtt_client->client.ipstack->tls = malloc(sizeof(mqtt_tls_context_t));
     if (!mqtt_client->client.ipstack->tls) {
@@ -329,6 +331,14 @@ int paho_mqtt_demo()
       return -1;
     }
     configure_tls_certificates(&mqtt_client->client.ipstack->tls->cert_ctx);
+    /* TLS requires a hostname for SNI and server cert verification. Call NetworkSetTlsHostname()
+   * before NetworkConnect(). See MQTTSi91x_lwip.h (NetworkSetTlsHostname, NETWORK_ERROR_TLS_HOSTNAME_REQUIRED). */
+    if (NetworkSetTlsHostname(mqtt_client->client.ipstack, MQTT_BROKER_TLS_HOSTNAME) != 0) {
+      printf("\r\nError: Invalid TLS hostname (NULL, empty, or longer than 255). Fix MQTT_BROKER_TLS_HOSTNAME.\r\n");
+      free(mqtt_client->client.ipstack->tls);
+      mqtt_client->client.ipstack->tls = NULL;
+      return -1;
+    }
   }
 
   status = NetworkConnect(mqtt_client->client.ipstack,
@@ -340,15 +350,38 @@ int paho_mqtt_demo()
 
   if (status == NETWORK_ERROR_NULL_STRUCTURE) {
     printf("\r\nError: Network structure is NULL.\r\n");
+    if (mqtt_client->client.ipstack->tls) {
+      free(mqtt_client->client.ipstack->tls);
+      mqtt_client->client.ipstack->tls = NULL;
+    }
     return status;
   } else if (status == NETWORK_ERROR_NULL_ADDRESS) {
     printf("\r\nError: Address is NULL.\r\n");
+    if (mqtt_client->client.ipstack->tls) {
+      free(mqtt_client->client.ipstack->tls);
+      mqtt_client->client.ipstack->tls = NULL;
+    }
     return status;
   } else if (status == NETWORK_ERROR_INVALID_TYPE) {
     printf("\r\nError: Invalid transport type.\r\n");
+    if (mqtt_client->client.ipstack->tls) {
+      free(mqtt_client->client.ipstack->tls);
+      mqtt_client->client.ipstack->tls = NULL;
+    }
+    return status;
+  } else if (status == NETWORK_ERROR_TLS_HOSTNAME_REQUIRED) {
+    printf("\r\nError: TLS requires hostname. Call NetworkSetTlsHostname() before NetworkConnect().\r\n");
+    if (mqtt_client->client.ipstack->tls) {
+      free(mqtt_client->client.ipstack->tls);
+      mqtt_client->client.ipstack->tls = NULL;
+    }
     return status;
   } else if (status != 0) {
     printf("\r\n TCP Connection Failed: %d\r\n", status);
+    if (mqtt_client->client.ipstack->tls) {
+      free(mqtt_client->client.ipstack->tls);
+      mqtt_client->client.ipstack->tls = NULL;
+    }
     return status;
   }
   MQTTPacket_connectData connectData = MQTTPacket_connectData_initializer;
@@ -373,6 +406,9 @@ int paho_mqtt_demo()
   status = MQTTConnect(&mqtt_client->client, &connectData);
   if (status != 0) {
     printf("\r\nMQTT Connection Failed: %d\r\n", status);
+    if (mqtt_client->client.ipstack) {
+      NetworkDisconnect(mqtt_client->client.ipstack);
+    }
     return status;
   }
   printf("\r\nMQTT Connected Successfully!\r\n");
@@ -381,6 +417,9 @@ int paho_mqtt_demo()
   status = MQTTSubscribe(&mqtt_client->client, (char *)TOPIC_TO_BE_SUBSCRIBED, (enum QoS)QOS, message_arrived);
   if (status != 0) {
     printf("\r\nSubscription Failed: %d\r\n", status);
+    if (mqtt_client->client.ipstack) {
+      NetworkDisconnect(mqtt_client->client.ipstack);
+    }
     return status;
   }
   printf("\r\nSubscribed to topic: %s\r\n", TOPIC_TO_BE_SUBSCRIBED);
@@ -401,6 +440,9 @@ int paho_mqtt_demo()
   status = MQTTPublish(&mqtt_client->client, (const char *)TOPIC_TO_BE_SUBSCRIBED, &publish_msg);
   if (status != 0) {
     printf("\r\nMQTT Publish Failed: %d\r\n", status);
+    if (mqtt_client->client.ipstack) {
+      NetworkDisconnect(mqtt_client->client.ipstack);
+    }
     return status;
   } else {
     printf("\r\nPublishes to Topic successfully\r\n");
@@ -412,6 +454,9 @@ int paho_mqtt_demo()
     if (status != SL_STATUS_OK) {
       //! Error in receiving
       printf("\r\nReceive Data Failed, Error Code : 0x%X\r\n", status);
+      if (mqtt_client->client.ipstack) {
+        NetworkDisconnect(mqtt_client->client.ipstack);
+      }
       return status;
     } else {
       printf("\r\nReceive Data Success\r\n");
@@ -422,6 +467,9 @@ int paho_mqtt_demo()
   status = MQTTUnsubscribe(&mqtt_client->client, (const char *)TOPIC_TO_BE_SUBSCRIBED);
   if (status != SL_STATUS_OK) {
     printf("\r\nUnsubscription to Topic Failed, Error Code : 0x%X\r\n", status);
+    if (mqtt_client->client.ipstack) {
+      NetworkDisconnect(mqtt_client->client.ipstack);
+    }
     return status;
   } else {
     printf("\r\nUnsubscription to Topic Success\r\n");
@@ -431,6 +479,9 @@ int paho_mqtt_demo()
   status = MQTTDisconnect(&mqtt_client->client);
   if (status != SL_STATUS_OK) {
     printf("\r\nDisconnect to the MQTT broker Failed, Error Code : 0x%X\r\n", status);
+    if (mqtt_client->client.ipstack) {
+      NetworkDisconnect(mqtt_client->client.ipstack);
+    }
     return status;
   } else {
     printf("\r\nDisconnect to the MQTT broker Success\r\n");

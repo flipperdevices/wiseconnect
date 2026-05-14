@@ -2,7 +2,7 @@
 
 ## Table of Contents
 
-- [Wi-Fi - Paho MQTT Client Over TCP (LwIP)](#wi-fi---paho-mqtt-client-over-tcp)
+- [Wi-Fi - Paho MQTT Client Over TCP (LwIP)](#wi-fi---paho-mqtt-client-over-tcp-lwip)
   - [Table of Contents](#table-of-contents)
   - [Purpose/Scope](#purposescope)
   - [Prerequisites/Setup Requirements](#prerequisitessetup-requirements)
@@ -255,17 +255,17 @@ Follow the steps below for successful execution of the application:
 
 - If mosquitto is not allowing external connections to the broker, add the following lines in the `mosquitto.conf` file:
 
-   ```c
+   ```conf
    listener 1883
    allow_anonymous true
    ```
 
-- For SSL support, add the following configuration in the `mosquitto.conf`file.
+- For SSL support, add the following configuration in the `mosquitto.conf` file.
 
-  ```c
+  ```conf
    listener 8883
    allow_anonymous true
-   #Paths to SSL / TLS certificates
+   # Paths to SSL / TLS certificates
    certfile \resources\certificates\server.crt
    keyfile \resources\certificates\server.key
    cafile \resources\certificates\ca.crt

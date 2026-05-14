@@ -14,6 +14,7 @@
   - [Getting Started](#getting-started)
   - [Application Build Environment](#application-build-environment)
     - [Application Configuration Parameters](#application-configuration-parameters)
+    - [PWM_OUTPUT_LOW build symbol](#pwm_output_low-build-symbol)
     - [PWM Pin Configuration](#pwm-pin-configuration)
   - [Test the Application](#test-the-application)
 
@@ -174,6 +175,20 @@ For details on the project folder structure, see the [WiSeConnect Examples](http
     - The pin configuration for PWM channel can be configured under SL_PWM_CHANNEL0 section.
 
       ![Figure: UC image](resources/uc_screen/pwm_uc_screen.png)
+
+### PWM_OUTPUT_LOW build symbol
+
+The PWM driver uses the C preprocessor macro **`PWM_OUTPUT_LOW`** to select how pins and the peripheral clock are set up. The source uses `#if defined(PWM_OUTPUT_LOW)` (the macro is either **present** in the build or **not**).
+
+- **How to enable (safe-init path):** Add **`PWM_OUTPUT_LOW`** to your project’s **preprocessor defined symbols** (Simplicity Studio: **Project** → **Properties** → **C/C++ Build** → **Settings** → **Tool Settings** → **Preprocessor** → **Defined symbols**, or the equivalent for your toolchain). You can also pass **`-DPWM_OUTPUT_LOW`** on the compiler command line. Any form that **defines the macro name** selects the safe-init behavior.
+
+- **How to stay on legacy behavior:** Do **not** define **`PWM_OUTPUT_LOW`** at all (leave it out of Defined symbols). That is the “disabled” case for this feature: the driver follows the legacy SDK path.
+
+- **Important:** In standard C, `#if defined(PWM_OUTPUT_LOW)` is true if the symbol **exists**, including entries like **`PWM_OUTPUT_LOW=0`**. That still counts as defined, so it **does not** reliably turn the feature off. To use legacy behavior, **omit** the symbol rather than setting it to `0`.
+
+- **What changes when enabled:** PWM output pads can be driven to a known level before the peripheral mux via `sl_gpio_pin_configure_gpio_output_level()`, fault/event pins are configured as inputs where applicable, and **`PWM_CLK`** is enabled in **`sl_si91x_pwm_set_configuration()`** instead of in **`sl_si91x_pwm_init()`**. When the macro is undefined, **`PWM_CLK`** is enabled during **`sl_si91x_pwm_init()`** as in older SDKs.
+
+- **Example-only note:** Optional code paths such as **SVT** in this example may call **`sl_gpio_pin_configure_gpio_output_level()`** when **`SVT`** is defined, even if **`PWM_OUTPUT_LOW`** is not, so those trigger pins have a known level before mux. That is intentional and separate from the driver’s **`PWM_OUTPUT_LOW`**-gated PWM pad setup (see the file-level notes in `sl_si91x_pwm.h`).
 
 ### PWM Pin Configuration
 

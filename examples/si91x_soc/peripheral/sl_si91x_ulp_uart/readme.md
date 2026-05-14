@@ -35,7 +35,7 @@ This application demonstrates how to configure ULP UART In asynchronous mode, it
 
 ## About Example Code
 
-- [`ulp_uart_example.c`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.1-content-for-docs/examples/si91x_soc/peripheral/sl_si91x_ulp_uart/ulp_uart_example.c) - This example code demonstrates how to configure the UART to send and receive data in loopback mode.
+- [`ulp_uart_example.c`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.2-content-for-docs/examples/si91x_soc/peripheral/sl_si91x_ulp_uart/ulp_uart_example.c) - This example code demonstrates how to configure the UART to send and receive data in loopback mode.
 - In this example, the UART is first initialized—if not already done—using [`sl_si91x_usart_init`](https://docs.silabs.com/wiseconnect/latest/wiseconnect-api-reference-guide-si91x-peripherals/usart#sl-si91x-usart-init), along with clock, power mode and DMA configurations when DMA is enabled.  
 **Note:** If the UART/USART instance is selected for debug output logs, initialization will return `SL_STATUS_NOT_AVAILABLE`.
 - After UART initialization, ULP UART is configured with default configurations from UC along with UART transmit and receive lines using the [`sl_si91x_usart_set_configuration()`](https://docs.silabs.com/wiseconnect/latest/wiseconnect-api-reference-guide-si91x-peripherals/usart#sl-si91x-usart-set-configuration).
@@ -82,7 +82,7 @@ For details on the project folder structure, see the [WiSeConnect Examples](http
    ![Figure: ulpuart_uc](resources/readme/ulpuart_uc.png)
 
 - Data send and receive from VCOM console is for one iteration only. On VCOM console, set the configuration such that the received data is sent back on the same port.
-- To check continuous data transfer, modify the following macro to ENABLE in the [`ulp_uart_example.h`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.1-content-for-docs/examples/si91x_soc/peripheral/sl_si91x_ulp_uart/ulp_uart_example.h) file.
+- To check continuous data transfer, modify the following macro to ENABLE in the [`ulp_uart_example.h`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.2-content-for-docs/examples/si91x_soc/peripheral/sl_si91x_ulp_uart/ulp_uart_example.h) file.
 
   ```c
   #define USE_SEND    ENABLE
@@ -129,9 +129,9 @@ Follow the steps below for successful execution of the application:
 >- In this application, we are changing the power state from PS4 to PS2 and vice - versa.
 >- Once the power state changes from PS4 to PS2 and vice - versa, you have to reconfigure the uart configs once again using sl_si91x_usart_set_configuration() API  because of frequency change. Refer to  file for more info.
 >
-- Once the power state changes from PS4 to PS2 and vice - versa, you have to reconfigure the uart configs once again using sl_si91x_usart_set_configuration() API  because of frequency change. Refer to [`ulp_uart_example.c`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.1-content-for-docs/examples/si91x_soc/peripheral/sl_si91x_ulp_uart/ulp_uart_example.c) file for more info.
-- Once the power state changes from PS4 to PS2 and vice - versa, you have to reconfigure the uart configs once again using sl_si91x_usart_set_configuration() API  because of frequency change. Refer to [`ulp_uart_example.c`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.1-content-for-docs/examples/si91x_soc/peripheral/sl_si91x_ulp_uart/ulp_uart_example.c) file for more info.
-- Once the power state changes from PS4 to PS2 and vice - versa, you have to reconfigure the uart configs once again using sl_si91x_usart_set_configuration() API  because of frequency change. Refer to [`ulp_uart_example.c`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.1-content-for-docs/examples/si91x_soc/peripheral/sl_si91x_ulp_uart/ulp_uart_example.c) file for more info.
+- Once the power state changes from PS4 to PS2 and vice - versa, you have to reconfigure the uart configs once again using sl_si91x_usart_set_configuration() API  because of frequency change. Refer to [`ulp_uart_example.c`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.2-content-for-docs/examples/si91x_soc/peripheral/sl_si91x_ulp_uart/ulp_uart_example.c) file for more info.
+- Once the power state changes from PS4 to PS2 and vice - versa, you have to reconfigure the uart configs once again using sl_si91x_usart_set_configuration() API  because of frequency change. Refer to [`ulp_uart_example.c`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.2-content-for-docs/examples/si91x_soc/peripheral/sl_si91x_ulp_uart/ulp_uart_example.c) file for more info.
+- Once the power state changes from PS4 to PS2 and vice - versa, you have to reconfigure the uart configs once again using sl_si91x_usart_set_configuration() API  because of frequency change. Refer to [`ulp_uart_example.c`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.2-content-for-docs/examples/si91x_soc/peripheral/sl_si91x_ulp_uart/ulp_uart_example.c) file for more info.
 >
 >- CTS and RTS only works when not using ROM driver for UART
 >

@@ -52,42 +52,45 @@ For details on the project folder structure, see the [WiSeConnect Examples](http
 
 ## Code Classifier Usage
 
-This application demonstrates the usage of the **Code Classifier** feature for PSRAM-based memory management. It categorizes variables into specific memory classes, ensuring optimal performance when using external PSRAM.
+This application demonstrates the **Code Classifier** for PSRAM-based memory management. When **TEXT segment in PSRAM** and **DATA segment in PSRAM** are installed, they define the default layout (typically text and initialized data in PSRAM). The classifier adds **selective** overrides (such as,  placing specific functions or data in internal RAM, placing the BSS segment in PSRAM using **`SL_CODE_CLASS_FORCE_PSRAM`**, or assigning DMA/time-critical sections as needed).
 
-The following classifier categories are available for use (for **reference** to help users categorize variables accordingly):
+The following classifier categories are available for use (for **reference** to help users categorize variables accordingly). The macros **`SL_CODE_CLASS_FORCE_RAM`**, **`SL_CODE_CLASS_DMA_ACCESSIBLE`**, and **`SL_CODE_CLASS_TIME_CRITICAL`** all currently target **RAM** in link scripts. They differ by intent (performance, DMA, or latency), which keeps code self-documenting and allows future linker script updates (such as splitting alignment or memory regions) without requiring changes to the macro API.
 
-- `SL_CODE_CLASS_FORCE_PSRAM`: Used for variables placed in external **PSRAM** for bulk storage.
-- `SL_CODE_CLASS_FORCE_RAM`: Ensures placement of frequently accessed variables in **internal RAM**.
-- `SL_CODE_CLASS_DMA_ACCESSIBLE`: Used for variables that need to be **accessible by the DMA**.
-- `SL_CODE_CLASS_TIME_CRITICAL`: Applied to **time-sensitive operations**, minimizing access latency.
+- `SL_CODE_CLASS_FORCE_PSRAM`: Variables in external **PSRAM** for bulk storage.
+- `SL_CODE_CLASS_FORCE_RAM`: Frequently accessed variables in **internal RAM** (performance intent).
+- `SL_CODE_CLASS_DMA_ACCESSIBLE`: **DMA-accessible** placement (DMA-safe intent; currently the same RAM class).
+- `SL_CODE_CLASS_TIME_CRITICAL`: **Time-sensitive** access (latency intent; currently the same RAM class).
 
-### **Installing the Code Classifier Component**
+### Installing the Code Classifier Component
+
 To use this feature, the **Code Classifier Component** must be installed from the **Software Component Selection** in Simplicity Studio. 
 
 ## Memory Placement
 
-To optimize performance, memory placement is categorized as follows:
+To optimize performance, memory placement is categorized as follows. In source code, the macro’s first argument is the segment name (`text`, `data`, and so on). This argument expands to linker section names in the form `<segment>_<component>_<class>` (for example, `text_app_api_timecritical`), which the linker groups by prefix (`text_*`, `data_*`, and so on). Use the text segment for code and data for initialized data. The linker then maps the resulting sections according to your project’s linker scripts.
 
-### **1. Text and Data to SRAM**
-- **All text and initialized data is placed in PSRAM** by default.
+### 1. Text and Data to SRAM
+
+- **All text and initialized data is placed in PSRAM** by default (when the corresponding PSRAM segment components are used).
 - The **Code Classifier** can be used to selectively move specific elements to RAM if required for performance optimization.
-- Use the following **prefixes** for classification:
-  - `text_` → Used for **code placement** in PSRAM.
-  - `data_` → Used for **initialized data** in PSRAM.
+- Section name prefixes from the macro relate to the PSRAM segment components as follows:
+  - `text_*` → Used for **code** when the **TEXT segment in PSRAM** software component is installed.
+  - `data_*` → Used for **initialized data** when the **DATA segment in PSRAM** software component is installed.
 
-### **2. BSS to PSRAM**
+### 2. BSS to PSRAM
+
 - The **default BSS section is placed in RAM** to ensure optimal execution.
 - If needed, **specific BSS variables can be placed in PSRAM** using the **Code Classifier**.
 - Use the following **prefix** for classification:
   - `bss_` → Used for **uninitialized data** to allocate the same to PSRAM if required.
 
-### **3. Customizing Memory Placement**
+### 3. Customizing Memory Placement
 
 Variables and functions can be explicitly placed into the desired memory regions using the **Code Classifier** macro `SL_SI91X_CODE_CLASSIFY`.
 
 #### **SL_SI91X_CODE_CLASSIFY Macro**
 
-The `SL_SI91X_CODE_CLASSIFY` macro is used to classify and place code, data, and variables into specific memory sections based on their usage requirements. This allows fine-grained control over memory placement for optimal performance.
+The `SL_SI91X_CODE_CLASSIFY` macro classifies code, data, and variables into memory sections. The first parameter is the **segment** name; the compiler emits a **section** `<segment>_<component>_<class>` for the linker to place (aligned with the Memory Placement summary above).
 
 **Macro Syntax:**
 ```c
@@ -95,9 +98,9 @@ SL_SI91X_CODE_CLASSIFY(<segment>, <component>, <classifier_type>)
 ```
 
 **Parameters:**
-- `<segment>`: Specifies the memory segment type. Common values include:
-  - `text` - For code/functions (text segment)
-  - `data` - For initialized data variables
+- `<segment>`: Memory segment name (first macro argument). Common values include:
+  - `text` - Code/functions; linker collects `text_*` sections (for code when **TEXT segment in PSRAM** is part of the project).
+  - `data` - Initialized data; linker collects `data_*` sections (for initialized data when **DATA segment in PSRAM** is part of the project).
   - `bss_to_psram` - For uninitialized data to be placed in PSRAM
   - `data_to_ram` - For initialized data to be placed in RAM
   - `data_dma_accessible` - For DMA-accessible data
@@ -150,7 +153,7 @@ SL_SI91X_CODE_CLASSIFY(<segment>, <component>, <classifier_type>)
 - The macro must be placed **immediately before** the variable or function declaration.
 - The `<component>` parameter should be unique for each classification to avoid naming conflicts.
 - The macro is only effective when the **Code Classifier Component** is installed and enabled.
-- For recommended settings, please refer to the [recommendations guide](https://docs.silabs.com/wiseconnect/latest/wiseconnect-developers-guide-prog-recommended-settings/).
+- For project-wide recommended settings, build options, and component combinations (including Code Classifier with PSRAM), see the [Recommendations guide](https://docs.silabs.com/wiseconnect/latest/wiseconnect-developers-guide-prog-recommended-settings/).
 
 ## Testing the Application
 

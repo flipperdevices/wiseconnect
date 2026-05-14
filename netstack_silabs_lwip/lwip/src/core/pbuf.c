@@ -175,6 +175,7 @@ pbuf_pool_is_empty(void)
 #endif /* !LWIP_TCP || !TCP_QUEUE_OOSEQ || !PBUF_POOL_FREE_OOSEQ */
 
 /* Initialize members of struct pbuf after allocation */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 static void
 pbuf_init_alloced_pbuf(struct pbuf *p, void *payload, u16_t tot_len, u16_t len, pbuf_type type, u8_t flags)
 {
@@ -222,6 +223,7 @@ pbuf_init_alloced_pbuf(struct pbuf *p, void *payload, u16_t tot_len, u16_t len, 
  * @return the allocated pbuf. If multiple pbufs where allocated, this
  * is the first pbuf of a pbuf chain.
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 struct pbuf *
 pbuf_alloc(pbuf_layer layer, u16_t length, pbuf_type type)
 {
@@ -400,6 +402,7 @@ pbuf_alloced_custom(pbuf_layer l, u16_t length, pbuf_type type, struct pbuf_cust
  *
  * @note Despite its name, pbuf_realloc cannot grow the size of a pbuf (chain).
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 void
 pbuf_realloc(struct pbuf *p, u16_t new_len)
 {
@@ -474,6 +477,7 @@ pbuf_realloc(struct pbuf *p, u16_t new_len)
  * @return non-zero on failure, zero on success.
  *
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 static u8_t
 pbuf_add_header_impl(struct pbuf *p, size_t header_size_increment, u8_t force)
 {
@@ -552,6 +556,7 @@ pbuf_add_header_impl(struct pbuf *p, size_t header_size_increment, u8_t force)
  * @return non-zero on failure, zero on success.
  *
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 u8_t
 pbuf_add_header(struct pbuf *p, size_t header_size_increment)
 {
@@ -583,6 +588,7 @@ pbuf_add_header_force(struct pbuf *p, size_t header_size_increment)
  * @return non-zero on failure, zero on success.
  *
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 u8_t
 pbuf_remove_header(struct pbuf *p, size_t header_size_decrement)
 {
@@ -617,6 +623,7 @@ pbuf_remove_header(struct pbuf *p, size_t header_size_decrement)
   return 0;
 }
 
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 static u8_t
 pbuf_header_impl(struct pbuf *p, s16_t header_size_increment, u8_t force)
 {
@@ -647,6 +654,7 @@ pbuf_header_impl(struct pbuf *p, s16_t header_size_increment, u8_t force)
  * @return non-zero on failure, zero on success.
  *
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 u8_t
 pbuf_header(struct pbuf *p, s16_t header_size_increment)
 {
@@ -672,6 +680,7 @@ pbuf_header_force(struct pbuf *p, s16_t header_size_increment)
  *                   takes an u16_t not s16_t!
  * @return the new head pbuf
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 struct pbuf *
 pbuf_free_header(struct pbuf *q, u16_t size)
 {
@@ -725,6 +734,7 @@ pbuf_free_header(struct pbuf *q, u16_t size)
  * 1->1->1 becomes .......
  *
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 u8_t
 pbuf_free(struct pbuf *p)
 {
@@ -809,6 +819,7 @@ pbuf_free(struct pbuf *p)
  * @param p first pbuf of chain
  * @return the number of pbufs in a chain
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 u16_t
 pbuf_clen(const struct pbuf *p)
 {
@@ -829,6 +840,7 @@ pbuf_clen(const struct pbuf *p)
  * @param p pbuf to increase reference counter of
  *
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 void
 pbuf_ref(struct pbuf *p)
 {
@@ -853,6 +865,7 @@ pbuf_ref(struct pbuf *p)
  *
  * @see pbuf_chain()
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 void
 pbuf_cat(struct pbuf *h, struct pbuf *t)
 {
@@ -958,6 +971,7 @@ pbuf_dechain(struct pbuf *p)
  *                 enough to hold p_from
  *         ERR_VAL if any of the pbufs are part of a queue
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 err_t
 pbuf_copy(struct pbuf *p_to, const struct pbuf *p_from)
 {
@@ -985,6 +999,7 @@ pbuf_copy(struct pbuf *p_to, const struct pbuf *p_from)
  *                 or p_to is not big enough to hold copy_len at offset
  *         ERR_VAL if any of the pbufs are part of a queue
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 err_t
 pbuf_copy_partial_pbuf(struct pbuf *p_to, const struct pbuf *p_from, u16_t copy_len, u16_t offset)
 {
@@ -1057,6 +1072,7 @@ pbuf_copy_partial_pbuf(struct pbuf *p_to, const struct pbuf *p_from, u16_t copy_
  * @param offset offset into the packet buffer from where to begin copying len bytes
  * @return the number of bytes copied, or 0 on failure
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 u16_t
 pbuf_copy_partial(const struct pbuf *buf, void *dataptr, u16_t len, u16_t offset)
 {
@@ -1342,6 +1358,7 @@ pbuf_coalesce(struct pbuf *p, pbuf_layer layer)
  *
  * @return a new pbuf or NULL if allocation fails
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 struct pbuf *
 pbuf_clone(pbuf_layer layer, pbuf_type type, struct pbuf *p)
 {

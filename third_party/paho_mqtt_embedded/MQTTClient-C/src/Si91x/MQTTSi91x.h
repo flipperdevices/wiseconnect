@@ -22,14 +22,14 @@
 #include "cmsis_os2.h"
 
 #define MQTT_WITH_WEBSOCKET_HEADER_LEN         3
-#define WAIT_TIMEOOUT                          5000
+#define WAIT_TIMEOUT                           5000
 #define SLI_917_WAIT_FOREVER                   0
 #define WIFI_BLOCKED_TIMEOUT_SF                1
 #define DEFAULT_TIMEOUT                        SLI_TX_EVENT_WAIT_TIME
 #define SLI_TX_EVENT_WAIT_TIME                 (30000 + TX_WAIT_TIME)
 #define TX_WAIT_TIME                           0
 #define SLI_SOCKET_RECVFROM_RESPONSE_WAIT_TIME ((SLI_917_WAIT_FOREVER * WIFI_BLOCKED_TIMEOUT_SF) + (DEFAULT_TIMEOUT))
-#define SINGLE_PKT_TCP_STREAM_TIMEOUT          WAIT_TIMEOOUT + SLI_SOCKET_RECVFROM_RESPONSE_WAIT_TIME
+#define SINGLE_PKT_TCP_STREAM_TIMEOUT          WAIT_TIMEOUT + SLI_SOCKET_RECVFROM_RESPONSE_WAIT_TIME
 #define NETWORK_ERROR_NULL_STRUCTURE           -1 // Error: NULL network structure
 #define NETWORK_ERROR_NULL_ADDRESS             -2 // Error: NULL address
 #define NETWORK_ERROR_INVALID_TYPE             -3 // Error: Invalid transport type

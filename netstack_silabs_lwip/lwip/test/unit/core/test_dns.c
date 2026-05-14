@@ -59,7 +59,7 @@
 /* ⚠️  MAINTENANCE WARNING: This structure is duplicated from dns.c for white-box testing.
  *     It MUST be kept synchronized with the internal dns_table_entry structure in dns.c.
  */
-#ifdef LWIP_TESTMODE
+#if LWIP_TESTMODE
 struct dns_table_entry {
   u32_t ttl;
   ip_addr_t ipaddr;
@@ -1378,7 +1378,7 @@ END_TEST
 /* Test 21: Structure Layout Validation */
 START_TEST(test_dns_structure_layout_validation)
 {
-#ifdef LWIP_TESTMODE
+#if LWIP_TESTMODE
   struct dns_table_entry test_entry;
   size_t actual_size;
   LWIP_UNUSED_ARG(_i);
