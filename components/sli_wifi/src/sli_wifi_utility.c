@@ -240,6 +240,7 @@ sl_status_t sli_wifi_get_stored_scan_results(sl_wifi_interface_t interface,
       scan_results[*result_count].security_mode = scan_info->security_mode;
       scan_results[*result_count].rssi          = scan_info->rssi;
       scan_results[*result_count].network_type  = scan_info->network_type;
+      scan_results[*result_count].seen_count    = scan_info->seen_count;
       memcpy(scan_results[*result_count].bssid, scan_info->bssid, SLI_WIFI_HARDWARE_ADDRESS_LENGTH);
       memcpy(scan_results[*result_count].ssid, scan_info->ssid, 34);
       (*result_count)++;

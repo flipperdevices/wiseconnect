@@ -64,7 +64,7 @@ For details on the project folder structure, see the [WiSeConnect Examples](http
 
   >![Figure: sdio_secondary](resources/uc_screen/sdio_secondary.png)
 
-- Modify current_mode in the [`sdio_secondary_example.c`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.1-content-for-docs/examples/si91x_soc/peripheral/sl_si91x_sdio_secondary/sdio_secondary_example.c) file to configure current_mode for SDIO Secondary.
+- Modify current_mode in the [`sdio_secondary_example.c`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.2-content-for-docs/examples/si91x_soc/peripheral/sl_si91x_sdio_secondary/sdio_secondary_example.c) file to configure current_mode for SDIO Secondary.
   By default current mode is in RECEIVE_DATA.
 
   ```c
@@ -77,7 +77,7 @@ For details on the project folder structure, see the [WiSeConnect Examples](http
   current_mode = RECEIVE_DATA /*Default is receive mode, i.e., RX_PATH*/
   ```
 
-- Modify BLOCK_LEN and NO_OF_BLOCKS in the [`sdio_secondary_example.c`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.1-content-for-docs/examples/si91x_soc/peripheral/sl_si91x_sdio_secondary/sdio_secondary_example.c) file to configure size for application buffer:
+- Modify BLOCK_LEN and NO_OF_BLOCKS in the [`sdio_secondary_example.c`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.2-content-for-docs/examples/si91x_soc/peripheral/sl_si91x_sdio_secondary/sdio_secondary_example.c) file to configure size for application buffer:
 
   ```c
   #define BLOCK_LEN         256

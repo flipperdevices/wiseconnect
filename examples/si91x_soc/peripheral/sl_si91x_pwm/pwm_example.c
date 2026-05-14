@@ -52,8 +52,9 @@ static void pwm_callback_function(uint16_t event);
 /*******************************************************************************
  **********************  Local variables   *************************************
  ******************************************************************************/
+/* Volatile: written in PWM callback (ISR), read in main loop. Required for LTO. */
 static uint8_t flag[10];
-static boolean_t event_flag = 1;
+static volatile boolean_t event_flag = 1;
 /*******************************************************************************
 **************************   GLOBAL FUNCTIONS   *******************************
 ******************************************************************************/
@@ -193,12 +194,20 @@ void pwm_example_init(void)
     DEBUGOUT("PWM Control fault A/B is successful \n");
 #endif
 #ifdef SVT
+    /* Known GPIO level before peripheral mux for SVT pads. Not gated on PWM_OUTPUT_LOW (unlike
+     * sl_si91x_pwm_init); only this optional SVT pin setup path in the example. */
     sl_si91x_gpio_enable_ulp_pad_receiver((uint8_t)(SL_SI91X_PWM_SLP_EVENT_TRIG_PIN - GPIO_MAX_PIN));
+    sl_gpio_pin_configure_gpio_output_level(SL_ULP_PORT,
+                                            (uint8_t)(SL_SI91X_PWM_SLP_EVENT_TRIG_PIN - GPIO_MAX_PIN),
+                                            OUTPUT_VALUE);
     sl_gpio_set_pin_mode(SL_ULP_PORT,
                          (uint8_t)(SL_SI91X_PWM_SLP_EVENT_TRIG_PIN - GPIO_MAX_PIN),
                          ULP_GPIO_MODE_6,
                          OUTPUT_VALUE);
     sl_si91x_gpio_enable_pad_selection(SL_SI91X_PWM_SLP_EVENT_TRIG_PAD);
+    sl_gpio_pin_configure_gpio_output_level(SL_SI91X_PWM_SLP_EVENT_TRIG_PORT,
+                                            SL_SI91X_PWM_SLP_EVENT_TRIG_PIN,
+                                            OUTPUT_VALUE);
     sl_gpio_set_pin_mode(SL_SI91X_PWM_SLP_EVENT_TRIG_PORT,
                          SL_SI91X_PWM_SLP_EVENT_TRIG_PIN,
                          SL_SI91X_PWM_SLP_EVENT_TRIG_MUX,

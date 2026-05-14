@@ -77,6 +77,7 @@ netbuf *netbuf_new(void)
  *
  * @param buf pointer to a netbuf allocated by netbuf_new()
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 void
 netbuf_delete(struct netbuf *buf)
 {
@@ -98,6 +99,7 @@ netbuf_delete(struct netbuf *buf)
  * @return pointer to the allocated memory
  *         NULL if no memory could be allocated
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 void *
 netbuf_alloc(struct netbuf *buf, u16_t size)
 {
@@ -123,6 +125,7 @@ netbuf_alloc(struct netbuf *buf, u16_t size)
  *
  * @param buf pointer to the netbuf which contains the packet buffer to free
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 void
 netbuf_free(struct netbuf *buf)
 {

@@ -125,7 +125,7 @@ For details on the project folder structure, see the [WiSeConnect Examples](http
 
 ### Application Configuration Parameters
 
-- Configure the following parameters in the [`ulp_gpio_example.c`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.1-content-for-docs/examples/si91x_soc/peripheral/sl_si91x_ulp_gpio/ulp_gpio_example.c) file and update/modify following macros, if required.
+- Configure the following parameters in the [`ulp_gpio_example.c`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.2-content-for-docs/examples/si91x_soc/peripheral/sl_si91x_ulp_gpio/ulp_gpio_example.c) file and update/modify following macros, if required.
 
   ```c
   #define PORT0                    0      // GPIO Port number(0 to 4)

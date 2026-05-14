@@ -38,7 +38,7 @@ This application demonstrates how to configure the Universal Synchronous/Asynchr
 
 ## About Example Code
 
-- [`usart_sync_example.c`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.1-content-for-docs/examples/si91x_soc/peripheral/sl_si91x_usart_sync_master/usart_sync_example.c) – Demonstrates configuring the USART to send and receive data in synchronous master mode.
+- [`usart_sync_example.c`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.2-content-for-docs/examples/si91x_soc/peripheral/sl_si91x_usart_sync_master/usart_sync_example.c) – Demonstrates configuring the USART to send and receive data in synchronous master mode.
 - In this example, first USART gets initialized if it was not already initialized with the clock and DMA configurations if DMA is enabled using [`sl_si91x_usart_init`](https://docs.silabs.com/wiseconnect/latest/wiseconnect-api-reference-guide-si91x-peripherals/usart#sl-si91x-usart-init). 
 
 - If the UART/USART instance is already selected for debug output logs, initialization returns `SL_STATUS_NOT_AVAILABLE` (this is informational; the application continues using the existing instance).
@@ -49,14 +49,14 @@ This application demonstrates how to configure the Universal Synchronous/Asynchr
 
 ### Configuration Macros
 
-The header file [`usart_sync_example.h`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.1-content-for-docs/examples/si91x_soc/peripheral/sl_si91x_usart_sync_master/usart_sync_example.h) exposes build-time macros:
+The header file [`usart_sync_example.h`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.2-content-for-docs/examples/si91x_soc/peripheral/sl_si91x_usart_sync_master/usart_sync_example.h) exposes build-time macros:
 
 | Macro | Purpose | Effect if Disabled | Error Returned? |
 |-------|---------|--------------------|-----------------|
 | `SL_USART_SYNCH_MODE` | Ensures the example validates synchronous mode operation. | Example runs but will not explicitly assert synchronous usage; configuration may fall back to default UC settings. | No – operation continues. |
 | `USE_SEND` | (Reserved for continuous send sequencing) Intended to enable repeated transmit cycles. | Currently unused in code; disabling has no effect. | No. |
 | `USE_RECEIVE` | (Reserved for continuous receive sequencing) Intended to enable repeated capture cycles. | Currently unused in code; disabling has no effect. | No. |
-| `NON_UC_DEFAULT_CONFIG` in [`usart_sync_example.c`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.1-content-for-docs/examples/si91x_soc/peripheral/sl_si91x_usart_sync_master/usart_sync_example.c) | Use hard-coded default configuration instead of UC component settings. | UC (Universal Configuration) values are used. | No – configuration API returns standard status. |
+| `NON_UC_DEFAULT_CONFIG` in [`usart_sync_example.c`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.2-content-for-docs/examples/si91x_soc/peripheral/sl_si91x_usart_sync_master/usart_sync_example.c) | Use hard-coded default configuration instead of UC component settings. | UC (Universal Configuration) values are used. | No – configuration API returns standard status. |
 
 These macros do not cause failures when disabled; they gate optional or illustrative behavior. If you require custom pin/baud/synchronous settings without UC, enable `NON_UC_DEFAULT_CONFIG` and adjust the structure values in `usart_sync_example.c`.
 
@@ -102,8 +102,13 @@ For details on the project folder structure, see the [WiSeConnect Examples](http
 - You can use the configuration wizard to configure different parameters. The following configuration screen illustrates what the user can select as per their requirements.
 
   > ![Figure: Selecting UC](resources/uc_screen/usart_uc.png)
+
+- By default, `USART0 SYNC Mode` is disabled in UC. Enable it for synchronous communication.
+- By default, the CLK pin is not configured in UC. Select the required CLK pin.
 - Connect master (this example) and a board flashed with the slave example: master clock pin (GPIO_8 or GPIO_25 depending on board) to slave clock pin, master TX (GPIO_30) to slave RX, master RX (GPIO_29) to slave TX.
 - The Application has been configured to run in Synchronous Master mode.
+
+> **Note:** **USART0 SCLK fractional divider mode** in the USART Universal Configurator (Fractional vs Clock swallow) has **no effect** when the peripheral runs in **synchronous** mode; it applies to asynchronous baud-clock generation. For this example, timing is governed by synchronous operation and the **CLK** / pin wiring, not that UC field.
 
 ### Pin Configuration of the WPK[BRD4002A] Base Board, and with BRD4338A radio board
 
@@ -148,7 +153,7 @@ To enable hardware flow control (RTS/CTS):
 3. Assign RTS and CTS pins either:
 
 - Through the UC pin assignment widget (preferred), OR
-- Manually by editing [`RTE_Device_917.h`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.1-content-for-docs/components/device/silabs/si91x/mcu/core/chip/config/RTE_Device_917.h) and locating the USART0 RTS/CTS section.
+- Manually by editing [`RTE_Device_917.h`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.2-content-for-docs/components/device/silabs/si91x/mcu/core/chip/config/RTE_Device_917.h) and locating the USART0 RTS/CTS section.
 
 4. Use the following default mapping if your Pin Tool is unavailable:
 

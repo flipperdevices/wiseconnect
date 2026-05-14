@@ -214,6 +214,7 @@ igmp_report_groups(struct netif *netif)
  * @return a struct igmp_group* if the group has been found,
  *         NULL if the group wasn't found.
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 struct igmp_group *
 igmp_lookfor_group(struct netif *ifp, const ip4_addr_t *addr)
 {

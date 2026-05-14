@@ -109,7 +109,7 @@ For details on the project folder structure, see the [WiSeConnect Examples](http
 - Configure mode, operating-mode, and transfer-type of I2C instance using respective instance UC.
 - Change 'Mode' to 'Leader mode' on UC.
 - Change 'Operating Mode' as per bus-speed requirement.
-- After completing the above UC configurations, configure the following macros in [`i2c_leader_example.c`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.1-content-for-docs/examples/si91x_soc/peripheral/sl_si91x_i2c_driver_leader/i2c_leader_example.c) and [`i2c_leader_example.h`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.1-content-for-docs/examples/si91x_soc/peripheral/sl_si91x_i2c_driver_leader/i2c_leader_example.h) file. Update or modify the following macros, if required.
+- After completing the above UC configurations, configure the following macros in [`i2c_leader_example.c`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.2-content-for-docs/examples/si91x_soc/peripheral/sl_si91x_i2c_driver_leader/i2c_leader_example.c) and [`i2c_leader_example.h`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.2-content-for-docs/examples/si91x_soc/peripheral/sl_si91x_i2c_driver_leader/i2c_leader_example.h) file. Update or modify the following macros, if required.
 
     ```c
       #define FOLLOWER_I2C_ADDR        // Update I2C follower address

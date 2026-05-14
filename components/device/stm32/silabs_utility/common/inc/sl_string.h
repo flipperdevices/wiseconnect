@@ -93,7 +93,7 @@ void sl_strcat_s(char *dst, size_t dst_size, const char *src);
  *
  * @return              String lenght.
  ******************************************************************************/
-size_t sl_strlen(char *str);
+size_t sl_strlen(const char *str);
 
 /*******************************************************************************
  * @brief
@@ -105,7 +105,7 @@ size_t sl_strlen(char *str);
  *
  * @return              String lenght.
  ******************************************************************************/
-size_t sl_strnlen(char *str, size_t max_len);
+size_t sl_strnlen(const char *str, size_t max_len);
 
 /*******************************************************************************
  * @brief

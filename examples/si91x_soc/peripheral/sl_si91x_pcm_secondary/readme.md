@@ -102,7 +102,7 @@ For details on the project folder structure, see the [WiSeConnect Examples](http
 
 Configuration files are generated in the **config** folder. If not changed, the code will run on default UC values.
 
-Configure the following macros in [`pcm_secondary_example.c`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.1-content-for-docs/examples/si91x_soc/peripheral/sl_si91x_pcm_secondary/pcm_secondary_example.c) file and update/modify following macros if required.
+Configure the following macros in [`pcm_secondary_example.c`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.2-content-for-docs/examples/si91x_soc/peripheral/sl_si91x_pcm_secondary/pcm_secondary_example.c) file and update/modify following macros if required.
 
 ```C
 #define PCM_SECONDARY_BUFFER_SIZE 1024    ///< Transmit/Receive buffer size
@@ -118,7 +118,7 @@ Configure the following macros in [`pcm_secondary_example.c`](https://github.com
 
 To use the ULP_PCM instance instead of the default PCM0 instance:
 
-- Change the `PCM_INSTANCE` macro value to `ULP_PCM` in [`pcm_secondary_example.c`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.1-content-for-docs/examples/si91x_soc/peripheral/sl_si91x_pcm_secondary/pcm_secondary_example.c):
+- Change the `PCM_INSTANCE` macro value to `ULP_PCM` in [`pcm_secondary_example.c`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.2-content-for-docs/examples/si91x_soc/peripheral/sl_si91x_pcm_secondary/pcm_secondary_example.c):
 
   ```C
   #define PCM_INSTANCE ULP_PCM

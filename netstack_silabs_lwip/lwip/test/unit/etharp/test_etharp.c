@@ -6,7 +6,7 @@
 #include "netif/ethernet.h"
 #include "lwip/stats.h"
 #include "lwip/prot/iana.h"
-#if defined(SL_LWIP_ETHARP_ONDEMAND_TIMER) && SL_LWIP_ETHARP_ONDEMAND_TIMER && defined(LWIP_TESTMODE)
+#if SL_LWIP_ETHARP_ONDEMAND_TIMER && LWIP_TESTMODE
 #include "lwip/timeouts.h"
 #endif
 
@@ -27,7 +27,7 @@ static int linkoutput_ctr;
 
 /* Helper functions */
 
-#if defined(SL_LWIP_ETHARP_ONDEMAND_TIMER) && SL_LWIP_ETHARP_ONDEMAND_TIMER && defined(LWIP_TESTMODE)
+#if SL_LWIP_ETHARP_ONDEMAND_TIMER && LWIP_TESTMODE
 /**
  * Safe wrapper for etharp_tmr() when on-demand timer is enabled.
  * Calls timer to process entries but immediately cancels the scheduled timeout
@@ -56,7 +56,7 @@ static void
 etharp_remove_all(void)
 {
   int i;
-#if defined(SL_LWIP_ETHARP_ONDEMAND_TIMER) && SL_LWIP_ETHARP_ONDEMAND_TIMER && defined(LWIP_TESTMODE)
+#if SL_LWIP_ETHARP_ONDEMAND_TIMER && LWIP_TESTMODE
   /* Call etharp_tmr repeatedly using our safe wrapper.
    * This properly removes dynamic entries while preserving static ones. */
   for(i = 0; i < 0xff; i++) {
@@ -164,7 +164,7 @@ create_arp_response(ip4_addr_t *adr)
 static void
 etharp_setup(void)
 {
-#if defined(SL_LWIP_ETHARP_ONDEMAND_TIMER) && SL_LWIP_ETHARP_ONDEMAND_TIMER && defined(LWIP_TESTMODE)
+#if SL_LWIP_ETHARP_ONDEMAND_TIMER && LWIP_TESTMODE
   /* Clear table directly for setup - don't use timer operations */
   etharp_test_clear_table();
   etharp_test_set_timer_started(0);
@@ -174,7 +174,7 @@ etharp_setup(void)
   etharp_remove_all();
 #endif
   default_netif_add();
-#if defined(SL_LWIP_ETHARP_ONDEMAND_TIMER) && SL_LWIP_ETHARP_ONDEMAND_TIMER && defined(LWIP_TESTMODE)
+#if SL_LWIP_ETHARP_ONDEMAND_TIMER && LWIP_TESTMODE
   /* Keep timer_started = 1 so ARP operations don't try to schedule timers.
    * This prevents MEMP_SYS_TIMEOUT allocations during the test. */
   etharp_test_set_timer_started(1);
@@ -185,7 +185,7 @@ etharp_setup(void)
 static void
 etharp_teardown(void)
 {
-#if defined(SL_LWIP_ETHARP_ONDEMAND_TIMER) && SL_LWIP_ETHARP_ONDEMAND_TIMER && defined(LWIP_TESTMODE)
+#if SL_LWIP_ETHARP_ONDEMAND_TIMER && LWIP_TESTMODE
   /* Reset timer state, then clear table directly */
   etharp_test_set_timer_started(0);
   etharp_test_clear_table();
@@ -247,7 +247,7 @@ START_TEST(test_etharp_table)
 
         idx = etharp_find_addr(NULL, &adrs[i], &unused_ethaddr, &unused_ipaddr);
         fail_unless(idx == i);
-        #if defined(SL_LWIP_ETHARP_ONDEMAND_TIMER) && SL_LWIP_ETHARP_ONDEMAND_TIMER && defined(LWIP_TESTMODE)
+        #if SL_LWIP_ETHARP_ONDEMAND_TIMER && LWIP_TESTMODE
         test_safe_etharp_tmr();
         #else
         etharp_tmr();
@@ -291,7 +291,7 @@ START_TEST(test_etharp_table)
           /* the last entry must not overwrite the static entry! */
           fail_unless(idx == 1);
         }
-        #if defined(SL_LWIP_ETHARP_ONDEMAND_TIMER) && SL_LWIP_ETHARP_ONDEMAND_TIMER && defined(LWIP_TESTMODE)
+        #if SL_LWIP_ETHARP_ONDEMAND_TIMER && LWIP_TESTMODE
         test_safe_etharp_tmr();
         #else
         etharp_tmr();

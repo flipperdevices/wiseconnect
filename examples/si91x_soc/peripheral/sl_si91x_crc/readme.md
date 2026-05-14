@@ -59,7 +59,7 @@ For details on the project folder structure, see the [WiSeConnect Examples](http
 - **Data width:** Specifies how many bits wide the input data is (e.g., 8-bit, 16-bit, 32-bit)
 - These parameters allow users to customize the CRC implementation for different standards and data types.
 
-- Configure the following parameter in the [`sl_si91x_crc.h`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.1-content-for-docs/components/device/silabs/si91x/mcu/drivers/unified_api/inc/sl_si91x_crc.h) file. Update or modify the following macro, if required. The code illustrates the default configurations.
+- Configure the following parameter in the [`sl_si91x_crc.h`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.2-content-for-docs/components/device/silabs/si91x/mcu/drivers/unified_api/inc/sl_si91x_crc.h) file. Update or modify the following macro, if required. The code illustrates the default configurations.
 
   ```C
    #define SL_CRC_POLYNOMIAL      0x04C11DB7 /* Polynomial encryption value */

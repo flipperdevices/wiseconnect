@@ -114,4 +114,7 @@
 #define IPV6_FRAG_COPYHEADER            1
 #endif
 
+/* Enable LWIP Adaptive timers optimizations */
+#define SL_LWIP_ADAPTIVE_TIMERS        1
+
 #endif /* LWIP_HDR_LWIPOPTS_H */

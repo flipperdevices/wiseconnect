@@ -51,7 +51,7 @@ This application demonstrates the use of Synchronous Serial Interface (SSI) for 
 
 - This example demonstrates SSI transfer (that is, full-duplex communication) and SSI send/SSI receive (that is, half-duplex communication).
 - Various parameters like SSI clock mode, Bit-width, Manual cs pin, and SSI baud rate can be configured using the UC. Also, Master or Slave or ULP Master DMA can be configured using UC.
-- The [`sl_si91x_ssi_config.h`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.1-content-for-docs/components/device/silabs/si91x/mcu/drivers/unified_api/config/sl_si91x_ssi_config.h) file contains the control configurations and [`sl_si91x_ssi_common_config.h`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.1-content-for-docs/components/device/silabs/si91x/mcu/drivers/unified_api/config/sl_si91x_ssi_common_config.h) contains DMA configuration selection.
+- The [`sl_si91x_ssi_config.h`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.2-content-for-docs/components/device/silabs/si91x/mcu/drivers/unified_api/config/sl_si91x_ssi_config.h) file contains the control configurations and [`sl_si91x_ssi_common_config.h`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.2-content-for-docs/components/device/silabs/si91x/mcu/drivers/unified_api/config/sl_si91x_ssi_common_config.h) contains DMA configuration selection.
 - In the example code, first the output buffer is filled with some data which is transferred to the slave.
 - The firmware version of API is fetched using [sl_si91x_ssi_get_version](https://docs.silabs.com/wiseconnect/latest/wiseconnect-api-reference-guide-si91x-peripherals/ssi#sl-si91x-ssi-get-version) which includes the release version, major version, and minor version [sl_ssi_version_t](https://docs.silabs.com/wiseconnect/latest/wiseconnect-api-reference-guide-si91x-peripherals/sl-ssi-version-t).
 - [sl_si91x_ssi_init](https://docs.silabs.com/wiseconnect/latest/wiseconnect-api-reference-guide-si91x-peripherals/ssi#sl-si91x-ssi-init) is used to initialize the peripheral, that includes pin configuration and it powers up the module.
@@ -59,7 +59,7 @@ This application demonstrates the use of Synchronous Serial Interface (SSI) for 
 - All the necessary parameters are configured using [sl_si91x_ssi_set_configuration](https://docs.silabs.com/wiseconnect/latest/wiseconnect-api-reference-guide-si91x-peripherals/ssi#sl-si91x-ssi-set-configuration) API. It expects a structure with required parameters
   [sl_ssi_control_config_t](https://docs.silabs.com/wiseconnect/latest/wiseconnect-api-reference-guide-si91x-peripherals/sl-ssi-control-config-t).
 - After configuration, a callback register API is called to register the callback at the time of events [sl_si91x_ssi_register_event_callback](https://docs.silabs.com/wiseconnect/latest/wiseconnect-api-reference-guide-si91x-peripherals/ssi#sl-si91x-ssi-register-event-callback).
-- The State machine code is implemented for transfer, send and receive data, and the current mode is determined by ssi_mode_enum_t which is declared in [`ssi_slave_example.c`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.1-content-for-docs/examples/si91x_soc/peripheral/sl_si91x_ssi_slave/ssi_slave_example.c) file.
+- The State machine code is implemented for transfer, send and receive data, and the current mode is determined by ssi_mode_enum_t which is declared in [`ssi_slave_example.c`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.2-content-for-docs/examples/si91x_soc/peripheral/sl_si91x_ssi_slave/ssi_slave_example.c) file.
 - According to the macro which is enabled, the example code executes the transfer of data:
 
 - If the **SSI_SLAVE_TRANSFER** macro is enabled, it will transfer the data (that is, send and receive data) in full-duplex mode.
@@ -136,7 +136,7 @@ For details on the project folder structure, see the [WiSeConnect Examples](http
     - Rx FIFO Threshold: Receive FIFO Threshold. Controls the level of entries (or below) at which the receive FIFO controller triggers an interrupt. The configuration range from 0 to 15.
 - Configuration files are generated in the **config folder**. If the configurations are not changed, the code will run on default UC values.
 
-- Configure the following macros in the [`ssi_slave_example.h`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.1-content-for-docs/examples/si91x_soc/peripheral/sl_si91x_ssi_slave/ssi_slave_example.h) file and update/modify following macros, if required.
+- Configure the following macros in the [`ssi_slave_example.h`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.2-content-for-docs/examples/si91x_soc/peripheral/sl_si91x_ssi_slave/ssi_slave_example.h) file and update/modify following macros, if required.
 
 - `SSI_SLAVE_TRANSFER`: This macro is enabled by default. It sends and receives data in full duplex.
 
@@ -170,7 +170,7 @@ For details on the project folder structure, see the [WiSeConnect Examples](http
 >
 > Where F<sub>sclk_in</sub> is the incoming clock from the master. The SSI Secondary (Slave) peripheral clock (F<sub>ssi_clk</sub>) must satisfy this condition. If the master is configured for a specific frequency, ensure that the slave's clock is properly configured. Failure to properly configure the clock may result in communication errors or unreliable data transfer.
 >
-> Configure the following macro in the [`ssi_slave_example.c`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.1-content-for-docs/examples/si91x_soc/peripheral/sl_si91x_ssi_slave/ssi_slave_example.c) file to set the SSI baud rate for the slave:
+> Configure the following macro in the [`ssi_slave_example.c`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.2-content-for-docs/examples/si91x_soc/peripheral/sl_si91x_ssi_slave/ssi_slave_example.c) file to set the SSI baud rate for the slave:
 >
 > ```C
 > #define SSI_SLAVE_BAUDRATE 2000000  // SSI baudrate
@@ -193,14 +193,15 @@ For details on the project folder structure, see the [WiSeConnect Examples](http
 
 | Explorer kit GPIO| Description        |
 | ------------| ------------------------|
-|   GPIO_25   | RTE_SSI_SLAVE_SCK_PIN   |
-|   GPIO_28   | RTE_SSI_SLAVE_CS_PIN    |
+|   GPIO_26   | RTE_SSI_SLAVE_SCK_PIN   |
+|   GPIO_25   | RTE_SSI_SLAVE_CS_PIN    |
 |   GPIO_27   | RTE_SSI_SLAVE_MOSI_PIN  |
-|   GPIO_26   | RTE_SSI_SLAVE_MISO_PIN  |
+|   GPIO_28   | RTE_SSI_SLAVE_MISO_PIN  |
 
 >**Note:** Make sure the following pin configuration are in the `RTE_Device_xxx.h` file:
 >
 > - SiWx917: RTE_Device_917.h (path: /$project/config/RTE_Device_917.h)
+> - On the BRD4342A board, GPIO_9 is dedicated to the TA VCOM TX and GPIO_53 is dedicated to the PSRAM SIO0, so they cannot be used as the SSI slave chip select. Use GPIO_25 or GPIO_46 instead, and update the CS pin selection in the UC.
 
 > **Note**: For recommended settings, please refer the [recommendations guide](https://docs.silabs.com/wiseconnect/latest/wiseconnect-developers-guide-prog-recommended-settings/).
 

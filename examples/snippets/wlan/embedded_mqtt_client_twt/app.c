@@ -132,7 +132,7 @@ static sl_wifi_device_configuration_t wifi_mqtt_client_configuration = {
 #endif
                                                   ),
                    .bt_feature_bit_map         = 0,
-                   .ext_tcp_ip_feature_bit_map = (SL_SI91X_CONFIG_FEAT_EXTENTION_VALID | SL_SI91X_EXT_EMB_MQTT_ENABLE),
+                   .ext_tcp_ip_feature_bit_map = (SL_SI91X_CONFIG_FEAT_EXTENSION_VALID | SL_SI91X_EXT_EMB_MQTT_ENABLE),
                    .ble_feature_bit_map        = 0,
                    .ble_ext_feature_bit_map    = 0,
                    .config_feature_bit_map = (SL_SI91X_FEAT_SLEEP_GPIO_SEL_BITMAP | SL_WIFI_ENABLE_ENHANCED_MAX_PSP) }
@@ -410,8 +410,30 @@ void mqtt_client_error_event_handler(void *client, sl_mqtt_client_error_status_t
 {
   UNUSED_PARAMETER(client);
 
-  printf("Terminating program, Error: %d\r\n", *error);
-  mqtt_client_cleanup();
+  switch (*error) {
+    case SL_MQTT_CLIENT_RECEIVE_FAILED:
+      printf("MQTT Error: Message receive failed.\r\n");
+      break;
+
+    case SL_MQTT_CLIENT_RECEIVE_PAYLOAD_TOO_LARGE:
+      printf("MQTT Error: Received payload exceeds max size (%u bytes). "
+             "Increase SL_MQTT_CLIENT_MAX_RX_PAYLOAD_SIZE.\r\n",
+             SL_MQTT_CLIENT_MAX_RX_PAYLOAD_SIZE);
+      break;
+
+    case SL_MQTT_CLIENT_RECEIVE_MEMORY_ALLOCATION_FAILED:
+      printf("MQTT Error: Failed to allocate memory for message reassembly.\r\n");
+      break;
+
+    case SL_MQTT_CLIENT_RECEIVE_DATA_CORRUPTED:
+      printf("MQTT Error: Data corruption detected during message reassembly.\r\n");
+      break;
+
+    default:
+      printf("Terminating program, Error: %d\r\n", *error);
+      mqtt_client_cleanup();
+      break;
+  }
 }
 
 void mqtt_client_event_handler(void *client, sl_mqtt_client_event_t event, void *event_data, void *context)

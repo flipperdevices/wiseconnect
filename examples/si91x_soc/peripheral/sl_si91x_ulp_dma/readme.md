@@ -32,7 +32,7 @@
 
 ## About Example Code
 
-- [`ulp_dma_example.c`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.1-content-for-docs/examples/si91x_soc/peripheral/sl_si91x_ulp_dma/ulp_dma_example.c) file demonstrates how to use DMA peripheral to perform memory to memory transfers
+- [`ulp_dma_example.c`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.2-content-for-docs/examples/si91x_soc/peripheral/sl_si91x_ulp_dma/ulp_dma_example.c) file demonstrates how to use DMA peripheral to perform memory to memory transfers
 - In this example first dma initialization is done using [sl_si91x_dma_init](https://docs.silabs.com/wiseconnect/latest/wiseconnect-api-reference-guide-si91x-peripherals/dma#sl-si91x-dma-init)
 - Then [sl_si91x_dma_allocate_channel](https://docs.silabs.com/wiseconnect/latest/wiseconnect-api-reference-guide-si91x-peripherals/dma#sl-si91x-dma-allocate-channel) is used to allocate ULP_DMA_CHANNEL for transfer.
 - After configuring channel, callbacks are registered using [sl_si91x_dma_register_callbacks](https://docs.silabs.com/wiseconnect/latest/wiseconnect-api-reference-guide-si91x-peripherals/dma#sl-si91x-dma-register-callbacks)
@@ -83,7 +83,7 @@ For details on the project folder structure, see the [WiSeConnect Examples](http
 
 - Open **sl_si91x_ulp_dma.slcp** project file select **software component** tab and search for **SL_DMA** in search bar.
 - Configure SL_ULP_DMA_CHANNEL_COUNT(0 - 12) - Number of available channels for ULP_DMA
-- Configure the following macros in [`ulp_dma_example.c`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.1-content-for-docs/examples/si91x_soc/peripheral/sl_si91x_ulp_dma/ulp_dma_example.c) file and update/modify following macros if required.
+- Configure the following macros in [`ulp_dma_example.c`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.2-content-for-docs/examples/si91x_soc/peripheral/sl_si91x_ulp_dma/ulp_dma_example.c) file and update/modify following macros if required.
 
 ```C
 #define ULP_DMA_SIMPLE_TRANSFER 1    ///< Enable/Disable simple transfer

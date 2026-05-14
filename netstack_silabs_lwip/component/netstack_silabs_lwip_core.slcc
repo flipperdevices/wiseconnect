@@ -21,6 +21,9 @@ requires:
   condition:
   - micriumos
 - name: kernel
+- name: sli_csa_for_lwip
+  condition:
+  - device_generic_family_sixx353
 recommends:
 - id: netstack_silabs_lwip_netif_ppp
 - id: freertos

@@ -19,7 +19,9 @@
 
 #include "MQTTPacket.h"
 
-#if defined(SLI_SI91X_OFFLOAD_NETWORK_STACK) || defined(sl_si91x_internal_stack)
+#if defined(SLI_SI91X_NETWORK_DUAL_STACK) || defined(sl_si91x_network_dual_stack)
+#include "MQTTSi91x_dual_stack.h" //Platform specific implementation for dual stack
+#elif defined(SLI_SI91X_OFFLOAD_NETWORK_STACK) || defined(sl_si91x_internal_stack)
 #include "MQTTSi91x.h" //Platform specific implementation header file
 #elif defined(SLI_SI91X_LWIP_HOSTED_NETWORK_STACK) || defined(sl_si91x_lwip_stack)
 #include "MQTTSi91x_lwip.h" //Platform specific implementation header file
@@ -102,5 +104,5 @@ struct Client {
   *           remaining bytes(of single TCP Packet) to be read by host mandatorily.
   *           Otherwise, Host will not be able to identify the subsequent bytes properly.
   * Here, the Wait time is considered based on the logic present in rsi_socket_recvfrom() */
-#define SINGLE_PKT_TCP_STREAM_TIMEOUT WAIT_TIMEOOUT + SLI_SOCKET_RECVFROM_RESPONSE_WAIT_TIME
+#define SINGLE_PKT_TCP_STREAM_TIMEOUT WAIT_TIMEOUT + SLI_SOCKET_RECVFROM_RESPONSE_WAIT_TIME
 #endif

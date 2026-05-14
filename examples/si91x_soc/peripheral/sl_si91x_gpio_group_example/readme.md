@@ -203,7 +203,7 @@ For details on the project folder structure, see the [WiSeConnect Examples](http
 
 ### Application Configuration Parameters
 
-- Configure the following parameters in [`gpio_group_example.c`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.1-content-for-docs/examples/si91x_soc/peripheral/sl_si91x_gpio_group_example/gpio_group_example.c) (examples/si91x_soc/peripheral/sl_si91x_gpio_group_example/) file and update/modify following macros if required
+- Configure the following parameters in [`gpio_group_example.c`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.2-content-for-docs/examples/si91x_soc/peripheral/sl_si91x_gpio_group_example/gpio_group_example.c) (examples/si91x_soc/peripheral/sl_si91x_gpio_group_example/) file and update/modify following macros if required
 
   ```c
     #define PIN_COUNT        4      // Number of interrupts needed

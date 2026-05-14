@@ -462,6 +462,10 @@ void RSI_Configure_Ipmu_Mode(void)
   (void)temperature;
   /*configures chip supply mode to HP-LDO */
   configure_ipmu_mode(HP_LDO_MODE);
+#elif defined(__ZEPHYR__)
+  (void)temperature;
+  // FIXME: If temperature is too high, switch to LDO supply mode.
+  configure_ipmu_mode(SCDC_MODE);
 #else
   (void)temperature;
   /* Read the temperature; if it is within the range of 0 to 60 degrees, switch the chip supply to SCDC mode. Otherwise, maintain the default LDO supply mode.*/

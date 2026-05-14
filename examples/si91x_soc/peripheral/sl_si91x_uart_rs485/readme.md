@@ -133,15 +133,15 @@ For details on the project folder structure, see the [WiSeConnect Examples](http
 - This example demonstrates RS485 multi-slave communication using three Simplicity Studio projects: one master (sending) and two slaves (receiving). Below are the necessary configurations and changes required in the application code.
 
   - Master Project: 
-    - Set `current_mode = SL_UART_RS485_SEND` and `current_slave = RS485_SLAVE1`in [`uart_rs485_example.c`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.1-content-for-docs/examples/si91x_soc/peripheral/sl_si91x_uart_rs485/uart_rs485_example.c) application.
+    - Set `current_mode = SL_UART_RS485_SEND` and `current_slave = RS485_SLAVE1`in [`uart_rs485_example.c`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.2-content-for-docs/examples/si91x_soc/peripheral/sl_si91x_uart_rs485/uart_rs485_example.c) application.
     - This configures the master to transmit data to RS485_SLAVE1 in half-duplex mode, once SLAVE1 data transfer is done, current slave is changed to RS485_SLAVE2 and sends data to RS485_SLAVE2 in one direction(master sends, SLAVE2 receives).
 
   - Slave Project 1:
-    - Set `current_mode = SL_UART_RS485_RECEIVE` and `current_slave = RS485_SLAVE1` in [`uart_rs485_example.c`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.1-content-for-docs/examples/si91x_soc/peripheral/sl_si91x_uart_rs485/uart_rs485_example.c) application.
+    - Set `current_mode = SL_UART_RS485_RECEIVE` and `current_slave = RS485_SLAVE1` in [`uart_rs485_example.c`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.2-content-for-docs/examples/si91x_soc/peripheral/sl_si91x_uart_rs485/uart_rs485_example.c) application.
     - This configures the slave to listen for and process messages addressed to `RS485_HW_SLAVE1_ADDRESS`.
 
   - Slave Project 2:
-    - Set `current_mode = SL_UART_RS485_RECEIVE` and `current_slave = RS485_SLAVE2` in [`uart_rs485_example.c`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.1-content-for-docs/examples/si91x_soc/peripheral/sl_si91x_uart_rs485/uart_rs485_example.c) application.
+    - Set `current_mode = SL_UART_RS485_RECEIVE` and `current_slave = RS485_SLAVE2` in [`uart_rs485_example.c`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.2-content-for-docs/examples/si91x_soc/peripheral/sl_si91x_uart_rs485/uart_rs485_example.c) application.
     - This configures the slave to handle messages directed to `RS485_HW_SLAVE2_ADDRESS`.
 
 - This setup enables the master project to transmit data to two distinct slave projects, using RS485 addressing. The same steps apply to software-controlled half-duplex mode.

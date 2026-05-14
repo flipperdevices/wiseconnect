@@ -73,7 +73,7 @@ The project uses BTN0 by default. To change the button to BTN1, follow the below
 
    ![Figure: Adding Button Instance](resources/readme/image600d.png)
 
-2. Change the definition of macro BUTTON_INSTANCE_0 in the [`button_baremetal.c`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.1-content-for-docs/examples/si91x_soc/peripheral/sl_si91x_button_baremetal/button_baremetal.c) file to button_btn1.
+2. Change the definition of macro BUTTON_INSTANCE_0 in the [`button_baremetal.c`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.2-content-for-docs/examples/si91x_soc/peripheral/sl_si91x_button_baremetal/button_baremetal.c) file to button_btn1.
 
 3. Build and test the output.
 
