@@ -1,23 +1,26 @@
-#BLE - iBeacon
+# BLE - iBeacon
 
-##Table of Contents
+## Table of Contents
 
-    - [BLE - iBeacon](#ble-- - ibeacon) - [Table of Contents](#table - of - contents) - [Purpose / Scope](#purposescope)
-    - [iBeacon Overview](#ibeacon - overview) - [Prerequisites / Setup Requirements](#prerequisitessetup - requirements)
-    - [Hardware Requirements](#hardware - requirements) - [Software Requirements](#software - requirements)
-    - [Setup Diagram](#setup - diagram) - [Getting Started](#getting - started)
-    - [Application Build Environment](#application - build - environment)
-    - [Test the Application](#test - the - application)
+- [BLE - iBeacon](#ble---ibeacon)
+  - [Table of Contents](#table-of-contents)
+  - [Purpose/Scope](#purposescope)
+  - [iBeacon Overview](#ibeacon-overview)
+  - [Prerequisites/Setup Requirements](#prerequisitessetup-requirements)
+    - [Hardware Requirements](#hardware-requirements)
+    - [Software Requirements](#software-requirements)
+    - [Setup Diagram](#setup-diagram)
+  - [Getting Started](#getting-started)
+  - [Application Build Environment](#application-build-environment)
+  - [Test the Application](#test-the-application)
 
-          ##Purpose
-        / Scope
+## Purpose/Scope
 
-          This application demonstrates how to set the iBeacon data format in advertising parameters in BLE
-          peripheral mode.
+This application demonstrates how to set the iBeacon data format in advertising parameters in BLE peripheral mode.
 
-          ##iBeacon Overview
+## iBeacon Overview
 
-          The iBeacon advertise data format is as follows :
+The iBeacon advertise data format is as follows :
 
   | iBeacon prefix | UUID | Major Number | Minor | Number | TX Power |
   | -- -- -- | -- - | -- -- -- | -- -- -- | -- -- -- | -- -- -- | | 1 | 9Bytes | 16bytes | 2Bytes | 2 Bytes | 1bytes |

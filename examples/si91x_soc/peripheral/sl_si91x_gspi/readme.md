@@ -47,7 +47,7 @@ This application demonstrates the GSPI for data transfer in full-duplex as well 
 - This example demonstrates GSPI transfer (that is, full-duplex communication) and GSPI send - GSPI receive (that is, half-duplex communication).
 - Various parameters like swap read and write data, data width, mode, and bitrate can be configured using [sl_gspi_control_config_t](https://docs.silabs.com/wiseconnect/latest/wiseconnect-api-reference-guide-si91x-peripherals/gspi#sl-gspi-control-config-t)
 - DMA and FIFO Threshold can also be configured using the UC.
-- The file [`sl_si91x_gspi_config.h`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.1-content-for-docs/components/device/silabs/si91x/mcu/drivers/unified_api/config/sl_si91x_gspi_config.h) contains the control configurations and [`sl_si91x_gspi_common_config.h`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.1-content-for-docs/components/device/silabs/si91x/mcu/drivers/unified_api/config/sl_si91x_gspi_common_config.h) contains DMA and FIFO Threshold configuration.
+- The file [`sl_si91x_gspi_config.h`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.2-content-for-docs/components/device/silabs/si91x/mcu/drivers/unified_api/config/sl_si91x_gspi_config.h) contains the control configurations and [`sl_si91x_gspi_common_config.h`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.2-content-for-docs/components/device/silabs/si91x/mcu/drivers/unified_api/config/sl_si91x_gspi_common_config.h) contains DMA and FIFO Threshold configuration.
 - In the example code, firstly, the output buffer is filled with some data which is transferred to the slave.
 - The firmware version of the API is fetched using [sl_si91x_gspi_get_version](https://docs.silabs.com/wiseconnect/latest/wiseconnect-api-reference-guide-si91x-peripherals/gspi#sl-si91x-gspi-get-version) which includes the release version, major version, and minor version [sl_gspi_version_t](https://docs.silabs.com/wiseconnect/latest/wiseconnect-api-reference-guide-si91x-peripherals/gspi#sl-gspi-version-t).
 - [sl_si91x_gspi_init](https://docs.silabs.com/wiseconnect/latest/wiseconnect-api-reference-guide-si91x-peripherals/gspi#sl-si91x-gspi-init) is used to initialize the peripheral, which includes pin configuration and also enables DMA if configured.
@@ -130,7 +130,7 @@ For details on the project folder structure, see the [WiSeConnect Examples](http
 - **GSPI Configuration**
 
   - Mode: SPI mode can be configured: Mode 0 and Mode 3 (motorola). Mode 0: Clock Polarity 0 and Clock Phase 0, Mode 3: Clock Polarity 1 and Clock Phase 1.
-  - Bitrate: The speed of transfer can be configured (that is, bits/second).
+  - Bitrate: The speed of transfer can be configured from **2 kbit/s** to **116 Mbit/s**. The minimum and maximum speed of transfer depend on the GSPI peripheral clock source configured for the device.
   - Data Width: The size of data packet, it can be configured between 1 to 16.
   - Byte-wise swapping of read and write data, enable will swap the data and disable will not swap the data. (Can be used only if data width is configured as 16).
 
@@ -141,7 +141,7 @@ For details on the project folder structure, see the [WiSeConnect Examples](http
   - It is recommended to have maximum depth for FIFO threshold. Almost Full refers to the RX FIFO and Almost Empty refers to TX FIFO.
   - Configuration files are generated in **config folder**. If not changed, the code will run on default UC values.
 
-- Configure the following macros in the [`gspi_example.h`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.1-content-for-docs/examples/si91x_soc/peripheral/sl_si91x_gspi/gspi_example.h) file and update/modify following macros, if required.
+- Configure the following macros in the [`gspi_example.h`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.2-content-for-docs/examples/si91x_soc/peripheral/sl_si91x_gspi/gspi_example.h) file and update/modify following macros, if required.
 
       ```c
       #define SL_USE_TRANSFER ENABLE    ///< To use the transfer API
@@ -195,17 +195,35 @@ Refer to the instructions [here](https://docs.silabs.com/wiseconnect/latest/wise
    ![Figure: output](resources/readme/output_gspi.png)
 
 > **Note:**
->- To achieve 116 MHz for non-power-save applications, you must change the INTF_PLL frequency in `components\device\silabs\si91x\mcu\drivers\service\clock_manager\src\sl_si91x_clock_manager.c` to 116M Hz.
 >
->   ```c 
->   #define INTF_PLL_FREQ  (160000000UL) to (116000000UL) ///< Non Powersave Application      
+> - The GSPI SCK frequency depends on `f_gspi_src`, the GSPI peripheral clock source. Configure the clock source and frequency according to the device Hardware Reference Manual (HRM). With the maximum 8-bit clock divider (255), the SCK frequency is approximately:
+>
+>   `f_SCK ≈ f_gspi_src / (2 × 255) = f_gspi_src / 510`
+>
+> - GSPI uses the INTF PLL, so `f_gspi_src` follows `INTF_PLL_FREQ` in `components/device/silabs/si91x/mcu/drivers/service/clock_manager/src/sl_si91x_clock_manager.c`:
+>
+>   ```c
+>   #define INTF_PLL_FREQ  (160000000UL) // 160 MHz default interface PLL for peripherals
 >   ```
 >
->- To achieve 116 MHz for power-save applications, you must change the clock scaling mode to performance and INTF_PLL frequency in `components\device\silabs\si91x\mcu\drivers\service\clock_manager\src\sli_si91x_clock_manager.c` to 116 MHz.
+> - To achieve 116 MHz for non-power-save applications, set the INTF_PLL frequency in `components\device\silabs\si91x\mcu\drivers\service\clock_manager\src\sl_si91x_clock_manager.c` to 116 MHz.
 >
->    ```c 
->    #define PS4_PERFORMANCE_MODE_INTF_FREQ     (160000000UL) to (116000000UL)   ///< Powersave Application
+>    ```c
+>    // From:
+>    #define INTF_PLL_FREQ  (160000000UL)
+>    // To:
+>    #define INTF_PLL_FREQ  (116000000UL) ///< Non-power-save application
 >    ```
->   This change affects flash performance, as its operating frequency decreases from 80 MHz to 58 MHz.
 >
->- Interrupt handlers are implemented in the driver layer, and user callbacks are provided for custom code. If you want to write your own interrupt handler instead of using the default one, make the driver interrupt handler a weak handler. Then, copy the necessary code from the driver handler to your custom interrupt handler.
+> - To achieve 116 MHz for power-save applications, set the clock scaling mode to performance and INTF_PLL frequency in `components\device\silabs\si91x\mcu\drivers\service\clock_manager\src\sli_si91x_clock_manager.c` to 116 MHz.
+>
+>   ```c
+>   // From:
+>   #define PS4_PERFORMANCE_MODE_INTF_FREQ (160000000UL)
+>   // To:
+>   #define PS4_PERFORMANCE_MODE_INTF_FREQ (116000000UL) ///< Power-save application
+>   ```
+>
+>   This change reduces flash performance, because the operating frequency decreases from 80 MHz to 58 MHz.
+>
+> - Interrupt handlers are implemented in the driver layer, and user callbacks are provided for custom code. To customize the interrupt handler, make the driver interrupt handler a weak handler, then copy the necessary code from the driver handler to the custom interrupt handler.

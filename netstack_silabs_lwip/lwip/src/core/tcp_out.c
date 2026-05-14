@@ -131,6 +131,7 @@ static err_t tcp_output_control_segment_netif(const struct tcp_pcb *pcb, struct 
                                               struct netif *netif);
 
 /* tcp_route: common code that returns a fixed bound netif or calls ip_route */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 static struct netif *
 tcp_route(const struct tcp_pcb *pcb, const ip_addr_t *src, const ip_addr_t *dst)
 {
@@ -157,6 +158,7 @@ tcp_route(const struct tcp_pcb *pcb, const ip_addr_t *src, const ip_addr_t *dst)
  * The TCP header is filled in except ackno and wnd.
  * p is freed on failure.
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 static struct tcp_seg *
 tcp_create_segment(const struct tcp_pcb *pcb, struct pbuf *p, u8_t hdrflags, u32_t seqno, u8_t optflags)
 {
@@ -224,6 +226,7 @@ tcp_create_segment(const struct tcp_pcb *pcb, struct pbuf *p, u8_t hdrflags, u32
  * @param first_seg true when this pbuf will be used in the first enqueued segment.
  */
 #if TCP_OVERSIZE
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 static struct pbuf *
 tcp_pbuf_prealloc(pbuf_layer layer, u16_t length, u16_t max_length,
                   u16_t *oversize, const struct tcp_pcb *pcb, u8_t apiflags,
@@ -304,6 +307,7 @@ tcp_seg_add_chksum(u16_t chksum, u16_t len, u16_t *seg_chksum,
  * @param len length of data to send (checked against snd_buf)
  * @return ERR_OK if tcp_write is allowed to proceed, another err_t otherwise
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 static err_t
 tcp_write_checks(struct tcp_pcb *pcb, u16_t len)
 {
@@ -389,6 +393,7 @@ tcp_write_checks(struct tcp_pcb *pcb, u16_t len)
  * - TCP_WRITE_FLAG_MORE (0x02) for TCP connection, PSH flag will not be set on last segment sent,
  * @return ERR_OK if enqueued, another err_t on error
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 err_t
 tcp_write(struct tcp_pcb *pcb, const void *arg, u16_t len, u8_t apiflags)
 {
@@ -826,6 +831,7 @@ memerr:
  * @param pcb the tcp_pcb for which to split the unsent head
  * @param split the amount of payload to remain in the head
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 err_t
 tcp_split_unsent_seg(struct tcp_pcb *pcb, u16_t split)
 {
@@ -1237,6 +1243,7 @@ tcp_build_wnd_scale_option(u32_t *opts)
  * @return ERR_OK if data has been sent or nothing to send
  *         another err_t on error
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 err_t
 tcp_output(struct tcp_pcb *pcb)
 {
@@ -1432,6 +1439,7 @@ output_done:
  * @arg seg the tcp segment to check
  * @return 1 if ref != 1, 0 if ref == 1
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 static int
 tcp_output_segment_busy(const struct tcp_seg *seg)
 {
@@ -1455,6 +1463,7 @@ tcp_output_segment_busy(const struct tcp_seg *seg)
  * @param pcb the tcp_pcb for the TCP connection used to send the segment
  * @param netif the netif used to send the segment
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 static err_t
 tcp_output_segment(struct tcp_seg *seg, struct tcp_pcb *pcb, struct netif *netif)
 {
@@ -1631,6 +1640,7 @@ tcp_output_segment(struct tcp_seg *seg, struct tcp_pcb *pcb, struct netif *netif
  *
  * @param pcb the tcp_pcb for which to re-enqueue all unacked segments
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 err_t
 tcp_rexmit_rto_prepare(struct tcp_pcb *pcb)
 {
@@ -1724,6 +1734,7 @@ tcp_rexmit_rto(struct tcp_pcb *pcb)
  *
  * @param pcb the tcp_pcb for which to retransmit the first unacked segment
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 err_t
 tcp_rexmit(struct tcp_pcb *pcb)
 {
@@ -1783,6 +1794,7 @@ tcp_rexmit(struct tcp_pcb *pcb)
  *
  * @param pcb the tcp_pcb for which to retransmit the first unacked segment
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 void
 tcp_rexmit_fast(struct tcp_pcb *pcb)
 {
@@ -1818,6 +1830,7 @@ tcp_rexmit_fast(struct tcp_pcb *pcb)
   }
 }
 
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 static struct pbuf *
 tcp_output_alloc_header_common(u32_t ackno, u16_t optlen, u16_t datalen,
                         u32_t seqno_be /* already in network byte order */,
@@ -1853,6 +1866,7 @@ tcp_output_alloc_header_common(u32_t ackno, u16_t optlen, u16_t datalen,
  * @param seqno_be seqno in network byte order (big-endian)
  * @return pbuf with p->payload being the tcp_hdr
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 static struct pbuf *
 tcp_output_alloc_header(struct tcp_pcb *pcb, u16_t optlen, u16_t datalen,
                         u32_t seqno_be /* already in network byte order */)
@@ -1872,6 +1886,7 @@ tcp_output_alloc_header(struct tcp_pcb *pcb, u16_t optlen, u16_t datalen,
 }
 
 /* Fill in options for control segments */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 static void
 tcp_output_fill_options(const struct tcp_pcb *pcb, struct pbuf *p, u8_t optflags, u8_t num_sacks)
 {
@@ -1921,6 +1936,7 @@ tcp_output_fill_options(const struct tcp_pcb *pcb, struct pbuf *p, u8_t optflags
  * this function combines selecting a netif for transmission, generating the tcp
  * header checksum and calling ip_output_if while handling netif hints and stats.
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 static err_t
 tcp_output_control_segment(const struct tcp_pcb *pcb, struct pbuf *p,
                            const ip_addr_t *src, const ip_addr_t *dst)
@@ -1942,6 +1958,7 @@ tcp_output_control_segment(const struct tcp_pcb *pcb, struct pbuf *p,
  * Called instead of tcp_output_control_segment when we don't have a pcb but we
  * do know the interface to send to.
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 static err_t
 tcp_output_control_segment_netif(const struct tcp_pcb *pcb, struct pbuf *p,
                                  const ip_addr_t *src, const ip_addr_t *dst,
@@ -2085,6 +2102,7 @@ tcp_rst_netif(struct netif *netif, u32_t seqno, u32_t ackno,
  *
  * @param pcb Protocol control block for the TCP connection to send the ACK
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 err_t
 tcp_send_empty_ack(struct tcp_pcb *pcb)
 {

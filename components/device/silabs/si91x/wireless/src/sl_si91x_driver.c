@@ -463,9 +463,13 @@ sl_status_t sl_si91x_driver_init_wifi_radio(const sl_wifi_device_configuration_t
   sl_status_t status;
 
 // Set 11ax configuration with guard interval if SLI_SI91X_CONFIG_WIFI6_PARAMS is supported
+// Note: 802.11ax is supported only in client-capable modes (SL_WIFI_CLIENT_MODE, SL_WIFI_ENTERPRISE_CLIENT_MODE, SL_WIFI_CONCURRENT_MODE).
+// SL_WIFI_ACCESS_POINT_MODE does not support 802.11ax and the firmware will reject it with error 0x6C.
 #ifdef SLI_SI91X_CONFIG_WIFI6_PARAMS
-  status = sl_wifi_set_11ax_config(SLI_GUARD_INTERVAL);
-  VERIFY_STATUS_AND_RETURN(status);
+  if (config->boot_config.oper_mode != SL_SI91X_ACCESS_POINT_MODE) {
+    status = sl_wifi_set_11ax_config(SLI_GUARD_INTERVAL);
+    VERIFY_STATUS_AND_RETURN(status);
+  }
 #endif
 
   // Send WLAN request to set the operating band (2.4GHz or 5GHz)
@@ -836,11 +840,7 @@ sl_status_t sl_si91x_driver_init(const sl_wifi_device_configuration_t *config, s
   }
 
   // Check and update the frontend switch control based on custom feature bit map
-#ifndef __ZEPHYR__
   if (config->boot_config.custom_feature_bit_map & SL_WIFI_SYSTEM_CUSTOM_FEAT_EXTENSION_VALID) {
-#else
-  if (config->boot_config.custom_feature_bit_map & SL_SI91X_CUSTOM_FEAT_EXTENSION_VALID) {
-#endif
     frontend_switch_control = (config->boot_config.ext_custom_feature_bit_map & (BIT(29) | (BIT(30))));
   }
 
@@ -1021,7 +1021,7 @@ sl_status_t sl_si91x_driver_raw_send_command(uint8_t command,
   status = sl_si91x_allocate_data_buffer(&buffer,
                                          (void **)&packet,
                                          sizeof(sl_wifi_system_packet_t) + data_length,
-                                         SLI_WIFI_ALLOCATE_RAW_BUFFER_WAIT_TIME);
+                                         SLI_WIFI_ALLOCATE_COMMAND_BUFFER_WAIT_TIME);
   VERIFY_STATUS_AND_RETURN(status);
 
   // If the packet is not allocated successfully, return an allocation failed error

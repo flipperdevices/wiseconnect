@@ -255,6 +255,8 @@ By default antenna type should be set to 0.
 
     e.g., wifi_ax_transmit_test_start 127 263 1500 0 1 1 1 0 2 1 0 0 0 0 0 0 0 0 0 0 0 192 1 0 0 0 0 0
 
+    **Parameter count**: This command expects exactly **28** parameters (as listed above). Providing fewer or more parameters will result in an "Invalid Parameters" error.
+
   **power**: Set transmit power in dbm. Valid values are from 2 dBm to 21 dBm.
 
   **data rate**: Set transmit data rate

@@ -58,6 +58,11 @@
 
 #if MQTT_TLS_ENABLE
 
+// mbedTLS error: bad client hello (e.g. SNI/hostname or cipher mismatch); value 0x5D80
+#ifndef MBEDTLS_ERR_SSL_BAD_HS_CLIENT_HELLO
+#define MBEDTLS_ERR_SSL_BAD_HS_CLIENT_HELLO (-0x5D80)
+#endif
+
 // Function prototypes for TLS
 static mqtt_tls_context_t *allocate_tls_context(Network *n);
 static void free_tls_context(mqtt_tls_context_t *ctx);
@@ -171,7 +176,7 @@ static int mqtt_ssl_recv_timeout(void *ctx, unsigned char *buf, size_t len, uint
 
   // Avoid immediate timeout if mbedTLS passes 0
   if (timeout == 0) {
-    timeout = WAIT_TIMEOOUT;
+    timeout = WAIT_TIMEOUT;
   }
 
   FD_ZERO(&read_fds);
@@ -214,7 +219,7 @@ static int mqtt_tls_init(mqtt_tls_context_t *tls_ctx, int socket_fd, const char 
                                    MBEDTLS_ENTROPY_MAX_GATHER,
                                    MBEDTLS_ENTROPY_SOURCE_STRONG);
   if (ret != 0) {
-    SL_DEBUG_LOG("mbedtls_entropy_add_source failed: -0x%04x\n", -ret);
+    SL_DEBUG_LOG("mbedtls_entropy_add_source failed: -0x%04x\n", (unsigned int)(-ret));
     return ret;
   }
 
@@ -225,7 +230,7 @@ static int mqtt_tls_init(mqtt_tls_context_t *tls_ctx, int socket_fd, const char 
                               (const unsigned char *)pers,
                               strlen(pers));
   if (ret != 0) {
-    SL_DEBUG_LOG("mbedtls_ctr_drbg_seed failed: -0x%04x\n", -ret);
+    SL_DEBUG_LOG("mbedtls_ctr_drbg_seed failed: -0x%04x\n", (unsigned int)(-ret));
     return ret;
   }
 
@@ -235,12 +240,31 @@ static int mqtt_tls_init(mqtt_tls_context_t *tls_ctx, int socket_fd, const char 
                                     MBEDTLS_SSL_TRANSPORT_STREAM,
                                     MBEDTLS_SSL_PRESET_DEFAULT);
   if (ret != 0) {
-    SL_DEBUG_LOG("mbedtls_ssl_config_defaults failed: -0x%04x\n", -ret);
+    SL_DEBUG_LOG("mbedtls_ssl_config_defaults failed: -0x%04x\n", (unsigned int)(-ret));
     return ret;
   }
 
-  // Disable certificate verification completely to save significant memory
-  mbedtls_ssl_conf_authmode(&tls_ctx->conf, MBEDTLS_SSL_VERIFY_NONE);
+  // Server certificate verification: REQUIRED when CA is provided, else NONE
+  if (tls_ctx->cert_ctx.cacert && tls_ctx->cert_ctx.cacert_len > 0) {
+    ret = mbedtls_x509_crt_parse(&tls_ctx->cacert,
+                                 (const unsigned char *)tls_ctx->cert_ctx.cacert,
+                                 tls_ctx->cert_ctx.cacert_len);
+    if (ret < 0) {
+      SL_DEBUG_LOG("TLS init: CA certificate parse failed: -0x%04x\n", (unsigned int)(-ret));
+      mbedtls_x509_crt_free(&tls_ctx->cacert);
+      mbedtls_ssl_free(&tls_ctx->ssl);
+      mbedtls_ssl_config_free(&tls_ctx->conf);
+      mbedtls_entropy_free(&tls_ctx->entropy);
+      mbedtls_ctr_drbg_free(&tls_ctx->ctr_drbg);
+      return ret;
+    }
+    mbedtls_ssl_conf_ca_chain(&tls_ctx->conf, &tls_ctx->cacert, NULL);
+    mbedtls_ssl_conf_authmode(&tls_ctx->conf, MBEDTLS_SSL_VERIFY_REQUIRED);
+    SL_DEBUG_LOG("CA certificate loaded successfully\n");
+  } else {
+    mbedtls_ssl_conf_authmode(&tls_ctx->conf, MBEDTLS_SSL_VERIFY_NONE);
+    SL_DEBUG_LOG("TLS init: no CA provided - server verification disabled\n");
+  }
 
   // Configure RNG
   mbedtls_ssl_conf_rng(&tls_ctx->conf, mbedtls_ctr_drbg_random, &tls_ctx->ctr_drbg);
@@ -254,19 +278,19 @@ static int mqtt_tls_init(mqtt_tls_context_t *tls_ctx, int socket_fd, const char 
 
   ret = mbedtls_ssl_setup(&tls_ctx->ssl, &tls_ctx->conf);
   if (ret != 0) {
-    SL_DEBUG_LOG("mbedtls_ssl_setup failed: -0x%04x\n", -ret);
+    SL_DEBUG_LOG("mbedtls_ssl_setup failed: -0x%04x\n", (unsigned int)(-ret));
     if (ret == MBEDTLS_ERR_SSL_ALLOC_FAILED) {
       SL_DEBUG_LOG("SSL setup failed due to memory allocation failure\n");
     }
     return ret;
   }
 
-  printf("SSL setup completed successfully!\n");
+  SL_DEBUG_LOG("SSL setup completed successfully!\n");
 
   if (hostname) {
     ret = mbedtls_ssl_set_hostname(&tls_ctx->ssl, hostname);
     if (ret != 0) {
-      SL_DEBUG_LOG("mbedtls_ssl_set_hostname failed: -0x%04x\n", -ret);
+      SL_DEBUG_LOG("mbedtls_ssl_set_hostname failed: -0x%04x\n", (unsigned int)(-ret));
       return ret;
     }
     SL_DEBUG_LOG("Hostname set successfully\n");
@@ -278,7 +302,7 @@ static int mqtt_tls_init(mqtt_tls_context_t *tls_ctx, int socket_fd, const char 
   mbedtls_ssl_set_bio(&tls_ctx->ssl, &tls_ctx->socket_fd, mqtt_ssl_send, mqtt_ssl_recv, mqtt_ssl_recv_timeout);
 
   tls_ctx->initialized = true;
-  printf("TLS initialization completed successfully\n");
+  SL_DEBUG_LOG("TLS initialization completed successfully\n");
   return 0;
 }
 
@@ -289,12 +313,18 @@ static int mqtt_tls_handshake(mqtt_tls_context_t *tls_ctx)
 
   while ((ret = mbedtls_ssl_handshake(&tls_ctx->ssl)) != 0) {
     if (ret != MBEDTLS_ERR_SSL_WANT_READ && ret != MBEDTLS_ERR_SSL_WANT_WRITE) {
-      SL_DEBUG_LOG("mbedtls_ssl_handshake failed: -0x%04x\n", -ret);
+      SL_DEBUG_LOG("TLS handshake failed: -0x%04x", (unsigned int)(-ret));
+      if (ret == MBEDTLS_ERR_X509_CERT_VERIFY_FAILED) {
+        SL_DEBUG_LOG(" (cert verify failed: CA must sign broker cert; hostname must match cert CN/SAN)");
+      } else if (ret == MBEDTLS_ERR_SSL_BAD_HS_CLIENT_HELLO) {
+        SL_DEBUG_LOG(" (SSL error: often SNI/hostname or cipher mismatch)");
+      }
+      SL_DEBUG_LOG("\n");
       return ret;
     }
   }
 
-  printf("TLS handshake successful\n");
+  SL_DEBUG_LOG("TLS handshake successful\n");
   return 0;
 }
 
@@ -302,7 +332,7 @@ static int mqtt_tls_handshake(mqtt_tls_context_t *tls_ctx)
 static void mqtt_tls_cleanup(mqtt_tls_context_t *tls_ctx)
 {
   if (tls_ctx && tls_ctx->initialized) {
-    printf("Cleaning up TLS context...\n");
+    SL_DEBUG_LOG("Cleaning up TLS context...\n");
 
     mbedtls_ssl_free(&tls_ctx->ssl);
     mbedtls_ssl_config_free(&tls_ctx->conf);
@@ -333,7 +363,7 @@ static int mqtt_tls_read(Network *n, unsigned char *buffer, int len, int timeout
     return 0;
   }
   if (ret < 0) {
-    SL_DEBUG_LOG("mbedtls_ssl_read failed: -0x%04x\n", -ret);
+    SL_DEBUG_LOG("mbedtls_ssl_read failed: -0x%04x\n", (unsigned int)(-ret));
     return -1;
   }
 
@@ -357,7 +387,7 @@ static int mqtt_tls_write(Network *n, unsigned char *buffer, int len, int timeou
     return 0;
   }
   if (ret < 0) {
-    SL_DEBUG_LOG("mbedtls_ssl_write failed: -0x%04x\n", -ret);
+    SL_DEBUG_LOG("mbedtls_ssl_write failed: -0x%04x\n", (unsigned int)(-ret));
     return -1;
   }
 
@@ -449,10 +479,12 @@ static void mqtt_tcp_disconnect(Network *n)
     free_tls_context(n->tls);
     n->tls = NULL;
   }
+  n->tls_hostname = NULL; // Require NetworkSetTlsHostname() again on reconnect
 #endif
 
   if (n->socket >= 0) {
     close(n->socket);
+    n->socket = -1;
   }
 
   printf("MQTT connection closed\n");
@@ -469,7 +501,6 @@ static int mqtt_tcpconnection_handler(Network *n,
   UNUSED_PARAMETER(src_port);
   int type = SOCK_STREAM;
   int rc   = -1;
-  int ret;
 
 #ifdef SLI_SI91X_ENABLE_IPV6
   struct sockaddr_in6 server_address_v6 = { 0 };
@@ -515,6 +546,7 @@ static int mqtt_tcpconnection_handler(Network *n,
   if (rc == -1) {
     printf("\r\nSocket Connect failed with bsd error: %d\r\n", errno);
     close(n->socket);
+    n->socket = -1;
     return rc;
   }
   printf("\nSocket connection success \n");
@@ -523,23 +555,34 @@ static int mqtt_tcpconnection_handler(Network *n,
   if (ssl) {
 #if MQTT_TLS_ENABLE
 
+    // TLS requires a hostname for SNI and server cert verification; brokers typically reject or fail without it.
+    // Returns NETWORK_ERROR_TLS_HOSTNAME_REQUIRED (-4) if not set.
+    if (!n->tls_hostname || n->tls_hostname[0] == '\0') {
+      SL_DEBUG_LOG("Error: TLS requires hostname. Call NetworkSetTlsHostname() before NetworkConnect().\n");
+      close(n->socket);
+      n->socket = -1;
+      return NETWORK_ERROR_TLS_HOSTNAME_REQUIRED;
+    }
+
     // Allocate TLS context for this Network
     n->tls = allocate_tls_context(n);
     if (!n->tls) {
-      printf("Failed to allocate TLS context\n");
+      SL_DEBUG_LOG("Failed to allocate TLS context\n");
       close(n->socket);
+      n->socket = -1;
       return -1;
     }
 
-    // Initialize TLS
-    const char *hostname = NULL;
+    // Use hostname set by app via NetworkSetTlsHostname(); must match server cert CN/SAN for verification
+    const char *hostname = n->tls_hostname;
     if (mqtt_tls_init(n->tls, n->socket, hostname) != 0) {
-      printf("TLS initialization failed\n");
+      SL_DEBUG_LOG("TLS initialization failed\n");
       NetworkDisconnect(n);
       return -1;
     }
-    printf("TLS init completed successfully\n");
+    SL_DEBUG_LOG("TLS init completed successfully\n");
 
+    // CA already loaded and ca_chain set in mqtt_tls_init() before ssl_setup
     SL_DEBUG_LOG("CA cert: %p (len=%u), Client cert: %p (len=%u), Client key: %p (len=%u)\n",
                  (void *)n->tls->cert_ctx.cacert,
                  (unsigned int)n->tls->cert_ctx.cacert_len,
@@ -547,35 +590,22 @@ static int mqtt_tcpconnection_handler(Network *n,
                  (unsigned int)n->tls->cert_ctx.client_cert_len,
                  (void *)n->tls->cert_ctx.client_key,
                  (unsigned int)n->tls->cert_ctx.client_key_len);
-    // Only validate CA certificate for server verification
-    if (!n->tls->cert_ctx.cacert || n->tls->cert_ctx.cacert_len == 0) {
-      printf("Warning: CA certificate not set - using verify none\n");
-    } else {
-      // Load CA certificate
-      ret = mbedtls_x509_crt_parse(&n->tls->cacert,
-                                   (const unsigned char *)n->tls->cert_ctx.cacert,
-                                   n->tls->cert_ctx.cacert_len);
-      if (ret != 0) {
-        SL_DEBUG_LOG("mbedtls_x509_crt_parse (CA) failed: -0x%04x\n", -ret);
-      } else {
-        printf("CA certificate loaded successfully\n");
-      }
-    }
-    printf("TLS certificates configured\n");
+    SL_DEBUG_LOG("TLS certificates configured\n");
 
     // Perform TLS handshake
     if (mqtt_tls_handshake(n->tls) != 0) {
-      printf("TLS handshake failed\n");
+      SL_DEBUG_LOG("TLS handshake failed\n");
       NetworkDisconnect(n);
       return -1;
     }
 
-    printf("TLS connection established\n");
+    SL_DEBUG_LOG("TLS connection established\n");
 #else
     // TLS requested but not available
     SL_DEBUG_LOG("ERROR: TLS requested but mbedTLS not available!\n");
     SL_DEBUG_LOG("Compile with mbedTLS libraries to enable TLS support\n");
     close(n->socket);
+    n->socket = -1;
     return -1;
 #endif
   } else {
@@ -598,7 +628,33 @@ void NetworkInit(Network *n)
   n->mqttread   = mqtt_tcp_read;
   n->mqttwrite  = mqtt_tcp_write;
   n->disconnect = mqtt_tcp_disconnect;
+#if MQTT_TLS_ENABLE
+  n->tls_hostname = NULL;
+#endif
 }
+
+#if MQTT_TLS_ENABLE
+/* Max hostname length: RFC 1035 (DNS) = 255 octets; TLS SNI (RFC 6066) uses DNS hostnames. */
+#define MQTT_TLS_MAX_HOSTNAME_LEN 255u
+
+int NetworkSetTlsHostname(Network *n, const char *hostname)
+{
+  if (n == NULL) {
+    return -1;
+  }
+  if (hostname == NULL) {
+    n->tls_hostname = NULL;
+    return -1;
+  }
+  size_t len = strlen(hostname);
+  if (len == 0 || len > MQTT_TLS_MAX_HOSTNAME_LEN) {
+    n->tls_hostname = NULL; // Reject empty or too long; connect will fail with hostname required
+    return -1;
+  }
+  n->tls_hostname = hostname;
+  return 0;
+}
+#endif
 
 // Connect to the MQTT broker using TCP
 int NetworkConnect(Network *n, uint8_t flags, char *addr, int dst_port, int src_port, bool ssl)

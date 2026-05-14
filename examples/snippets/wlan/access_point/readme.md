@@ -94,6 +94,8 @@ For details on the project folder structure, see the [WiSeConnect Examples](http
 
 > **Note**: For recommended settings, please refer the [recommendations guide](https://docs.silabs.com/wiseconnect/latest/wiseconnect-developers-guide-prog-recommended-settings/).
 
+> **Note**: The SiWx91x in Access Point mode (SL_WIFI_ACCESS_POINT_MODE) operates as 802.11n/ac and does not support 802.11ax (Wi-Fi 6). Client modes (SL_WIFI_CLIENT_MODE, SL_WIFI_ENTERPRISE_CLIENT_MODE, and SL_WIFI_CONCURRENT_MODE) support Wi-Fi 6 for client connections.
+
 ## Test the Application
 
 Refer to the instructions [here](https://docs.silabs.com/wiseconnect/latest/wiseconnect-getting-started/) to:

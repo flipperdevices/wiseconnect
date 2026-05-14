@@ -1,6 +1,7 @@
 # SiWx917 Software Reference
 
 ## Introduction
+
 This reference manual provides detailed information about the software architecture, features, and functionalities of the SiWx917™, the first chip in the SiWx91x™ chipset family. This manual is designed to assist developers in leveraging the full potential of the SiWx917 for their applications.
 
 The SiWx917 system-on-chip (SoC) has two processing cores:
@@ -11,7 +12,7 @@ The SiWx917 operates with two flash memory options: common flash or dual flash. 
 
 The NWP includes support for in-built network and wireless protocol stacks, which applications running on the MCU can access via pre-defined APIs provided by the WiSeConnect™ SDK. Both the processors are connected over an AHB interface. The MCU and NWP rely on firmware-based state machines to manage and coordinate their individual and joint functionalities. These state machines control the operational flow within each processor, ensuring that each one transitions through specific states required for seamless processing and reliable performance
 
-MCU applications can be developed, compiled, and run on the SiWx917 using the WiSeConnect SDK extension (or **WiSeconnect** extension) on Simplicity Studio. The NWP firmware is available as a pre-built binary with the WiSeConnect SDK package. See the [Getting Started](http://docs.silabs.com/wiseconnect/latest/wiseconnect-getting-started/) documentation for more details.
+MCU applications can be developed, compiled, and run on the SiWx917 using the WiSeConnect SDK extension (or **WiSeConnect** extension) on Simplicity Studio. The NWP firmware is available as a pre-built binary with the WiSeConnect SDK package. See the [Getting Started](http://docs.silabs.com/wiseconnect/latest/wiseconnect-getting-started/) documentation for more details.
 
 >**Note:** RTOS support is available at Application and Service level. Applications developers must use the correct RTOS primitives when accessing MCU peripherals from multiple SW threads. When using RTOS, developers need to configure interrupt priorities for all MCU interrupts being used in the application.
 
@@ -21,22 +22,24 @@ The SiWx91x is the industry's first wireless microcontroller unit (MCU) family w
 
 Key features of the SiWx917 include:
 
- * Dual processing cores: Network wireless processor (NWP) and ARM Cortex M4 application processor (MCU)
- * Support for multiple flash memory configurations: separate flash for MCU and NWP or shared flash memory
- * Shared SRAM for both processors
- * In-built network and wireless stacks accessible via pre-defined APIs in the WiSeConnect™ SDK
- * Advanced security features
- * High-performance mixed-signal peripherals
- * Integrated power management
+- Dual processing cores: Network wireless processor (NWP) and ARM Cortex M4 application processor (MCU)
+- Support for multiple flash memory configurations: separate flash for MCU and NWP or shared flash memory
+- Shared SRAM for both processors
+- In-built network and wireless stacks accessible via pre-defined APIs in the WiSeConnect™ SDK
+- Advanced security features
+- High-performance mixed-signal peripherals
+- Integrated power management
+
 These features make the SiWx917 a versatile and powerful solution for a wide range of applications, providing developers with the tools they need for efficient and effective development.
 
 ## System Processor
 
 The SiWx917 family include ARM® Cortex®-M4 processor for user application. The Cortex-M4 processor is a high performance 32-bit processor designed for the micro-controller market. It offers significant benefits to developers, including:
--  Outstanding processing performance combined with fast interrupt handling
--  Enhanced system debug with extensive break-point and trace capabilities
--  Efficient processor core, system and memories
--  Ultra-low power consumption with integrated sleep modes
+
+- Outstanding processing performance combined with fast interrupt handling
+- Enhanced system debug with extensive break-point and trace capabilities
+- Efficient processor core, system and memories
+- Ultra-low power consumption with integrated sleep modes
 
 ## Software Architecture
 
@@ -59,6 +62,7 @@ For more details on MCU Peripherals, see the [SiWx917 Reference Manual](https://
 ![SiWx917 MCU Architecture](./resources/SiWx917_mcu_architecture.png)
 
 - When using low-power features in high-power mode with DMA enabled, it is recommended to use the ULP Memory block for buffer storage. For more details on buffer allocation, refer to the example applications: ULP_I2S, ULP_UDMA, ULP_SSI, and ULP_UART.
+
 ### Application Flow
 
 The following diagram demonstrates the flow of code in an SiWx917 MCU application code created using the WiSeConnect SDK.
@@ -68,6 +72,7 @@ Code blocks in green represent SiWx91x MCU APIs and code blocks in orange repres
 ![Application Flow](./resources/application_flow.png)
 
 ## Memory Architecture
+
 The SiWx917 SoC contains the following memory components:
   
   **On-chip SRAM**
@@ -88,23 +93,25 @@ The SiWx917 SoC contains the following memory components:
   **e-Fuse**
   The SiWx917 features 32 bytes of M4 eFuse and it is available for cusmoer applications. These e-fuses enable secure and permanent storage of important configuration settings, such as unique device identifiers and security keys. Once programmed, e-fuses remain unchanged, ensuring that critical settings are preserved.
 
-For detailed information on the memory components, please refer [SiWx917 SoC Memory Map Application Note](https://www.silabs.com/documents/public/application-notes/an1416-siwx917-soc-memory-map.pdf)
+For detailed information on the memory components, see [SiWx917 SoC Memory Map Application Note](https://www.silabs.com/documents/public/application-notes/an1416-siwx917-soc-memory-map.pdf)
 
 #### PSRAM
 
 The PSRAM on the SiWx917 provides additional RAM space to the MCU application beyond the SRAM. It is available in either stacked or external configurations, depending on the package. The stacked version offers enhanced security for application execution and data storage. The MCU application can use the PSRAM for additional RAM space beyond the SRAM.
 
 The SiWx917 provides the PSRAM in a ready-to-use state upon boot up. During boot up, the bootloader:
+
 - Initializes the PSRAM die according to the chip and PSRAM configurations in the master boot record (MBR).
 - Makes the PSRAM available as in-system memory. 
 
 The application may use the PSRAM for different memory segments like .data, .bss, .stack, .heap, .text, or user defined segments. Different PSRAM components are available in the Simplicity Studio application project depending on the memory segments required. See the components starting from Segments in PSRAM in the [Peripherals](https://docs.silabs.com/wiseconnect/latest/wiseconnect-developers-guide-migr-sdk-changes/application-components#peripherals) section of the **Application Components** documentation page.
 
-PSRAM can be used for runtime data storage as well as for executing MCU applications. It utilizes D-cache and I-cache to enhance memory access performance for both data and instructions.
+PSRAM can be used for runtime data storage and executing MCU applications. It uses the instruction cache (I-cache) to improve instruction memory access performance. The PSRAM D-cache path is disabled to prevent incorrect data during specific back-to-back accesses. For more information, see [DCACHE_E301 Errata](https://www.silabs.com/documents/public/errata/siwg917-soc-ic-errata.pdf).
 
 There is a provision to modify the PSRAM configuration settings in addition to boot up and default settings with the help of driver APIs which are part of the WiSeConnect SDK. These additional configurations include interface mode, read/write type, clock, pinset, and others. The WiSeConnect SDK offers various [examples](https://docs.silabs.com/wiseconnect/latest/wiseconnect-examples/) to demonstrate the use of PSRAM memory and driver APIs.
 
-The PSRAM interface comes with security features which allow the user to protect the data stored in the PSRAM.  It is possible to configure up to four secure segments within the PSRAM by specifying each segment's start address and length in the MBR. Each secure segment represents a designated memory area where data protection is applied, allowing users to choose specific areas of memory that require enhanced security. This segmentation flexibility lets users secure only the data that needs protection. 
+The PSRAM interface comes with security features which allow the user to protect the data stored in the PSRAM.  It is possible to configure up to four secure segments within the PSRAM by specifying each segment's start address and length in the MBR. Each secure segment represents a designated memory area where data protection is applied, allowing users to choose specific areas of memory that require enhanced security. This segmentation flexibility lets users secure only the data that needs protection.
+
 An inline AES engine within the Quad SPI controller encrypts and decrypts data on the fly for these secure segments, supporting CTR mode with a key size of either 128 or 256 bits. The security configurations for these secure segments are locked in place at system boot-up; they can only be written once and cannot be modified afterward, providing write protection for the security settings.
 
 The WiSeConnect SDK provides a power save mechanism for the PSRAM which effectively utilizes the hardware power handles and sleep features of the PSRAM die across sleep and wakeup to minimize power consumption.
@@ -145,8 +152,9 @@ For more information on the memory architecture and hardware interfaces of PSRAM
 This section describes the package combinations of flash and PSRAM provided by the SiWx917. Users can select the appropriate combination based on their application requirements.
 
 The available PSRAM options depend on the flash configuration of the SiWx917 package:
-* In the common flash configuration, both the NWP and MCU will use the same flash memory which is either stacked or external.
-* In the dual flash configuration, the NWP uses stacked flash and MCU uses external flash.
+
+- In the common flash configuration, both the NWP and MCU will use the same flash memory which is either stacked or external.
+- In the dual flash configuration, the NWP uses stacked flash and MCU uses external flash.
 
 The following table shows the possible combinations and the available options to add on PSRAM:
 
@@ -370,7 +378,7 @@ The wakeup mode defines the bootloader sequence the SiWx917 will undergo once it
 >**Note:**
 >* rsi_deepsleep_soc.c file should compiled to SRAM.
 >
->* Refer to the [Wi-Fi - TCP Tx on Periodic Wakeup (SoC)](https://github.com/SiliconLabs/wiseconnect/tree/v4.0.1-content-for-docs/examples/snippets/wlan/tcp_tx_on_periodic_wakeup) example for a detailed >example of M4 sleep wakeup.
+>* Refer to the [Wi-Fi - TCP Tx on Periodic Wakeup (SoC)](https://github.com/SiliconLabs/wiseconnect/tree/v4.0.2-content-for-docs/examples/snippets/wlan/tcp_tx_on_periodic_wakeup) example for a detailed >example of M4 sleep wakeup.
 >
 >* Enable SL_SI91X_ENABLE_LOWPWR_RET_LDO macro to optimize the deepsleep >power number. By default, it is disabled.
 >
@@ -836,7 +844,7 @@ The Lite configuration is used for 4 MB SoC OPN where 1.3 MB is allocated for th
 The `SLI_SI91X_MCU_4MB_LITE_IMAGE` macro will be enabled if the **lite_image_for_4mb** component is installed.
 
 For low-power M4 sleep states such as PS2, PS3, and PS4, certain files must be run from RAM memory. Refer to [Power manager integration guide](
-https://github.com/SiliconLabs/wiseconnect/blob/v4.0.1-content-for-docs/examples/si91x_soc/service/sl_si91x_power_manager_tickless_idle/resources/power_manager_integration_guide/power_manager_integration.pdf) for more details.
+https://github.com/SiliconLabs/wiseconnect/blob/v4.0.2-content-for-docs/examples/si91x_soc/service/sl_si91x_power_manager_tickless_idle/resources/power_manager_integration_guide/power_manager_integration.pdf) for more details.
 
 #### SL_SI91X_ENABLE_GCC_LTO
 
@@ -981,5 +989,5 @@ For further assistance and support, please contact:
 | Getting Started with WiSeConnect | [Getting Started](http://docs.silabs.com/wiseconnect/latest/wiseconnect-getting-started/) |
 | NVM3 - NVM Data Manager | [NVM3 Documentation](https://docs.silabs.com/gecko-platform/3.1/driver/api/group-nvm3) |
 | Third Generation NonVolatile Memory (NVM3) Data Storage | [NVM3 Application Note](https://www.silabs.com/documents/public/application-notes/an1135-using-third-generation-nonvolatile-memory.pdf) |
-| Power Manager Integration Guide | [Power Manager Integration Guide](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.1-content-for-docs/examples/si91x_soc/service/sl_si91x_power_manager_tickless_idle/resources/power_manager_integration_guide/power_manager_integration.pdf) |
+| Power Manager Integration Guide | [Power Manager Integration Guide](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.2-content-for-docs/examples/si91x_soc/service/sl_si91x_power_manager_tickless_idle/resources/power_manager_integration_guide/power_manager_integration.pdf) |
 | SiWx917 Reference Manual | Contact [Silicon Labs Sales](https://www.silabs.com/about-us/contact-sales) for access. |

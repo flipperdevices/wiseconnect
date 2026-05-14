@@ -106,7 +106,7 @@ For details on the project folder structure, see the [WiSeConnect Examples](http
 
 ### SensorHub Configuration Parameters
 
-1. Configure the number of sensor info in [`sensors_config.h`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.1-content-for-docs/examples/si91x_soc/service/sl_si91x_sensorhub/sensors/inc/sensors_config.h) file.
+1. Configure the number of sensor info in [`sensors_config.h`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.2-content-for-docs/examples/si91x_soc/service/sl_si91x_sensorhub/sensors/inc/sensors_config.h) file.
     ```c
     #define SL_MAX_NUM_SENSORS 5 // Maximum sensors present in the system
     ```
@@ -205,7 +205,7 @@ For details on the project folder structure, see the [WiSeConnect Examples](http
 
 4. **ADC Configurations**:
     - Configure the macro SH_ADC_ENABLE=1 in the preprocessor settings to enable ADC support.
-    - Configure the following parameters in the [`sensorhub_config.c`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.1-content-for-docs/examples/si91x_soc/service/sl_si91x_sensorhub/sensorhub_config.c) file to change the ADC's mode from FIFO to STATIC and vice versa.
+    - Configure the following parameters in the [`sensorhub_config.c`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.2-content-for-docs/examples/si91x_soc/service/sl_si91x_sensorhub/sensorhub_config.c) file to change the ADC's mode from FIFO to STATIC and vice versa.
 
       ```c
       .adc_config.adc_cfg.operation_mode = SL_ADC_STATIC_MODE
@@ -216,7 +216,7 @@ For details on the project folder structure, see the [WiSeConnect Examples](http
     - **ADC static mode:-**
         - SensorHub polling mode is supported
         - ADC is capable of reading only one Sample at a time and generates an interrupt in static mode.
-        configure as shown below in [`adc_sensor_hal.h`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.1-content-for-docs/examples/si91x_soc/service/sl_si91x_sensorhub/sensors/inc/adc_sensor/adc_sensor_hal.h) file:
+        configure as shown below in [`adc_sensor_hal.h`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.2-content-for-docs/examples/si91x_soc/service/sl_si91x_sensorhub/sensors/inc/adc_sensor/adc_sensor_hal.h) file:
 
           ```C
           #define SL_SH_ADC_CH0_NUM_SAMPLES 1
@@ -225,14 +225,14 @@ For details on the project folder structure, see the [WiSeConnect Examples](http
 
     - **ADC FIFO mode:-**
       - The SensorHUB interrupt mode configurations are utilized in conjunction with **ADC FIFO mode**.      
-      - Configure the following parameter [`sensorhub_config.c`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.1-content-for-docs/examples/si91x_soc/service/sl_si91x_sensorhub/sensorhub_config.c) file:
+      - Configure the following parameter [`sensorhub_config.c`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.2-content-for-docs/examples/si91x_soc/service/sl_si91x_sensorhub/sensorhub_config.c) file:
     
         ```c
         .adc_config.adc_cfg.operation_mode = SL_ADC_FIFO_MODE,
         ```
 
       - In the SensorHub interrupt mode, The ADC will continuously sample 4 channels, regardless of the number of channels enabled in sets of 4 (0-3).
-      configure as shown below in [`adc_sensor_hal.h`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.1-content-for-docs/examples/si91x_soc/service/sl_si91x_sensorhub/sensors/inc/adc_sensor/adc_sensor_hal.h) file:
+      configure as shown below in [`adc_sensor_hal.h`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.2-content-for-docs/examples/si91x_soc/service/sl_si91x_sensorhub/sensors/inc/adc_sensor/adc_sensor_hal.h) file:
 
         ```C
           // Set SL_SH_ADC_CH0_NUM_SAMPLES to a value between 100 and 1023 if you are using sample rate >= 100
@@ -258,7 +258,7 @@ For details on the project folder structure, see the [WiSeConnect Examples](http
     - For SDC Multichannel enable the **SDC_MUTI_CHANNEL_ENABLE** macro in the preprocessor settings
     - Disable the remaining sensor configurations.
     - one sensor hub configuration structure is enough for the all connected sensors.
-    - Configure the following parameters in [`sensorhub_config.c`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.1-content-for-docs/examples/si91x_soc/service/sl_si91x_sensorhub/sensorhub_config.c)
+    - Configure the following parameters in [`sensorhub_config.c`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.2-content-for-docs/examples/si91x_soc/service/sl_si91x_sensorhub/sensorhub_config.c)
     - SDC will support only for the JoyStick 
 
       ```c
@@ -298,9 +298,9 @@ AWS ONLY begins by implementing the modifications and settings listed below.
 
 1. After creating the project add **SH_AWS_ENABLE=1** macro in the preprocessor settings.
 2. Now refer to ***Wi-Fi - AWS IoT MQTT Client (SoC)*** example readme.
-3. Make the relevant changes according to the above example readme in [`sl_net_default_values.h`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.1-content-for-docs/resources/defaults/sl_net_default_values.h),  [`aws_iot_config.h`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.1-content-for-docs/resources/defaults/aws_iot_config.h) present in *config* folder 
-4. Modify the relevant changes in [`sensorhub_aws_app.c`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.1-content-for-docs/examples/si91x_soc/service/sl_si91x_sensorhub/sensorhub_aws_app.c) also. 
-5. Increase the buffer size AWS_IOT_MQTT_TX_BUF_LEN to 1024 in [`aws_iot_config.h`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.1-content-for-docs/resources/defaults/aws_iot_config.h)
+3. Make the relevant changes according to the above example readme in [`sl_net_default_values.h`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.2-content-for-docs/resources/defaults/sl_net_default_values.h),  [`aws_iot_config.h`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.2-content-for-docs/resources/defaults/aws_iot_config.h) present in *config* folder 
+4. Modify the relevant changes in [`sensorhub_aws_app.c`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.2-content-for-docs/examples/si91x_soc/service/sl_si91x_sensorhub/sensorhub_aws_app.c) also. 
+5. Increase the buffer size AWS_IOT_MQTT_TX_BUF_LEN to 1024 in [`aws_iot_config.h`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.2-content-for-docs/resources/defaults/aws_iot_config.h)
 
 ## Sensor Pins Setup
 

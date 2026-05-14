@@ -21,6 +21,43 @@
 This application demonstrates how SiWx91x is configured as an MQTT client, connects to an MQTT broker, subscribes to a topic, and publishes messages on a particular MQTT topic.
 In this application, SiWx91x is configured as a Wi-Fi station and connects to an access point. After successful Wi-Fi connection, the application connects to a MQTT broker and subscribes to the topic called **THERMOSTAT-DATA**. Subsequently, the application publishes a message **"Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do"** on the **WiFiSDK_TOPIC** topic. Finally, the application waits to receive the data published on the subscribed topic by other clients after which it unsubscribes from the topic it has subscribed to and disconnects from MQTT broker.
 
+### Large Payload Support
+
+The SDK supports receiving large incoming MQTT payloads through fragmentation and reassembly:
+
+- **Transparent to Application**: The SDK automatically reassembles fragmented MQTT messages, so applications receive complete messages in their handler callbacks without requiring any special handling.
+
+**Configuration:**
+
+The maximum allowed payload size can be configured via `SL_MQTT_CLIENT_MAX_RX_PAYLOAD_SIZE` (default: 8192 bytes). Set to 0 to disable large payload support.
+
+> **Note:** The application is configured with `SL_MQTT_CLIENT_MAX_RX_PAYLOAD_SIZE` set to **5120 bytes (5 KB)** to demonstrate large payload reception while conserving memory.
+
+```c
+// In your project configuration to limit max payload to 4 KB
+#define SL_MQTT_CLIENT_MAX_RX_PAYLOAD_SIZE 4096
+```
+
+Example of receiving large messages:
+
+```c
+void mqtt_client_message_handler(void *client, sl_mqtt_client_message_t *message, void *context)
+{
+    // message->content contains the complete reassembled payload
+    // message->content_length contains the total payload length (can be > 1400 bytes)
+    printf("Received %lu bytes on topic: %.*s\r\n", 
+           message->content_length, message->topic_length, message->topic);
+}
+```
+
+**Error Handling:**
+
+The SDK reports errors during large message reception via `SL_MQTT_CLIENT_ERROR_EVENT`. Handle these in your error callback:
+
+- `SL_MQTT_CLIENT_RECEIVE_PAYLOAD_TOO_LARGE` - Payload exceeds `SL_MQTT_CLIENT_MAX_RX_PAYLOAD_SIZE`
+- `SL_MQTT_CLIENT_RECEIVE_MEMORY_ALLOCATION_FAILED` - Failed to allocate reassembly buffer
+- `SL_MQTT_CLIENT_RECEIVE_DATA_CORRUPTED` - Data corruption detected during reassembly
+
 ## Prerequisites/Setup Requirements
 
 ### Hardware Requirements  

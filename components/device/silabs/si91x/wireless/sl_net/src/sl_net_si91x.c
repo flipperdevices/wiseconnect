@@ -50,6 +50,7 @@
 #include "sl_net_dns.h"
 #include "sli_wifi_constants.h"
 #include "sli_wifi_utility.h"
+#include <sl_string.h>
 
 typedef enum { SLI_SI91X_CLIENT = 0, SLI_SI91X_AP = 1, SLI_SI91X_MAX_INTERFACES = 2 } sli_si91x_interfaces_t;
 sl_status_t sl_net_dns_resolve_hostname(const char *host_name,
@@ -319,6 +320,74 @@ sl_status_t sl_net_dns_resolve_hostname(const char *host_name,
                                          SLI_SI91X_NETWORK_CMD,
                                          &dns_query_request,
                                          sizeof(dns_query_request),
+                                         wait_period,
+                                         NULL,
+                                         &buffer);
+
+  // Check if the command failed and free the buffer if it was allocated
+  if ((status != SL_STATUS_OK) && (buffer != NULL)) {
+    sli_si91x_host_free_buffer(buffer);
+  }
+  VERIFY_STATUS_AND_RETURN(status);
+
+  // Extract the DNS response from the SI91X packet buffer
+  packet       = sli_wifi_host_get_buffer_data(buffer, 0, NULL);
+  dns_response = (sli_si91x_dns_response_t *)packet->data;
+
+  // Convert the SI91X DNS response to the sl_ip_address format
+  sli_convert_si91x_dns_response(sl_ip_address, dns_response);
+  sli_si91x_host_free_buffer(buffer);
+  return SL_STATUS_OK;
+}
+
+sl_status_t sl_net_dns_resolve_hostname_v2(const char *host_name,
+                                           const uint8_t initial_timeout_sec,
+                                           const uint8_t retry_count,
+                                           const sl_net_dns_resolution_ip_type_t dns_resolution_ip,
+                                           sl_ip_address_t *sl_ip_address)
+{
+  // Check for NULL pointers
+  SL_WIFI_ARGS_CHECK_NULL_POINTER(sl_ip_address);
+  SL_WIFI_ARGS_CHECK_NULL_POINTER(host_name);
+
+  size_t len = sl_strnlen(host_name, SLI_SI91X_DNS_REQUEST_MAX_URL_LEN + 1);
+  if (len > SLI_SI91X_DNS_REQUEST_MAX_URL_LEN) {
+    return SL_STATUS_INVALID_PARAMETER;
+  }
+
+  sl_status_t status                                 = SL_STATUS_FAIL;
+  sl_wifi_system_packet_t *packet                    = NULL;
+  sl_wifi_buffer_t *buffer                           = NULL;
+  const sli_si91x_dns_response_t *dns_response       = NULL;
+  sli_si91x_dns_query_request_t dns_query_request_v2 = { 0 };
+  uint8_t dns_timeout                                = 0;
+
+  // Determine the wait period based on the timeout value
+  sli_wifi_wait_period_t wait_period =
+    initial_timeout_sec == 0 ? SLI_WIFI_RETURN_IMMEDIATELY : (SLI_WIFI_WAIT_FOR_EVER | SLI_WIFI_WAIT_FOR_RESPONSE_BIT);
+
+  if (wait_period != SLI_WIFI_RETURN_IMMEDIATELY) {
+    dns_timeout = initial_timeout_sec;
+
+    if (dns_timeout < SLI_NET_MIN_DNS_INITIAL_TIMEOUT) {
+      return SL_STATUS_INVALID_PARAMETER;
+    }
+
+    if (dns_timeout > SLI_NET_MAX_DNS_INITIAL_TIMEOUT) {
+      dns_timeout = SLI_NET_MAX_DNS_INITIAL_TIMEOUT; // Set the maximum timeout to 10 seconds
+    }
+  }
+
+  // Determine the IP version to be used (IPv4 or IPv6)
+  dns_query_request_v2.ip_version[0]       = (dns_resolution_ip == SL_NET_DNS_TYPE_IPV4) ? 4 : 6;
+  dns_query_request_v2.initial_timeout_sec = dns_timeout;
+  dns_query_request_v2.retry_count         = retry_count;
+  memcpy(dns_query_request_v2.url_name, host_name, len);
+
+  status = sli_si91x_driver_send_command(SLI_WLAN_REQ_DNS_QUERY,
+                                         SLI_SI91X_NETWORK_CMD,
+                                         &dns_query_request_v2,
+                                         sizeof(dns_query_request_v2),
                                          wait_period,
                                          NULL,
                                          &buffer);

@@ -23,6 +23,8 @@ include:
 define:
 - name: SL_SI91X_PRINT_DBG_LOG
 - name: SLI_SI91X_EMBEDDED_MQTT_CLIENT
+- name: SL_MQTT_CLIENT_MAX_RX_PAYLOAD_SIZE
+  value: '5120'
 component:
 - id: sl_main
 - id: freertos
@@ -73,8 +75,8 @@ ui_hints:
 sdk_extension:
 - id: wiseconnect3_sdk
   vendor: silabs
-  version: 4.0.1
+  version: 4.0.2
 sdk:
   id: simplicity_sdk
   vendor: silabs
-  version: 2025.12.2
+  version: 2025.12.3

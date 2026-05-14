@@ -114,6 +114,7 @@ static err_t netconn_close_shutdown(struct netconn *conn, u8_t how);
  * @param apimsg a struct containing the function to call and its parameters
  * @return ERR_OK if the function was called, another err_t if not
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 static err_t
 netconn_apimsg(tcpip_callback_fn fn, struct api_msg *apimsg)
 {
@@ -575,6 +576,7 @@ netconn_accept(struct netconn *conn, struct netconn **new_conn)
  *         ERR_WOULDBLOCK if the netconn is nonblocking but would block to wait for data
  *         ERR_TIMEOUT if the netconn has a receive timeout and no data was received
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 static err_t
 netconn_recv_data(struct netconn *conn, void **new_buf, u8_t apiflags)
 {
@@ -673,6 +675,7 @@ netconn_recv_data(struct netconn *conn, void **new_buf, u8_t apiflags)
 }
 
 #if LWIP_TCP
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 static err_t
 netconn_tcp_recvd_msg(struct netconn *conn, size_t len, struct api_msg *msg)
 {
@@ -685,6 +688,7 @@ netconn_tcp_recvd_msg(struct netconn *conn, size_t len, struct api_msg *msg)
   return netconn_apimsg(lwip_netconn_do_recv, msg);
 }
 
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 err_t
 netconn_tcp_recvd(struct netconn *conn, size_t len)
 {
@@ -699,6 +703,7 @@ netconn_tcp_recvd(struct netconn *conn, size_t len)
   return err;
 }
 
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 static err_t
 netconn_recv_data_tcp(struct netconn *conn, struct pbuf **new_buf, u8_t apiflags)
 {
@@ -799,6 +804,7 @@ netconn_recv_tcp_pbuf(struct netconn *conn, struct pbuf **new_buf)
  *                memory error or another error, @see netconn_recv_data)
  *         ERR_ARG if conn is not a TCP netconn
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 err_t
 netconn_recv_tcp_pbuf_flags(struct netconn *conn, struct pbuf **new_buf, u8_t apiflags)
 {
@@ -838,6 +844,7 @@ netconn_recv_udp_raw_netbuf(struct netconn *conn, struct netbuf **new_buf)
  *                memory error or another error)
  *         ERR_ARG if conn is not a UDP/RAW netconn
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 err_t
 netconn_recv_udp_raw_netbuf_flags(struct netconn *conn, struct netbuf **new_buf, u8_t apiflags)
 {
@@ -856,6 +863,7 @@ netconn_recv_udp_raw_netbuf_flags(struct netconn *conn, struct netbuf **new_buf,
  * @return ERR_OK if data has been received, an error code otherwise (timeout,
  *                memory error or another error)
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 err_t
 netconn_recv(struct netconn *conn, struct netbuf **new_buf)
 {
@@ -918,6 +926,7 @@ netconn_recv(struct netconn *conn, struct netbuf **new_buf)
  * @param port the remote port to which to send the data
  * @return ERR_OK if data was sent, any other err_t on error
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 err_t
 netconn_sendto(struct netconn *conn, struct netbuf *buf, const ip_addr_t *addr, u16_t port)
 {
@@ -937,6 +946,7 @@ netconn_sendto(struct netconn *conn, struct netbuf *buf, const ip_addr_t *addr, 
  * @param buf a netbuf containing the data to send
  * @return ERR_OK if data was sent, any other err_t on error
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 err_t
 netconn_send(struct netconn *conn, struct netbuf *buf)
 {
@@ -970,6 +980,7 @@ netconn_send(struct netconn *conn, struct netbuf *buf)
  * @param bytes_written pointer to a location that receives the number of written bytes
  * @return ERR_OK if data was sent, any other err_t on error
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 err_t
 netconn_write_partly(struct netconn *conn, const void *dataptr, size_t size,
                      u8_t apiflags, size_t *bytes_written)
@@ -993,6 +1004,7 @@ netconn_write_partly(struct netconn *conn, const void *dataptr, size_t size,
  * @param bytes_written pointer to a location that receives the number of written bytes
  * @return ERR_OK if data was sent, any other err_t on error
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 err_t
 netconn_write_vectors_partly(struct netconn *conn, struct netvector *vectors, u16_t vectorcnt,
                              u8_t apiflags, size_t *bytes_written)
@@ -1135,6 +1147,7 @@ netconn_close(struct netconn *conn)
  * @param conn the netconn to get the error from
  * @return and pending error or ERR_OK if no error was pending
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 err_t
 netconn_err(struct netconn *conn)
 {

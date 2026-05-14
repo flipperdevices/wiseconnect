@@ -1,9 +1,9 @@
 # Properties file for Simplicity Studio metadata
 id=uc.extension.wiseconnect3_sdk
-version=4.0.1
+version=4.0.2
 label=WiSeConnect
 description=WiSeConnect SDK
-prop.subLabel=Wi-Fi\\ SDK\\ 4.0.1-alpha.71
+prop.subLabel=Wi-Fi\\ SDK\\ 4.0.2-rc.5
 prop.file.templatesFile=bluetooth_le_siwx91x_app_templates.xml platform_siwx91x_app_templates.xml platform_nwp_siwx91x_app_templates.xml multi_protocol_siwx91x_app_templates.xml wifi_app_templates.xml
 prop.file.docsFile=wiseconnect_docs.xml
 prop.file.connectivityFirmwareFolders=connectivity_firmware

@@ -45,19 +45,21 @@
 #endif
 
 #define MQTT_WITH_WEBSOCKET_HEADER_LEN         3
-#define WAIT_TIMEOOUT                          5000
+#define WAIT_TIMEOUT                           5000
 #define SLI_917_WAIT_FOREVER                   0
 #define WIFI_BLOCKED_TIMEOUT_SF                1
 #define DEFAULT_TIMEOUT                        SLI_TX_EVENT_WAIT_TIME
 #define SLI_TX_EVENT_WAIT_TIME                 (30000 + TX_WAIT_TIME)
 #define TX_WAIT_TIME                           0
 #define SLI_SOCKET_RECVFROM_RESPONSE_WAIT_TIME ((SLI_917_WAIT_FOREVER * WIFI_BLOCKED_TIMEOUT_SF) + (DEFAULT_TIMEOUT))
-#define SINGLE_PKT_TCP_STREAM_TIMEOUT          WAIT_TIMEOOUT + SLI_SOCKET_RECVFROM_RESPONSE_WAIT_TIME
+#define SINGLE_PKT_TCP_STREAM_TIMEOUT          WAIT_TIMEOUT + SLI_SOCKET_RECVFROM_RESPONSE_WAIT_TIME
 #define NETWORK_ERROR_NULL_STRUCTURE           -1 // Error: NULL network structure
 #define NETWORK_ERROR_NULL_ADDRESS             -2 // Error: NULL address
 #define NETWORK_ERROR_INVALID_TYPE             -3 // Error: Invalid transport type
-#define MQTT_TLS_HANDSHAKE_TIMEOUT_MIN_MS      10000
-#define MQTT_TLS_HANDSHAKE_TIMEOUT_MAX_MS      30000
+#define NETWORK_ERROR_TLS_HOSTNAME_REQUIRED \
+  -4 // Error: TLS requires hostname; call NetworkSetTlsHostname() before NetworkConnect()
+#define MQTT_TLS_HANDSHAKE_TIMEOUT_MIN_MS 10000
+#define MQTT_TLS_HANDSHAKE_TIMEOUT_MAX_MS 30000
 
 #if MQTT_TLS_ENABLE
 // TLS certificate context structure
@@ -131,7 +133,8 @@ struct Network {
   void (*disconnect)(Network *);
   mqtt_transport_t transport_type;
 #if MQTT_TLS_ENABLE
-  mqtt_tls_context_t *tls; // Pointer to TLS context if TLS is enabled
+  mqtt_tls_context_t *tls;  // Pointer to TLS context if TLS is enabled
+  const char *tls_hostname; // Optional hostname for TLS SNI and cert verification (set by app before connect)
 #endif
 };
 
@@ -143,6 +146,37 @@ int left_ms_mqtt(Timer *);
 
 #if MQTT_TLS_ENABLE
 int mqtt_set_tls_certificates(Network *n, TLS_cert_ctx_t *tls_config);
+
+/**
+ * @brief Sets the hostname used for TLS SNI and server certificate verification.
+ *
+ * @param[in] n        Pointer to the initialized Network structure.
+ * @param[in] hostname Null-terminated string used as the TLS SNI hostname (passed through to the TLS
+ *                     stack). Typical values are a broker DNS name (for example, "broker.example.com") or an
+ *                     IP literal when that matches how the server certificate is issued. The maximum
+ *                     length is 255 bytes (upper bound aligned with DNS name length and SNI usage).
+ *                     This function checks only that the @p hostname is non-NULL, non-empty, and within
+ *                     that length. It does not validate DNS label, FQDN, or IPv4/IPv6 syntax.
+ *                     When TLS is used, a non-NULL, non-empty hostname is required; otherwise,
+ *                     NetworkConnect() returns NETWORK_ERROR_TLS_HOSTNAME_REQUIRED (-4).
+ *
+ * @return 0 on success. -1 if @p n is NULL or @p hostname is NULL, empty, or longer than 255 bytes.
+ *         In these cases, the stored hostname is cleared and a subsequent NetworkConnect() with TLS
+ *         will fail with NETWORK_ERROR_TLS_HOSTNAME_REQUIRED (-4).
+ *
+ * @details
+ * - Call this before NetworkConnect() when using TLS. The hostname must match the
+ *   broker certificate CN or SAN for verification to succeed.
+ * - Rejected inputs are NULL, an empty string, or a length over 255 bytes. Rejected inputs clear
+ *   the stored hostname and return -1. Any other string is accepted; callers must supply a name
+ *   suitable for SNI and certificate verification. If this value is not set, NetworkConnect()
+ *   fails with NETWORK_ERROR_TLS_HOSTNAME_REQUIRED (-4).
+ * - A string constant or macro, such as MQTT_BROKER_TLS_HOSTNAME, is recommended. The hostname
+ *   must remain valid until NetworkDisconnect() is called. Do not pass a short-lived or stack
+ *   buffer.
+ * - NetworkDisconnect() clears tls_hostname. Set this value again before reconnecting with TLS.
+ */
+int NetworkSetTlsHostname(Network *n, const char *hostname);
 #endif
 
 /**
@@ -179,6 +213,7 @@ void NetworkInit(Network *n);
  * - `NETWORK_ERROR_NULL_STRUCTURE (-1)` if the `Network` structure is `NULL`.
  * - `NETWORK_ERROR_NULL_ADDRESS (-2)` if the `addr` is `NULL`.
  * - `NETWORK_ERROR_INVALID_TYPE (-3)` if the `transport_type` is invalid.
+ * - `NETWORK_ERROR_TLS_HOSTNAME_REQUIRED (-4)` if TLS is requested but no hostname was set (call NetworkSetTlsHostname first).
  * - Transport-specific error codes for connection failures.
  *
  * @details
@@ -203,6 +238,8 @@ int NetworkConnect(Network *n, uint8_t flags, char *addr, int dst_port, int src_
  * - This function invokes the transport-specific `disconnect` callback to clean up the connection.
  * - For TCP, it closes the socket using `mqtt_tcp_disconnect`.
  * - For WebSocket, it deinitializes the WebSocket connection using `mqtt_ws_disconnect`.
+ * - When TLS was in use, tls_hostname is cleared; call NetworkSetTlsHostname() again before
+ *   reconnecting with TLS.
  *
  * @note
  * - Ensure that the `Network` structure is valid and initialized before calling this function.

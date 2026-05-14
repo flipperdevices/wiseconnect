@@ -31,7 +31,7 @@ This example does both a Generic DMA transfer with a predefined config and a use
 
 ## About Example Code
 
-- [`gpdma_example.c`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.1-content-for-docs/examples/si91x_soc/peripheral/sl_si91x_gpdma/gpdma_example.c) demonstrates how to use GPDMA peripheral to perform memory-to-memory transfers.
+- [`gpdma_example.c`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.2-content-for-docs/examples/si91x_soc/peripheral/sl_si91x_gpdma/gpdma_example.c) demonstrates how to use GPDMA peripheral to perform memory-to-memory transfers.
 - In this example, the first GPDMA initialization is done in \ref sl_event_handler.c.
 - Then \ref sl_si91x_gpdma_allocate_channel is used to allocate GPDMA_CHANNEL for transfer.
 - After configuring the channel, callbacks are registered using \ref sl_si91x_gpdma_register_callbacks

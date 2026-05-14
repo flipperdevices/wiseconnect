@@ -95,5 +95,5 @@ DEFINE_FAKE_VALUE_FUNC1(osStatus_t, osMutexRelease, osMutexId_t);
 DEFINE_FAKE_VOID_FUNC_VARARG(sl_redirect_log, const char *, ...);
 DEFINE_FAKE_VOID_FUNC1(sli_wifi_set_event, uint32_t);
 DEFINE_FAKE_VOID_FUNC2(sli_wifi_append_to_buffer_queue, sli_wifi_buffer_queue_t *, sl_wifi_buffer_t *);
-DEFINE_FAKE_VALUE_FUNC2(size_t, sl_strnlen, char *, size_t);
+DEFINE_FAKE_VALUE_FUNC2(size_t, sl_strnlen, const char *, size_t);
 DEFINE_FAKE_VALUE_FUNC0(uint32_t, osKernelGetTickFreq);

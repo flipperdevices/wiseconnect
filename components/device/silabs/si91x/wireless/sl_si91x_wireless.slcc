@@ -358,7 +358,7 @@ template_contribution:
       static: SL_IP_MANAGEMENT_STATIC_IP
       dhcp: SL_IP_MANAGEMENT_DHCP
     boolean:
-      true: 1
+      'true': 1
     sl_wifi_timeout_type_t:
       authentication_association_timer: SL_SI91X_AUTHENTICATION_ASSOCIATION_TIMEOUT
       channel_active_timer: SL_SI91X_CHANNEL_ACTIVE_SCAN_TIMEOUT

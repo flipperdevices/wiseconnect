@@ -56,7 +56,7 @@
   - **transfer_type** - Transfer type (Transmit, Receive, Transmit abort, and Receive abort)
 - Transfers with 16-bit resolution must use uint16_t data type buffer and pass SL_I2S_DATA_SIZE16 to data_size parameter in sl_i2s_xfer_config_t while configuring transfer.
 - Transfers with 24-bit and 32-bit resolutions must use uint32_t data type buffer and pass SL_I2S_DATA_SIZE32 to data_size parameter in sl_i2s_xfer_config_t while configuring transfer.
-- Because 8-bit resolution is not supported, use a uint8_t data buffer with 16-bit resolution for the transfer. When configuring the transfer, pass SL_I2S_DATA_SIZE8 to the data_size parameter in sl_i2s_xfer_config_t. Cast the data buffer to (uint16_t *) before the transfer, and set the transfer size to half the size of the 8-bit data type buffer. (Refer to the [I2S loopback](https://github.com/SiliconLabs/wiseconnect/tree/v4.0.1-content-for-docs/examples/si91x_soc/peripheral/sl_si91x_i2s_loopback) application for more details). For 8-bit transfers, the transfer size must be a multiple of four (for example, 8, 12, 16, or 20 bytes).
+- Because 8-bit resolution is not supported, use a uint8_t data buffer with 16-bit resolution for the transfer. When configuring the transfer, pass SL_I2S_DATA_SIZE8 to the data_size parameter in sl_i2s_xfer_config_t. Cast the data buffer to (uint16_t *) before the transfer, and set the transfer size to half the size of the 8-bit data type buffer. (Refer to the [I2S loopback](https://github.com/SiliconLabs/wiseconnect/tree/v4.0.2-content-for-docs/examples/si91x_soc/peripheral/sl_si91x_i2s_loopback) application for more details). For 8-bit transfers, the transfer size must be a multiple of four (for example, 8, 12, 16, or 20 bytes).
 - For I2S transfers with 16-bit or 32-bit resolution, the transfer size must be an even value (8,10,12,14...)
 - For I2S transfers with 24-bit resolution, the transfer size must be a multiple of four (8,12,16,20...)
  - SCK frequency is calculated as SCK = 2 × bit_width × sampling_rate. By default, I2S0 uses I2S_PLL_CLK as the clock source and supports a wide range of audio bit-clock frequencies suitable for common sampling rates.
@@ -107,7 +107,7 @@ For details on the project folder structure, see the [WiSeConnect Examples](http
 - SL_I2S0_CHANNEL: I2S0 channel number (0-channel no 0, 1-channel no 1)
 - Configuration files are generated in **config folder**, if not changed then the code will run on default UC values.
 
-- Configure the following macros in [`i2s_primary_example.c`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.1-content-for-docs/examples/si91x_soc/peripheral/sl_si91x_i2s_primary/i2s_primary_example.c) file and update/modify following macros if required.
+- Configure the following macros in [`i2s_primary_example.c`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.2-content-for-docs/examples/si91x_soc/peripheral/sl_si91x_i2s_primary/i2s_primary_example.c) file and update/modify following macros if required.
 
 ```C
 #define I2S_PRIMARY_BUFFER_SIZE 1024    ///< Transmit/Receive buffer size
@@ -133,7 +133,7 @@ For details on the project folder structure, see the [WiSeConnect Examples](http
 Refer to the instructions [here](https://docs.silabs.com/wiseconnect/latest/wiseconnect-developers-guide-developing-for-silabs-hosts/using-the-simplicity-studio-ide#create-a-project) to:
 
 1. Obtain two Silicon Labs Si917 Evaluation Kits: a [WPK (BRD4002)](https://www.silabs.com/development-tools/wireless/wireless-pro-kit-mainboard?tab=overview) and a [BRD4338A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-rb4338a-wifi-6-bluetooth-le-soc-radio-board?tab=overview).
-2. On one board, build and run the I2S secondary application from the WiseConnect repository: [i2s secondary](https://github.com/SiliconLabs/wiseconnect/tree/v4.0.1-content-for-docs/examples/si91x_soc/peripheral/sl_si91x_i2s_secondary).
+2. On one board, build and run the I2S secondary application from the WiseConnect repository: [i2s secondary](https://github.com/SiliconLabs/wiseconnect/tree/v4.0.2-content-for-docs/examples/si91x_soc/peripheral/sl_si91x_i2s_secondary).
 3. Compile and run this application on the other board.
 4. When the application runs, it receives data from the secondary device and after successful
    comparison, it sends data to the secondary device.

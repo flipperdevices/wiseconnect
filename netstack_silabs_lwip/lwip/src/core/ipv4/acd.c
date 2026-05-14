@@ -593,6 +593,7 @@ acd_restart(struct netif *netif, struct acd *acd)
  * @param netif network interface to use for acd processing
  * @param hdr   Incoming ARP packet
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 void
 acd_arp_reply(struct netif *netif, struct etharp_hdr *hdr)
 {
