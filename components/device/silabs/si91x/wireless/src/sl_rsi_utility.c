@@ -712,11 +712,15 @@ static void sli_process_vendor_specific_element(const sli_wifi_data_tagged_info_
 static void sli_process_tag_info(const sli_wifi_data_tagged_info_t *info, sli_scan_info_t *scan_info)
 {
   switch (info->tag) {
-    case SLI_WLAN_TAG_SSID:
-      memcpy(scan_info->ssid, info->data, info->data_length);
-      scan_info->ssid[info->data_length] = 0;
+    case SLI_WLAN_TAG_SSID: {
+      size_t data_length = info->data_length;
+      if (data_length >= sizeof(scan_info->ssid)) {
+        data_length = sizeof(scan_info->ssid) - 1;
+      }
+      memcpy(scan_info->ssid, info->data, data_length);
+      scan_info->ssid[data_length] = 0;
       break;
-
+    }
     case SLI_WLAN_TAG_RSN:
       sli_process_rsn_element(info, scan_info);
       break;
@@ -773,8 +777,13 @@ void sli_handle_wifi_beacon(sl_wifi_system_packet_t *packet)
 
       sli_wifi_data_tagged_info_t *info = (sli_wifi_data_tagged_info_t *)wifi_frame->tagged_info;
       while (0 != ies_length) {
+        const size_t info_length = sizeof(sli_wifi_data_tagged_info_t) + info->data_length;
+        if (ies_length < info_length) {
+          return;
+        }
+
         sli_process_tag_info(info, &scan_info);
-        ies_length -= (sizeof(sli_wifi_data_tagged_info_t) + info->data_length);
+        ies_length -= info_length;
         info = (sli_wifi_data_tagged_info_t *)&(info->data[info->data_length]);
 
         if (ies_length <= sizeof(sli_wifi_data_tagged_info_t)) {
