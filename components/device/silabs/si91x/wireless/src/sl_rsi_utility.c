@@ -714,16 +714,11 @@ static void sli_process_tag_info(const sli_wifi_data_tagged_info_t *info, sli_sc
   switch (info->tag) {
     case SLI_WLAN_TAG_SSID: {
       size_t data_length = info->data_length;
-      if (data_length > sizeof(scan_info->ssid)) {
-        data_length = sizeof(scan_info->ssid);
+      if (data_length >= sizeof(scan_info->ssid)) {
+        data_length = sizeof(scan_info->ssid) - 1;
       }
       memcpy(scan_info->ssid, info->data, data_length);
-
-      size_t end_idx = data_length;
-      if (data_length == sizeof(scan_info->ssid)) {
-        end_idx = end_idx - 1;
-      }
-      scan_info->ssid[end_idx] = 0;
+      scan_info->ssid[data_length] = 0;
       break;
     }
     case SLI_WLAN_TAG_RSN:
