@@ -1348,7 +1348,6 @@ sl_status_t sli_si91x_driver_send_command_packet(uint32_t command,
   sl_wifi_buffer_t *packet         = NULL;
   sl_wifi_buffer_t *response       = NULL;
   uint8_t flags                    = 0;
-  static uint8_t command_packet_id = 0;
 
   // Allocate a command packet and set flags based on the command type
   status = sli_si91x_allocate_command_buffer(&packet,
@@ -1367,8 +1366,7 @@ sl_status_t sli_si91x_driver_send_command_packet(uint32_t command,
   sli_configure_si91x_command_packet_node(node, buffer, command_type, flags, sdk_context, wait_period);
 
   // Enqueue command packet using SI91X-specific helper function
-  const uint8_t this_packet_id = command_packet_id;
-  command_packet_id++;
+  const uint8_t this_packet_id = sli_wifi_allocate_command_packet_id();
   status = sli_enqueue_si91x_command_packet(command_type, packet, buffer, this_packet_id);
   if (status != SL_STATUS_OK) {
     return status;

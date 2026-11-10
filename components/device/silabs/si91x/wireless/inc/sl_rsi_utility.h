@@ -253,6 +253,12 @@ sl_status_t sli_si91x_host_allocate_buffer(sl_wifi_buffer_t **buffer,
 
 // Helper functions for command packet processing
 /**
+ * @brief Allocate a command packet ID shared by all command entry points
+ * @return New packet ID
+ */
+uint8_t sli_wifi_allocate_command_packet_id(void);
+
+/**
  * @brief Set flags for command packet based on wait period and command type
  * @param command Command type
  * @param wait_period Wait period configuration

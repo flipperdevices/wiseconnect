@@ -223,6 +223,15 @@ void *sli_wifi_host_get_buffer_data(void *buffer, uint16_t offset, uint16_t *dat
   return (void *)&temp_buffer->data[offset];
 }
 
+uint8_t sli_wifi_allocate_command_packet_id(void)
+{
+  static uint8_t command_packet_id = 0;
+  CORE_irqState_t state            = CORE_EnterAtomic();
+  const uint8_t packet_id          = command_packet_id++;
+  CORE_ExitAtomic(state);
+  return packet_id;
+}
+
 sl_status_t sli_wifi_send_command(uint32_t command,
                                   sli_wifi_command_type_t command_type,
                                   const void *data,
@@ -237,7 +246,6 @@ sl_status_t sli_wifi_send_command(uint32_t command,
   sl_status_t status;
   sli_si91x_queue_packet_t *node   = NULL;
   uint8_t flags                    = 0;
-  static uint8_t command_packet_id = 0;
   sl_wifi_buffer_t *queue_packet;
 
   // Check if the queue type is within valid range
@@ -285,8 +293,7 @@ sl_status_t sli_wifi_send_command(uint32_t command,
   sli_configure_command_packet_node(node, buffer, command_type, flags, sdk_context, wait_period);
 
   // Enqueue command packet using helper function
-  const uint8_t this_packet_id = command_packet_id;
-  command_packet_id++;
+  const uint8_t this_packet_id = sli_wifi_allocate_command_packet_id();
   status = sli_enqueue_command_packet(command_type, queue_packet, buffer, this_packet_id);
   if (status != SL_STATUS_OK) {
     return status;
