@@ -1961,8 +1961,14 @@ sl_status_t sl_si91x_command_to_read_common_flash(uint32_t read_address, size_t 
     }
     VERIFY_STATUS_AND_RETURN(status);
 
-    packet = sli_wifi_host_get_buffer_data(buffer, 0, NULL);
-    memcpy(output_buffer, packet->data, packet->length);
+    uint16_t response_size = 0;
+    packet = sli_wifi_host_get_buffer_data(buffer, 0, &response_size);
+    if ((packet == NULL) || (packet->length != chunkSize)
+        || (response_size < sizeof(*packet) + chunkSize)) {
+      sli_si91x_host_free_buffer(buffer);
+      return SL_STATUS_INVALID_COUNT;
+    }
+    memcpy(output_buffer, packet->data, chunkSize);
     sli_si91x_host_free_buffer(buffer);
 
     // Adjust pointers and counters
