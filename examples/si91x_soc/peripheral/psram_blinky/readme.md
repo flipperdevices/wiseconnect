@@ -1,8 +1,8 @@
-# PSRAM Blinky
+# SiWx91x Platform PSRAM Blinky
 
 ## Table of Contents
 
-- [PSRAM Blinky](#psram-blinky)
+- [SiWx91x Platform PSRAM Blinky](#platform-siwx91x-psram-blinky)
   - [Table of Contents](#table-of-contents)
   - [Purpo/sescope](#purposescope)
   - [Prerequisites/Setup Requirements](#prerequisitessetup-requirements)
@@ -13,6 +13,9 @@
   - [Application Build Environment](#application-build-environment)
   - [PSRAM Linker Component Installation](#psram-linker-component-installation)
   - [Test the Application](#test-the-application)
+  - [Troubleshooting](#troubleshooting)
+  - [Resources](#resources)
+  - [Report Bugs/Support](#report-bugssupport)
 
 ## Purpo/sescope
 
@@ -23,7 +26,7 @@
 ### Hardware Requirements
 
 - Windows PC
-- Silicon Labs Si917 Evaluation Kit [WPK(BRD4002) + BRD4342A]
+- Silicon Labs SiWx91x Evaluation Kit [WPK(BRD4002) + BRD4342A]
 
 ### Software Requirements
 
@@ -47,12 +50,20 @@ For details on the project folder structure, see the [WiSeConnect Examples](http
 
 ## Application Build Environment
 
-- Configure the following parameter in [`app.c`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.1-content-for-docs/examples/si91x_soc/peripheral/psram_blinky/app.c) file, update/modify following macro if required
+- Configure the following parameter in [`app.c`](app.c) file, update/modify following macro if required
 
-  ```C
-    #define RSI_BLINK_RATE //  configured for 10 ticks per second   
-  ```   
-- Sections can be included in PSRAM by installing components present under "PSRAM Linker Configurations" from "SOFTWARE COMPONENTS" GUI. Same can be removed from PSRAM and placed into default memory by uninstalling the respective component from software component selection GUI. 
+  - `LED_INSTANCE`: Selects the LED instance used by the blinky example. By default, it is set to `led_led0`.
+
+    ```c
+    #define LED_INSTANCE    led_led0 // LED instance
+    ```
+
+  - `TOOGLE_DELAY_MS`: Delay (in milliseconds) between successive LED toggles. By default, it is set to 500.
+
+    ```c
+    #define TOOGLE_DELAY_MS 500      // Toggle delay in ms
+    ```
+- Sections can be included in PSRAM by installing components present under "PSRAM Linker Configurations" from "SOFTWARE COMPONENTS" GUI. Same can be removed from PSRAM and placed into default memory by uninstalling the respective component from software component selection GUI.
 
 ## PSRAM Linker Component Installation
 
@@ -71,7 +82,7 @@ For details on the project folder structure, see the [WiSeConnect Examples](http
 2. Toggles the state of LED0 at configured blink rate.
 3. LED0 should blink on WPK base board.
 
-> **Note!** 
+> **Note!**
 >
 > LED0 will continuously be turned on and off.
 
@@ -80,3 +91,19 @@ For details on the project folder structure, see the [WiSeConnect Examples](http
 > **Note:**
 >
 > - Interrupt handlers are implemented in the driver layer, and user callbacks are provided for custom code. If you want to write your own interrupt handler instead of using the default one, make the driver interrupt handler a weak handler. Then, copy the necessary code from the driver handler to your custom interrupt handler.
+
+## Troubleshooting
+
+- If the project does not build, ensure Simplicity Studio and the WiSeConnect extension are installed and the board is connected.
+- If the device is not detected, reinstall the connectivity firmware and check USB drivers.
+
+## Resources
+
+- [WiSeConnect Getting Started](https://docs.silabs.com/wiseconnect/latest/wiseconnect-getting-started/)
+- [WiSeConnect Examples](https://docs.silabs.com/wiseconnect/latest/wiseconnect-examples/)
+- [SiWx91x SoC Documentation](https://docs.silabs.com/wiseconnect/latest/)
+
+## Report Bugs/Support
+
+For issues and support, use the Silicon Labs Community or your normal support channel.
+

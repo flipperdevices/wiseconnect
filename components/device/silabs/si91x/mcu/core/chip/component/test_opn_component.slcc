@@ -8,7 +8,7 @@
       license: MSLA
 - category: Device|Si91x|MCU|Core
 - description: >
-    Si91x SoC OPN testing component for internal use only.
+    This component provides SiWx91x SoC OPN testing for internal use only.
 - define:
     - name: USER_CONFIGURATION_ENABLE
       value: '1'
@@ -21,6 +21,8 @@
     - name: external_flash_8mb
       condition: [device_supports_external_flash]
     - name: external_psram_8mb
+      condition: [device_supports_external_psram]
+    - name: psram_aps6404l_sqh
       condition: [device_supports_external_psram]
 - template_contribution:
     - name: psram_present
@@ -37,4 +39,6 @@
       condition: [device_supports_external_psram]       
 - toolchain_settings:
     - option: gcc_compiler_option
+      value: -w
+    - option: llvm_compiler_option
       value: -w

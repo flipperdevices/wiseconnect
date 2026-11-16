@@ -1,9 +1,9 @@
 id: sl_si91x_uart_bus
 package: wifi
 description: >
-  This component implements UART communication interface to Si91x from the host MCU.
+  This component implements UART communication interface to SiWx91x from the host MCU.
 
-label: Si91x NCP UART bus interface
+label: SiWx91x NCP UART bus interface
 category: Device|Si91x|Wireless|Network Stack
 quality: production
 metadata:

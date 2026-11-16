@@ -2,7 +2,8 @@ id: sl_wdt_manager
 label: WDT Manager
 package: platform_siwx91x
 description: >
-  Initiates the WDT Manager (WDTM) component to manage the MCU's reset recovery mechanism, Allows the WDT Manager (WDTM) component to manage the MCU's reset recovery and provides APIs for watchdog timer configuration in applications.
+  This component manages the MCU's reset recovery mechanism and provides APIs for watchdog
+  timer configuration in applications.
 
   Note: When the RC clock is used as the source for the LF-FSM, the timeout durations may vary due to the inherent frequency instability of the RC oscillator. The minimum WDT timeout that can be set is approximately 1ms.
 category: Device|Si91x|MCU|Service

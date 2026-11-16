@@ -29,17 +29,17 @@
 //                              Macros and Typedefs
 // -----------------------------------------------------------------------------
 
-#define print_error_cycle(CODE)     \
-  do {                              \
-    psa_status_t ret;               \
-                                    \
-    ret = CODE;                     \
-    if (ret == PSA_SUCCESS) {       \
-      printf("OK\n");               \
-    } else {                        \
-      printf("Failed: %ld\n", ret); \
-    }                               \
-    return ret;                     \
+#define print_error_cycle(CODE)         \
+  do {                                  \
+    psa_status_t ret;                   \
+                                        \
+    ret = CODE;                         \
+    if (ret == PSA_SUCCESS) {           \
+      printf("OK\n");                   \
+    } else {                            \
+      printf("Failed: %d\n", (int)ret); \
+    }                                   \
+    return ret;                         \
   } while (0)
 
 // -----------------------------------------------------------------------------

@@ -15,11 +15,13 @@
  *
  ******************************************************************************/
 #include "sl_wifi.h"
+#include "sl_si91x_driver.h"
 #include "sl_net.h"
 #include "sl_si91x_power_manager.h"
 #include "sl_si91x_logger_example.h"
 #include "FreeRTOS.h"
 #include "sl_log_helper.h"
+#include <inttypes.h>
 
 /*******************************************************************************
  ***************************  Defines / Macros  ********************************
@@ -94,66 +96,74 @@ static sl_m4_ta_power_t sl_log_m4_ta_power_state = { .m4_state           = SL_SI
 // Attempts to move the M4 core to the given power state
 static sl_status_t set_m4_power_state(sl_power_state_t target)
 {
-  SL_PRINT_STRING_DEBUG("ENTER: set_m4_power_state");
+
+  /* Note: All status messages in this example — both success and failure — are
+ * intentionally emitted via SL_PRINT_STRING_ERROR so that they remain visible
+ * on the console at the default log level. This is a demonstration choice, not
+ * a recommendation: in production code, ERROR severity should be reserved for
+ * actual failures, with successful operations logged via SL_PRINT_STRING_INFO
+ * (or SL_PRINT_STRING_ERROR for verbose trace). */
+
+  SL_PRINT_STRING_ERROR("ENTER: set_m4_power_state\r\n");
 
   sl_status_t status       = SL_STATUS_OK;
   sl_power_state_t current = sl_si91x_power_manager_get_current_state();
 
   // If already in requested state, log a warning and exit
   if (current == target) {
-    SL_PRINT_STRING_WARN("M4 already in requested state %lu", target);
+    SL_PRINT_STRING_ERROR("M4 already in requested state %lu\r\n", target);
     return SL_STATUS_OK;
   }
 
-  SL_PRINT_STRING_DEBUG("M4 current state %lu Target state %lu", current, target);
+  SL_PRINT_STRING_ERROR("M4 current state %lu Target state %lu\r\n", current, target);
 
   // Add and remove the PS requirement to trigger transition
   status = sl_si91x_power_manager_add_ps_requirement(target);
   if (status != SL_STATUS_OK) {
-    SL_PRINT_STRING_ERROR("Add PS req fail %lu", status);
+    SL_PRINT_STRING_ERROR("Add PS req fail %u\r\n", (unsigned int)status);
     return status;
   }
 
   status = sl_si91x_power_manager_remove_ps_requirement(target);
   if (status != SL_STATUS_OK) {
-    SL_PRINT_STRING_ERROR("Remove PS req fail %lu", status);
+    SL_PRINT_STRING_ERROR("Remove PS req fail %u\r\n", (unsigned int)status);
     return status;
   }
 
-  SL_PRINT_STRING_INFO("M4 change state success, current state %lu", target);
+  SL_PRINT_STRING_ERROR("M4 change state success, current state %lu\r\n", target);
 
   osDelay(10); // Allow small delay for state change to settle
 
-  SL_PRINT_STRING_DEBUG("EXIT: set_m4_power_state");
+  SL_PRINT_STRING_ERROR("EXIT: set_m4_power_state\r\n");
   return status;
 }
 
 // Updates the Wi‑Fi performance profile of the TA (network processor)
 static sl_status_t set_ta_profile(sl_wifi_performance_profile_v2_t *profile)
 {
-  SL_PRINT_STRING_DEBUG("ENTER: set_ta_profile");
+  SL_PRINT_STRING_ERROR("ENTER: set_ta_profile\r\n");
 
   sl_wifi_performance_profile_v2_t current;
   sl_wifi_get_performance_profile_v2(&current);
 
   // Warn if requested profile is already active
   if (current.profile == profile->profile) {
-    SL_PRINT_STRING_WARN("TA already in requested state %lu", profile->profile);
+    SL_PRINT_STRING_ERROR("TA already in requested state %lu\r\n", profile->profile);
     return SL_STATUS_OK;
   }
 
-  SL_PRINT_STRING_DEBUG("TA Current state %lu Target state %lu", current.profile, profile->profile);
+  SL_PRINT_STRING_ERROR("TA Current state %lu Target state %lu\r\n", current.profile, profile->profile);
 
   sl_status_t status = sl_wifi_set_performance_profile_v2(profile);
   if (status != SL_STATUS_OK) {
-    SL_PRINT_STRING_ERROR("TA set profile failed %lu", status);
+    SL_PRINT_STRING_ERROR("TA set profile failed %u\r\n", (unsigned int)status);
   }
 
-  SL_PRINT_STRING_INFO("TA set profile success, current profile %lu", profile->profile);
+  SL_PRINT_STRING_ERROR("TA set profile success, current profile %lu\r\n", profile->profile);
 
   osDelay(10); // Allow small delay for NWP state application
 
-  SL_PRINT_STRING_DEBUG("EXIT: set_ta_profile");
+  SL_PRINT_STRING_ERROR("EXIT: set_ta_profile\r\n");
   return status;
 }
 
@@ -163,13 +173,13 @@ static sl_status_t set_ta_profile(sl_wifi_performance_profile_v2_t *profile)
 // The TA task initializes wireless, then waits for semaphore signal from app task
 static void ta_task_start(void *arg)
 {
-  SL_PRINT_STRING_DEBUG("ENTER: ta_task_start");
+  SL_PRINT_STRING_ERROR("ENTER: ta_task_start\r\n");
   (void)arg;
 
   // Initialize Wi‑Fi and network processor
   sl_status_t status = initialize_wireless();
   if (status != SL_STATUS_OK) {
-    SL_PRINT_STRING_ERROR("Wireless init fail 0x%lX", status);
+    SL_PRINT_STRING_ERROR("Wireless init fail 0x%X\r\n", (unsigned int)status);
     return;
   }
 
@@ -192,7 +202,7 @@ static void ta_task_start(void *arg)
 // M4 task waits for semaphore, updates M4 power state, then triggers TA task
 static void m4_task_start(void *arg)
 {
-  SL_PRINT_STRING_DEBUG("ENTER: m4_task_start");
+  SL_PRINT_STRING_ERROR("ENTER: m4_task_start\r\n");
   (void)arg;
 
   // Subscribe to power‑state transition events for logging
@@ -200,7 +210,7 @@ static void m4_task_start(void *arg)
   sl_power_manager_ps_transition_event_info_t info = { .event_mask = PS_EVENT_MASK, .on_event = transition_callback };
 
   if (sl_si91x_power_manager_subscribe_ps_transition_event(&handle, &info) != SL_STATUS_OK) {
-    SL_PRINT_STRING_ERROR("PM event subscribe fail");
+    SL_PRINT_STRING_ERROR("PM event subscribe fail\r\n");
   }
 
   // Main M4‑task loop
@@ -222,7 +232,7 @@ static void m4_task_start(void *arg)
 // Main application thread that cycles through power/profile combinations
 static void application_start(void *argument)
 {
-  SL_PRINT_STRING_DEBUG("ENTER: application_start");
+  SL_PRINT_STRING_ERROR("ENTER: application_start\r\n");
   (void)argument;
 
   osThreadId_t m4_task_thread_id;
@@ -231,38 +241,38 @@ static void application_start(void *argument)
   // Create semaphores used to control task execution order
   sem_m4_turn = osSemaphoreNew(1U, 0U, NULL);
   if (sem_m4_turn == NULL) {
-    SL_PRINT_STRING_ERROR("sem_m4_turn semaphore creation failed");
+    SL_PRINT_STRING_ERROR("sem_m4_turn semaphore creation failed\r\n");
   }
-  SL_PRINT_STRING_INFO("sem_m4_turn semaphore created");
+  SL_PRINT_STRING_ERROR("sem_m4_turn semaphore created\r\n");
 
   sem_ta_turn = osSemaphoreNew(1U, 0U, NULL);
   if (sem_ta_turn == NULL) {
-    SL_PRINT_STRING_ERROR("sem_ta_turn semaphore creation failed");
+    SL_PRINT_STRING_ERROR("sem_ta_turn semaphore creation failed\r\n");
   }
-  SL_PRINT_STRING_INFO("sem_ta_turn semaphore created");
+  SL_PRINT_STRING_ERROR("sem_ta_turn semaphore created\r\n");
 
   sem_app_turn = osSemaphoreNew(1U, 0U, NULL);
   if (sem_app_turn == NULL) {
-    SL_PRINT_STRING_ERROR("sem_app_turn semaphore creation failed");
+    SL_PRINT_STRING_ERROR("sem_app_turn semaphore creation failed\r\n");
   }
-  SL_PRINT_STRING_INFO("sem_app_turn semaphore created");
+  SL_PRINT_STRING_ERROR("sem_app_turn semaphore created\r\n");
 
   // Create TA and M4 worker threads
   ta_task_thread_id = osThreadNew(ta_task_start, NULL, &ta_thread_attributes);
   if (ta_task_thread_id == NULL) {
-    SL_PRINT_STRING_ERROR("ta_task_start thread creation failed");
+    SL_PRINT_STRING_ERROR("ta_task_start thread creation failed\r\n");
     while (1)
       ;
   }
-  SL_PRINT_STRING_INFO("ta_task_start thread created");
+  SL_PRINT_STRING_ERROR("ta_task_start thread created\r\n");
 
   m4_task_thread_id = osThreadNew(m4_task_start, NULL, &m4_thread_attributes);
   if (m4_task_thread_id == NULL) {
-    SL_PRINT_STRING_ERROR("m4_task_thread_id thread creation failed");
+    SL_PRINT_STRING_ERROR("m4_task_thread_id thread creation failed\r\n");
     while (1)
       ;
   }
-  SL_PRINT_STRING_INFO("m4_task_start thread created");
+  SL_PRINT_STRING_ERROR("m4_task_start thread created\r\n");
 
   // Iterate through all M4/TA combinations in a loop
   uint32_t combination_index = 0;
@@ -280,10 +290,10 @@ static void application_start(void *argument)
 
     // Synchronize timestamps across cores
     sl_log_sync_timestamp(0, NULL);
-    SL_PRINT_STRING_INFO("Timestamp synchronization complete");
+    SL_PRINT_STRING_ERROR("Timestamp synchronization complete\r\n");
 
     // Log timestamp counters from both cores
-    SL_PRINT_STRING_INFO("M4_TS=%lu TA_TS=%lu", sl_log_get_timestamp_count(1), sl_log_get_timestamp_count(0));
+    SL_PRINT_STRING_ERROR("M4_TS=%lu TA_TS=%lu\r\n", sl_log_get_timestamp_count(1), sl_log_get_timestamp_count(0));
 
     // Move to next combination, flush logs when finishing full cycle
     combination_index++;
@@ -300,52 +310,56 @@ static void application_start(void *argument)
 // Initializes Wi‑Fi subsystem and loads firmware
 static sl_status_t initialize_wireless(void)
 {
-  SL_PRINT_STRING_DEBUG("ENTER: initialize_wireless");
+  SL_PRINT_STRING_ERROR("ENTER: initialize_wireless\r\n");
 
   // Standard STA‑mode configuration with low‑power features
   static const sl_wifi_device_configuration_t station_init_configuration = {
-    .boot_option = LOAD_NWP_FW,
-    .mac_address = NULL,
-    .band        = SL_SI91X_WIFI_BAND_2_4GHZ,
-    .boot_config = { .oper_mode = SL_SI91X_CLIENT_MODE,
-                     .coex_mode = SL_SI91X_WLAN_ONLY_MODE,
-                     .feature_bit_map =
-                       (SL_WIFI_FEAT_SECURITY_OPEN | SL_WIFI_FEAT_AGGREGATION | SL_SI91X_FEAT_ULP_GPIO_BASED_HANDSHAKE),
-                     .tcp_ip_feature_bit_map =
-                       (SL_SI91X_TCP_IP_FEAT_DHCPV4_CLIENT | SL_SI91X_TCP_IP_FEAT_EXTENSION_VALID),
-                     .custom_feature_bit_map     = (SL_WIFI_SYSTEM_CUSTOM_FEAT_EXTENSION_VALID),
-                     .ext_custom_feature_bit_map = (SL_WIFI_SYSTEM_EXT_FEAT_LOW_POWER_MODE | SL_SI91X_EXT_FEAT_XTAL_CLK
+    .boot_option     = LOAD_NWP_FW,
+    .mac_address     = NULL,
+    .band            = SL_SI91X_WIFI_BAND_2_4GHZ,
+    .boot_config     = { .oper_mode = SL_SI91X_CLIENT_MODE,
+                         .coex_mode = SL_SI91X_WLAN_ONLY_MODE,
+                         .feature_bit_map =
+                           (SL_WIFI_FEAT_SECURITY_OPEN | SL_WIFI_FEAT_AGGREGATION | SL_SI91X_FEAT_ULP_GPIO_BASED_HANDSHAKE),
+                         .tcp_ip_feature_bit_map =
+                           (SL_SI91X_TCP_IP_FEAT_DHCPV4_CLIENT | SL_SI91X_TCP_IP_FEAT_EXTENSION_VALID),
+                         .custom_feature_bit_map     = (SL_WIFI_SYSTEM_CUSTOM_FEAT_EXTENSION_VALID),
+                         .ext_custom_feature_bit_map = (SL_WIFI_SYSTEM_EXT_FEAT_LOW_POWER_MODE | SL_SI91X_EXT_FEAT_XTAL_CLK
                                                     | SL_SI91X_EXT_FEAT_UART_SEL_FOR_DEBUG_PRINTS | MEMORY_CONFIG),
-                     .bt_feature_bit_map         = 0,
-                     .ext_tcp_ip_feature_bit_map = SL_SI91X_CONFIG_FEAT_EXTENTION_VALID,
-                     .ble_feature_bit_map        = 0,
-                     .ble_ext_feature_bit_map    = 0,
-                     .config_feature_bit_map = (SL_SI91X_FEAT_SLEEP_GPIO_SEL_BITMAP | SL_WIFI_ENABLE_ENHANCED_MAX_PSP) }
+                         .bt_feature_bit_map         = 0,
+                         .ext_tcp_ip_feature_bit_map = SL_SI91X_CONFIG_FEAT_EXTENSION_VALID,
+                         .ble_feature_bit_map        = 0,
+                         .ble_ext_feature_bit_map    = 0,
+                         .config_feature_bit_map =
+                           (SL_SI91X_FEAT_SLEEP_GPIO_SEL_BITMAP | SL_WIFI_ENABLE_ENHANCED_MAX_PSP) },
+    .ta_pool         = { .tx_ratio_in_buffer_pool = 0, .rx_ratio_in_buffer_pool = 0, .global_ratio_in_buffer_pool = 0 },
+    .efuse_data_type = SL_SI91X_EFUSE_MFG_SW_VERSION,
+    .nwp_fw_image_number = SL_SI91X_NWP_FW_IMAGE_NUMBER_0
   };
 
   sl_status_t status;
-  sl_wifi_firmware_version_t version = { 0 };
-  sl_mac_address_t mac_addr          = { 0 };
+  sl_si91x_firmware_version_t version = { 0 };
+  sl_mac_address_t mac_addr           = { 0 };
 
   // Initialize Wi‑Fi stack and load firmware
   status = sl_net_init(SL_NET_WIFI_CLIENT_INTERFACE, &station_init_configuration, NULL, NULL);
   if (status != SL_STATUS_OK) {
-    SL_PRINT_STRING_ERROR("WiFi init fail 0x%lX", status);
+    SL_PRINT_STRING_ERROR("WiFi init fail 0x%X\r\n", (unsigned int)status);
     return status;
   }
 
   // Retrieve MAC address
   status = sl_wifi_get_mac_address(SL_WIFI_CLIENT_INTERFACE, &mac_addr);
   if (status != SL_STATUS_OK)
-    SL_PRINT_STRING_ERROR("MAC fail 0x%lX", status);
+    SL_PRINT_STRING_ERROR("MAC fail 0x%X\r\n", (unsigned int)status);
 
   // Retrieve firmware version
-  status = sl_wifi_get_firmware_version(&version);
+  status = sl_si91x_get_firmware_version(&version);
   if (status != SL_STATUS_OK) {
-    SL_PRINT_STRING_ERROR("FW ver fail 0x%lX", status);
+    SL_PRINT_STRING_ERROR("FW ver fail 0x%X\r\n", (unsigned int)status);
   }
 
-  SL_PRINT_STRING_DEBUG("EXIT: initialize_wireless");
+  SL_PRINT_STRING_ERROR("EXIT: initialize_wireless\r\n");
   return SL_STATUS_OK;
 }
 
@@ -355,15 +369,15 @@ static sl_status_t initialize_wireless(void)
 // Called when the M4 power manager transitions between PS states
 static void transition_callback(sl_power_state_t from, sl_power_state_t to)
 {
-  SL_PRINT_STRING_DEBUG("ENTER: transition_callback");
+  SL_PRINT_STRING_ERROR("ENTER: transition_callback\r\n");
 
   // Log the transition source
   switch (from) {
     case SL_SI91X_POWER_MANAGER_PS4:
-      SL_PRINT_STRING_INFO("Leave PS4");
+      SL_PRINT_STRING_ERROR("Leave PS4\r\n");
       break;
     case SL_SI91X_POWER_MANAGER_PS3:
-      SL_PRINT_STRING_INFO("Leave PS3");
+      SL_PRINT_STRING_ERROR("Leave PS3\r\n");
       break;
     default:
       break;
@@ -372,16 +386,16 @@ static void transition_callback(sl_power_state_t from, sl_power_state_t to)
   // Log the transition destination
   switch (to) {
     case SL_SI91X_POWER_MANAGER_PS4:
-      SL_PRINT_STRING_INFO("Enter PS4");
+      SL_PRINT_STRING_ERROR("Enter PS4\r\n");
       break;
     case SL_SI91X_POWER_MANAGER_PS3:
-      SL_PRINT_STRING_INFO("Enter PS3");
+      SL_PRINT_STRING_ERROR("Enter PS3\r\n");
       break;
     default:
       break;
   }
 
-  SL_PRINT_STRING_DEBUG("EXIT: transition_callback");
+  SL_PRINT_STRING_ERROR("EXIT: transition_callback\r\n");
 }
 
 /*******************************************************************************

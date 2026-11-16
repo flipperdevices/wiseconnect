@@ -37,6 +37,7 @@
  ******************************************************************************/
 
 #include <string.h>
+#include <inttypes.h>
 #include "sensor_hub.h"
 #include "rsi_debug.h"
 #include "rsi_os.h"
@@ -336,11 +337,10 @@ const osThreadAttr_t sensor_thread_attributes = {
   .stack_size = SL_SH_SENSOR_TASK_STACK_SIZE, //< Stack size of sensor task
   .priority   = osPriorityLow1,               //< Priority of Sensor task
   .tz_module  = 0,
-  .reserved   = 0,
 };
 
 /*******************************************************************************
- **************  Event Manger Task Attributes structure for thread   ***********
+ **************  Event Manager Task Attributes structure for thread   ***********
  ******************************************************************************/
 const osThreadAttr_t EM_thread_attributes = {
   .name       = "EM Task", //< Name of thread
@@ -351,7 +351,6 @@ const osThreadAttr_t EM_thread_attributes = {
   .stack_size = SL_SH_EM_TASK_STACK_SIZE, //< Stack size of EM task
   .priority   = osPriorityLow2,           //< Priority of EM task
   .tz_module  = 0,
-  .reserved   = 0,
 };
 
 /**************************************************************************/ /**
@@ -386,19 +385,19 @@ static void transition_callback(sl_power_state_t from, sl_power_state_t to)
   switch (from) {
     case SL_SI91X_POWER_MANAGER_PS4:
       // Previous state was PS4
-      DEBUGOUT("Leaving PS4 State \n");
+      SL_PRINT_STRING_DEBUG("Leaving PS4 State \n");
       break;
     case SL_SI91X_POWER_MANAGER_PS3:
       // Previous state was PS3
-      DEBUGOUT("Leaving PS3 State \n");
+      SL_PRINT_STRING_DEBUG("Leaving PS3 State \n");
       break;
     case SL_SI91X_POWER_MANAGER_PS2:
       // Previous state was PS2
-      DEBUGOUT("Leaving PS2 State \n");
+      SL_PRINT_STRING_DEBUG("Leaving PS2 State \n");
       break;
     case SL_SI91X_POWER_MANAGER_PS1:
       // Wakeup from PS1
-      DEBUGOUT("Leaving PS1 State \n");
+      SL_PRINT_STRING_DEBUG("Leaving PS1 State \n");
       break;
     case SL_SI91X_POWER_MANAGER_SLEEP:
       // Wakeup from sleep
@@ -409,7 +408,7 @@ static void transition_callback(sl_power_state_t from, sl_power_state_t to)
       break;
     case SL_SI91X_POWER_MANAGER_STANDBY:
       // Wakeup from standby
-      DEBUGOUT("Leaving Standby State \n");
+      SL_PRINT_STRING_DEBUG("Leaving Standby State \n");
       break;
     default:
       break;
@@ -418,15 +417,15 @@ static void transition_callback(sl_power_state_t from, sl_power_state_t to)
   switch (to) {
     case SL_SI91X_POWER_MANAGER_PS4:
       // Current state is PS4
-      //      DEBUGOUT("Entering PS4 State \n");
+      SL_PRINT_STRING_DEBUG("Entering PS4 State \n");
       break;
     case SL_SI91X_POWER_MANAGER_PS3:
       // Current state is PS3
-      DEBUGOUT("Entering PS3 State \n");
+      SL_PRINT_STRING_DEBUG("Entering PS3 State \n");
       break;
     case SL_SI91X_POWER_MANAGER_PS2:
       // Current state is PS2
-      DEBUGOUT("Entering PS2 State \n");
+      SL_PRINT_STRING_DEBUG("Entering PS2 State \n");
       break;
     default:
       break;
@@ -444,7 +443,7 @@ static sl_sensor_impl_type_t *sensorhub_get_sensor_implementation(int32_t sensor
   uint32_t count = sl_si91x_get_implementation_size();
 
   for (uint32_t i = 0; i < count; i++) {
-    if (sensor_impls[i].type == sensor_id) {
+    if ((int32_t)sensor_impls[i].type == sensor_id) {
       return &sensor_impls[i];
     }
   }
@@ -532,6 +531,9 @@ static sl_sensor_info_t *sensorhub_get_sensor_info(sl_sensor_id_t sensor_id)
 sl_status_t sl_si91x_sensorhub_notify_cb_register(sl_sensor_signalEvent_t cb_event, sl_sensor_id_t *cb_ack)
 {
   if (cb_event == NULL || cb_ack == NULL) {
+    SL_PRINT_STRING_ERROR("sl_si91x_sensorhub_notify_cb_register: invalid parameters st=0x%04lX,line no : %d\r\n",
+                          (unsigned long)SL_SH_INVALID_PARAMETERS,
+                          (int)__LINE__);
     return SL_SH_INVALID_PARAMETERS;
   }
   //!register call back handler for application
@@ -594,22 +596,28 @@ static sl_status_t sensorhub_gpio_interrupt_config(uint16_t gpio_pin, sl_si91x_g
     // Initialize the GPIOs by clearing all interrupts initially
     status = sl_gpio_driver_init();
     if (status != SL_STATUS_OK) {
-      // Prints GPIO initialization fails
-      DEBUGOUT("sl_gpio_driver_init, Error code: %lu", status);
+      SL_PRINT_STRING_ERROR("sensorhub_gpio_interrupt_config: sl_gpio_driver_init failed st=0x%04lX,line no : %d\r\n",
+                            (unsigned long)status,
+                            (int)__LINE__);
       break; // breaks if error occurs
     }
 
     status = sl_gpio_set_configuration(sl_gpio_pin_config1);
     if (status != SL_STATUS_OK) {
-      // Prints if pin configuration fails
-      DEBUGOUT("sl_gpio_set_configuration, Error code: %lu", status);
+      SL_PRINT_STRING_ERROR(
+        "sensorhub_gpio_interrupt_config: sl_gpio_set_configuration failed st=0x%04lX,line no : %d\r\n",
+        (unsigned long)status,
+        (int)__LINE__);
       break; // breaks if error occurs
     }
 
     // Configure the UULP GPIO pin mode, receiver enable, direction and polarity.
     status = sl_si91x_gpio_driver_set_uulp_pad_configuration(&uulp_pad);
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("sl_si91x_gpio_driver_set_uulp_pad_configuration, Error code: %lu", status);
+      SL_PRINT_STRING_ERROR(
+        "sensorhub_gpio_interrupt_config: set_uulp_pad_configuration failed st=0x%04lX,line no : %d\r\n",
+        (unsigned long)status,
+        (int)__LINE__);
       break;
     }
     status = sl_gpio_driver_configure_interrupt(&sl_gpio_pin_config1.port_pin,
@@ -618,7 +626,10 @@ static sl_status_t sensorhub_gpio_interrupt_config(uint16_t gpio_pin, sl_si91x_g
                                                 (sl_gpio_irq_callback_t)&gpio_uulp_pin_interrupt_callback,
                                                 AVL_INTR_NO);
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("sl_gpio_configure_interrupt, Error code: %lu", status);
+      SL_PRINT_STRING_ERROR(
+        "sensorhub_gpio_interrupt_config: sl_gpio_driver_configure_interrupt failed st=0x%04lX,line no : %d\r\n",
+        (unsigned long)status,
+        (int)__LINE__);
       break;
     }
   } while (false);
@@ -722,7 +733,9 @@ static sl_status_t sensorhub_adc_init(void)
   if (bus_intf_info.adc_config.adc_init == 1) {
     status = sl_si91x_adc_deinit(bus_intf_info.adc_config.adc_cfg);
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("\r\n ADC DeInit Failed, Error Code : %ld\r\n", status);
+      SL_PRINT_STRING_ERROR("sensorhub_adc_init: adc_deinit failed st=0x%04lX,line no : %d\r\n",
+                            (unsigned long)status,
+                            (int)__LINE__);
       return SL_STATUS_FAIL;
     }
   }
@@ -730,7 +743,9 @@ static sl_status_t sensorhub_adc_init(void)
   status =
     sl_si91x_adc_init(bus_intf_info.adc_config.adc_ch_cfg, bus_intf_info.adc_config.adc_cfg, SL_SH_ADC_VREF_VALUE);
   if (status != SL_STATUS_OK) {
-    DEBUGOUT("\r\n ADC Initialization Failed, Error Code : %ld\r\n", status);
+    SL_PRINT_STRING_ERROR("sensorhub_adc_init: adc_init failed st=0x%04lX,line no : %d\r\n",
+                          (unsigned long)status,
+                          (int)__LINE__);
     return SL_STATUS_FAIL;
   } else {
     bus_intf_info.adc_config.adc_init = 1;
@@ -740,7 +755,9 @@ static sl_status_t sensorhub_adc_init(void)
   if (bus_intf_info.adc_config.adc_cfg.operation_mode != SL_ADC_STATIC_MODE) {
     status = sl_si91x_adc_register_event_callback(sl_si91x_adc_callback_v2);
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("\r\n ADC callback event fail:%lu\r\n", status);
+      SL_PRINT_STRING_ERROR("sensorhub_adc_init: adc_register_event_callback failed st=0x%04lX,line no : %d\r\n",
+                            (unsigned long)status,
+                            (int)__LINE__);
       return SL_STATUS_FAIL;
     }
   }
@@ -752,7 +769,9 @@ static sl_status_t sensorhub_adc_init(void)
   /* start the adc peripheral */
   status = sl_si91x_adc_start(bus_intf_info.adc_config.adc_cfg);
   if (status != SL_STATUS_OK) {
-    DEBUGOUT("\r\n ADC sensor start failed:%lu\r\n", status);
+    SL_PRINT_STRING_ERROR("sensorhub_adc_init: adc_start failed st=0x%04lX,line no : %d\r\n",
+                          (unsigned long)status,
+                          (int)__LINE__);
     return SL_STATUS_FAIL;
   }
 
@@ -761,7 +780,7 @@ static sl_status_t sensorhub_adc_init(void)
     NVIC_DisableIRQ(ADC_IRQn);
   }
 
-  //  DEBUGOUT("\r\n ADC Initialization Success\r\n");
+  //  SL_PRINT_STRING_DEBUG("\r\n ADC Initialization Success\r\n");
 
   return SL_STATUS_OK;
 }
@@ -879,31 +898,45 @@ sl_status_t sl_si91x_sensorhub_init()
   status = sensorhub_i2c_init();
   if (status != SL_STATUS_OK) {
     bus_errors.i2c = false;
-    DEBUGOUT("\r\n I2C Init Fail \r\n");
+    SL_PRINT_STRING_ERROR("sl_si91x_sensorhub_init: i2c_init failed st=0x%04lX,line no : %d\r\n",
+                          (unsigned long)status,
+                          (int)__LINE__);
+    SL_PRINT_STRING_ERROR("\r\n I2C Init Fail \r\n");
   }
 #if !(SH_ADC_ENABLE || SH_SDC_ENABLE)
   status = sensorhub_spi_init();
   if (status != SL_STATUS_OK) {
     bus_errors.spi = false;
-    DEBUGOUT("\r\n SPI Init Fail \r\n");
+    SL_PRINT_STRING_ERROR("sl_si91x_sensorhub_init: spi_init failed st=0x%04lX,line no : %d\r\n",
+                          (unsigned long)status,
+                          (int)__LINE__);
   }
 #endif
 #ifdef SH_ADC_ENABLE
   status = sensorhub_adc_init();
   if (status != SL_STATUS_OK) {
     bus_errors.adc = false;
-    DEBUGOUT("\r\n ADC Init Fail \r\n");
+    SL_PRINT_STRING_ERROR("sl_si91x_sensorhub_init: adc_init failed st=0x%04lX,line no : %d\r\n",
+                          (unsigned long)status,
+                          (int)__LINE__);
   }
 #endif
 #ifdef SH_SDC_ENABLE
   status = sensorhub_sdc_init();
   if (status != SL_STATUS_OK) {
     bus_errors.sdc = false;
-    DEBUGOUT("\r\n sdc Init Fail \r\n");
+    SL_PRINT_STRING_ERROR("sl_si91x_sensorhub_init: sdc_init failed st=0x%04lX,line no : %d\r\n",
+                          (unsigned long)status,
+                          (int)__LINE__);
   }
-  DEBUGOUT("\r\n sdc Init done \r\n");
+  SL_PRINT_STRING_DEBUG("sl_si91x_sensorhub_init: sdc_init done st=0x%04lX,line no : %d\r\n",
+                        (unsigned long)status,
+                        (int)__LINE__);
 #endif
   if (!bus_errors.i2c && !bus_errors.spi && !bus_errors.adc && !bus_errors.sdc) {
+    SL_PRINT_STRING_ERROR("sl_si91x_sensorhub_init: all peripherals init failed st=0x%04lX,line no : %d\r\n",
+                          (unsigned long)SL_ALL_PERIPHERALS_INIT_FAILED,
+                          (int)__LINE__);
     return SL_ALL_PERIPHERALS_INIT_FAILED;
   }
   bus_errors.peripheral_global_status = 0;
@@ -923,11 +956,12 @@ sl_status_t sl_si91x_sensor_hub_start()
   // Subscribe the state transition callback events, the ored value of flag and function pointer is passed in this API.
   pm_subs_status = sl_si91x_power_manager_subscribe_ps_transition_event(&handle, &info);
   if (pm_subs_status != SL_STATUS_OK) {
-    // If status is not OK, return with the error code.
-    DEBUGOUT("Power Manager transition event subscription failed, Error Code: 0x%lX \n", pm_subs_status);
+    SL_PRINT_STRING_ERROR("sl_si91x_sensor_hub_start: subscribe_ps_transition_event failed st=0x%04lX,line no : %d\r\n",
+                          (unsigned long)pm_subs_status,
+                          (int)__LINE__);
     return SL_STATUS_FAIL;
   }
-  DEBUGOUT("Power Manager transition event is subscribed \n");
+  SL_PRINT_STRING_DEBUG("Power Manager transition event is subscribed \n");
 
   if (sl_si91x_power_manager_get_current_state() == SL_SI91X_POWER_MANAGER_PS3) {
     sl_si91x_power_manager_add_ps_requirement(SL_SI91X_POWER_MANAGER_PS4);
@@ -938,17 +972,23 @@ sl_status_t sl_si91x_sensor_hub_start()
 
   status = osThreadNew((osThreadFunc_t)sensorhub_sensor_task, NULL, &sensor_thread_attributes);
   if (status == NULL) {
-    DEBUGOUT("\r\n Sensor_Task create fail \r\n");
+    SL_PRINT_STRING_ERROR("sl_si91x_sensor_hub_start: sensor task create failed st=0x%04lX,line no : %d\r\n",
+                          (unsigned long)SL_SH_SENSOR_TASK_CREATION_FAILED,
+                          (int)__LINE__);
+
     return SL_SH_SENSOR_TASK_CREATION_FAILED;
   }
-  DEBUGOUT("\r\n Sensor_Task:%p \r\n", status);
+  SL_PRINT_STRING_DEBUG("Sensor_Task:%p\r\n", (unsigned long)(uintptr_t)status);
 
   status = osThreadNew((osThreadFunc_t)sensorhub_em_task, NULL, &EM_thread_attributes);
   if (status == NULL) {
-    DEBUGOUT("\r\n EM_Task create fail \r\n");
+    SL_PRINT_STRING_ERROR("sl_si91x_sensor_hub_start: EM task create failed st=0x%04lX,line no : %d\r\n",
+                          (unsigned long)SL_SH_EM_TASK_CREATION_FAILED,
+                          (int)__LINE__);
+
     return SL_SH_EM_TASK_CREATION_FAILED;
   }
-  DEBUGOUT("\r\n EM_Task:%p \r\n", status);
+  SL_PRINT_STRING_DEBUG("\r\n EM_Task:%p \r\n", (unsigned long)(uintptr_t)status);
 
   return SL_STATUS_OK;
 }
@@ -965,17 +1005,18 @@ sl_status_t sl_si91x_sensor_hub_start()
 *******************************************************************************/
 sl_status_t sl_si91x_sensorhub_detect_sensors(sl_sensor_id_t *sensor_id_info, uint8_t num_of_sensors)
 {
-  sl_status_t cnt, sensors_detected = 0;
-  int32_t status = SL_STATUS_FAIL;
+  uint32_t cnt;
+  sl_status_t sensors_detected = 0;
+  int32_t status               = SL_STATUS_FAIL;
   for (cnt = 0; cnt < num_of_sensors; cnt++) {
     switch (sensor_hub_info_t[cnt].sensor_bus) {
       case SL_SH_I2C:
         if (bus_errors.i2c) {
           status = sensorhub_i2c_sensors_scan(sensor_hub_info_t[cnt].address);
           if (status != SL_STATUS_OK) {
-            DEBUGOUT("\r\n Failed to Scan sensor: %s I2C error code: %lu \r\n",
-                     sensor_hub_info_t[cnt].sensor_name,
-                     status);
+            SL_PRINT_STRING_ERROR("\r\n Failed to Scan sensor: %s I2C error code: %ld \r\n",
+                                  (unsigned long)(uintptr_t)sensor_hub_info_t[cnt].sensor_name,
+                                  (unsigned long)status);
           }
         }
         break;
@@ -993,7 +1034,9 @@ sl_status_t sl_si91x_sensorhub_detect_sensors(sl_sensor_id_t *sensor_id_info, ui
         break;
 
       default:
-        DEBUGOUT("\r\n Failed to Scan sensor:%d cnt:%lu \r\n", sensor_hub_info_t[cnt].sensor_id, cnt);
+        SL_PRINT_STRING_ERROR("sl_si91x_sensorhub_detect_sensors: bad bus cfg id=%u cnt=%u\r\n",
+                              (unsigned int)sensor_hub_info_t[cnt].sensor_id,
+                              (unsigned int)cnt);
         status = SL_STATUS_FAIL;
         break;
     }
@@ -1151,7 +1194,9 @@ sl_status_t sl_si91x_sensorhub_create_sensor(sl_sensor_id_t sensor_id)
                      sensorhub_sensors_timer_cb);
 
       if (sensor_list.sl_sensors_st[sensor_index].timer_handle == NULL) {
-        DEBUGOUT("\r\n OS timer creation Failed \r\n");
+        SL_PRINT_STRING_ERROR("sl_si91x_sensorhub_create_sensor: OS timer creation Failed st=0x%04lX,line no : %d\r\n",
+                              (unsigned long)SL_SH_TIMER_CREATION_FAILED,
+                              (int)__LINE__);
         return SL_SH_TIMER_CREATION_FAILED;
       }
       break;
@@ -1216,7 +1261,9 @@ sl_status_t sl_si91x_sensorhub_delete_sensor(sl_sensor_id_t sensor_id)
       timer_status = osTimerDelete(sensor_list.sl_sensors_st[sensor_index].timer_handle); //cmsis v2 apis
       if (timer_status != osOK) {
         /* Post-event as SL_SENSOR_START_FAILED */
-        DEBUGOUT("\r\n osTimer Delete failed:%d \r\n", timer_status);
+        SL_PRINT_STRING_ERROR("sl_si91x_sensorhub_delete_sensor: osTimer Delete fail st=0x%04lX line=%d\r\n",
+                              (unsigned long)timer_status,
+                              (int)__LINE__);
         sensorhub_em_post_event(sensor_id, SL_SENSOR_DELETE_FAILED, NULL, EM_POST_TIME);
         return SL_SH_TIMER_DELETION_FAILED;
       }
@@ -1341,7 +1388,9 @@ sl_status_t sl_si91x_sensorhub_stop_sensor(sl_sensor_id_t sensor_id)
       status = osTimerStop(sensor_list.sl_sensors_st[sensor_index].timer_handle);
       if (status != osOK) {
         /* Post event as SL_SENSOR_STOP_FAILED */
-        DEBUGOUT("\r\n osTimer stop failed:%lu \r\n", status);
+        SL_PRINT_STRING_ERROR("sl_si91x_sensorhub_stop_sensor: osTimer stop fail st=0x%08lx line=%d\r\n",
+                              (unsigned long)status,
+                              (int)__LINE__);
         sensorhub_em_post_event(sensor_id, SL_SENSOR_STOP_FAILED, NULL, EM_POST_TIME);
         return SL_SH_TIMER_STOP_FAIL;
       }
@@ -1396,7 +1445,9 @@ static void sensorhub_em_post_event(sl_sensor_id_t sensor_id,
   BaseType_t mutex_result = pdFALSE;
   mutex_result            = osMutexAcquire(sl_event_queue_mutex, ticks_to_wait);
   if (mutex_result != osOK) {
-    DEBUGOUT("\r\n osMutexAcquire failed in Sensor_Task:%u \r\n", (uint8_t)mutex_result);
+    SL_PRINT_STRING_ERROR("sensorhub_em_post_event: osMutexAcquire fail st=0x%04lX line=%d\r\n",
+                          (unsigned long)mutex_result,
+                          (int)__LINE__);
   }
   mutex_result = osMessageQueuePut(sl_event_queue_handler, &em_event, 0U, 0U);
   if (mutex_result == osOK) {
@@ -1404,7 +1455,9 @@ static void sensorhub_em_post_event(sl_sensor_id_t sensor_id,
     mutex_result = osMutexRelease(sl_event_queue_mutex);
 
     if (mutex_result != osOK) {
-      DEBUGOUT("\r\n osMutexRelease failed in em task:%u \r\n", (uint8_t)mutex_result);
+      SL_PRINT_STRING_ERROR("sensorhub_em_post_event: osMutexRelease fail st=0x%04lX line=%d\r\n",
+                            (unsigned long)mutex_result,
+                            (int)__LINE__);
     }
   }
 }
@@ -1437,14 +1490,18 @@ static void sensorhub_em_task(void)
   /*Create an Event Queue*/
   sl_event_queue_handler = osMessageQueueNew(20, sizeof(sl_em_event_t), &sl_osMessageQueueAttr); //CMSIS V2 API
   if (sl_event_queue_handler == NULL) {
-    DEBUGOUT("create event queue failed");
+    SL_PRINT_STRING_ERROR("sensorhub_em_task: create event queue failed st=0x%04lX,line no : %d\r\n",
+                          (unsigned long)sl_event_queue_handler,
+                          (int)__LINE__);
     while (1)
       ;
   }
 
   sl_event_queue_mutex = osMutexNew(&sl_em_osMutexAttr_t);
   if (sl_event_queue_mutex == NULL) {
-    DEBUGOUT("create event mutex failed");
+    SL_PRINT_STRING_ERROR("sensorhub_em_task: create event mutex failed st=0x%04lX,line no : %d\r\n",
+                          (unsigned long)sl_event_queue_mutex,
+                          (int)__LINE__);
     while (1)
       ;
   }
@@ -1456,7 +1513,9 @@ static void sensorhub_em_task(void)
       /*Acquire the mutex*/
       sl_em_mutex_acc_status = osMutexAcquire(sl_event_queue_mutex, osWaitForever);
       if (sl_em_mutex_acc_status != osOK) {
-        DEBUGOUT("\r\n Mutex Acquire fail:%d \r\n", sl_em_mutex_acc_status);
+        SL_PRINT_STRING_ERROR("sensorhub_em_task: Mutex Acquire fail st=0x%04lX line=%d\r\n",
+                              (unsigned long)sl_em_mutex_acc_status,
+                              (int)__LINE__);
       }
 #ifdef SL_SH_POWER_STATE_TRANSITIONS
       if (em_event.event == SL_SENSOR_DATA_READY) {
@@ -1464,11 +1523,15 @@ static void sensorhub_em_task(void)
             && sensorhub_current_powerstate == SL_SI91X_POWER_MANAGER_PS2) {
           status = sl_si91x_power_manager_add_ps_requirement(SL_SI91X_POWER_MANAGER_PS4);
           if (status != SL_STATUS_OK) {
-            DEBUGOUT("\r\n Add PS requirement PS4 fail %lu", status);
+            SL_PRINT_STRING_ERROR("sensorhub_em_task: Add PS4 requirement fail st=0x%08lx line=%d\r\n",
+                                  (unsigned long)(uint32_t)status,
+                                  (int)__LINE__);
           }
           status = sl_si91x_power_manager_remove_ps_requirement(SL_SI91X_POWER_MANAGER_PS2);
           if (status != SL_STATUS_OK) {
-            DEBUGOUT("\r\n Remove PS requirement PS2 fail %lu", status);
+            SL_PRINT_STRING_ERROR("sensorhub_em_task: Remove PS2 requirement fail st=0x%08lx line=%d\r\n",
+                                  (unsigned long)(uint32_t)status,
+                                  (int)__LINE__);
           }
           if (status == SL_STATUS_OK) {
             sensorhub_current_powerstate = SL_SI91X_POWER_MANAGER_PS4;
@@ -1491,7 +1554,9 @@ static void sensorhub_em_task(void)
       /*Release the mutex*/
       sl_em_mutex_rel_status = osMutexRelease(sl_event_queue_mutex);
       if (sl_em_mutex_rel_status != osOK) {
-        DEBUGOUT("\r\n Mutex Release fail:%d\r\n", sl_em_mutex_rel_status);
+        SL_PRINT_STRING_ERROR("sensorhub_em_task: Mutex Release fail st=0x%04lX line=%d\r\n",
+                              (unsigned long)sl_em_mutex_rel_status,
+                              (int)__LINE__);
       }
 
 #ifdef SL_SH_POWER_STATE_TRANSITIONS
@@ -1500,11 +1565,15 @@ static void sensorhub_em_task(void)
             && sensorhub_current_powerstate == SL_SI91X_POWER_MANAGER_PS4) {
           status = sl_si91x_power_manager_add_ps_requirement(SL_SI91X_POWER_MANAGER_PS2);
           if (status != SL_STATUS_OK) {
-            DEBUGOUT("\r\n ADD PS requirement PS2 fail %lu", status);
+            SL_PRINT_STRING_ERROR("sensorhub_em_task: ADD PS2 requirement fail st=0x%08lx line=%d\r\n",
+                                  (unsigned long)(uint32_t)status,
+                                  (int)__LINE__);
           }
           status = sl_si91x_power_manager_remove_ps_requirement(SL_SI91X_POWER_MANAGER_PS4);
           if (status != SL_STATUS_OK) {
-            DEBUGOUT("\r\n Remove PS requirement PS4 fail %lu", status);
+            SL_PRINT_STRING_ERROR("sensorhub_em_task: Remove PS4 requirement fail st=0x%08lx line=%d\r\n",
+                                  (unsigned long)(uint32_t)status,
+                                  (int)__LINE__);
           }
           if (status == SL_STATUS_OK) {
             sensorhub_current_powerstate = SL_SI91X_POWER_MANAGER_PS2;
@@ -1518,7 +1587,9 @@ static void sensorhub_em_task(void)
         sl_power_state_enum = SL_SH_SLEEP_WAKEUP;
         sl_semrel_status    = osSemaphoreRelease(sl_semaphore_power_task_id);
         if (sl_semrel_status != osOK) {
-          DEBUGOUT("\r\n SL_SH_SLEEP_WAKEUP Semaphore Release fail :%d \r\n", sl_semrel_status);
+          SL_PRINT_STRING_ERROR("sensorhub_em_task: SL_SH_SLEEP_WAKEUP Semaphore Release fail st=0x%04lX line=%d\r\n",
+                                (unsigned long)sl_semrel_status,
+                                (int)__LINE__);
         }
       }
 #endif
@@ -1561,14 +1632,19 @@ static void sensorhub_sensor_task(void)
   sl_event_group = osEventFlagsNew(&sl_eventFlagsAttr);
   if (sl_event_group == NULL) {
     // Event Flags object not created, handle failure
-    DEBUGOUT("\r\n create sl_event_group failed in sensor HUB Task \r\n");
+    SL_PRINT_STRING_ERROR(
+      "sensorhub_sensor_task: create sl_event_group failed in sensor HUB Task st=0x%04lX,line no : %d\r\n",
+      (unsigned long)sl_event_group,
+      (int)__LINE__);
     while (1)
       ;
   }
 
   sl_sensor_mutex = osMutexNew(&sl_osMutexAttr_t);
   if (sl_sensor_mutex == NULL) {
-    DEBUGOUT("create sensor mutex failed");
+    SL_PRINT_STRING_ERROR("sensorhub_sensor_task: create sensor mutex failed st=0x%04lX,line no : %d\r\n",
+                          (unsigned long)sl_sensor_mutex,
+                          (int)__LINE__);
     while (1)
       ;
   }
@@ -1579,7 +1655,9 @@ static void sensorhub_sensor_task(void)
 
     sl_mutex_acc_status = osMutexAcquire(sl_sensor_mutex, osWaitForever);
     if (sl_mutex_acc_status != osOK) {
-      DEBUGOUT("\r\n Mutex Acquire fail:%d \r\n", sl_mutex_acc_status);
+      SL_PRINT_STRING_ERROR("sensorhub_sensor_task: Mutex Acquire fail st=0x%04lX line=%d\r\n",
+                            (unsigned long)sl_mutex_acc_status,
+                            (int)__LINE__);
     }
     i = 0;
     while (event_flags) {
@@ -1604,7 +1682,10 @@ static void sensorhub_sensor_task(void)
               sl_status_t ret =
                 sl_si91x_adc_channel_init(&bus_intf_info.adc_config.adc_ch_cfg, &bus_intf_info.adc_config.adc_cfg);
               if (ret != SL_STATUS_OK) {
-                DEBUGOUT("\r\n ADC sensor channel init failed after wakeup \r\n");
+                SL_PRINT_STRING_ERROR(
+                  "sensorhub_sensor_task: ADC sensor channel init failed after wakeup st=0x%04lX,line no : %d\r\n",
+                  (unsigned long)ret,
+                  (int)__LINE__);
               }
               bus_errors.adc = true;
             }
@@ -1612,7 +1693,10 @@ static void sensorhub_sensor_task(void)
               sensor_list.sl_sensors_st[i].sensor_impl->sample(sensor_list.sl_sensors_st[i].sensor_handle,
                                                                sensor_list.sl_sensors_st[i].config_st->sensor_data_ptr);
             if (status != SL_STATUS_OK) {
-              DEBUGOUT("\r\n Sensor polling sample fail:%d \r\n", sensor_list.sl_sensors_st[i].config_st->sensor_id);
+              SL_PRINT_STRING_ERROR("sensorhub_sensor_task: polling sample fail id=%u\r\n",
+                                    (unsigned int)sensor_list.sl_sensors_st[i].config_st->sensor_id);
+              SL_PRINT_STRING_ERROR("sensorhub_sensor_task: polling sample st=0x%08lx\r\n",
+                                    (unsigned long)(uint32_t)status);
             }
           }
         }
@@ -1622,7 +1706,10 @@ static void sensorhub_sensor_task(void)
             sensor_list.sl_sensors_st[i].sensor_handle,
             (sl_sensor_data_group_t *)sensor_list.sl_sensors_st[i].config_st->sensor_data_ptr);
           if (status != SL_STATUS_OK) {
-            DEBUGOUT("\r\n Sensor Interrupt sample fail %d \r\n", sensor_list.sl_sensors_st[i].config_st->sensor_id);
+            SL_PRINT_STRING_ERROR("sensorhub_sensor_task: Interrupt sample fail id=%u\r\n",
+                                  (unsigned int)sensor_list.sl_sensors_st[i].config_st->sensor_id);
+            SL_PRINT_STRING_ERROR("sensorhub_sensor_task: Interrupt sample st=0x%08lx\r\n",
+                                  (unsigned long)(uint32_t)status);
           }
         }
 
@@ -1710,7 +1797,9 @@ static void sensorhub_sensor_task(void)
 
     sl_mutex_rel_status = osMutexRelease(sl_sensor_mutex);
     if (sl_mutex_rel_status != osOK) {
-      DEBUGOUT("\r\n Mutex Release fail:%d \r\n", sl_mutex_rel_status);
+      SL_PRINT_STRING_ERROR("sensorhub_sensor_task: Mutex Release fail st=0x%04lX line=%d\r\n",
+                            (unsigned long)sl_mutex_rel_status,
+                            (int)__LINE__);
     }
   } //end of while(1);
 } //end of sensor task
@@ -1731,12 +1820,14 @@ void mySPI_callback(uint32_t event)
             but the send/receive/transfer operation has not been started
             and indicates that data is lost. Occurs also in master mode
             when the driver cannot transfer data fast enough.*/
-      DEBUGOUT("\r\n ARM_SPI_EVENT_DATA_LOST \r\n");
+      SL_PRINT_STRING_DEBUG("\r\n ARM_SPI_EVENT_DATA_LOST \r\n");
       break;
     case ARM_SPI_EVENT_MODE_FAULT:
       /*        Occurs in master mode when Slave Select is deactivated and
             indicates Master Mode Fault.*/
-      DEBUGOUT("\r\n ARM_SPI_EVENT_MODE_FAULT \r\n");
+      SL_PRINT_STRING_DEBUG("\r\n ARM_SPI_EVENT_MODE_FAULT \r\n");
+      break;
+    default:
       break;
   }
 }
@@ -1755,10 +1846,12 @@ static int32_t sensorhub_spi_init(void)
   // Initialize the SPI driver
   status = (int32_t)SPIdrv->Initialize(mySPI_callback);
   if (status != ARM_DRIVER_OK) {
-    DEBUGOUT("\r\n SPI Initialization Failed, Error Code : %ld\r\n", status);
+    SL_PRINT_STRING_ERROR("sensorhub_spi_init: SPI init fail st=0x%08lx line=%d\r\n",
+                          (unsigned long)(uint32_t)status,
+                          (int)__LINE__);
     return status;
   } else {
-    //DEBUGOUT("\r\n SPI Initialization Success\r\n");
+    //SL_PRINT_STRING_DEBUG("\r\n SPI Initialization Success\r\n");
   }
 
   RSI_SPI_SetSlaveSelectNumber(bus_intf_info.spi_config.spi_cs_number);
@@ -1766,7 +1859,9 @@ static int32_t sensorhub_spi_init(void)
   // Power up the SPI peripheral
   status = (int32_t)SPIdrv->PowerControl(bus_intf_info.spi_config.spi_power_state);
   if (status != ARM_DRIVER_OK) {
-    DEBUGOUT("\r\n Failed to Set Power to SPI, Error Code : %ld \r\n", status);
+    SL_PRINT_STRING_ERROR("sensorhub_spi_init: SPI Set Power fail st=0x%08lx line=%d\r\n",
+                          (unsigned long)(uint32_t)status,
+                          (int)__LINE__);
     return status;
   }
   // Configure the SPI to Master, 16-bit mode @10000 kBits/sec
@@ -1775,17 +1870,21 @@ static int32_t sensorhub_spi_init(void)
                                       | ARM_SPI_DATA_BITS(bus_intf_info.spi_config.spi_bit_width),
                                     bus_intf_info.spi_config.spi_baud);
   if (status != ARM_DRIVER_OK) {
-    DEBUGOUT("\r\n Failed to Set Configuration Parameters to SPI, Error Code : %ld \r\n", status);
+    SL_PRINT_STRING_ERROR("sensorhub_spi_init: SPI Set Config fail st=0x%08lx line=%d\r\n",
+                          (unsigned long)(uint32_t)status,
+                          (int)__LINE__);
     return status;
   }
   // SS line = ACTIVE = LOW
   status =
     (int32_t)SPIdrv->Control(bus_intf_info.spi_config.spi_cs_misc_mode, bus_intf_info.spi_config.spi_sec_sel_sig);
   if (status != ARM_DRIVER_OK) {
-    DEBUGOUT("\r\n Failed to Set Configuration Parameters to SPI, Error Code : %ld \r\n", status);
+    SL_PRINT_STRING_ERROR("sensorhub_spi_init: SPI Set Config (CS) fail st=0x%08lx line=%d\r\n",
+                          (unsigned long)(uint32_t)status,
+                          (int)__LINE__);
     return status;
   }
-  //  DEBUGOUT("\r\n SPI Initialization Success\r\n");
+  //  SL_PRINT_STRING_DEBUG("\r\n SPI Initialization Success\r\n");
   return SL_STATUS_OK;
 }
 
@@ -1816,6 +1915,8 @@ void ARM_I2C_SignalEvent(uint32_t event)
       break;
     case ARM_I2C_EVENT_BUS_CLEAR:
       break;
+    default:
+      break;
   }
   return;
 }
@@ -1833,28 +1934,34 @@ static int32_t sensorhub_i2c_init(void)
 
   status = (int32_t)I2Cdrv->Initialize(ARM_I2C_SignalEvent);
   if (status != ARM_DRIVER_OK) {
-    DEBUGOUT("\r\nI2C Initialization Failed Error Code:%ld \r\n", status);
+    SL_PRINT_STRING_ERROR("sensorhub_i2c_init: I2C init fail st=0x%08lx line=%d\r\n",
+                          (unsigned long)(uint32_t)status,
+                          (int)__LINE__);
     return status;
   } else {
-    //DEBUGOUT("\r\n I2C Initialization Success \r\n");
+    //SL_PRINT_STRING_DEBUG("\r\n I2C Initialization Success \r\n");
   }
 
   status = (int32_t)I2Cdrv->PowerControl(bus_intf_info.i2c_config.i2c_power_state);
   if (status != ARM_DRIVER_OK) {
-    DEBUGOUT("\r\nFailed to Set Power to I2C, Error Code : %ld\r\n", status);
+    SL_PRINT_STRING_ERROR("sensorhub_i2c_init: I2C Set Power fail st=0x%08lx line=%d\r\n",
+                          (unsigned long)(uint32_t)status,
+                          (int)__LINE__);
     return status;
   } else {
-    //DEBUGOUT("\r\n Set Power mode to I2C is Success \r\n");
+    //SL_PRINT_STRING_DEBUG("\r\n Set Power mode to I2C is Success \r\n");
   }
 
   status = (int32_t)I2Cdrv->Control(bus_intf_info.i2c_config.i2c_control_mode, bus_intf_info.i2c_config.i2c_bus_speed);
   if (status != ARM_DRIVER_OK) {
-    DEBUGOUT("\r\nFailed to Set Configuration Parameters to I2C, Error Code : %ld\r\n", status);
+    SL_PRINT_STRING_ERROR("sensorhub_i2c_init: I2C Set Control fail st=0x%08lx line=%d\r\n",
+                          (unsigned long)(uint32_t)status,
+                          (int)__LINE__);
     return status;
   } else {
-    //DEBUGOUT("\r\n Set Control mode to I2C is Success\r\n");
+    //SL_PRINT_STRING_DEBUG("\r\n Set Control mode to I2C is Success\r\n");
   }
-  // DEBUGOUT("\r\n I2C Initialization Success \r\n");
+  // SL_PRINT_STRING_DEBUG("\r\n I2C Initialization Success \r\n");
   return status;
 }
 

@@ -22,22 +22,29 @@
 #include "cmsis_os2.h"
 
 #define MQTT_WITH_WEBSOCKET_HEADER_LEN         3
-#define WAIT_TIMEOOUT                          5000
+#define WAIT_TIMEOUT                           5000
 #define SLI_917_WAIT_FOREVER                   0
 #define WIFI_BLOCKED_TIMEOUT_SF                1
 #define DEFAULT_TIMEOUT                        SLI_TX_EVENT_WAIT_TIME
 #define SLI_TX_EVENT_WAIT_TIME                 (30000 + TX_WAIT_TIME)
 #define TX_WAIT_TIME                           0
 #define SLI_SOCKET_RECVFROM_RESPONSE_WAIT_TIME ((SLI_917_WAIT_FOREVER * WIFI_BLOCKED_TIMEOUT_SF) + (DEFAULT_TIMEOUT))
-#define SINGLE_PKT_TCP_STREAM_TIMEOUT          WAIT_TIMEOOUT + SLI_SOCKET_RECVFROM_RESPONSE_WAIT_TIME
+#define SINGLE_PKT_TCP_STREAM_TIMEOUT          WAIT_TIMEOUT + SLI_SOCKET_RECVFROM_RESPONSE_WAIT_TIME
 #define NETWORK_ERROR_NULL_STRUCTURE           -1 // Error: NULL network structure
 #define NETWORK_ERROR_NULL_ADDRESS             -2 // Error: NULL address
 #define NETWORK_ERROR_INVALID_TYPE             -3 // Error: Invalid transport type
+#define NETWORK_ERROR_INVALID_FLAGS            -5 // Error: sl_paho_network_connect flags invalid
+
+// Address family for sl_paho_network_connect; set exactly one (distinct bits).
+#define SL_PAHO_NETWORK_FLAG_IPV4 (1U << 0)
+#define SL_PAHO_NETWORK_FLAG_IPV6 (1U << 1)
 
 // MQTT TLS Configuration
 #ifndef MQTT_TLS_AVAILABLE
 #define MQTT_TLS_AVAILABLE 1 // Set to 1 to enable TLS support, 0 to disable
 #endif
+
+#include "sli_mqtt_tls_alpn.h"
 
 typedef struct Timer Timer;
 struct Timer {
@@ -135,12 +142,53 @@ void NetworkInit(Network *n);
  *   - `mqtt_tcpconnection_handler` for TCP.
  *   - `mqtt_websocketconnection_handler` for WebSocket.
  * - SSL can be enabled for secure connections by setting the `ssl` parameter to `true`.
+ * - When `MQTT_TLS_ALPN_ENABLED` is set to `1`, ALPN is configured automatically during
+ *   TCP connection setup (after socket creation and TLS enable, before connect).
+ *   Set `MQTT_TLS_ALPN_PROTOCOL` to the broker's ALPN name (e.g. `"mqtt"` for Mosquitto on port 443).
+ * - ALPN applies to @ref MQTT_TRANSPORT_TCP with TLS only. The WebSocket transport
+ *   (`MQTT_TRANSPORT_WEBSOCKET`) does not configure TLS ALPN through this SDK path.
+ *   Secure WebSocket (WSS) on port 443 typically negotiates `http/1.1` at the TLS layer
+ *   rather than `mqtt`; that scenario is not covered by this ALPN integration.
  *
  * @note
  * - Ensure that the `Network` structure is initialized using `NetworkInit` before calling this function.
  * - The `addr` parameter must point to a valid IP address string.
  */
 int NetworkConnect(Network *n, uint8_t flags, char *addr, int dst_port, int src_port, bool ssl);
+
+/**
+ * @brief Establishes a TCP connection to the MQTT broker with explicit IPv4/IPv6 selection.
+ *
+ * @param[in] n         Pointer to the initialized Network structure.
+ * @param[in] flags     Address family: set exactly one of `SL_PAHO_NETWORK_FLAG_IPV4` or
+ *                      `SL_PAHO_NETWORK_FLAG_IPV6`.
+ * @param[in] addr      Pointer to raw broker IP octets (4 bytes for IPv4, 16 bytes for IPv6).
+ * @param[in] dst_port  Destination port of the MQTT broker.
+ * @param[in] src_port  Source port for the connection.
+ * @param[in] ssl       Boolean flag to enable/disable SSL for the connection.
+ *
+ * @return
+ * - `0` on success.
+ * - `NETWORK_ERROR_NULL_STRUCTURE (-1)` if the `Network` structure is `NULL`.
+ * - `NETWORK_ERROR_NULL_ADDRESS (-2)` if the `addr` is `NULL`.
+ * - `NETWORK_ERROR_INVALID_TYPE (-3)` if the `transport_type` is not TCP.
+ * - `NETWORK_ERROR_INVALID_FLAGS (-5)` if neither or both of IPV4/IPV6 are set, or if IPV6
+ *   is requested on an IPv4-only build.
+ * - Transport-specific error codes for connection failures.
+ *
+ * @details
+ * - Prefer this API over NetworkConnect when the application must choose the MQTT TCP socket
+ *   family on dual-IP builds.
+ * - SSL can be enabled for secure connections by setting the `ssl` parameter to `true`.
+ * - When `MQTT_TLS_ALPN_ENABLED` is set to `1`, ALPN is configured automatically during
+ *   TCP connection setup (after socket creation and TLS enable, before connect).
+ *   Set `MQTT_TLS_ALPN_PROTOCOL` to the broker's ALPN name (e.g. `"mqtt"` for Mosquitto on port 443).
+ *
+ * @note
+ * - Ensure that the `Network` structure is initialized using `NetworkInit` before calling this function.
+ * - WebSocket transport is not supported by this API; use NetworkConnect for WebSocket.
+ */
+int sl_paho_network_connect(Network *n, uint8_t flags, char *addr, int dst_port, int src_port, bool ssl);
 
 /**
  * @brief Cleans up and closes the network connection.

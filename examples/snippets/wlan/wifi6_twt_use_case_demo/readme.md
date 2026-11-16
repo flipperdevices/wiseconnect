@@ -1,6 +1,14 @@
 # Wi-Fi - TWT Use Case Demo App
 
+## High-Level Overview
+
+SiWx91x TWT use case demo: Configure iTWT sessions and respond to remote TCP triggers with TCP or UDP traffic for door-lock and camera power-save scenarios in SoC mode.
+
+## Table of Contents
+
 - [Wi-Fi - TWT Use Case Demo App](#wi-fi---twt-use-case-demo-app)
+  - [Table of Contents](#table-of-contents)
+  - [High-Level Overview](#high-level-overview)
   - [Purpose/Scope](#purposescope)
   - [Prerequisites/Setup Requirements](#prerequisitessetup-requirements)
     - [Hardware Requirements](#hardware-requirements)
@@ -10,7 +18,7 @@
   - [Application Build Environment](#application-build-environment)
     - [Configure the application](#configure-the-application)
     - [iTWT Configuration APIs](#itwt-configuration-apis)
-      - [sl\_wifi\_target\_wake\_time\_auto\_selection API](#sl_wifi_target_wake_time_auto_selection-api)
+      - [sl\_wifi\_target\_wake\_time\_auto\_selection\_v2 API](#sl_wifi_target_wake_time_auto_selection_v2-api)
       - [sl\_wifi\_enable\_target\_wake\_time API](#sl_wifi_enable_target_wake_time-api)
     - [iTWT Teardown Configuration](#itwt-teardown-configuration)
     - [iTWT Session Status Codes](#itwt-session-status-codes)
@@ -21,6 +29,10 @@
   - [Test the application](#test-the-application)
     - [Using Simplicity Studio Energy Profiler for current measurement](#using-simplicity-studio-energy-profiler-for-current-measurement)
       - [Expected output in Energy Profiler](#expected-output-in-energy-profiler)
+
+  - [Troubleshooting](#troubleshooting)
+  - [Resources](#resources)
+  - [Report Bugs and Get Support](#report-bugs-and-get-support)
 
 ## Purpose/Scope
 
@@ -35,31 +47,48 @@ This application is designed to be used in combination with **TWT Use Case Remot
 - Wi-Fi Access Point with 11ax and TWT responder mode support.
 - **SoC Mode**:
   - Standalone
-    - BRD4002A Wireless pro kit mainboard [SI-MB4002A]
+    - BRD4002B Wireless Pro Kit Mainboard [SI-MB4002B](https://www.silabs.com/development-tools/wireless/wireless-pro-kit-mainboard?tab=overview)
     - Radio Boards 
-  	  - BRD4338A [SiWx917-RB4338A]
-  	  - BRD4343A [SiWx917-RB4343A]
+  	  - BRD4338A [SiWx917-RB4338A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-rb4338a-wifi-6-bluetooth-le-soc-radio-board?tab=overview)
+  	  - BRD4342A [SiWx917-RB4342A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx91x-rb4342a-wifi-6-bluetooth-le-soc-radio-board?tab=overview)
+  	  - BRD4339B [SiWx917-RB4339B](https://docs.silabs.com/wiseconnect/latest/wiseconnect-getting-started/getting-started-with-at)
+  	  - BRD4340A [SiWx917-RB4340A](https://docs.silabs.com/wiseconnect/latest/wiseconnect-getting-started/getting-started-with-at)
+  	  - BRD4343A [SiWx917-RB4343A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4343a-wi-fi-6-bluetooth-le-8mb-flash-radio-board-for-module?tab=overview)
+  	  - BRD4343C [SiWx917-RB4343C](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4343c-wi-fi-6-bluetooth-le-8mb-flash-radio-board-for-module?tab=overview)
   - Kits
+  	- SiWG917 Dev Kit [BRD2605A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-dk2605a-wifi-6-bluetooth-le-soc-dev-kit?tab=overview)
+  	- SiWG917 Dev Kit [BRD2605B]
   	- SiWx917 Pro Kit [Si917-PK6031A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-pro-kit?tab=overview)
   	- SiWx917 Pro Kit [Si917-PK6032A]
-    - SiWx917 AC1 Module Explorer Kit (BRD2708A)
+    - SiWx917 AC1 Module Explorer Kit [BRD2708A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-ek2708a-explorer-kit?tab=overview)
   	
-- **NCP Mode**:
-  - Standalone
-    - BRD4002A Wireless pro kit mainboard [SI-MB4002A]
-    - EFR32xG24 Wireless 2.4 GHz +10 dBm Radio Board [xG24-RB4186C](https://www.silabs.com/development-tools/wireless/xg24-rb4186c-efr32xg24-wireless-gecko-radio-board?tab=overview)
-    - NCP Expansion Kit with NCP Radio boards
-      - (BRD4346A + BRD8045A) [SiWx917-EB4346A]
-      - (BRD4357A + BRD8045A) [SiWx917-EB4357A]
-  - Kits
-  	- EFR32xG24 Pro Kit +10 dBm [xG24-PK6009A](https://www.silabs.com/development-tools/wireless/efr32xg24-pro-kit-10-dbm?tab=overview) 
-  - Interface and Host MCU Supported
-    - SPI - EFR32 
-    - UART - EFR32
+- **NCP Mode** (select either the EFR32 or STM32 host MCU platform; a single platform is sufficient to run the application):
+  - **Option 1: EFR32 host**
+    - Standalone
+      - BRD4002B Wireless Pro Kit Mainboard [SI-MB4002B](https://www.silabs.com/development-tools/wireless/wireless-pro-kit-mainboard?tab=overview)
+      - EFR32xG24 Wireless 2.4 GHz +10 dBm Radio Board [xG24-RB4186C](https://www.silabs.com/development-tools/wireless/xg24-rb4186c-efr32xg24-wireless-gecko-radio-board?tab=overview)
+      - NCP Expansion Kit with NCP Radio Boards
+        - [BRD4346A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-rb4346a-wifi-6-bluetooth-le-soc-4mb-flash-radio-board?tab=overview) + [BRD8045A](https://www.silabs.com/development-tools/wireless/wi-fi/expansion-adapter-board-for-co-processor-radio-boards?tab=overview)
+        - [BRD4357A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4357a-wi-fi-6-bluetooth-le-4mb-flash-radio-board-for-rcp-and-ncp-modules?tab=overview) + [BRD8045A](https://www.silabs.com/development-tools/wireless/wi-fi/expansion-adapter-board-for-co-processor-radio-boards?tab=overview)
+        - [BRD4357C](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4357c-wi-fi-6-bluetooth-le-4mb-flash-radio-board-for-rcp-and-ncp-modules?tab=overview) + [BRD8045A](https://www.silabs.com/development-tools/wireless/wi-fi/expansion-adapter-board-for-co-processor-radio-boards?tab=overview)
+    - Kits
+    	- EFR32xG24 Pro Kit +10 dBm [xG24-PK6009A](https://www.silabs.com/development-tools/wireless/efr32xg24-pro-kit-10-dbm?tab=overview) 
+
+  - **Option 2: STM32F411RE host**
+    - [STM32F411RE](https://www.st.com/en/microcontrollers-microprocessors/stm32f411re.html) MCU
+    - NCP Expansion Kit with NCP Radio Boards
+      - [BRD4346A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-rb4346a-wifi-6-bluetooth-le-soc-4mb-flash-radio-board?tab=overview) + [BRD8045C](https://www.silabs.com/development-tools/wireless/wi-fi/shield-adapter-board-for-co-processor-radio-boards?tab=overview)
+      - [BRD4357A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4357a-wi-fi-6-bluetooth-le-4mb-flash-radio-board-for-rcp-and-ncp-modules?tab=overview) + [BRD8045C](https://www.silabs.com/development-tools/wireless/wi-fi/shield-adapter-board-for-co-processor-radio-boards?tab=overview)
+      - [BRD4357C](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4357c-wi-fi-6-bluetooth-le-4mb-flash-radio-board-for-rcp-and-ncp-modules?tab=overview) + [BRD8045C](https://www.silabs.com/development-tools/wireless/wi-fi/shield-adapter-board-for-co-processor-radio-boards?tab=overview)
+
+  - Interface and host MCU supported
+    - SPI : EFR32 and STM32
+    - UART : EFR32
 
 ### Software Requirements
 
 - Simplicity Studio IDE
+- [Keil IDE](https://www.keil.com/) (to be used with STM32F411RE MCU)
 - [iPerf Application](https://sourceforge.net/projects/iperf2/files/iperf-2.0.8-win.zip/download). iPerf is a tool for active measurements of the maximum achievable bandwidth on IP networks. It supports tuning of various parameters related to timing, buffers and protocols (TCP and UDP with IPv4 and IPv6).
 
 ### Setup Diagram
@@ -77,7 +106,7 @@ Refer to the instructions [here](https://docs.silabs.com/wiseconnect/latest/wise
 - [Install Simplicity Studio](https://docs.silabs.com/wiseconnect/latest/wiseconnect-developers-guide-developing-for-silabs-hosts/#install-simplicity-studio)
 - [Install WiSeConnect extension](https://docs.silabs.com/wiseconnect/latest/wiseconnect-developers-guide-developing-for-silabs-hosts/#install-the-wi-se-connect-extension)
 - [Connect your device to the computer](https://docs.silabs.com/wiseconnect/latest/wiseconnect-developers-guide-developing-for-silabs-hosts/#connect-si-wx91x-to-computer)
-- [Upgrade your connectivity firmware](https://docs.silabs.com/wiseconnect/latest/wiseconnect-developers-guide-developing-for-silabs-hosts/#update-si-wx91x-connectivity-firmware)
+- [Upgrade your connectivity firmware](https://docs.silabs.com/wiseconnect/latest/wiseconnect-developers-guide-developing-for-silabs-hosts/using-the-simplicity-studio-ide#update-siwx91x-connectivity-firmware)
 - [Create a Studio project](https://docs.silabs.com/wiseconnect/latest/wiseconnect-developers-guide-developing-for-silabs-hosts/#create-a-project)
 
 For details on the project folder structure, see the [WiSeConnect Examples](https://docs.silabs.com/wiseconnect/latest/wiseconnect-examples/#example-folder-structure) page.
@@ -144,13 +173,13 @@ In general, it is advisable to start the server before the client since the clie
     #define UDP_SERVER_PORT 5005
     ```
 
-  - SERVER_IP_ADDRESS_TCP refers remote peer IP address (Si91x remote module/ any end user application device IP) to connect with TCP server socket.
+  - SERVER_IP_ADDRESS_TCP refers remote peer IP address (SiWx91x remote module/ any end user application device IP) to connect with TCP server socket.
 
     ```c
     #define SERVER_IP_ADDRESS_TCP "192.168.50.68"
     ```
 
-  - SERVER_IP_ADDRESS_UDP refers remote peer IP address (Si91x remote module/ any end user application device IP) to connect with UDP server socket.
+  - SERVER_IP_ADDRESS_UDP refers remote peer IP address (SiWx91x remote module/ any end user application device IP) to connect with UDP server socket.
 
     ```c
     #define SERVER_IP_ADDRESS_UDP "192.168.50.136"
@@ -185,14 +214,14 @@ In general, it is advisable to start the server before the client since the clie
 To configure iTWT parameters open **app.c**.
 There are three TWT configuration APIs. 
 >
-> - sl_wifi_target_wake_time_auto_selection - This API calculates and automatically configures suitable TWT parameters based on the given inputs. Enables or disables a TWT session. Recommended for user applications.
+> - sl_wifi_target_wake_time_auto_selection_v2 - This API calculates and automatically configures suitable TWT parameters based on the given inputs. Enables or disables a TWT session. Recommended for user applications.
 > - sl_wifi_enable_target_wake_time - This API allows users to manually configure iTWT session parameters and enables the iTWT session. This API is not recommended for users. It is for internal certification purposes only.
 > - sl_wifi_disable_target_wake_time - Disables a TWT session.
 
-#### sl_wifi_target_wake_time_auto_selection API
+#### sl_wifi_target_wake_time_auto_selection_v2 API
 
 ```c
-sl_status_t sl_wifi_target_wake_time_auto_selection(sl_wifi_twt_selection_t *twt_auto_request)
+sl_status_t sl_wifi_target_wake_time_auto_selection_v2(sl_wifi_twt_selection_v2_t *config)
 ```
 
 This TWT API is recommended because it's designed for maintaining connections, improving throughput, and enhancing power performance.
@@ -200,11 +229,11 @@ This TWT API is recommended because it's designed for maintaining connections, i
 Input parameter descriptions are as follows:
 
 - twt_enable : TWT enable. 0 - TWT session teardown; 1 - TWT session setup.
-- average_tx_throughput : This is the expected average Tx throughput in Kbps. Value ranges from 0 to 10Mbps, which is half of the default [device_average_throughput](https://docs.silabs.com/wiseconnect/latest/wiseconnect-api-reference-guide-wi-fi/sl-wifi-twt-selection-t#device-average-throughput) (20Mbps by default).
+- average_tx_throughput : This is the expected average Tx throughput in Kbps. Value ranges from 0 to 10Mbps, which is half of the default [device_average_throughput](https://docs.silabs.com/wiseconnect/latest/wiseconnect-api-reference-guide-wi-fi/sl-wifi-twt-selection-v2-t#device-average-throughput) (20Mbps by default).
 - tx_latency : The allowed latency, in milliseconds, within which the given Tx operation is expected to be completed. If 0 is configured, maximum allowed Tx latency is same as rx_latency. Otherwise, valid values are in the range of [200ms - 6hrs].
 - rx_latency : The maximum latency, in milliseconds, for receiving buffered packets from the AP. The device wakes up at least once for a TWT service period within the configured rx_latency if there are any pending packets destined for the device from the AP. If set to 0, the default latency of 2 seconds is used. Valid range is between 2 seconds to 6 hours. Recommended range is 2 seconds to 60 seconds to avoid connection failures with AP due to longer sleep time.
 
-For more information on parameters, refer [sl_wifi_twt_selection_t](https://docs.silabs.com/wiseconnect/latest/wiseconnect-api-reference-guide-wi-fi/sl-wifi-twt-selection-t).
+For more information, refer to [sl_wifi_twt_selection_v2_t](https://docs.silabs.com/wiseconnect/latest/wiseconnect-api-reference-guide-wi-fi/sl-wifi-twt-selection-v2-t).
 
 - Enable TWT_AUTO_CONFIG MACRO in the app.c file to enable usage of this API.
 
@@ -212,33 +241,18 @@ For more information on parameters, refer [sl_wifi_twt_selection_t](https://docs
   #define TWT_AUTO_CONFIG         1
   ```
 
-Given below are sample configurations.
+Given below is a sample configuration.
   
   ```c
-  sl_wifi_twt_selection_t default_twt_selection_configuration = {
-    .twt_enable                            = 1,
-    .average_tx_throughput                 = 1000,
-    .tx_latency                            = 0,
-    .rx_latency                            = 5000,
-    .device_average_throughput             = DEVICE_AVERAGE_THROUGHPUT,
-    .estimated_extra_wake_duration_percent = ESTIMATE_EXTRA_WAKE_DURATION_PERCENT,
-    .twt_tolerable_deviation               = TWT_TOLERABLE_DEVIATION,
-    .default_wake_interval_ms              = TWT_DEFAULT_WAKE_INTERVAL_MS,
-    .default_minimum_wake_duration_ms      = TWT_DEFAULT_WAKE_DURATION_MS,
-    .beacon_wake_up_count_after_sp         = MAX_BEACON_WAKE_UP_AFTER_SP
+  sl_wifi_twt_selection_v2_t default_twt_config = {
+    .twt_enable            = 1,
+    .average_tx_throughput = 1000,
+    .tx_latency            = 0,
+    .rx_latency            = 5000,
   };
   ```
-- The following are the default macro settings. User should not change these values as it may affect the working of the algorithm. 
-
   ```c
-  #define DEVICE_AVG_THROUGHPUT                20000    // Kbps
-  #define ESTIMATE_EXTRA_WAKE_DURATION_PERCENT 0        // in percentage
-  #define TWT_TOLERABLE_DEVIATION              10       // in percentage
-  #define TWT_DEFAULT_WAKE_INTERVAL_MS         1024     // in milli seconds
-  #define TWT_DEFAULT_WAKE_DURATION_MS         16       // in milli seconds
-  #define MAX_TX_AND_RX_LATENCY_LIMIT          22118400 // 6hrs in milli seconds
-  #define MAX_BEACON_WAKE_UP_AFTER_SP \
-    2 // The number of beacons after the service period completion for which the module wakes up and listens for any pending RX.
+  status = sl_wifi_target_wake_time_auto_selection_v2(&default_twt_config);
   ```
 
 >**Note**
@@ -282,10 +296,10 @@ Usage of this API requires knowledge of individual TWT setup negotiation. This A
 
 > Note:
 >
-> - TWT Wake duration depends on the wake duration unit. For example, for the above configuration, wake duration value is  (0xE0 * 256 = 57.3 msec).
+> - TWT Wake duration depends on the wake duration unit. For example, for the above configuration, wake duration value is  (0xE0 * 256 = 57.3 ms).
 > - TWT Wake interval is calculated as mantissa *2 ^ exp.  For example, for the above configuration, wake interval value is (0x1B00* 2^13  = 55.2 sec).
 > - Configuring TWT Wake interval beyond 1 min might lead to disconnections from the AP.
-> - There might be disconnections while using TWT with wake interval > 4sec when connected to an AP with non-zero GTK key renewal time.
+> - There might be disconnections while using TWT with wake interval > 4 seconds when connected to an AP with non-zero GTK key renewal time.
 > - Keep Alive timeout should be non-zero when negotiated TWT setup is **unannounced**, otherwise there might be disconnections.
 
 - For both TWT APIs, if TWT session setup is successful, the following notification will be printed with TWT response parameters from the AP.
@@ -299,10 +313,10 @@ To teardown TWT session use the matching TWT teardown API corresponding to the T
 - For TWT parameters Auto Selection API, call the following API to teardown :
 
   ```c
-  status = sl_wifi_target_wake_time_auto_selection(twt_selection);
+  status = sl_wifi_target_wake_time_auto_selection_v2(&twt_config);
   ```
 
-  - Set twt_enable parameter to '0' in the **twt_selection** structure. The other parameters in the structure are ignored. 
+  - Set twt_enable parameter to '0' in the **twt_config** (sl_wifi_twt_selection_v2_t) structure. The other parameters are ignored. 
 
 - For manually configurable TWT parameters API, call the following API to teardown:
 
@@ -344,19 +358,19 @@ To teardown TWT session use the matching TWT teardown API corresponding to the T
 
 ### Recommendations
 
-- Use sl_wifi_target_wake_time_auto_selection with appropriate Rx Latency input according to the use case as it has improved design over sl_wifi_enable_target_wake_time. Also, it handles network level disconnections such as ARP, Embedded MQTT and TCP connections. It has better user interface and simplifies TWT usage.
+- Use sl_wifi_target_wake_time_auto_selection_v2 with appropriate Rx Latency input according to the use case as it has improved design over sl_wifi_enable_target_wake_time. Also, it handles network level disconnections such as ARP, Embedded MQTT and TCP connections. It has better user interface and simplifies TWT usage.
 
 - iTWT setup is recommended after IP assignment/TCP connection/application connection.
 
-- When using sl_wifi_target_wake_time_auto_selection API, Rx Latency should be less than TCP / ARP Timeouts at the remote side.
+- When using sl_wifi_target_wake_time_auto_selection_v2 API, Rx Latency should be less than TCP / ARP Timeouts at the remote side.
 
 - When using sl_wifi_enable_target_wake_time API, TWT interval configured should be less than TCP / ARP Timeouts at the remote side.
 
-- For iTWT GTK Interval Should be kept maximum possible value or zero. If GTK interval is not configurable, recommended TWT interval (in case of sl_wifi_enable_target_wake_time) / RX Latency (in case of sl_wifi_target_wake_time_auto_selection API) is less than 4sec.
+- For iTWT GTK Interval Should be kept maximum possible value or zero. If GTK interval is not configurable, recommended TWT interval (in case of sl_wifi_enable_target_wake_time) / RX Latency (in case of sl_wifi_target_wake_time_auto_selection_v2 API) is less than 4 seconds.
 
 - When sl_wifi_enable_target_wake_time API is used, configuring TWT Wake interval beyond 1 min might lead to disconnections from the AP. Recommended to use TWT wake up interval less than or equal to 1 min.
 
-- WLAN Keep Alive timeout should not be disabled when sl_wifi_target_wake_time_auto_selection API is used or when unannounced TWT session is set up using sl_wifi_enable_target_wake_time API. It is recommended to use WLAN Keep Alive timeout of 30 sec which is the default timeout even if not configured specifically by the user.
+- WLAN Keep Alive timeout should not be disabled when sl_wifi_target_wake_time_auto_selection_v2 API is used or when unannounced TWT session is set up using sl_wifi_enable_target_wake_time API. It is recommended to use WLAN Keep Alive timeout of 30 seconds which is the default timeout even if not configured specifically by the user.
 
 ## Soc Mode:
 
@@ -426,3 +440,26 @@ Refer to the instructions [here](https://docs.silabs.com/wiseconnect/latest/wise
   ![Figure: Energy Profiler Output](resources/readme/outputs_2.png)
 
 > **Note**: The average current consumption may vary based on the environment, the above image is for reference.
+
+## Troubleshooting
+
+If you encounter issues while running this example, check the following:
+
+- Run this application together with [Wi-Fi - TWT Use Case Remote app](https://github.com/SiliconLabs/wiseconnect/blob/v4.1.2-content-for-docs/examples/snippets/wlan/twt_use_case_remote_app/readme.md) on a separate SiWx91x board.
+- Use a Wi-Fi 6 access point with TWT responder mode enabled.
+- If TWT setup fails, review [iTWT Session Status Codes](#itwt-session-status-codes).
+- Follow [Recommendations](#recommendations) for latency, keep-alive, and teardown settings.
+
+
+
+## Resources
+
+- [WiSeConnect Getting Started Guide](https://docs.silabs.com/wiseconnect/latest/wiseconnect-getting-started/)
+- [WiSeConnect Examples](https://docs.silabs.com/wiseconnect/latest/wiseconnect-examples/#example-folder-structure)
+- [WiSeConnect Recommended Settings Guide](https://docs.silabs.com/wiseconnect/latest/wiseconnect-developers-guide-prog-recommended-settings/)
+
+## Report Bugs and Get Support
+
+Report issues and get help from the Silicon Labs community:
+
+- [Silicon Labs Community](https://www.silabs.com/community)

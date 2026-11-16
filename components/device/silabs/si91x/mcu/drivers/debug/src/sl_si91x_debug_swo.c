@@ -51,7 +51,7 @@ static sl_si91x_gpio_pin_config_t sl_mcu_clk_out_gpio_pin_config = { { SL_SI91X_
 static sl_si91x_gpio_pin_config_t sl_mcu_trace_clk_in_gpio_pin_config = { { SL_SI91X_GPIO_15_PORT,
                                                                             SL_SI91X_GPIO_15_PIN },
                                                                           GPIO_INPUT };
-
+static bool is_initialized                                            = false;
 /*******************************************************************************
 ****************************  DEFINES   ********************************
 *******************************************************************************/
@@ -69,6 +69,12 @@ sl_status_t sl_si91x_debug_swo_init(void)
   uint32_t freq       = 0UL;
   uint16_t cyctap     = 0U;
   uint16_t postpreset = 0U;
+
+  // If already initialized, return SL_STATUS_OK
+  if (is_initialized) {
+    return SL_STATUS_OK;
+  }
+
   status = sl_si91x_gpio_driver_enable_pad_selection(PAD_SEL_MCU_CLK); // Enables Pad selection for MCU clock out
   if (status != SL_STATUS_OK) {
     return status;
@@ -159,6 +165,16 @@ sl_status_t sl_si91x_debug_swo_init(void)
   ITM->TER |= (1UL << 8);
   ITM->PORT[8].u8 = 0xFF;
   ITM->TER &= ~(1UL << 8);
+  is_initialized = true;
+  return SL_STATUS_OK;
+}
+
+sl_status_t sl_si91x_debug_swo_deinit(void)
+{
+  if (!is_initialized) {
+    return SL_STATUS_NOT_INITIALIZED;
+  }
+  is_initialized = false;
   return SL_STATUS_OK;
 }
 

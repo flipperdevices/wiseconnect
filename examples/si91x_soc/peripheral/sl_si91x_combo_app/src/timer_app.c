@@ -32,13 +32,22 @@ void timer_config_match_reg(uint32_t ms)
   match_val = ms * CLOCKS_PER_MICROSECONDS_32MHZ * TIME_ONE_MS;
   status    = sl_si91x_ulp_timer_set_count(ULP_TIMER_INSTANCE, match_val);
   if (status != SL_STATUS_OK) {
-    DEBUGOUT("sl_si91x_ulp_timer_set_count : Invalid Parameters Error Code : %lu\n", status);
+    SL_PRINT_STRING_ERROR(
+
+      /* Note: All status messages in this example — both success and failure — are
+ * intentionally emitted via SL_PRINT_STRING_ERROR so that they remain visible
+ * on the console at the default log level. This is a demonstration choice, not
+ * a recommendation: in production code, ERROR severity should be reserved for
+ * actual failures, with successful operations logged via SL_PRINT_STRING_INFO
+ * (or SL_PRINT_STRING_DEBUG for verbose trace). */
+      "sl_si91x_ulp_timer_set_count : Invalid Parameters Error Code : %lu\n",
+      status);
   } else {
     //    DEBUGOUT("Successfully changed the timer match value\n");
   }
   status = sl_si91x_ulp_timer_start(ULP_TIMER_INSTANCE);
   if (status != SL_STATUS_OK) {
-    DEBUGOUT("sl_si91x_ulp_timer_start : Invalid Parameters Error Code : %lu\n", status);
+    SL_PRINT_STRING_ERROR("sl_si91x_ulp_timer_start : Invalid Parameters Error Code : %lu\n", status);
     /*      break;*/
   }
 }
@@ -60,31 +69,38 @@ void timer_init(void)
     // Timer Peripheral input clock source configuration, common for all ulp-timer instances
     status = sl_si91x_ulp_timer_init(&sl_timer_clk_handle);
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("sl_si91x_ulp_timer_init : Invalid Parameters, Error Code : %lu\n", status);
+      SL_PRINT_STRING_ERROR("sl_si91x_ulp_timer_init : Invalid Parameters, Error Code : %lu\n", status);
       break;
     }
-    DEBUGOUT("Successfully configured ULP-timer clock input source\n");
+    SL_PRINT_STRING_ERROR("Successfully configured ULP-timer clock input source\n");
     // Updating default timer match-value
     SL_ULP_TIMER_HANDLE.timer_match_value = SL_TIMER_MATCH_VALUE;
     // Configuring timer instance parameters: mode-periodic, type-1us, match-value: 1second
     status = sl_si91x_ulp_timer_set_configuration(&(SL_ULP_TIMER_HANDLE));
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("sl_si91x_ulp_timer_set_configuration : Invalid Parameters Error Code : %lu\n", status);
+      SL_PRINT_STRING_ERROR("sl_si91x_ulp_timer_set_configuration : Invalid "
+                            "Parameters Error Code : %lu\n",
+                            status);
       break;
     }
-    DEBUGOUT("Successfully configured ULP-timer parameters with default parameters \n");
+    SL_PRINT_STRING_ERROR("Successfully configured ULP-timer parameters with "
+                          "default parameters \n");
     // Registering timeout callback for the selected timer instance, which will also enable its interrupt
     status = sl_si91x_ulp_timer_register_timeout_callback(ULP_TIMER_INSTANCE, &(SL_ULP_TIMER_CALLBACK));
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("sl_si91x_ulp_timer_timeout_callback_register : Invalid Parameters Error Code : %lu\n", status);
+      SL_PRINT_STRING_ERROR("sl_si91x_ulp_timer_timeout_callback_register : "
+                            "Invalid Parameters Error Code : %lu\n",
+                            status);
       break;
     }
-    DEBUGOUT("Successfully registered timer instance timeout callback\n");
+    SL_PRINT_STRING_ERROR("Successfully registered timer instance timeout callback\n");
 
     // Starting Timer instance with default parameters and setting match value to 5 seconds
     timer_config_match_reg(MS_5000);
 
-    DEBUGOUT("\nSuccessfully started ulp-timer for %dsec ticking for initiation of i2c leader\n", (MS_5000 / 1000));
+    SL_PRINT_STRING_ERROR("\nSuccessfully started ulp-timer for %dsec ticking "
+                          "for initiation of i2c leader\n",
+                          (MS_5000 / 1000));
   } while (false);
 }
 
@@ -96,7 +112,7 @@ static void SL_ULP_TIMER_CALLBACK(void)
   // set the flag 0x0001U for i2c-timer event
   status = osEventFlagsSet(event_flags_id, EVENT_FLAGS_I2C_TIMER_MASKBIT);
   if (status != EVENT_FLAGS_I2C_TIMER_MASKBIT) {
-    DEBUGOUT("timer callback failed to set Event flag\n");
+    SL_PRINT_STRING_ERROR("timer callback failed to set Event flag\n");
   }
 #endif // SL_CATALOG_KERNEL_PRESENT
 }

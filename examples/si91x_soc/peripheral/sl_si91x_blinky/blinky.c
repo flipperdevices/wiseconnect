@@ -43,7 +43,7 @@
  ******************************************************************************/
 
 sl_sleeptimer_timer_handle_t timer;
-bool toggle_timeout = false;
+volatile bool toggle_timeout = false;
 
 /*******************************************************************************
  *********************   LOCAL FUNCTION PROTOTYPES   ***************************

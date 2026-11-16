@@ -30,9 +30,12 @@ requires:
   - name: romdriver_qspi
   - name: udma_linker_config
   - name: rsilib_dcache
+  - name: code_classification
 define:  
   - name: SLI_SI91X_MCU_PSRAM_PRESENT
   - name: SL_SI91X_REQUIRES_INTF_PLL
+  - name: SL_CODE_COMPONENT_PSRAM_CORE
+    value: psram_core
 source:
   - path: src/sl_si91x_psram.c
   - path: src/sl_si91x_psram_handle.c
@@ -40,10 +43,12 @@ include:
   - path: inc
     file_list:
       - path: sl_si91x_psram.h
-      - path: sl_si91x_psram_handle.h     
+      - path: sl_si91x_psram_handle.h
+      - path: sl_si91x_psram_retained_data.h
+template_contribution:
+  - name: code_classification_components
+    value: psram_core
 config_file:
   - path: config/sl_si91x_psram_pin_config.h
     file_id: psram_pin_config
-documentation:
-    docset: wiseconnect
-    document: wiseconnect-api-reference-guide-si91x-peripherals/psram
+

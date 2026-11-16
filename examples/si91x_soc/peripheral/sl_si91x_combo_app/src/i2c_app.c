@@ -122,27 +122,33 @@ void i2c_init(void)
   DEBUGINIT();
 
   if (i2c_status != SL_I2C_SUCCESS) {
-    DEBUGOUT("sl_i2c_driver_init : Invalid Parameters, Error Code : %u \n", i2c_status);
+    /* Note: All status messages in this example — both success and failure — are
+ * intentionally emitted via SL_PRINT_STRING_ERROR so that they remain visible
+ * on the console at the default log level. This is a demonstration choice, not
+ * a recommendation: in production code, ERROR severity should be reserved for
+ * actual failures, with successful operations logged via SL_PRINT_STRING_INFO
+ * (or SL_PRINT_STRING_DEBUG for verbose trace). */
+    SL_PRINT_STRING_ERROR("sl_i2c_driver_init : Invalid Parameters, Error Code : %u \n", i2c_status);
   } else {
-    DEBUGOUT("Successfully initialized and configured i2c leader\n");
+    SL_PRINT_STRING_ERROR("Successfully initialized and configured i2c leader\n");
   }
   // Configuring RX and TX FIFO thresholds
   i2c_status = sl_i2c_driver_configure_fifo_threshold(i2c_instance, I2C_TX_FIFO_THRESHOLD, I2C_RX_FIFO_THRESHOLD);
   if (i2c_status != SL_I2C_SUCCESS) {
-    DEBUGOUT("sl_i2c_driver_configure_fifo_threshold : Invalid Parameters, "
-             "Error Code : %u \n",
-             i2c_status);
+    SL_PRINT_STRING_ERROR("sl_i2c_driver_configure_fifo_threshold : Invalid Parameters, "
+                          "Error Code : %u \n",
+                          i2c_status);
   } else {
-    DEBUGOUT("Successfully configured i2c TX & RX FIFO thresholds\n");
+    SL_PRINT_STRING_ERROR("Successfully configured i2c TX & RX FIFO thresholds\n");
   }
   // Enabling combined format transfer, by enabling repeated start
   i2c_status = sl_i2c_driver_enable_repeated_start(i2c_instance, true);
   if (i2c_status != SL_I2C_SUCCESS) {
-    DEBUGOUT("sl_i2c_driver_enable_repeated_start : Invalid Parameters, Error "
-             "Code : %u \n",
-             i2c_status);
+    SL_PRINT_STRING_ERROR("sl_i2c_driver_enable_repeated_start : Invalid Parameters, Error "
+                          "Code : %u \n",
+                          i2c_status);
   } else {
-    DEBUGOUT("Successfully enabled repeated start\n");
+    SL_PRINT_STRING_ERROR("Successfully enabled repeated start\n");
   }
   // Updating DMA RX and TX channel numbers as per I2C instance
   if (sl_i2c_config.transfer_type == SL_I2C_USING_DMA) {
@@ -191,9 +197,9 @@ void i2c_leader_example_process_action(void)
                                                         (uint8_t *)i2c_write_buffer,
                                                         I2C_TX_LENGTH);
           if (i2c_status != SL_I2C_SUCCESS) {
-            DEBUGOUT("sl_i2c_driver_send_data_blocking : Invalid Parameters, "
-                     "Error Code : %u \n",
-                     i2c_status);
+            SL_PRINT_STRING_ERROR("sl_i2c_driver_send_data_blocking : Invalid Parameters, "
+                                  "Error Code : %u \n",
+                                  i2c_status);
             break;
           }
         } else {
@@ -203,9 +209,9 @@ void i2c_leader_example_process_action(void)
                                                             I2C_TX_LENGTH,
                                                             &p_dma_config);
           if (i2c_status != SL_I2C_SUCCESS) {
-            DEBUGOUT("sl_i2c_driver_send_data_non_blocking : Invalid Parameters, "
-                     "Error Code : %u \n",
-                     i2c_status);
+            SL_PRINT_STRING_ERROR("sl_i2c_driver_send_data_non_blocking : Invalid Parameters, "
+                                  "Error Code : %u \n",
+                                  i2c_status);
             break;
           }
         }
@@ -222,7 +228,7 @@ void i2c_leader_example_process_action(void)
           current_mode          = I2C_RECEIVE_DATA;
         }
         if (i2c_driver_dma_error) {
-          DEBUGOUT("Data is not transferred to Follower successfully \n");
+          SL_PRINT_STRING_ERROR("Data is not transferred to Follower successfully \n");
           i2c_driver_dma_error = false;
           break;
         }
@@ -234,18 +240,18 @@ void i2c_leader_example_process_action(void)
         // Disabling repeated start before last cycle of transfer
         i2c_status = sl_i2c_driver_enable_repeated_start(i2c_instance, false);
         if (i2c_status != SL_I2C_SUCCESS) {
-          DEBUGOUT("sl_i2c_driver_enable_repeated_start : Invalid Parameters, "
-                   "Error Code : %u \n",
-                   i2c_status);
+          SL_PRINT_STRING_ERROR("sl_i2c_driver_enable_repeated_start : Invalid Parameters, "
+                                "Error Code : %u \n",
+                                i2c_status);
         }
         // Validation for executing the API only once.
         if (sl_i2c_config.transfer_type == SL_I2C_USING_NON_DMA) {
           i2c_status =
             sl_i2c_driver_receive_data_blocking(i2c_instance, FOLLOWER_I2C_ADDR, i2c_read_buffer, I2C_RX_LENGTH);
           if (i2c_status != SL_I2C_SUCCESS) {
-            DEBUGOUT("sl_i2c_driver_receive_data_blocking : Invalid Parameters, Error "
-                     "Code : %u \n",
-                     i2c_status);
+            SL_PRINT_STRING_ERROR("sl_i2c_driver_receive_data_blocking : Invalid Parameters, Error "
+                                  "Code : %u \n",
+                                  i2c_status);
             break;
           }
         } else {
@@ -255,10 +261,10 @@ void i2c_leader_example_process_action(void)
                                                                I2C_RX_LENGTH,
                                                                &p_dma_config);
           if (i2c_status != SL_I2C_SUCCESS) {
-            DEBUGOUT("sl_i2c_driver_receive_data_non_blocking : Invalid "
-                     "Parameters, Error "
-                     "Code : %u \n",
-                     i2c_status);
+            SL_PRINT_STRING_ERROR("sl_i2c_driver_receive_data_non_blocking : Invalid "
+                                  "Parameters, Error "
+                                  "Code : %u \n",
+                                  i2c_status);
             break;
           }
         }
@@ -279,7 +285,7 @@ void i2c_leader_example_process_action(void)
           compare_data();
         }
         if (i2c_driver_dma_error) {
-          DEBUGOUT("Data is not received from Follower successfully \n");
+          SL_PRINT_STRING_ERROR("Data is not received from Follower successfully \n");
           i2c_driver_dma_error = false;
           break;
         }
@@ -290,9 +296,9 @@ void i2c_leader_example_process_action(void)
       // De-initializing i2c instance and unregistering callback
       i2c_status = sl_i2c_driver_deinit(i2c_instance);
       if (i2c_status != SL_I2C_SUCCESS) {
-        DEBUGOUT("sl_i2c_driver_deinit : Invalid Parameters, "
-                 "Error Code : %u \n",
-                 i2c_status);
+        SL_PRINT_STRING_ERROR("sl_i2c_driver_deinit : Invalid Parameters, "
+                              "Error Code : %u \n",
+                              i2c_status);
       } else {
         current_mode = I2C_IDLE_MODE;
       }
@@ -320,11 +326,11 @@ static void compare_data(void)
     }
   }
   if (data_index == I2C_SIZE_BUFFERS) {
-    DEBUGOUT("Leader-Follower read-write Data comparison is successful, Test "
-             "Case Passed \n");
+    SL_PRINT_STRING_ERROR("Leader-Follower read-write Data comparison is successful, Test "
+                          "Case Passed \n");
   } else {
-    DEBUGOUT("Leader-Follower read-write Data comparison is not successful, "
-             "Test Case Failed \n");
+    SL_PRINT_STRING_ERROR("Leader-Follower read-write Data comparison is not successful, "
+                          "Test Case Failed \n");
   }
 }
 

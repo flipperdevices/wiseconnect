@@ -1,8 +1,8 @@
-# SL GPIO GROUP EXAMPLE
+# SiWx91x Platform GPIO GROUP EXAMPLE
 
 ## Table of Contents
 
-- [SL GPIO GROUP EXAMPLE](#sl-gpio-group-example)
+- [SiWx91x Platform GPIO GROUP EXAMPLE](#platform-siwx91x-gpio-group-example)
   - [Table of Contents](#table-of-contents)
   - [Purpose/Scope](#purposescope)
   - [Overview](#overview)
@@ -16,6 +16,9 @@
   - [Application Build Environment](#application-build-environment)
     - [Application Configuration Parameters](#application-configuration-parameters)
   - [Test the Application](#test-the-application)
+  - [Troubleshooting](#troubleshooting)
+  - [Resources](#resources)
+  - [Report Bugs/Support](#report-bugssupport)
 
 ## Purpose/Scope
 
@@ -29,8 +32,8 @@
   - **UULP (Ultra Ultra Low Power) Instance:** Controls the UULP GPIOs (UULP_GPIO_n; n=0 to 4).
 - HP and ULP Instance have same features and functionality except for different base address.
 - Each port in the HP domain supports a maximum of 16 GPIO pins, with a total of four ports (SL_GPIO_PORT_A, SL_GPIO_PORT_B, SL_GPIO_PORT_C, SL_GPIO_PORT_D).
-- The ULP GPIO domain has only one port (SL_GPIO_ULP_PORT) with a maximum of 12 pins.  
-- Similarly, the UULP GPIO domain has only one port (SL_GPIO_UULP_PORT) with a maximum of 5 pins. 
+- The ULP GPIO domain has only one port (SL_GPIO_ULP_PORT) with a maximum of 12 pins.
+- Similarly, the UULP GPIO domain has only one port (SL_GPIO_UULP_PORT) with a maximum of 5 pins.
 
   > **Note:** Please note that GPIO_n (n=0:5) are dedicated for the Secure Zone Processor's Flash interface. The MCU should NOT be changing any configuration related to these GPIOs under any circumstances since it may lead to the Flash content being corrupted, rendering the chip unusable. This is applicable to MCU HP EGPIO Instance.
 
@@ -40,10 +43,10 @@
  The table below explains the Port and Pin selection for different instances:
 
 |  GPIO Instance                 |    GPIO Port      |  GPIO Pin Number  |
-|--------------------------------|-------------------|-------------------|  
+|--------------------------------|-------------------|-------------------|
 |                                |  SL_GPIO_PORT_A   |   (6-15)          |
 | HP GPIO Instance               |  SL_GPIO_PORT_B   |   (16-31)         |
-|                                |  SL_GPIO_PORT_C   |   (32-47)         | 
+|                                |  SL_GPIO_PORT_C   |   (32-47)         |
 |                                |  SL_GPIO_PORT_D   |   (48-57)         |
 | ULP GPIO Instance              |  SL_GPIO_ULP_PORT |   (0-11)          |
 | UULP GPIO Instance             | SL_GPIO_UULP_PORT |   (0-4)           |
@@ -53,12 +56,12 @@
 
 **NOTE** : For reference on how to select Port and Pin number for different instances, please see the following points:
 
-- To select HP GPIO pin number 16 for usage, Select Port as SL_GPIO_PORT_B and Pin number as 0. 
-- To select HP GPIO pin number 31 for usage, Select Port as SL_GPIO_PORT_B and Pin number as 15. 
-- To select HP GPIO pin number 33 for usage, Select Port as SL_GPIO_PORT_C and Pin number as 1. 
-- To select HP GPIO pin number 56 for usage, Select Port as SL_GPIO_PORT_D and Pin number as 14. 
-- To select ULP  GPIO pin number 10 for usage, Select Port as SL_GPIO_ULP_PORT and Pin number as 10. 
-- To select UULP  GPIO pin number 2 for usage, Select Port as SL_GPIO_UULP_PORT and Pin number as 2. 
+- To select HP GPIO pin number 16 for usage, Select Port as SL_GPIO_PORT_B and Pin number as 0.
+- To select HP GPIO pin number 31 for usage, Select Port as SL_GPIO_PORT_B and Pin number as 15.
+- To select HP GPIO pin number 33 for usage, Select Port as SL_GPIO_PORT_C and Pin number as 1.
+- To select HP GPIO pin number 56 for usage, Select Port as SL_GPIO_PORT_D and Pin number as 14.
+- To select ULP  GPIO pin number 10 for usage, Select Port as SL_GPIO_ULP_PORT and Pin number as 10.
+- To select UULP  GPIO pin number 2 for usage, Select Port as SL_GPIO_UULP_PORT and Pin number as 2.
 
 Please refer to the following APIs which are common for all 3 instances and are differentiated based on Port and Pin:
 
@@ -86,13 +89,13 @@ Please refer to the following APIs which are common for all 3 instances and are 
 
 Below are the list of GPIO examples available and it's functionality:
 
-  |  GPIO Examples        |    GPIO Functionality                              |  
-  |-----------------------|----------------------------------------------------|  
-  | gpio_detailed_example | Demonstrates GPIO toggle and supported APIs        |    
-  | gpio_example          |  Demonstrates HP GPIO pin interrupt                |  
-  | gpio_group_example    | Demonstrates HP, ULP  GPIO group interrupts        | 
-  | gpio_ulp_example      |  Demonstrates GPIO toggle and ULP  pin interrupt   |           
-  | gpio_uulp_example     | Demonstrates UULP  pin interrupt                   | 
+  |  GPIO Examples        |    GPIO Functionality                              |
+  |-----------------------|----------------------------------------------------|
+  | gpio_detailed_example | Demonstrates GPIO toggle and supported APIs        |
+  | gpio_example          |  Demonstrates HP GPIO pin interrupt                |
+  | gpio_group_example    | Demonstrates HP, ULP  GPIO group interrupts        |
+  | gpio_ulp_example      |  Demonstrates GPIO toggle and ULP  pin interrupt   |
+  | gpio_uulp_example     | Demonstrates UULP  pin interrupt                   |
   |                       |                                                    |
 
 ## About Example Code
@@ -101,7 +104,7 @@ Below are the list of GPIO examples available and it's functionality:
 - Clear all GPIO interrupts and enable the clock using the `sl_gpio_driver_init`  API.
 - Configure the HP and ULP GPIO pins using the `sl_gpio_set_configuration` API.
 - For HP interrupt:
-  - Connect GPIO8 (F8) and GPIO9 (F9) to low or high voltage levels. 
+  - Connect GPIO8 (F8) and GPIO9 (F9) to low or high voltage levels.
   - When the `AND event` is selected, the interrupt occurs when both GPIO pins match the configured polarity simultaneously.
   - When the `OR event` is selected, the interrupt occurs when at least one pin matches the configured polarity, based on the level or edge configuration.
 - For ULP interrupt:
@@ -120,41 +123,41 @@ Below are the list of GPIO examples available and it's functionality:
 
 > |  GPIO8 pin state | GPIO9 pin state   |    Trigger status |
 > |------------------|-------------------|-------------------|
-> |         0        |        0          |      1            |             
+> |         0        |        0          |      1            |
 > |         0        |        1          |      0            |
-> |         1        |        0          |      0            |   
-> |         1        |        1          |      0            |  
-> |                  |                   |                   | 
+> |         1        |        0          |      0            |
+> |         1        |        1          |      0            |
+> |                  |                   |                   |
 
 **OR Event table (Low Polarity Configuration):**
 
 > |  GPIO8 pin state | GPIO9 pin state   |    Trigger status |
 > |------------------|-------------------|-------------------|
-> |         0        |        0          |      1            |             
+> |         0        |        0          |      1            |
 > |         0        |        1          |      1            |
-> |         1        |        0          |      1            |   
-> |         1        |        1          |      0            |  
-> |                  |                   |                   | 
+> |         1        |        0          |      1            |
+> |         1        |        1          |      0            |
+> |                  |                   |                   |
 
 **AND Event table (High Polarity Configuration):**
 
 > |  GPIO8 pin state | GPIO9 pin state   |    Trigger status |
 > |------------------|-------------------|-------------------|
-> |         0        |        0          |      0            |             
+> |         0        |        0          |      0            |
 > |         0        |        1          |      0            |
-> |         1        |        0          |      0            |   
-> |         1        |        1          |      1            |  
-> |                  |                   |                   | 
+> |         1        |        0          |      0            |
+> |         1        |        1          |      1            |
+> |                  |                   |                   |
 
 **OR Event table (High Polarity Configuration):**
 
 > |  GPIO8 pin state | GPIO9 pin state   |    Trigger status |
 > |------------------|-------------------|-------------------|
-> |         0        |        0          |      0            |             
+> |         0        |        0          |      0            |
 > |         0        |        1          |      1            |
-> |         1        |        0          |      1            |   
-> |         1        |        1          |      1            |  
-> |                  |                   |                   | 
+> |         1        |        0          |      1            |
+> |         1        |        1          |      1            |
+> |                  |                   |                   |
 
 > **Note:**
 >
@@ -174,7 +177,7 @@ Below are the list of GPIO examples available and it's functionality:
 ### Hardware Requirements
 
 - Windows PC
-- Silicon Labs Si917 Evaluation Kit [[BRD4002](https://www.silabs.com/development-tools/wireless/wireless-pro-kit-mainboard?tab=overview) + [BRD4338A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-rb4338a-wifi-6-bluetooth-le-soc-radio-board?tab=overview) / [BRD4342A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx91x-rb4342a-wifi-6-bluetooth-le-soc-radio-board?tab=overview) / [BRD4343A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4343a-wi-fi-6-bluetooth-le-8mb-flash-radio-board-for-module?tab=overview)]
+- Silicon Labs SiWx91x Evaluation Kit [[BRD4002](https://www.silabs.com/development-tools/wireless/wireless-pro-kit-mainboard?tab=overview) + [BRD4338A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-rb4338a-wifi-6-bluetooth-le-soc-radio-board?tab=overview) / [BRD4342A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx91x-rb4342a-wifi-6-bluetooth-le-soc-radio-board?tab=overview) / [BRD4343A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4343a-wi-fi-6-bluetooth-le-8mb-flash-radio-board-for-module?tab=overview) / [BRD4343C](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4343c-wi-fi-6-bluetooth-le-8mb-flash-radio-board-for-module?tab=overview)]
 - SiWx917 AC1 Module Explorer Kit [BRD2708A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-ek2708a-explorer-kit)
 
 ### Software Requirements
@@ -203,11 +206,24 @@ For details on the project folder structure, see the [WiSeConnect Examples](http
 
 ### Application Configuration Parameters
 
-- Configure the following parameters in [`gpio_group_example.c`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.1-content-for-docs/examples/si91x_soc/peripheral/sl_si91x_gpio_group_example/gpio_group_example.c) (examples/si91x_soc/peripheral/sl_si91x_gpio_group_example/) file and update/modify following macros if required
+- Configure the following parameters in [`gpio_group_example.c`](gpio_group_example.c) (examples/si91x_soc/peripheral/sl_si91x_gpio_group_example/) file and update/modify following macros if required.
+
+- `PIN_COUNT`: Specifies the number of interrupts needed for the group interrupt configuration. By default, it is set to 4.
 
   ```c
     #define PIN_COUNT        4      // Number of interrupts needed
+  ```
+
+- `GRP_COUNT`: Specifies the count of group interrupt pins per group. By default, it is set to 2.
+
+  ```c
     #define GRP_COUNT        2      // Count of group interrupt pins
+  ```
+
+- `NUMBER_OF_PINS`: Specifies the total number of pins used for the pin configuration set. By default, it is set to 4.
+
+  ```c
+    #define NUMBER_OF_PINS   4      // Total number of pins for pin configuration set
   ```
 
 > **Note**: For recommended settings, please refer the [recommendations guide](https://docs.silabs.com/wiseconnect/latest/wiseconnect-developers-guide-prog-recommended-settings/).
@@ -226,3 +242,19 @@ Refer to the instructions [here](https://docs.silabs.com/wiseconnect/latest/wise
 >
 > - Interrupt handlers are implemented in the driver layer, and user callbacks are provided for custom code. If you want to write your own interrupt handler instead of using the default one, make the driver interrupt handler a weak handler. Then, copy the necessary code from the driver handler to your custom interrupt handler.
 >- To use GPIO pins 31-34 in GPIO mode, see the [SiWx917 Software Reference Manual](docs/software-reference/manuals/siwx91x-software-reference-manual.md).
+
+## Troubleshooting
+
+- If the project does not build, ensure Simplicity Studio and the WiSeConnect extension are installed and the board is connected.
+- If the device is not detected, reinstall the connectivity firmware and check USB drivers.
+
+## Resources
+
+- [WiSeConnect Getting Started](https://docs.silabs.com/wiseconnect/latest/wiseconnect-getting-started/)
+- [WiSeConnect Examples](https://docs.silabs.com/wiseconnect/latest/wiseconnect-examples/)
+- [SiWx91x SoC Documentation](https://docs.silabs.com/wiseconnect/latest/)
+
+## Report Bugs/Support
+
+For issues and support, use the Silicon Labs Community or your normal support channel.
+

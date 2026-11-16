@@ -1,8 +1,8 @@
-# SL BLINKY
+# SiWx91x Platform Blinky
 
 ## Table of Contents
 
-- [SL BLINKY](#sl-blinky)
+- [SiWx91x Platform Blinky](#platform-siwx91x-blinky)
   - [Table of Contents](#table-of-contents)
   - [Purpose/Scope](#purposescope)
   - [Prerequisites/Setup Requirements](#prerequisitessetup-requirements)
@@ -12,6 +12,9 @@
   - [Getting Started](#getting-started)
   - [Application Build Environment](#application-build-environment)
   - [Test the Application](#test-the-application)
+  - [Troubleshooting](#troubleshooting)
+  - [Resources](#resources)
+  - [Report Bugs/Support](#report-bugssupport)
 
 ## Purpose/Scope
 
@@ -22,7 +25,7 @@ This application contains an example code to demonstrate the GPIO/LED toggle fun
 ### Hardware Requirements
 
 - Windows PC
-- Silicon Labs Si917 Evaluation Kit [[BRD4002](https://www.silabs.com/development-tools/wireless/wireless-pro-kit-mainboard?tab=overview) + [BRD4338A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-rb4338a-wifi-6-bluetooth-le-soc-radio-board?tab=overview) / [BRD4342A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx91x-rb4342a-wifi-6-bluetooth-le-soc-radio-board?tab=overview) / [BRD4343A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4343a-wi-fi-6-bluetooth-le-8mb-flash-radio-board-for-module?tab=overview)]
+- Silicon Labs SiWx91x Evaluation Kit [[BRD4002](https://www.silabs.com/development-tools/wireless/wireless-pro-kit-mainboard?tab=overview) + [BRD4338A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-rb4338a-wifi-6-bluetooth-le-soc-radio-board?tab=overview) / [BRD4342A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx91x-rb4342a-wifi-6-bluetooth-le-soc-radio-board?tab=overview) / [BRD4343A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4343a-wi-fi-6-bluetooth-le-8mb-flash-radio-board-for-module?tab=overview) / [BRD4343C](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4343c-wi-fi-6-bluetooth-le-8mb-flash-radio-board-for-module?tab=overview)]
 - SiWx917 AC1 Module Explorer Kit [BRD2708A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-ek2708a-explorer-kit)
 
 ### Software Requirements
@@ -47,10 +50,18 @@ For details on the project folder structure, see the [WiSeConnect Examples](http
 
 ## Application Build Environment
 
-Configure the following parameter in [`blinky.c`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.1-content-for-docs/examples/si91x_soc/peripheral/sl_si91x_blinky/blinky.c) file. Update or modify following macro if required.
+Configure the following parameter in [`blinky.c`](blinky.c) file. Update or modify following macro if required.
 
-  ```C
-    #define TOGGLE_DELAY_MS 500//  configured for 500 ms   
+- `LED_INSTANCE`: Selects the LED instance that is toggled by the example. By default, it is set to `led_led0`.
+
+  ```c
+    #define LED_INSTANCE    led_led0 // LED instance
+  ```
+
+- `TOOGLE_DELAY_MS`: Delay between consecutive LED toggles, in milliseconds. By default, it is set to 500 ms.
+
+  ```c
+    #define TOOGLE_DELAY_MS 500      // configured for 500 ms
   ```
 
 > **Note**: For recommended settings, please refer the [recommendations guide](https://docs.silabs.com/wiseconnect/latest/wiseconnect-developers-guide-prog-recommended-settings/).
@@ -67,3 +78,20 @@ Configure the following parameter in [`blinky.c`](https://github.com/SiliconLabs
 > **Note:**
 >
 > - Interrupt handlers are implemented in the driver layer, and user callbacks are provided for custom code. If you want to write your own interrupt handler instead of using the default one, make the driver interrupt handler a weak handler. Then, copy the necessary code from the driver handler to your custom interrupt handler.
+> - In case of sleep-wakeup, call `led_init_instances()` after wakeup before toggling the LED again so the configured LED instances are restored.
+
+## Troubleshooting
+
+- If the project does not build, ensure Simplicity Studio and the WiSeConnect extension are installed and the board is connected.
+- If the device is not detected, reinstall the connectivity firmware and check USB drivers.
+
+## Resources
+
+- [WiSeConnect Getting Started](https://docs.silabs.com/wiseconnect/latest/wiseconnect-getting-started/)
+- [WiSeConnect Examples](https://docs.silabs.com/wiseconnect/latest/wiseconnect-examples/)
+- [SiWx91x SoC Documentation](https://docs.silabs.com/wiseconnect/latest/)
+
+## Report Bugs/Support
+
+For issues and support, use the Silicon Labs Community or your normal support channel.
+

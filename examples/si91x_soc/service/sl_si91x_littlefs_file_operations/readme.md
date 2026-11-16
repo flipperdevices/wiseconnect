@@ -1,8 +1,8 @@
-# SL LITTLEFS FILE SYSTEM
+# SiWx91x Platform LittleFS Basic File Operations
 
 ## Table of Contents
 
-- [SL LITTLEFS FILE SYSTEM](#sl-littlefs-file-system)
+- [SiWx91x Platform LittleFS Basic File Operations](#platform-siwx91x-littlefs-basic-file-operations)
   - [Table of Contents](#table-of-contents)
   - [Purpose/Scope](#purposescope)
   - [Overview](#overview)
@@ -13,6 +13,9 @@
     - [Setup Diagram](#setup-diagram)
   - [Getting Started](#getting-started)
   - [Test the Application](#test-the-application)
+  - [Troubleshooting](#troubleshooting)
+  - [Resources](#resources)
+  - [Report Bugs/Support](#report-bugssupport)
 
 ## Purpose/Scope
 
@@ -30,11 +33,11 @@ Demonstrates basic file operations using the LittleFS library on a QSPI-based fl
 ## About Example Code
 
 - The example code in **file_operations_example.c** shows how to set up QSPI to access flash memory for a file system using the LittleFS library.
-- Initialize QSPI for LittleFS through `sl_si91x_littlefs_qspi_init()`.  
-- Mount the file system via `lfs_mount()`. If mounting fails, format it with `lfs_format()` and then mount again.  
-- Open the target file for reading using `lfs_file_open()` and retrieve the data using `lfs_file_read()`.  
-- Write new data to the file with `lfs_file_write()`, append additional data by opening the file with the `LFS_O_APPEND` flag, and use `lfs_file_truncate()` to change the file size or `lfs_file_seek()` to access a specific offset.  
-- Close the file by calling `lfs_file_close()` and unmount the file system through `lfs_unmount()`.  
+- Initialize QSPI for LittleFS through `sl_si91x_littlefs_qspi_init()`.
+- Mount the file system via `lfs_mount()`. If mounting fails, format it with `lfs_format()` and then mount again.
+- Open the target file for reading using `lfs_file_open()` and retrieve the data using `lfs_file_read()`.
+- Write new data to the file with `lfs_file_write()`, append additional data by opening the file with the `LFS_O_APPEND` flag, and use `lfs_file_truncate()` to change the file size or `lfs_file_seek()` to access a specific offset.
+- Close the file by calling `lfs_file_close()` and unmount the file system through `lfs_unmount()`.
 - Simulate a reboot by unmounting and remounting to ensure data persistence using `simulate_reboot()`.
 
 ## Prerequisites/Setup Requirements
@@ -42,11 +45,13 @@ Demonstrates basic file operations using the LittleFS library on a QSPI-based fl
 ### Hardware Requirements
 
 - Windows PC
-- Silicon Labs Si917 Evaluation Kit + External Flash
+- Silicon Labs SiWx91x Evaluation Kit [[BRD4002](https://www.silabs.com/development-tools/wireless/wireless-pro-kit-mainboard?tab=overview) + [BRD4338A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-rb4338a-wifi-6-bluetooth-le-soc-radio-board?tab=overview) / [BRD4342A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx91x-rb4342a-wifi-6-bluetooth-le-soc-radio-board?tab=overview) / [BRD4343A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4343a-wi-fi-6-bluetooth-le-8mb-flash-radio-board-for-module?tab=overview) / [BRD4343C](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4343c-wi-fi-6-bluetooth-le-8mb-flash-radio-board-for-module?tab=overview)]
+- SiWx917 AC1 Module Explorer Kit [BRD2708A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-ek2708a-explorer-kit)
+
 
 >**Note:**
->- LittleFS service is supported on both stacked flash and external flash SiWG917 OPNs. 
->- For detailed information about pinset configurations, refer to the **Flash and PSRAM Combinations** section in the [Software Reference Manual](https://github.com/SiliconLabs/wiseconnect/blob/release/v3.4.2/docs/software-reference/manuals/siwx91x-software-reference-manual.md).
+>- LittleFS service is supported on both stacked flash and external flash SiWx91x OPNs.
+>- For detailed information about pinset configurations, refer to the **Flash and PSRAM Combinations** section in the [Software Reference Manual](https://github.com/SiliconLabs/wiseconnect/blob/v4.1.2-content-for-docs/docs/software-reference/manuals/siwx91x-software-reference-manual.md).
 ### Software Requirements
 
 - Simplicity Studio
@@ -71,7 +76,7 @@ Refer to the instructions [here](https://docs.silabs.com/wiseconnect/latest/wise
 
 ## Test the Application
 
-1. Run the application 
+1. Run the application
 2. Observe file operations and outputs on the console:
    - Read the data from the file both before and after the simulated reboot.
    - Execute write, append, seek, and truncate operations on the file, observing the results after each action.
@@ -82,3 +87,18 @@ Refer to the instructions [here](https://docs.silabs.com/wiseconnect/latest/wise
 > **Note**:
 >
 > When you run the littlefs example first time, after flash erase you see the errors **(error: Corrupted dir pair at {0x0, 0x1})** because flash is not yet formatted for littlefs. Ignore the error when running the example the first time.
+
+## Troubleshooting
+
+- If the project does not build, ensure Simplicity Studio and the WiSeConnect extension are installed and the board is connected.
+- If the device is not detected, reinstall the connectivity firmware and check USB drivers.
+
+## Resources
+
+- [WiSeConnect Getting Started](https://docs.silabs.com/wiseconnect/latest/wiseconnect-getting-started/)
+- [WiSeConnect Examples](https://docs.silabs.com/wiseconnect/latest/wiseconnect-examples/)
+- [SiWx91x SoC Documentation](https://docs.silabs.com/wiseconnect/latest/)
+
+## Report Bugs/Support
+
+For issues and support, use the Silicon Labs Community or your normal support channel.

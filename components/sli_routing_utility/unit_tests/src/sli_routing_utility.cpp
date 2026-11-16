@@ -31,7 +31,6 @@
 #include <gtest/gtest.h>
 extern "C" {
 #include "sli_routing_utility.h"
-#include "sl_wifi_device.h"
 #include "sli_routing_utility_types.h"
 #include "sli_routing_utility_fake_function.h"
 }

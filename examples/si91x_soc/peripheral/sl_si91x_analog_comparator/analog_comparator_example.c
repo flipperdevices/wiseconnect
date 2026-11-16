@@ -128,7 +128,13 @@ void analog_comparator_example_init(void)
   do {
     // Initializing analog comparator module
     sl_si91x_analog_comparator_init();
-    DEBUGOUT("Analog Comparator is initialized successfully \n");
+    /* Note: All status messages in this example — both success and failure — are
+ * intentionally emitted via SL_PRINT_STRING_ERROR so that they remain visible
+ * on the console at the default log level. This is a demonstration choice, not
+ * a recommendation: in production code, ERROR severity should be reserved for
+ * actual failures, with successful operations logged via SL_PRINT_STRING_INFO
+ * (or SL_PRINT_STRING_DEBUG for verbose trace). */
+    SL_PRINT_STRING_ERROR("Analog Comparator is initialized successfully \n");
     // Configuring comparator parameters as per selected usecase
 #if (ANALOG_COMPARATOR_USED == INSTANCE_ONE)
     status = sl_si91x_analog_comparator_set_configurations(&sl_analog_comparator1_config_handle);
@@ -137,50 +143,50 @@ void analog_comparator_example_init(void)
     status = sl_si91x_analog_comparator_set_configurations(&sl_analog_comparator2_config_handle);
 #endif
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("sl_si91x_analog_comparator_set_configurations, Error code: %lu", status);
+      SL_PRINT_STRING_ERROR("sl_si91x_analog_comparator_set_configurations, Error code: %lu", status);
       break;
     }
-    DEBUGOUT("Analog Comparator configurations are set successfully \n");
+    SL_PRINT_STRING_ERROR("Analog Comparator configurations are set successfully \n");
 #if (COMPARE_POS_INPUT_EXTERNAL_NEG_INPUT_REF_SCALER)
     status = sl_si91x_analog_comparator_set_reference_scaler_output(scale_factor_value);
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("sl_si91x_analog_comparator_set_reference_scaler_output, Error "
-               "code: %lu",
-               status);
+      SL_PRINT_STRING_ERROR("sl_si91x_analog_comparator_set_reference_scaler_output, Error "
+                            "code: %lu",
+                            status);
       break;
     }
-    DEBUGOUT("Analog Comparator scale factor is set successfully \n");
+    SL_PRINT_STRING_ERROR("Analog Comparator scale factor is set successfully \n");
 #endif
 #if (COMPARE_POS_INPUT_EXTERNAL_NEG_INPUT_RESISTOR_BANK)
     // Setting threshold value for resistor bank output voltage
     status = sl_si91x_analog_comparator_set_resistor_bank_threshold(threshold_value);
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("sl_si91x_analog_comparator_set_resistor_bank_threshold, Error "
-               "code: %lu",
-               status);
+      SL_PRINT_STRING_ERROR("sl_si91x_analog_comparator_set_resistor_bank_threshold, Error "
+                            "code: %lu",
+                            status);
       break;
     }
-    DEBUGOUT("Analog Comparator resistor bank threshold is set successfully \n");
+    SL_PRINT_STRING_ERROR("Analog Comparator resistor bank threshold is set successfully \n");
 #endif
 #if (COMPARE_POS_INPUT_RESISTOR_BANK_NEG_INPUT_REF_SCALER)
     // Setting scale factor for reference scaler output voltage
     status = sl_si91x_analog_comparator_set_reference_scaler_output(scale_factor_value);
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("sl_si91x_analog_comparator_set_reference_scaler_output, Error "
-               "code: %lu",
-               status);
+      SL_PRINT_STRING_ERROR("sl_si91x_analog_comparator_set_reference_scaler_output, Error "
+                            "code: %lu",
+                            status);
       break;
     }
-    DEBUGOUT("Analog Comparator scale factor is set successfully \n");
+    SL_PRINT_STRING_ERROR("Analog Comparator scale factor is set successfully \n");
     // Setting threshold value for resistor bank output voltage
     status = sl_si91x_analog_comparator_set_resistor_bank_threshold(threshold_value);
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("sl_si91x_analog_comparator_set_resistor_bank_threshold, Error "
-               "code: %lu",
-               status);
+      SL_PRINT_STRING_ERROR("sl_si91x_analog_comparator_set_resistor_bank_threshold, Error "
+                            "code: %lu",
+                            status);
       break;
     }
-    DEBUGOUT("Analog Comparator resistor bank threshold is set successfully \n");
+    SL_PRINT_STRING_ERROR("Analog Comparator resistor bank threshold is set successfully \n");
 #endif
 #if COMPARE_POS_INPUT_OPAMP_NEG_INPUT_EXTERNAL
     uint8_t opamp_instance = OPAMP_INSTANCE_USED;
@@ -192,24 +198,24 @@ void analog_comparator_example_init(void)
     // Setting scale factor for reference scaler output voltage
     status = sl_si91x_analog_comparator_set_reference_scaler_output(scale_factor_value);
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("sl_si91x_analog_comparator_set_reference_scaler_output, Error "
-               "code: %lu",
-               status);
+      SL_PRINT_STRING_ERROR("sl_si91x_analog_comparator_set_reference_scaler_output, Error "
+                            "code: %lu",
+                            status);
       break;
     }
-    DEBUGOUT("Analog Comparator scale factor is set successfully \n");
+    SL_PRINT_STRING_ERROR("Analog Comparator scale factor is set successfully \n");
 #endif
 #if COMPARE_POS_INPUT_OPAMP_NEG_INPUT_RESISTOR_BANK
     uint8_t opamp_instance = OPAMP_INSTANCE_USED;
     opamp_init(opamp_instance);
     status = sl_si91x_analog_comparator_set_resistor_bank_threshold(threshold_value);
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("sl_si91x_analog_comparator_set_resistor_bank_threshold, Error "
-               "code: %lu",
-               status);
+      SL_PRINT_STRING_ERROR("sl_si91x_analog_comparator_set_resistor_bank_threshold, Error "
+                            "code: %lu",
+                            status);
       break;
     }
-    DEBUGOUT("Analog Comparator resistor bank threshold is set successfully \n");
+    SL_PRINT_STRING_ERROR("Analog Comparator resistor bank threshold is set successfully \n");
 #endif
 #if COMPARE_POS_INPUT_DAC_NEG_INPUT_EXTERNAL
     dac_init();
@@ -219,30 +225,30 @@ void analog_comparator_example_init(void)
     // Setting scale factor for reference scaler output voltage
     status = sl_si91x_analog_comparator_set_reference_scaler_output(scale_factor_value);
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("sl_si91x_analog_comparator_set_reference_scaler_output, Error "
-               "code: %lu",
-               status);
+      SL_PRINT_STRING_ERROR("sl_si91x_analog_comparator_set_reference_scaler_output, Error "
+                            "code: %lu",
+                            status);
       break;
     }
-    DEBUGOUT("Analog Comparator scale factor is set successfully \n");
+    SL_PRINT_STRING_ERROR("Analog Comparator scale factor is set successfully \n");
 #endif
 #if (ANALOG_COMPARATOR_USED == INSTANCE_ONE)
     // Registering comparator callback and enabling interrupts
     status = sl_si91x_analog_comparator_register_callback(ANALOG_COMPARATOR_USED, on_comparator1_callback);
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("sl_si91x_analog_comparator_register_callback, Error code: %lu", status);
+      SL_PRINT_STRING_ERROR("sl_si91x_analog_comparator_register_callback, Error code: %lu", status);
       break;
     }
-    DEBUGOUT("Analog Comparator callback is registered successfully \n");
+    SL_PRINT_STRING_ERROR("Analog Comparator callback is registered successfully \n");
 #endif
 #if (ANALOG_COMPARATOR_USED == INSTANCE_TWO)
     // Registering comparator callback and enabling interrupts
     status = sl_si91x_analog_comparator_register_callback(ANALOG_COMPARATOR_USED, on_comparator2_callback);
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("sl_si91x_analog_comparator_register_callback, Error code: %lu", status);
+      SL_PRINT_STRING_ERROR("sl_si91x_analog_comparator_register_callback, Error code: %lu", status);
       break;
     }
-    DEBUGOUT("Analog Comparator callback is registered successfully \n");
+    SL_PRINT_STRING_ERROR("Analog Comparator callback is registered successfully \n");
 #endif
   } while (false);
 }
@@ -315,7 +321,7 @@ static void on_comparator1_callback(void)
   sl_si91x_gpio_driver_set_pin_direction(PORT_4, PIN_5, PIN_DIRECTION);
   sl_gpio_driver_set_pin(&port_pin);
   sl_gpio_driver_clear_pin(&port_pin);
-  DEBUGOUT("Comparator-1 non-inverting input voltage is greater\n");
+  SL_PRINT_STRING_ERROR("Comparator-1 non-inverting input voltage is greater\n");
 }
 #endif
 #if (ANALOG_COMPARATOR_USED == INSTANCE_TWO)
@@ -330,6 +336,6 @@ static void on_comparator2_callback(void)
   sl_si91x_gpio_driver_set_pin_direction(PORT_4, PIN_1, PIN_DIRECTION);
   sl_gpio_driver_set_pin(&port_pin);
   sl_gpio_driver_clear_pin(&port_pin);
-  DEBUGOUT("Comparator-2 non-inverting input voltage is greater\n");
+  SL_PRINT_STRING_ERROR("Comparator-2 non-inverting input voltage is greater\n");
 }
 #endif

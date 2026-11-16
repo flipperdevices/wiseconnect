@@ -29,11 +29,10 @@
 #ifndef __EVENT_LOOP_H__
 #define __EVENT_LOOP_H__
 #include "rsi_common_utils.h"
-#include "ble_config.h"
 
 //! defines
 #define MAX_NAME_TASK                 8
-#define MAX_NUM_PRIORITY_QUEUES       TOTAL_CONNECTIONS
+#define MAX_NUM_PRIORITY_QUEUES       8
 #define FIXED_LEN_RESPONSE_BUFFER_LEN 16
 #define BD_ADDR_NOT_FOUND             -1
 
@@ -84,7 +83,7 @@ typedef struct generic_task_cb_s {
 } generic_task_cb_t;
 
 /*=======================================================================*/
-//   ! Fucntion declarations
+//   ! Function declarations
 /*=======================================================================*/
 int32_t rsi_app_pending_event_handling(generic_task_cb_t *generic_task_cb);
 void rsi_app_pending_command_handling(generic_task_cb_t *generic_task_cb);
@@ -93,7 +92,7 @@ rsi_app_pkt_t *rsi_app_get_pending_msg_highest_pri_que(app_queue_t *event_queue,
 int32_t rsi_app_common_event_loop(generic_task_cb_t *generic_task_cb);
 
 /*=======================================================================*/
-//   ! Extern Fucntions
+//   ! Extern Functions
 /*=======================================================================*/
 extern int32_t rsi_app_common_event_loop(generic_task_cb_t *generic_task_cb);
 #endif

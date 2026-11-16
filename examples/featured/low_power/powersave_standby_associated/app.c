@@ -40,6 +40,8 @@
 #include "sl_wifi_callback_framework.h"
 #include "sl_si91x_driver.h"
 #include <string.h>
+#include <stdio.h>
+#include <inttypes.h>
 
 #ifdef SLI_SI91X_MCU_INTERFACE
 #include "sl_si91x_power_manager.h"
@@ -49,14 +51,17 @@
 /******************************************************
  *                      Macros
  ******************************************************/
-#define SERVER_IP_ADDRESS               "192.168.50.40"
-#define DATA                            "HellofromUDPclient!!!"
-#define SERVER_PORT                     5001
-#define NUMBER_OF_PACKETS               1000
-#define BROADCAST_DROP_THRESHOLD        5000
-#define BROADCAST_IN_TIM                1
-#define BROADCAST_TIM_TILL_NEXT_COMMAND 1
-#define ENABLE_DATA_TRANSFER            0
+#define SERVER_IP_ADDRESS    "192.168.50.40"
+#define DATA                 "HellofromUDPclient!!!"
+#define SERVER_PORT          5001
+#define NUMBER_OF_PACKETS    1000
+#define ENABLE_DATA_TRANSFER 0
+
+/* Defaults migrated from sl_wifi_filter_broadcast(5000, 1, 1). */
+#define BCAST_FILTER_ENABLE      (1U)
+#define MCAST_FILTER_ENABLE      (1U)
+#define FILTER_MODE              (0U)
+#define BEACON_DROP_THRESHOLD_MS (5000U)
 
 /******************************************************
  *                    Constants
@@ -84,10 +89,13 @@ static const sl_wifi_device_configuration_t station_init_configuration = {
 #endif
                                                   ),
                    .bt_feature_bit_map         = 0,
-                   .ext_tcp_ip_feature_bit_map = SL_SI91X_CONFIG_FEAT_EXTENTION_VALID,
+                   .ext_tcp_ip_feature_bit_map = SL_SI91X_CONFIG_FEAT_EXTENSION_VALID,
                    .ble_feature_bit_map        = 0,
                    .ble_ext_feature_bit_map    = 0,
-                   .config_feature_bit_map = (SL_SI91X_FEAT_SLEEP_GPIO_SEL_BITMAP | SL_WIFI_ENABLE_ENHANCED_MAX_PSP) }
+                   .config_feature_bit_map = (SL_SI91X_FEAT_SLEEP_GPIO_SEL_BITMAP | SL_WIFI_ENABLE_ENHANCED_MAX_PSP) },
+  .ta_pool         = { .tx_ratio_in_buffer_pool = 0, .rx_ratio_in_buffer_pool = 0, .global_ratio_in_buffer_pool = 0 },
+  .efuse_data_type = SL_SI91X_EFUSE_MFG_SW_VERSION,
+  .nwp_fw_image_number = SL_SI91X_NWP_FW_IMAGE_NUMBER_0
 };
 #else
 #include "sl_si91x_wc_device_configuration.h"
@@ -130,14 +138,6 @@ static void application_start(void *argument);
 sl_status_t send_data(void);
 
 /******************************************************
- *               Static Inline Functions
- ******************************************************/
-static inline void print_errno(void)
-{
-  printf("\r\nerrno: %d\r\n", errno);
-}
-
-/******************************************************
  *               Variable Definitions
  ******************************************************/
 
@@ -150,7 +150,6 @@ const osThreadAttr_t thread_attributes = {
   .stack_size = 3072,
   .priority   = osPriorityLow,
   .tz_module  = 0,
-  .reserved   = 0,
 };
 
 /******************************************************
@@ -167,76 +166,94 @@ static void application_start(void *argument)
   UNUSED_PARAMETER(argument);
   sl_status_t status;
   sl_wifi_performance_profile_v2_t performance_profile = { .profile = ASSOCIATED_POWER_SAVE_LOW_LATENCY };
-  sl_wifi_firmware_version_t version                   = { 0 };
+  sl_si91x_firmware_version_t version                  = { 0 };
   sl_mac_address_t mac_addr                            = { 0 };
 
   status = sl_net_init(SL_NET_WIFI_CLIENT_INTERFACE, &station_init_configuration, NULL, NULL);
   if (status != SL_STATUS_OK) {
-    printf("Failed to start Wi-Fi Client interface: 0x%lx\r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "Failed to start Wi-Fi Client interface: 0x%" PRIx32, (uint32_t)status);
     return;
   }
   status = sl_wifi_get_mac_address(SL_WIFI_CLIENT_INTERFACE, &mac_addr);
   if (status == SL_STATUS_OK) {
-    printf("Device MAC address: %x:%x:%x:%x:%x:%x\r\n",
-           mac_addr.octet[0],
-           mac_addr.octet[1],
-           mac_addr.octet[2],
-           mac_addr.octet[3],
-           mac_addr.octet[4],
-           mac_addr.octet[5]);
+    char ps_assoc_mac_log[80];
+    snprintf(ps_assoc_mac_log,
+             sizeof(ps_assoc_mac_log),
+             "Device MAC address: %x:%x:%x:%x:%x:%x",
+             mac_addr.octet[0],
+             mac_addr.octet[1],
+             mac_addr.octet[2],
+             mac_addr.octet[3],
+             mac_addr.octet[4],
+             mac_addr.octet[5]);
+    SL_DEBUG_LOG_V2(INFO, "%s", (uintptr_t)ps_assoc_mac_log);
   } else {
-    printf("Failed to get mac address: 0x%lx\r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "Failed to get mac address: 0x%" PRIx32, (uint32_t)status);
   }
-  status = sl_wifi_get_firmware_version(&version);
+  status = sl_si91x_get_firmware_version(&version);
   if (status != SL_STATUS_OK) {
-    printf("\r\nFailed to fetch firmware version: 0x%lx\r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "Failed to fetch firmware version: 0x%" PRIx32, (uint32_t)status);
   } else {
-    print_firmware_version(&version);
+    printf("\r\nFirmware version is: %x%x.%d.%d.%d.%d.%d.%d\r\n",
+           version.chip_id,
+           version.rom_id,
+           version.major,
+           version.minor,
+           version.security_version,
+           version.patch_num,
+           version.customer_id,
+           version.build_num);
   }
 
   status = sl_net_up(SL_NET_WIFI_CLIENT_INTERFACE, SL_NET_DEFAULT_WIFI_CLIENT_PROFILE_ID);
   if (status != SL_STATUS_OK) {
-    printf("Failed to bring Wi-Fi client interface up: 0x%lx\r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "Failed to bring Wi-Fi client interface up: 0x%" PRIx32, (uint32_t)status);
     return;
   }
-  printf("\r\nWi-Fi client connected\r\n");
+  SL_DEBUG_LOG_V2(INFO, "Wi-Fi client connected\r\n");
 
-  status = sl_wifi_filter_broadcast(BROADCAST_DROP_THRESHOLD, BROADCAST_IN_TIM, BROADCAST_TIM_TILL_NEXT_COMMAND);
+  sl_wifi_groupcast_filter_config_t groupcast_filter_config = { 0 };
+  groupcast_filter_config.enable_bcast_filter               = (uint8_t)BCAST_FILTER_ENABLE;
+  groupcast_filter_config.enable_mcast_filter               = (uint8_t)MCAST_FILTER_ENABLE;
+  groupcast_filter_config.filter_mode                       = (uint8_t)FILTER_MODE;
+
+  status = sl_wifi_set_groupcast_filter_config(&groupcast_filter_config);
   if (status != SL_STATUS_OK) {
-    printf("\r\nsl_wifi_filter_broadcast Failed, Error Code : 0x%lX\r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "sl_wifi_set_groupcast_filter_config failed, Error Code : 0x%" PRIx32, (uint32_t)status);
     return;
   }
+
+  status = sl_wifi_set_beacon_drop_threshold(SL_WIFI_CLIENT_INTERFACE, (uint16_t)BEACON_DROP_THRESHOLD_MS);
+  if (status != SL_STATUS_OK) {
+    SL_DEBUG_LOG_V2(ERROR, "sl_wifi_set_beacon_drop_threshold failed, Error Code : 0x%" PRIx32, (uint32_t)status);
+    return;
+  }
+
   // set performance profile
   status = sl_wifi_set_performance_profile_v2(&performance_profile);
   if (status != SL_STATUS_OK) {
-    printf("\r\nPower save configuration Failed, Error Code : 0x%lX\r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "Power save configuration Failed, Error Code : 0x%" PRIx32, (uint32_t)status);
     return;
   }
 
 #if ENABLE_DATA_TRANSFER
   status = send_data();
   if (status != SL_STATUS_OK) {
-    printf("\r\nSend data failed with status %lx\r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "Send data failed with status 0x%" PRIx32, (uint32_t)status);
     return;
   }
 #endif
-  printf("\r\nExample Demonstration Completed\r\n");
+  SL_DEBUG_LOG_V2(INFO, "Example Demonstration Completed");
 
 #ifdef SLI_SI91X_MCU_INTERFACE
-
-#if (SL_SI91X_TICKLESS_MODE == 0)
-  sl_si91x_power_manager_sleep();
-#else
   osSemaphoreId_t wait_semaphore;
   wait_semaphore = osSemaphoreNew(1, 0, NULL);
   if (wait_semaphore == NULL) {
-    printf("Failed to create semaphore\r\n");
+    SL_DEBUG_LOG_V2(ERROR, "Failed to create semaphore");
     return;
   }
   // Waiting forever using semaphore to put M4 to sleep in tick less mode
   osSemaphoreAcquire(wait_semaphore, osWaitForever);
-#endif
-
 #endif
 }
 
@@ -251,10 +268,10 @@ sl_status_t send_data(void)
   //create UDP socket
   int32_t socket_fd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
   if (socket_fd < 0) {
-    printf("\r\nSocket Create failed with bsd error: %d\r\n", errno);
+    SL_DEBUG_LOG_V2(ERROR, "Socket Create failed with bsd error: %d\r\n", errno);
     return SL_STATUS_FAIL;
   }
-  printf("\r\nUDP Client Socket Creation Success\r\n");
+  SL_DEBUG_LOG_V2(INFO, "UDP Client Socket Creation Success\r\n");
 
   sl_net_inet_addr((char *)SERVER_IP_ADDRESS, (uint32_t *)&server_ip);
 
@@ -268,7 +285,7 @@ sl_status_t send_data(void)
     if (bytes_sent < 0) {
       if (errno == ENOBUFS)
         continue;
-      printf("\r\nSend failed with bsd error: %d\r\n", errno);
+      SL_DEBUG_LOG_V2(ERROR, "Send failed with bsd error: %d\r\n", errno);
       close(socket_fd);
       return SL_STATUS_FAIL;
     }
@@ -276,7 +293,7 @@ sl_status_t send_data(void)
     packet_count++;
   }
 
-  printf("\r\nTotal number of bytes sent: %ld\r\n", total_num_of_bytes);
+  SL_DEBUG_LOG_V2(INFO, "Total number of bytes sent: %ld\r\n", total_num_of_bytes);
   close(socket_fd);
 
   return SL_STATUS_OK;

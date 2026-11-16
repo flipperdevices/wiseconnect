@@ -17,8 +17,16 @@ include:
     - path: "rsi_d_cache.h"
 provides:
   - name: rsilib_dcache
+requires:
+  - name: code_classification
+    condition: [psram_core]
 define:  
   - name: SL_SI91X_D_CACHE_ENABLE
+  - name: SL_CODE_COMPONENT_RSILIB_DCACHE
+    value: rsilib_dcache
 template_contribution:
   - name: psram_dcache
-    value: true  
+    value: true
+  - name: code_classification_components
+    value: rsilib_dcache
+    condition: [psram_core]

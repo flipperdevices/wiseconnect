@@ -91,50 +91,56 @@ void ulp_i2s_example_init(void)
     // Initialize I2S peripheral and store driver handle in i2s_driver_handle
     status = sl_si91x_i2s_init(ULP_I2S_INSTANCE, &i2s_driver_handle);
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("I2S Initialization fail\r\n");
+      /* Note: All status messages in this example — both success and failure — are
+ * intentionally emitted via SL_PRINT_STRING_ERROR so that they remain visible
+ * on the console at the default log level. This is a demonstration choice, not
+ * a recommendation: in production code, ERROR severity should be reserved for
+ * actual failures, with successful operations logged via SL_PRINT_STRING_INFO
+ * (or SL_PRINT_STRING_DEBUG for verbose trace). */
+      SL_PRINT_STRING_ERROR("I2S Initialization fail\r\n");
       break;
     }
-    DEBUGOUT("I2S Initialization success\r\n");
+    SL_PRINT_STRING_ERROR("I2S Initialization success\r\n");
     // Configure ARM full power mode
     status = sl_si91x_i2s_configure_power_mode(i2s_driver_handle, SL_I2S_FULL_POWER);
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("I2S power mode config fail\r\n");
+      SL_PRINT_STRING_ERROR("I2S power mode config fail\r\n");
       break;
     }
-    DEBUGOUT("I2S power mode config success\r\n");
+    SL_PRINT_STRING_ERROR("I2S power mode config success\r\n");
     // Register user callback handler
     status = sl_si91x_i2s_register_event_callback(i2s_driver_handle, callback_event);
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("I2S user callback register fail\r\n");
+      SL_PRINT_STRING_ERROR("I2S user callback register fail\r\n");
       break;
     }
-    DEBUGOUT("I2S user callback register success\r\n");
+    SL_PRINT_STRING_ERROR("I2S user callback register success\r\n");
     i2s_xfer_config.transfer_type = SL_I2S_TRANSMIT;
     // Configure transmitter parameters for i2s transfer
     if (sl_si91x_i2s_config_transmit_receive(i2s_driver_handle, &i2s_xfer_config)) {
-      DEBUGOUT("I2S transmit config fail\r\n");
+      SL_PRINT_STRING_ERROR("I2S transmit config fail\r\n");
       break;
     }
-    DEBUGOUT("I2S transmit config success\r\n");
+    SL_PRINT_STRING_ERROR("I2S transmit config success\r\n");
     i2s_xfer_config.transfer_type = SL_I2S_RECEIVE;
     // Configure receiver parameters for i2s transfer
     if (sl_si91x_i2s_config_transmit_receive(i2s_driver_handle, &i2s_xfer_config)) {
-      DEBUGOUT("I2S receive config fail\r\n");
+      SL_PRINT_STRING_ERROR("I2S receive config fail\r\n");
       break;
     }
-    DEBUGOUT("I2S receive config success\r\n");
+    SL_PRINT_STRING_ERROR("I2S receive config success\r\n");
     // Configure I2S receive DMA channel
     if (sl_si91x_i2s_receive_data(i2s_driver_handle, (uint16_t *)I2S_RX_BUF_MEMORY, I2S_LOWPOWER_BUFFER_SIZE)) {
-      DEBUGOUT("I2S receive start fail\r\n");
+      SL_PRINT_STRING_ERROR("I2S receive start fail\r\n");
       break;
     }
-    DEBUGOUT("I2S receive start success\r\n");
+    SL_PRINT_STRING_ERROR("I2S receive start success\r\n");
     // Configure I2S transmit DMA channel
     if (sl_si91x_i2s_transmit_data(i2s_driver_handle, (uint16_t *)I2S_TX_BUF_MEMORY, I2S_LOWPOWER_BUFFER_SIZE)) {
-      DEBUGOUT("I2S transmit start fail\r\n");
+      SL_PRINT_STRING_ERROR("I2S transmit start fail\r\n");
       break;
     }
-    DEBUGOUT("I2S transmit start success\r\n");
+    SL_PRINT_STRING_ERROR("I2S transmit start success\r\n");
   } while (false);
 }
 /*******************************************************************************
@@ -161,7 +167,7 @@ void ulp_i2s_example_process_action(void)
         if ((sl_si91x_i2s_get_transmit_data_count(i2s_driver_handle) == I2S_LOWPOWER_BUFFER_SIZE)
             && (sl_si91x_i2s_get_receive_data_count(i2s_driver_handle) == I2S_LOWPOWER_BUFFER_SIZE)) {
           // I2S transfer completed
-          DEBUGOUT("I2S transfer complete\r\n");
+          SL_PRINT_STRING_ERROR("I2S transfer complete\r\n");
           // Compare transmit data and receive data
           compare_loop_back_data();
         }
@@ -169,8 +175,8 @@ void ulp_i2s_example_process_action(void)
         i2s_lowpower_send_complete    = 0;
         i2s_lowpower_receive_complete = 0;
         //  de initializing the i2s
-        if (!(sl_si91x_i2s_deinit((sl_i2s_handle_t *)i2s_driver_handle))) {
-          DEBUGOUT("DEINIT SUCCESS\n");
+        if (sl_si91x_i2s_deinit_v2(i2s_driver_handle) == SL_STATUS_OK) {
+          SL_PRINT_STRING_ERROR("DEINIT SUCCESS\n");
         }
         // current mode being updated with power state transition to change the
         // power state mode
@@ -179,7 +185,7 @@ void ulp_i2s_example_process_action(void)
       break;
     case SL_ULP_I2S_POWER_STATE_TRANSITION:
       if (current_power_state == SL_SI91X_POWER_MANAGER_PS4) {
-        DEBUGOUT("Switching i2s from PS4->PS2 state \n");
+        SL_PRINT_STRING_ERROR("Switching i2s from PS4->PS2 state \n");
         // Control power management by adjusting clock references and shutting down
         // the power supply
         // This function is for demonstration purpose only. For more details, refer to the README file.
@@ -187,7 +193,7 @@ void ulp_i2s_example_process_action(void)
         // switching the power state PS4 to PS2 mode.
         status = sl_si91x_power_manager_add_ps_requirement(SL_SI91X_POWER_MANAGER_PS2);
         if (status != SL_STATUS_OK) {
-          DEBUGOUT("sl_si91x_power_manager_add_ps_requirement: Error Code : %lu \n", status);
+          SL_PRINT_STRING_ERROR("sl_si91x_power_manager_add_ps_requirement: Error Code : %lu \n", status);
           break;
         }
         /* Due to calling trim_efuse API om power manager it will change the clock
@@ -207,11 +213,11 @@ void ulp_i2s_example_process_action(void)
         // current power state is updated to PS2
         current_power_state = SL_SI91X_POWER_MANAGER_PS2;
       } else if (current_power_state == SL_SI91X_POWER_MANAGER_PS2) {
-        DEBUGOUT("Switching the i2s from PS2->PS4 state\n");
+        SL_PRINT_STRING_ERROR("Switching the i2s from PS2->PS4 state\n");
         // switching the power state from PS2 to PS4 mode
         status = sl_si91x_power_manager_add_ps_requirement(SL_SI91X_POWER_MANAGER_PS4);
         if (status != SL_STATUS_OK) {
-          DEBUGOUT("sl_si91x_power_manager_add_ps_requirement: Error Code : %lu \n", status);
+          SL_PRINT_STRING_ERROR("sl_si91x_power_manager_add_ps_requirement: Error Code : %lu \n", status);
           break;
         }
         /* Due to calling trim_efuse API om power manager it will change the clock
@@ -267,9 +273,9 @@ static void compare_loop_back_data(void)
     }
   }
   if (data_index == I2S_LOWPOWER_BUFFER_SIZE) {
-    DEBUGOUT("Data comparison successful, Loop Back Test Passed \n");
+    SL_PRINT_STRING_ERROR("Data comparison successful, Loop Back Test Passed \n");
   } else {
-    DEBUGOUT("Data comparison failed, Loop Back Test failed \n");
+    SL_PRINT_STRING_ERROR("Data comparison failed, Loop Back Test failed \n");
   }
 }
 
@@ -317,9 +323,9 @@ static void configuring_ps2_power_state(void)
                                                                      // management
   config.ulpss_ram_banks = 0;
   // Ored value for ulpss peripheral.
-  peri.ulpss_peripheral = SL_SI91X_POWER_MANAGER_ULPSS_PG_MISC | SL_SI91X_POWER_MANAGER_ULPSS_PG_SSI
-                          | SL_SI91X_POWER_MANAGER_ULPSS_PG_I2C | SL_SI91X_POWER_MANAGER_ULPSS_PG_IR
-                          | SL_SI91X_POWER_MANAGER_ULPSS_PG_FIM | SL_SI91X_POWER_MANAGER_ULPSS_PG_AUX;
+  peri.ulpss_peripheral = SL_SI91X_POWER_MANAGER_ULPSS_PG_SSI | SL_SI91X_POWER_MANAGER_ULPSS_PG_I2C
+                          | SL_SI91X_POWER_MANAGER_ULPSS_PG_IR | SL_SI91X_POWER_MANAGER_ULPSS_PG_FIM
+                          | SL_SI91X_POWER_MANAGER_ULPSS_PG_AUX;
   // Ored value for npss peripheral.
   peri.npss_peripheral = SL_SI91X_POWER_MANAGER_NPSS_PG_MCURTC | SL_SI91X_POWER_MANAGER_NPSS_PG_MCUWDT
                          | SL_SI91X_POWER_MANAGER_NPSS_PG_MCUPS | SL_SI91X_POWER_MANAGER_NPSS_PG_MCUTS
@@ -330,18 +336,18 @@ static void configuring_ps2_power_state(void)
     status = sl_si91x_power_manager_remove_peripheral_requirement(&peri);
     if (status != SL_STATUS_OK) {
       // If status is not OK, return with the error code.
-      DEBUGOUT("sl_si91x_power_manager_remove_peripheral_requirement failed, "
-               "Error Code: 0x%lX",
-               status);
+      SL_PRINT_STRING_ERROR("sl_si91x_power_manager_remove_peripheral_requirement failed, "
+                            "Error Code: 0x%lX",
+                            status);
       break;
     }
     // RAM retention modes are configured and passed into this API.
     status = sl_si91x_power_manager_configure_ram_retention(&config);
     if (status != SL_STATUS_OK) {
       // If status is not OK, return with the error code.
-      DEBUGOUT("sl_si91x_power_manager_configure_ram_retention failed, Error "
-               "Code: 0x%lX",
-               status);
+      SL_PRINT_STRING_ERROR("sl_si91x_power_manager_configure_ram_retention failed, Error "
+                            "Code: 0x%lX",
+                            status);
       break;
     }
   } while (false);

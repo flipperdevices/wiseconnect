@@ -22,3 +22,5 @@ provides:
   - name: sli_buffer_manager
 requires:
 - name: mem_pool
+- name: log_none
+  condition: ["device_si91x"]

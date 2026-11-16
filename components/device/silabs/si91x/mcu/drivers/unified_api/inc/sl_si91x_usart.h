@@ -38,6 +38,7 @@ extern "C" {
 // Includes
 #include "sl_status.h"
 #include "USART.h"
+#include "sl_log_helper.h"
 #include "rsi_usart.h"
 #if (SLI_SI91X_MCU_RS485_MODE == 1)
 #include "rsi_rs485.h"

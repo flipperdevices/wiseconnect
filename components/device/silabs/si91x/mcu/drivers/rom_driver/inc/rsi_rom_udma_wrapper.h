@@ -47,10 +47,10 @@
 extern "C" {
 #endif
 
-STATIC INLINE RSI_UDMA_HANDLE_T UDMAx_Initialize(const UDMA_RESOURCES *udma,
-                                                 RSI_UDMA_DESC_T *UDMA_Table,
-                                                 RSI_UDMA_HANDLE_T udmaHandle,
-                                                 uint32_t *mem)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE RSI_UDMA_HANDLE_T UDMAx_Initialize(const UDMA_RESOURCES *udma,
+                                                                                  RSI_UDMA_DESC_T *UDMA_Table,
+                                                                                  RSI_UDMA_HANDLE_T udmaHandle,
+                                                                                  uint32_t *mem)
 {
 #if defined(UDMA_ROMDRIVER_PRESENT) && defined(A11_ROM)
   udmaHandle = ROMAPI_UDMA_WRAPPER_API->uDMAx_Initialize(udma, UDMA_Table, udmaHandle, mem);
@@ -60,7 +60,7 @@ STATIC INLINE RSI_UDMA_HANDLE_T UDMAx_Initialize(const UDMA_RESOURCES *udma,
   return udmaHandle;
 }
 
-STATIC INLINE int32_t UDMAx_Uninitialize(const UDMA_RESOURCES *udma)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE int32_t UDMAx_Uninitialize(const UDMA_RESOURCES *udma)
 {
 #if defined(UDMA_ROMDRIVER_PRESENT) && defined(A11_ROM)
   return ROMAPI_UDMA_WRAPPER_API->uDMAx_Uninitialize(udma);
@@ -69,16 +69,16 @@ STATIC INLINE int32_t UDMAx_Uninitialize(const UDMA_RESOURCES *udma)
 #endif
 }
 
-STATIC INLINE int32_t UDMAx_ChannelConfigure(const UDMA_RESOURCES *udma,
-                                             uint8_t ch,
-                                             uint32_t src_addr,
-                                             uint32_t dest_addr,
-                                             uint32_t size,
-                                             RSI_UDMA_CHA_CONFIG_DATA_T control,
-                                             const RSI_UDMA_CHA_CFG_T *config,
-                                             UDMA_SignalEvent_t cb_event,
-                                             UDMA_Channel_Info *chnl_info,
-                                             RSI_UDMA_HANDLE_T udmaHandle)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE int32_t UDMAx_ChannelConfigure(const UDMA_RESOURCES *udma,
+                                                                              uint8_t ch,
+                                                                              uint32_t src_addr,
+                                                                              uint32_t dest_addr,
+                                                                              uint32_t size,
+                                                                              RSI_UDMA_CHA_CONFIG_DATA_T control,
+                                                                              const RSI_UDMA_CHA_CFG_T *config,
+                                                                              UDMA_SignalEvent_t cb_event,
+                                                                              UDMA_Channel_Info *chnl_info,
+                                                                              RSI_UDMA_HANDLE_T udmaHandle)
 {
   if (control.transferType == UDMA_SOFTWARE_TRIGG) {
     udma->desc->vsUDMAChaConfigData1.transferType = UDMA_SOFTWARE_TRIGG;
@@ -95,7 +95,9 @@ STATIC INLINE int32_t UDMAx_ChannelConfigure(const UDMA_RESOURCES *udma,
 #endif
 }
 
-STATIC INLINE int32_t UDMAx_ChannelEnable(uint8_t ch, const UDMA_RESOURCES *udma, RSI_UDMA_HANDLE_T udmaHandle)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE int32_t UDMAx_ChannelEnable(uint8_t ch,
+                                                                           const UDMA_RESOURCES *udma,
+                                                                           RSI_UDMA_HANDLE_T udmaHandle)
 {
 #if defined(UDMA_ROMDRIVER_PRESENT) && defined(A11_ROM)
 
@@ -105,7 +107,8 @@ STATIC INLINE int32_t UDMAx_ChannelEnable(uint8_t ch, const UDMA_RESOURCES *udma
 #endif
 }
 
-STATIC INLINE int32_t UDMAx_DMAEnable(const UDMA_RESOURCES *udma, RSI_UDMA_HANDLE_T udmaHandle)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE int32_t UDMAx_DMAEnable(const UDMA_RESOURCES *udma,
+                                                                       RSI_UDMA_HANDLE_T udmaHandle)
 {
 #if defined(UDMA_ROMDRIVER_PRESENT) && defined(A11_ROM)
   return ROMAPI_UDMA_WRAPPER_API->uDMAx_DMAEnable(udma, udmaHandle);
@@ -114,7 +117,9 @@ STATIC INLINE int32_t UDMAx_DMAEnable(const UDMA_RESOURCES *udma, RSI_UDMA_HANDL
 #endif
 }
 
-STATIC INLINE int32_t UDMAx_ChannelDisable(uint8_t ch, const UDMA_RESOURCES *udma, RSI_UDMA_HANDLE_T udmaHandle)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE int32_t UDMAx_ChannelDisable(uint8_t ch,
+                                                                            const UDMA_RESOURCES *udma,
+                                                                            RSI_UDMA_HANDLE_T udmaHandle)
 {
 #if defined(UDMA_ROMDRIVER_PRESENT) && defined(A11_ROM)
   return ROMAPI_UDMA_WRAPPER_API->uDMAx_ChannelDisable(ch, udma, udmaHandle);
@@ -123,11 +128,11 @@ STATIC INLINE int32_t UDMAx_ChannelDisable(uint8_t ch, const UDMA_RESOURCES *udm
 #endif
 }
 
-STATIC INLINE uint32_t UDMAx_ChannelGetCount(uint8_t ch,
-                                             RSI_UDMA_CHA_CONFIG_DATA_T control,
-                                             RSI_UDMA_CHA_CFG_T config,
-                                             const UDMA_RESOURCES *udma,
-                                             RSI_UDMA_HANDLE_T udmaHandle)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE uint32_t UDMAx_ChannelGetCount(uint8_t ch,
+                                                                              RSI_UDMA_CHA_CONFIG_DATA_T control,
+                                                                              RSI_UDMA_CHA_CFG_T config,
+                                                                              const UDMA_RESOURCES *udma,
+                                                                              RSI_UDMA_HANDLE_T udmaHandle)
 {
 #if defined(UDMA_ROMDRIVER_PRESENT) && defined(A11_ROM)
   return ROMAPI_UDMA_WRAPPER_API->uDMAx_ChannelGetCount(ch, control, config, udma, udmaHandle);
@@ -135,7 +140,9 @@ STATIC INLINE uint32_t UDMAx_ChannelGetCount(uint8_t ch,
   return uDMAx_ChannelGetCount(ch, control, config, udma, udmaHandle);
 #endif
 }
-STATIC INLINE void UDMAx_IRQHandler(UDMA_RESOURCES *udma, RSI_UDMA_DESC_T *UDMA_Table, UDMA_Channel_Info *chnl_info)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void UDMAx_IRQHandler(UDMA_RESOURCES *udma,
+                                                                     RSI_UDMA_DESC_T *UDMA_Table,
+                                                                     UDMA_Channel_Info *chnl_info)
 {
 #if defined(UDMA_ROMDRIVER_PRESENT) && defined(A11_ROM)
   ROMAPI_UDMA_WRAPPER_API->uDMAx_IRQHandler(udma, UDMA_Table, chnl_info);

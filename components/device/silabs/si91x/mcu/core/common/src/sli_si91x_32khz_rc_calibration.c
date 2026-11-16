@@ -54,11 +54,12 @@
 #define SLI_SI91X_NO_OF_DAY_IN_MONTH_3    30   // Number of days in even month
 #define SLI_SI91X_NO_OF_DAY_IN_MONTH_4    31   // Number of days in odd month
 #define SLI_SI91X_NO_OF_MONTH_IN_YEAR     12   // Number of months in a year
-#define SLI_SI91X_NEXT_OCCURENECE         1    // Next time occurence
-#define SLI_SI91X_RESET_DAY               1    // Reset day after incrementing month
-#define SLI_SI91X_RESET_MONTH             1    // Reset month after incrementing year
-#define SLI_SI91X_LEAP_YEAR_VALIDATION    4    // Value to validate the leap year
-#define SLI_SI91X_DAY_IN_MONTH_VALIDATION 2    // Value to validate the days in month
+#define SLI_SI91X_NEXT_OCCURRENCE         1    // Next time occurrence
+#define SLI_SI91X_NEXT_OCCURENECE         SLI_SI91X_NEXT_OCCURRENCE // Legacy alias
+#define SLI_SI91X_RESET_DAY               1                         // Reset day after incrementing month
+#define SLI_SI91X_RESET_MONTH             1                         // Reset month after incrementing year
+#define SLI_SI91X_LEAP_YEAR_VALIDATION    4                         // Value to validate the leap year
+#define SLI_SI91X_DAY_IN_MONTH_VALIDATION 2                         // Value to validate the days in month
 
 #define SLI_SI91X_CENTURY       2  // Default Century to be configured
 #define SLI_SI91X_YEAR          1  // Default year to be configured
@@ -534,7 +535,7 @@ void sli_si91x_set_periodic_alarm(uint32_t alarm_time)
   set_alarm_config.MilliSeconds = set_alarm_config.MilliSeconds + (alarm_time % SLI_SI91X_NO_OF_MSEC_IN_SEC);
   if (set_alarm_config.MilliSeconds >= SLI_SI91X_NO_OF_MSEC_IN_SEC) {
     set_alarm_config.MilliSeconds -= SLI_SI91X_NO_OF_MSEC_IN_SEC;
-    set_alarm_config.Second += SLI_SI91X_NEXT_OCCURENECE;
+    set_alarm_config.Second += SLI_SI91X_NEXT_OCCURRENCE;
   }
 
   alarm_time /= SLI_SI91X_NO_OF_MSEC_IN_SEC;
@@ -542,7 +543,7 @@ void sli_si91x_set_periodic_alarm(uint32_t alarm_time)
   set_alarm_config.Second = set_alarm_config.Second + (alarm_time % SLI_SI91X_NO_OF_SEC_IN_MIN);
   if (set_alarm_config.Second >= SLI_SI91X_NO_OF_SEC_IN_MIN) {
     set_alarm_config.Second -= SLI_SI91X_NO_OF_SEC_IN_MIN;
-    set_alarm_config.Minute += SLI_SI91X_NEXT_OCCURENECE;
+    set_alarm_config.Minute += SLI_SI91X_NEXT_OCCURRENCE;
   }
 
   alarm_time /= SLI_SI91X_NO_OF_SEC_IN_MIN;
@@ -550,7 +551,7 @@ void sli_si91x_set_periodic_alarm(uint32_t alarm_time)
   set_alarm_config.Minute = set_alarm_config.Minute + (alarm_time % SLI_SI91X_NO_OF_MIN_IN_HOUR);
   if (set_alarm_config.Minute >= SLI_SI91X_NO_OF_MIN_IN_HOUR) {
     set_alarm_config.Minute -= SLI_SI91X_NO_OF_MIN_IN_HOUR;
-    set_alarm_config.Hour += SLI_SI91X_NEXT_OCCURENECE;
+    set_alarm_config.Hour += SLI_SI91X_NEXT_OCCURRENCE;
   }
 
   alarm_time /= SLI_SI91X_NO_OF_MIN_IN_HOUR;
@@ -558,17 +559,17 @@ void sli_si91x_set_periodic_alarm(uint32_t alarm_time)
   set_alarm_config.Hour = set_alarm_config.Hour + alarm_time;
   if (set_alarm_config.Hour >= SLI_SI91X_NO_OF_HOUR_IN_DAY) {
     set_alarm_config.Hour -= SLI_SI91X_NO_OF_HOUR_IN_DAY;
-    set_alarm_config.Day += SLI_SI91X_NEXT_OCCURENECE;
+    set_alarm_config.Day += SLI_SI91X_NEXT_OCCURRENCE;
   }
 
   if (set_alarm_config.Day > SLI_SI91X_NO_OF_DAY_IN_MONTH_1) {
     if (set_alarm_config.Month == February) {
       if (set_alarm_config.Year % SLI_SI91X_LEAP_YEAR_VALIDATION) {
         set_alarm_config.Day = SLI_SI91X_RESET_DAY;
-        set_alarm_config.Month += SLI_SI91X_NEXT_OCCURENECE;
+        set_alarm_config.Month += SLI_SI91X_NEXT_OCCURRENCE;
       } else if (set_alarm_config.Day > SLI_SI91X_NO_OF_DAY_IN_MONTH_2) {
         set_alarm_config.Day = SLI_SI91X_RESET_DAY;
-        set_alarm_config.Month += SLI_SI91X_NEXT_OCCURENECE;
+        set_alarm_config.Month += SLI_SI91X_NEXT_OCCURRENCE;
       }
     }
 
@@ -576,26 +577,26 @@ void sli_si91x_set_periodic_alarm(uint32_t alarm_time)
       if (!(set_alarm_config.Month % SLI_SI91X_DAY_IN_MONTH_VALIDATION)) {
         if (set_alarm_config.Day > SLI_SI91X_NO_OF_DAY_IN_MONTH_3) {
           set_alarm_config.Day = SLI_SI91X_RESET_DAY;
-          set_alarm_config.Month += SLI_SI91X_NEXT_OCCURENECE;
+          set_alarm_config.Month += SLI_SI91X_NEXT_OCCURRENCE;
         } else if (set_alarm_config.Day > SLI_SI91X_NO_OF_DAY_IN_MONTH_4) {
           set_alarm_config.Day = SLI_SI91X_RESET_DAY;
-          set_alarm_config.Month += SLI_SI91X_NEXT_OCCURENECE;
+          set_alarm_config.Month += SLI_SI91X_NEXT_OCCURRENCE;
         }
       }
     } else if (!(set_alarm_config.Month % SLI_SI91X_DAY_IN_MONTH_VALIDATION)) {
       if (set_alarm_config.Day > SLI_SI91X_NO_OF_DAY_IN_MONTH_4) {
         set_alarm_config.Day = SLI_SI91X_RESET_DAY;
-        set_alarm_config.Month += SLI_SI91X_NEXT_OCCURENECE;
+        set_alarm_config.Month += SLI_SI91X_NEXT_OCCURRENCE;
       } else if (set_alarm_config.Day > SLI_SI91X_NO_OF_DAY_IN_MONTH_3) {
         set_alarm_config.Day = SLI_SI91X_RESET_DAY;
-        set_alarm_config.Month += SLI_SI91X_NEXT_OCCURENECE;
+        set_alarm_config.Month += SLI_SI91X_NEXT_OCCURRENCE;
       }
     }
   }
 
   if (set_alarm_config.Month > SLI_SI91X_NO_OF_MONTH_IN_YEAR) {
     set_alarm_config.Month = SLI_SI91X_RESET_MONTH;
-    set_alarm_config.Year += SLI_SI91X_NEXT_OCCURENECE;
+    set_alarm_config.Year += SLI_SI91X_NEXT_OCCURRENCE;
   }
 
   // The flag is cleared indicating execution is happening through driver files.

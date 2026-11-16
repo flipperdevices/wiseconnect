@@ -820,10 +820,4 @@ uint8_t ascii_to_dec(uint8_t *num);
 #define LINE10                   10
 //#define DEMO_RING_BUFFER_SIZE 1000 // 300
 
-/*=======================================================================*/
-// Extended Advertising Opermode parameters
-/*=======================================================================*/
-#define RSI_BLE_ENABLE_ADV_EXTN 1 // disabled by default
-#define RSI_BLE_AE_MAX_ADV_SETS 2 // default number of Advertising sets in extended advertising (Max value = 15)
-
 #include "rsi_ble_common_config.h"

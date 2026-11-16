@@ -27,6 +27,7 @@ requires:
   - name: wifi
   - name: sl_si91x_mcu
   - name: wifi_resources
+  - name: log_none
 template_contribution:
   - name: littlefs_enable
     value: true

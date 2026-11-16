@@ -43,8 +43,10 @@ extern "C" {
 //  <i> Enable: Peripheral configuration is taken straight from the configuration set in the universal configuration (UC).
 //  <i> Disable: If the application demands it to be modified during runtime, use the sl_si91x_uart_set_configuration API to modify the peripheral configuration.
 //  <i> Default: 1
-#define ULP_UART_UC    1
-#define ULPUART_MODULE 2
+#define ULP_UART_UC 1
+#ifndef ULP_UART_MODULE
+#define ULP_UART_MODULE 2
+#endif
 
 // <h>UART Configuration
 #define ENABLE  1
@@ -99,7 +101,7 @@ sl_si91x_usart_control_config_t ulp_uart_configuration = { .baudrate      = SL_U
                                                            .stopbits      = SL_ULP_UART_STOP_BITS,
                                                            .hwflowcontrol = SL_ULP_UART_FLOW_CONTROL_TYPE,
                                                            .databits      = SL_ULP_UART_DATA_BITS,
-                                                           .usart_module  = ULPUART_MODULE };
+                                                           .usart_module  = ULP_UART_MODULE };
 
 #endif //ULP_UART_UC
 #endif //SL_SI91X_UART_CONFIG_H

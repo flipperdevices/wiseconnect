@@ -27,8 +27,9 @@
 *
 ******************************************************************************/
 #include "sl_si91x_psram_handle.h"
+#include "sl_si91x_psram_retained_data.h" // SL_SI91X_RETAINED_DATA: keep PSRAM device handle/config in internal RAM (LTO-safe)
 
-struct sl_psram_info_type_t PSRAM_Device = {
+SL_SI91X_RETAINED_DATA struct sl_psram_info_type_t PSRAM_Device = {
 
     .devDensity = Mbit_(PSRAM_DEVICE_DENSITY_MBIT),
     .deviceName = PSRAM_DEVICE_NAME,
@@ -111,7 +112,7 @@ struct sl_psram_info_type_t PSRAM_Device = {
     }
 };
 
-struct PSRAMSecureSegmentType PSRAMSecureSegments[MAX_SEC_SEGMENTS] = {
+SL_SI91X_RETAINED_DATA struct PSRAMSecureSegmentType PSRAMSecureSegments[MAX_SEC_SEGMENTS] = {
   { .segmentEnable = 1, .lowerBoundary = 0x0000, .higherBoundary = 0x0ffff },
   { .segmentEnable = 0, .lowerBoundary = 0x0000, .higherBoundary = 0x0000 },
   { .segmentEnable = 0, .lowerBoundary = 0xf0001, .higherBoundary = 0xfffff },

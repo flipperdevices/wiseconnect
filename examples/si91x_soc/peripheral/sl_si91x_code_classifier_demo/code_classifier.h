@@ -1,6 +1,6 @@
 /***************************************************************************/ /**
  * @file code_classifier.h
- * @brief Simple code classifier examples functions
+ * @brief Simple PSRAM code classifier example functions
  *******************************************************************************
  * # License
  * <b>Copyright 2025 Silicon Laboratories Inc. www.silabs.com</b>
@@ -24,7 +24,7 @@
 void code_classifier_example_init(void);
 
 /***************************************************************************/ /**
-  * code classifier ticking function
+  * PSRAM code classifier ticking function
   ******************************************************************************/
 void code_classifier_example_process_action(void);
 

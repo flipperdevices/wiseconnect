@@ -83,7 +83,7 @@ TEST(sl_net_unit_tests, handles_tls_private_key_ecb_wrap_valid_length)
   RESET_FAKE(sl_si91x_wifi_set_certificate_index);
   sl_si91x_wifi_set_certificate_index_fake.return_val = SL_STATUS_OK;
 
-  sl_status_t status = sli_net_set_credential(id, type, credential, credential_length);
+  sl_status_t status = sli_si91x_set_credential(id, type, credential, credential_length);
 
   EXPECT_EQ(status, SL_STATUS_OK);
   EXPECT_EQ(sl_si91x_wifi_set_certificate_index_fake.call_count, 2);
@@ -98,7 +98,7 @@ TEST(sl_net_unit_tests, handles_tls_private_key_ecb_wrap_invalid_length)
   uint32_t credential_length    = SLI_MAX_PRIVATE_KEY_LENGTH; // Exceeds the allowed length
 
   RESET_FAKE(sl_si91x_wifi_set_certificate_index);
-  sl_status_t status = sli_net_set_credential(id, type, credential, credential_length);
+  sl_status_t status = sli_si91x_set_credential(id, type, credential, credential_length);
 
   // Validate the result
   EXPECT_EQ(status, SL_STATUS_INVALID_PARAMETER);
@@ -116,7 +116,7 @@ TEST(sl_net_unit_tests, handles_tls_private_key_cbc_wrap_valid_length)
   RESET_FAKE(sl_si91x_wifi_set_certificate_index);
   sl_si91x_wifi_set_certificate_index_fake.return_val = SL_STATUS_OK;
 
-  sl_status_t status = sli_net_set_credential(id, type, credential, credential_length);
+  sl_status_t status = sli_si91x_set_credential(id, type, credential, credential_length);
 
   EXPECT_EQ(status, SL_STATUS_OK);
   EXPECT_EQ(sl_si91x_wifi_set_certificate_index_fake.call_count, 2); // Called twice: once to clear, once to set
@@ -131,7 +131,7 @@ TEST(sl_net_unit_tests, handles_tls_private_key_cbc_wrap_invalid_length)
   uint32_t credential_length    = SLI_MAX_PRIVATE_KEY_LENGTH; // Exceeds the allowed length
 
   RESET_FAKE(sl_si91x_wifi_set_certificate_index);
-  sl_status_t status = sli_net_set_credential(id, type, credential, credential_length);
+  sl_status_t status = sli_si91x_set_credential(id, type, credential, credential_length);
 
   EXPECT_EQ(status, SL_STATUS_INVALID_PARAMETER);
   EXPECT_EQ(sl_si91x_wifi_set_certificate_index_fake.call_count, 0); // Should not call the underlying function
@@ -148,82 +148,8 @@ TEST(sl_net_unit_tests, handles_certificate_index_failure)
   RESET_FAKE(sl_si91x_wifi_set_certificate_index);
   sl_si91x_wifi_set_certificate_index_fake.return_val = SL_STATUS_FAIL;
 
-  sl_status_t status = sli_net_set_credential(id, type, credential, credential_length);
+  sl_status_t status = sli_si91x_set_credential(id, type, credential, credential_length);
 
   EXPECT_EQ(status, SL_STATUS_FAIL);
   EXPECT_EQ(sl_si91x_wifi_set_certificate_index_fake.call_count, 1);
-}
-
-// Test case: Flush IPv4 socket queues
-TEST(sl_net_unit_tests, FlushIPv4SocketQueues)
-{
-  RESET_FAKE(sli_si91x_flush_socket_command_queues_based_on_queue_type);
-  RESET_FAKE(sli_si91x_flush_socket_data_queues_based_on_queue_type);
-
-  sli_si91x_socket_t mock_socket;
-  sl_ip_address_t dest_ip_add;
-
-  // Set up mock_socket and destination IP to 192.168.0.1
-  SetupIPv4SocketAndDest(mock_socket, 0xC0A80001, 0, dest_ip_add);
-
-  // Call the function under test
-  sl_status_t status = sli_si91x_flush_all_socket_tx_queues_based_on_dest_ip_address(SL_STATUS_OK, &dest_ip_add, 1);
-
-  // Verify the results
-  EXPECT_EQ(status, SL_STATUS_OK);
-  EXPECT_EQ(sli_si91x_flush_socket_command_queues_based_on_queue_type_fake.call_count, 1);
-  EXPECT_EQ(sli_si91x_flush_socket_data_queues_based_on_queue_type_fake.call_count, 1);
-}
-
-// Test case: Flush IPv6 socket queues
-TEST(sl_net_unit_tests, FlushIPv6SocketQueues)
-{
-  RESET_FAKE(sli_si91x_flush_socket_command_queues_based_on_queue_type);
-  RESET_FAKE(sli_si91x_flush_socket_data_queues_based_on_queue_type);
-
-  sli_si91x_socket_t mock_socket;
-  memset(&mock_socket, 0, sizeof(mock_socket));
-  mock_socket.vap_id = 1;
-  struct sockaddr_in6 mock_address;
-  memset(&mock_address.sin6_addr, 0xAB, SL_IPV6_ADDRESS_LENGTH);
-  memcpy(&mock_socket.remote_address, &mock_address, sizeof(mock_address));
-  sli_si91x_sockets[0] = &mock_socket;
-
-  sl_ip_address_t dest_ip_add;
-  dest_ip_add.type = SL_IPV6;
-  memset(dest_ip_add.ip.v6.bytes, 0xAB, SL_IPV6_ADDRESS_LENGTH);
-
-  sl_status_t status = sli_si91x_flush_all_socket_tx_queues_based_on_dest_ip_address(SL_STATUS_OK, &dest_ip_add, 1);
-
-  EXPECT_EQ(status, SL_STATUS_OK);
-  EXPECT_EQ(sli_si91x_flush_socket_command_queues_based_on_queue_type_fake.call_count, 1);
-  EXPECT_EQ(sli_si91x_flush_socket_data_queues_based_on_queue_type_fake.call_count, 1);
-}
-
-// Test case: No matching socket
-TEST(sl_net_unit_tests, NoMatchingSocket)
-{
-  RESET_FAKE(sli_si91x_flush_socket_command_queues_based_on_queue_type);
-  RESET_FAKE(sli_si91x_flush_socket_data_queues_based_on_queue_type);
-
-  sli_si91x_socket_t mock_socket;
-  sl_ip_address_t dest_ip_add;
-
-  // Set up mock_socket with IP 192.168.0.2
-  SetupIPv4SocketAndDest(mock_socket, 0xC0A80002, 0, dest_ip_add);
-
-  // Set destination to 192.168.0.1 (does not match mock_socket)
-  dest_ip_add.type           = SL_IPV4;
-  dest_ip_add.ip.v4.bytes[0] = 192;
-  dest_ip_add.ip.v4.bytes[1] = 168;
-  dest_ip_add.ip.v4.bytes[2] = 0;
-  dest_ip_add.ip.v4.bytes[3] = 1;
-
-  // Call the function under test
-  sl_status_t status = sli_si91x_flush_all_socket_tx_queues_based_on_dest_ip_address(SL_STATUS_OK, &dest_ip_add, 1);
-
-  // Verify the results
-  EXPECT_EQ(status, SL_STATUS_OK);
-  EXPECT_EQ(sli_si91x_flush_socket_command_queues_based_on_queue_type_fake.call_count, 0);
-  EXPECT_EQ(sli_si91x_flush_socket_data_queues_based_on_queue_type_fake.call_count, 0);
 }

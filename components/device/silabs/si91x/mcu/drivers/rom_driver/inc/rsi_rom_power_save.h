@@ -55,7 +55,7 @@ extern "C" {
  *
  */
 /**
- * @fn            STATIC INLINE rsi_error_t RSI_PS_PowerStateChangePs4toPs2(ULP_MODE_T enCtxSel          ,
+ * @fn            STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE rsi_error_t RSI_PS_PowerStateChangePs4toPs2(ULP_MODE_T enCtxSel          ,
  *		                                          uint8_t PwrMuxSelUlpssRam    ,
  *                                                        uint8_t pwrMuxSelM4UlpRam    ,
  *							  uint8_t pwrMuxSelM4UlpRam16K ,
@@ -106,18 +106,18 @@ extern "C" {
  *                                  \n 1 :Enale 
  * @return        returns 0 \ref RSI_OK on success,return error code on error
  */
-STATIC INLINE rsi_error_t RSI_PS_PowerStateChangePs4toPs2(ULP_MODE_T enCtxSel,
-                                                          uint8_t PwrMuxSelUlpssRam,
-                                                          uint8_t pwrMuxSelM4UlpRam,
-                                                          uint8_t pwrMuxSelM4UlpRam16K,
-                                                          uint8_t pwrMuxSelM4Ulp,
-                                                          uint8_t pwrMuxSelUlpss,
-                                                          uint8_t bgSampleEnable,
-                                                          uint8_t dcDcEnable,
-                                                          uint8_t socLdoEnable,
-                                                          uint8_t standByDc,
-                                                          uint8_t taRamRetEnable,
-                                                          uint8_t M4RamRetEnable)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE rsi_error_t RSI_PS_PowerStateChangePs4toPs2(ULP_MODE_T enCtxSel,
+                                                                                           uint8_t PwrMuxSelUlpssRam,
+                                                                                           uint8_t pwrMuxSelM4UlpRam,
+                                                                                           uint8_t pwrMuxSelM4UlpRam16K,
+                                                                                           uint8_t pwrMuxSelM4Ulp,
+                                                                                           uint8_t pwrMuxSelUlpss,
+                                                                                           uint8_t bgSampleEnable,
+                                                                                           uint8_t dcDcEnable,
+                                                                                           uint8_t socLdoEnable,
+                                                                                           uint8_t standByDc,
+                                                                                           uint8_t taRamRetEnable,
+                                                                                           uint8_t M4RamRetEnable)
 {
   // Check silicon rev from flash/efuse offset; for 1.4V do this programming
   if (SiliconRev >= 0x14) {
@@ -153,13 +153,14 @@ STATIC INLINE rsi_error_t RSI_PS_PowerStateChangePs4toPs2(ULP_MODE_T enCtxSel,
 }
 
 /**
- * @fn          STATIC INLINE rsi_error_t RSI_PS_PowerStateChangePs2toPs4(uint32_t PmuBuckTurnOnWaitTime , uint32_t SocLdoTurnOnWaitTime)
+ * @fn          STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE rsi_error_t RSI_PS_PowerStateChangePs2toPs4(uint32_t PmuBuckTurnOnWaitTime , uint32_t SocLdoTurnOnWaitTime)
  * @brief	      This API is used to change the power state from PS2 to PS4
  * @param[in]	  PmuBuckTurnOnWaitTime :  PMU buck time
  * @param[in]	  SocLdoTurnOnWaitTime : soc ldo turn on time
  * @return       returns 0 \ref RSI_OK on success,return error code on error
  */
-STATIC INLINE rsi_error_t RSI_PS_PowerStateChangePs2toPs4(uint32_t PmuBuckTurnOnWaitTime, uint32_t SocLdoTurnOnWaitTime)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE rsi_error_t
+RSI_PS_PowerStateChangePs2toPs4(uint32_t PmuBuckTurnOnWaitTime, uint32_t SocLdoTurnOnWaitTime)
 {
   // Moved this API from ROM to appication memmory
   return ps_power_state_change_ps2_to_Ps4(PmuBuckTurnOnWaitTime, SocLdoTurnOnWaitTime);
@@ -171,7 +172,7 @@ STATIC INLINE rsi_error_t RSI_PS_PowerStateChangePs2toPs4(uint32_t PmuBuckTurnOn
  * @param         wakeUpIntrClear :  OR'ed value of register bits of NPSS interrupt register
  * @return        none
  */
-STATIC INLINE void RSI_PS_ClrWkpUpStatus(uint32_t wakeUpIntrClear)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_PS_ClrWkpUpStatus(uint32_t wakeUpIntrClear)
 {
 #if defined(PS_ROMDRIVER_PRESENT)
   ROMAPI_PWR_API->ps_clr_wkp_up_status(wakeUpIntrClear);
@@ -182,10 +183,10 @@ STATIC INLINE void RSI_PS_ClrWkpUpStatus(uint32_t wakeUpIntrClear)
 
 #if defined(SLI_SI917B0)
 
-STATIC INLINE void RSI_PS_RetentionSleepConfig_bypass(uint32_t stack_address,
-                                                      uint32_t jump_cb_address,
-                                                      uint32_t vector_offset,
-                                                      uint32_t mode)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_PS_RetentionSleepConfig_bypass(uint32_t stack_address,
+                                                                                       uint32_t jump_cb_address,
+                                                                                       uint32_t vector_offset,
+                                                                                       uint32_t mode)
 {
   UNUSED_PARAMETER(vector_offset);
   const qspi_reg_t *qspi_reg2 = (const qspi_reg_t *)M4SS_PSRAM_QSPI_BASE_ADDRESS;
@@ -207,7 +208,7 @@ STATIC INLINE void RSI_PS_RetentionSleepConfig_bypass(uint32_t stack_address,
 #endif
 
 /**
- * @fn            STATIC INLINE void RSI_PS_RetentionSleepConfig(uint32_t stack_address, uint32_t jump_cb_address, uint32_t vector_offset,uint32_t mode)
+ * @fn            STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_PS_RetentionSleepConfig(uint32_t stack_address, uint32_t jump_cb_address, uint32_t vector_offset,uint32_t mode)
  * @brief	        This API is used configure the wake up parameter for retention sleep
  * @param         stack_address   :
  * @param         jump_cb_address :
@@ -292,11 +293,11 @@ STATIC INLINE void RSI_PS_RetentionSleepConfig_bypass(uint32_t stack_address,
 #if SL_SI91X_FALLBACK_SLOT_ENCRYPTION
 
 /**
- * @fn            STATIC INLINE void sl_si91x_save_m4_app_metadata_to_ulp_ram(void)
+ * @fn            STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void sl_si91x_save_m4_app_metadata_to_ulp_ram(void)
  * @brief         Stores M4 application start address and size information from M4 QSPI AES SEC SEGMENT_LS and M4 QSPI AES SEC SEGMENT_MS in ULP RAM for 
  *                firmware fallback and power management operations with M4 inline decryption enabled.
  */
-STATIC INLINE void sl_si91x_save_m4_app_metadata_to_ulp_ram(void)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void sl_si91x_save_m4_app_metadata_to_ulp_ram(void)
 {
   if ((*(volatile uint32 *)OCTASPI_BUS_CONTROLLER_2) & BIT(13)) {
     *(volatile uint32_t *)(M4_APP_START_ULP_RAM_ADDR) = *(volatile uint32 *)QSPI_AES_SEC_SEG_LS_ADDR_2;
@@ -308,10 +309,10 @@ STATIC INLINE void sl_si91x_save_m4_app_metadata_to_ulp_ram(void)
 }
 #endif
 
-STATIC INLINE void RSI_PS_RetentionSleepConfig(uint32_t stack_address,
-                                               uint32_t jump_cb_address,
-                                               uint32_t vector_offset,
-                                               uint32_t mode)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_PS_RetentionSleepConfig(uint32_t stack_address,
+                                                                                uint32_t jump_cb_address,
+                                                                                uint32_t vector_offset,
+                                                                                uint32_t mode)
 {
 
 #if defined(SLI_SI917B0)
@@ -352,7 +353,7 @@ STATIC INLINE void RSI_PS_RetentionSleepConfig(uint32_t stack_address,
 }
 
 /**
- * @fn            STATIC INLINE void RSI_PS_BgLdoConfig(uint8_t ldo_0p6_ctrl, uint8_t ldo_0p6_lp_mode)
+ * @fn            STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_PS_BgLdoConfig(uint8_t ldo_0p6_ctrl, uint8_t ldo_0p6_lp_mode)
  * @brief	        This API is used configure the LP low power mode and vref for DCDC1p1_lp_500uA
  * @param         ldo_0p6_ctrl :  vref for DCDC1p1_lp_500uA
  *                                - 0 - 0.8V
@@ -364,7 +365,7 @@ STATIC INLINE void RSI_PS_RetentionSleepConfig(uint32_t stack_address,
  * @param         ldo_0p6_lp_mode : 1:enable low power mode, 0:otherwise in high power mode
  * @return        none
  */
-STATIC INLINE void RSI_PS_BgLdoConfig(uint8_t ldo_0p6_ctrl, uint8_t ldo_0p6_lp_mode)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_PS_BgLdoConfig(uint8_t ldo_0p6_ctrl, uint8_t ldo_0p6_lp_mode)
 {
 #if defined(CHIP_9118) && defined(A11_ROM) && defined(PS_ROMDRIVER_PRESENT)
   ROMAPI_PWR_API->ps_bg_ldo_config(ldo_0p6_ctrl, ldo_0p6_lp_mode);
@@ -374,7 +375,7 @@ STATIC INLINE void RSI_PS_BgLdoConfig(uint8_t ldo_0p6_ctrl, uint8_t ldo_0p6_lp_m
 }
 
 /**
- * @fn            STATIC INLINE void RSI_PS_ConfigurTrimValues(uint16_t lf_ro_trim ,uint16_t lf_rc_trim , uint16_t hf_ro_trim ,uint16_t hf_rc_trim ,uint16_t bg_ptat_trim , uint16_t bg_trim)
+ * @fn            STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_PS_ConfigurTrimValues(uint16_t lf_ro_trim ,uint16_t lf_rc_trim , uint16_t hf_ro_trim ,uint16_t hf_rc_trim ,uint16_t bg_ptat_trim , uint16_t bg_trim)
  * @brief	        This API is used configure the clock and bg trim values
  * @param[in]         lf_ro_trim : trim value for low frequency RO clock
  * @param[in]         lf_rc_trim : trim value for low frequency RC clock
@@ -384,12 +385,12 @@ STATIC INLINE void RSI_PS_BgLdoConfig(uint8_t ldo_0p6_ctrl, uint8_t ldo_0p6_lp_m
  * @param[in]         bg_trim    : trim value for bg(Band Gap)
  * @return        none
  */
-STATIC INLINE void RSI_PS_ConfigurTrimValues(uint16_t lf_ro_trim,
-                                             uint16_t lf_rc_trim,
-                                             uint16_t hf_ro_trim,
-                                             uint16_t hf_rc_trim,
-                                             uint16_t bg_ptat_trim,
-                                             uint16_t bg_trim)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_PS_ConfigurTrimValues(uint16_t lf_ro_trim,
+                                                                              uint16_t lf_rc_trim,
+                                                                              uint16_t hf_ro_trim,
+                                                                              uint16_t hf_rc_trim,
+                                                                              uint16_t bg_ptat_trim,
+                                                                              uint16_t bg_trim)
 {
 #if defined(CHIP_9118) && defined(A11_ROM) && defined(PS_ROMDRIVER_PRESENT)
   ROMAPI_PWR_API->ps_configure_trim_values(lf_ro_trim, lf_rc_trim, hf_ro_trim, hf_rc_trim, bg_ptat_trim, bg_trim);
@@ -399,11 +400,11 @@ STATIC INLINE void RSI_PS_ConfigurTrimValues(uint16_t lf_ro_trim,
 }
 
 /**
- * @fn            STATIC INLINE void RSI_PS_WirelessShutdown(void)
+ * @fn            STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_PS_WirelessShutdown(void)
  * @brief	        This API is used shut-down the wireless
  * @return        none
  */
-STATIC INLINE void RSI_PS_WirelessShutdown(void)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_PS_WirelessShutdown(void)
 {
   // Wireless shutdown should be called only on First/Reset boot
   if (MCU_FSM->MCU_FSM_CLK_ENS_AND_FIRST_BOOTUP_b.FIRST_BOOTUP_MCU_N_b == 0) {

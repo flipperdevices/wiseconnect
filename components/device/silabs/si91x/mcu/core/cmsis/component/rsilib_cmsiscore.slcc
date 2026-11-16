@@ -2,7 +2,7 @@ id: rsilib_cmsiscore
 label: CMSIS Core
 package: platform_siwx91x
 description: >
-  Provides access to CMSIS core include paths
+  This component provides access to CMSIS core include paths.
 category: Device|Si91x|MCU|Core
 quality: production
 metadata:

@@ -1843,6 +1843,7 @@ nd6_send_rs(struct netif *netif)
  * @return The neighbor cache entry index that matched, -1 if no
  * entry is found
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 static s8_t
 nd6_find_neighbor_cache_entry(const ip6_addr_t *ip6addr)
 {
@@ -2366,6 +2367,7 @@ nd6_new_onlink_prefix(const ip6_addr_t *prefix, struct netif *netif)
  *         suitable next hop was found, ERR_MEM if no cache entry
  *         could be created
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 static s8_t
 nd6_get_next_hop_entry(const ip6_addr_t *ip6addr, struct netif *netif)
 {
@@ -2705,6 +2707,7 @@ nd6_send_q(s8_t i)
  * - ERR_OK on success, ERR_RTE if no route was found for the packet,
  * or ERR_MEM if low memory conditions prohibit sending the packet at all.
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 err_t
 nd6_get_next_hop_addr_or_queue(struct netif *netif, struct pbuf *q, const ip6_addr_t *ip6addr, const u8_t **hwaddrp)
 {
@@ -2751,6 +2754,7 @@ nd6_get_next_hop_addr_or_queue(struct netif *netif, struct pbuf *q, const ip6_ad
  * @param netif the netif on which the packet will be sent
  * @return the Path MTU, if known, or the netif default MTU
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 u16_t
 nd6_get_destination_mtu(const ip6_addr_t *ip6addr, struct netif *netif)
 {

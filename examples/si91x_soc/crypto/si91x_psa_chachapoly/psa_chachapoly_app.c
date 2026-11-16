@@ -15,6 +15,7 @@
  *
  ******************************************************************************/
 #include "psa_chachapoly_app.h"
+#include <inttypes.h>
 #include "psa/crypto.h"
 #include "sl_si91x_psa_wrap.h"
 #include <stdio.h>
@@ -57,9 +58,17 @@ static const size_t add_len_test_data[NB_TESTS]   = { 12 };
 static const size_t tag_len_test_data[NB_TESTS]   = { 16 };
 static const size_t crypt_len_test_data[NB_TESTS] = { 130 };
 
-//Buffers to store responses
-unsigned char cipher_tag_buffer[NB_TESTS][CHACHAPOLY_TEST_CT_MAX_LEN];
-unsigned char decryption_output[NB_TESTS][CHACHAPOLY_TEST_CT_MAX_LEN];
+// Buffers to store AEAD outputs (ciphertext||tag) and recovered plaintext
+/*
+ * With SL_SI91X_SIDE_BAND_CRYPTO, the host passes buffer pointers to the NWP;
+ * the offload path may DMA to/from those addresses. The DMA engine requires
+ * 32-bit (4-byte) alignment for each buffer used as a source or sink.
+ * Misaligned addresses can cause failed transfers or memory corruption.
+ * Align both the encrypt output (ciphertext + tag) and decrypt output
+ * (plaintext) buffers accordingly.
+ */
+unsigned char cipher_tag_buffer[NB_TESTS][CHACHAPOLY_TEST_CT_MAX_LEN] __attribute__((aligned(4)));
+unsigned char decryption_output[NB_TESTS][CHACHAPOLY_TEST_CT_MAX_LEN] __attribute__((aligned(4)));
 
 void test_psa_chachapoly()
 {
@@ -71,7 +80,7 @@ void test_psa_chachapoly()
   if (ret == PSA_SUCCESS) {
     printf("\n PSA crypto library initialization Success \n");
   } else {
-    printf("\n PSA crypto library initialization Failed with error: %ld\n", ret);
+    printf("\n PSA crypto library initialization Failed with error: %" PRId32 "\n", ret);
   }
 
   for (int i = 0; i < NB_TESTS; i++) {
@@ -105,7 +114,7 @@ void test_psa_chachapoly()
     if (ret == PSA_SUCCESS) {
       printf("\n Key import Success \n");
     } else {
-      printf("\n Key import Failed with error: %ld\n", ret);
+      printf("\n Key import Failed with error: %" PRId32 "\n", ret);
     }
 
     ret = psa_aead_encrypt(key_id,
@@ -123,7 +132,7 @@ void test_psa_chachapoly()
     if (ret == 0 && memcmp(cipher_tag_buffer[i], res_test_data[i], msg_len_test_data[i]) == 0) {
       printf("\n Encryption Success \n");
     } else {
-      printf("\n Encryption Failed with error: %ld\n", ret);
+      printf("\n Encryption Failed with error: %" PRId32 "\n", ret);
     }
 
     memset(decryption_output[i], 0, CHACHAPOLY_TEST_PT_MAX_LEN);
@@ -143,13 +152,13 @@ void test_psa_chachapoly()
     if (ret == 0 && memcmp(decryption_output[i], msg_test_data, msg_len_test_data[i]) == 0) {
       printf("\n Decryption Success \n");
     } else {
-      printf("\n Decryption Failed with error: %ld\n", ret);
+      printf("\n Decryption Failed with error: %" PRId32 "\n", ret);
     }
 
     // Destroy plain key for ChachaPoly
     ret = psa_destroy_key(key_id);
     if (ret != PSA_SUCCESS) {
-      printf("Destroy key failed with error: %ld\n", ret);
+      printf("Destroy key failed with error: %" PRId32 "\n", ret);
     }
   }
 }

@@ -50,7 +50,7 @@ extern "C" {
  */
 
 /**
- * @fn          STATIC INLINE rsi_error_t  RSI_TIMERS_MicroSecTimerConfig(RSI_TIMERS_T *pTIMER, uint8_t timerNum,
+ * @fn          STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE rsi_error_t  RSI_TIMERS_MicroSecTimerConfig(RSI_TIMERS_T *pTIMER, uint8_t timerNum,
  *																				uint16_t integer,uint8_t fractional,uint8_t mode)
  * @brief		    This API is used to configure timer mode as a 1 micro second or 256 micro second mode
  * @param[in]		pTIMER			: Pointer to the TIMERS instance register area
@@ -66,11 +66,11 @@ extern "C" {
  *              - \ref TIMERS_INVAL_TIMER_NUM_ERROR  : If timer number is invalid
  *              - \ref RSI_OK                        : If process is done
  */
-STATIC INLINE rsi_error_t RSI_TIMERS_MicroSecTimerConfig(RSI_TIMERS_T *pTIMER,
-                                                         uint8_t timerNum,
-                                                         uint16_t integer,
-                                                         uint8_t fractional,
-                                                         uint8_t mode)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE rsi_error_t RSI_TIMERS_MicroSecTimerConfig(RSI_TIMERS_T *pTIMER,
+                                                                                          uint8_t timerNum,
+                                                                                          uint16_t integer,
+                                                                                          uint8_t fractional,
+                                                                                          uint8_t mode)
 {
 #if defined(TIMER_ROMDRIVER_PRESENT)
   return ROMAPI_TIMER_API->timers_microsec_timer_config(pTIMER, timerNum, integer, fractional, mode);
@@ -80,14 +80,16 @@ STATIC INLINE rsi_error_t RSI_TIMERS_MicroSecTimerConfig(RSI_TIMERS_T *pTIMER,
 }
 
 /**
- * @fn          STATIC INLINE uint32_t  RSI_TIMERS_ReadTimer(RSI_TIMERS_T *pTIMER, uint8_t timerNum,boolean_t countDir)
+ * @fn          STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE uint32_t  RSI_TIMERS_ReadTimer(RSI_TIMERS_T *pTIMER, uint8_t timerNum,boolean_t countDir)
  * @brief		    This API is used to get the count of the required timer
  * @param[in]   pTIMER     : Pointer to the TIMERS instance register area
  * @param[in]   timerNum   : Timer number(0 to 3)
  * @param[in]   countDir   : For reading/tracking counter in up counting this bit has to be set.
  * @return 		  Timer count value
  */
-STATIC INLINE uint32_t RSI_TIMERS_ReadTimer(RSI_TIMERS_T *pTIMER, uint8_t timerNum, boolean_t countDir)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE uint32_t RSI_TIMERS_ReadTimer(RSI_TIMERS_T *pTIMER,
+                                                                             uint8_t timerNum,
+                                                                             boolean_t countDir)
 {
 #if defined(TIMER_ROMDRIVER_PRESENT)
   return ROMAPI_TIMER_API->timers_read_timer(pTIMER, timerNum, countDir);

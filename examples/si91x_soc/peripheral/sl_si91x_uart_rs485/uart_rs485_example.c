@@ -97,26 +97,32 @@ void uart_rs485_example_init(void)
     // Initialize the UART
     status = sl_si91x_usart_init(UART_INSTANCE, &uart_rs485_handle);
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("sl_si91x_usart_initialize: Error Code : %lu \n", status);
+      /* Note: All status messages in this example — both success and failure — are
+ * intentionally emitted via SL_PRINT_STRING_ERROR so that they remain visible
+ * on the console at the default log level. This is a demonstration choice, not
+ * a recommendation: in production code, ERROR severity should be reserved for
+ * actual failures, with successful operations logged via SL_PRINT_STRING_INFO
+ * (or SL_PRINT_STRING_DEBUG for verbose trace). */
+      SL_PRINT_STRING_ERROR("sl_si91x_usart_initialize: Error Code : %lu \n", status);
       break;
     }
-    DEBUGOUT("UART initialization is successful \n");
+    SL_PRINT_STRING_ERROR("UART initialization is successful \n");
 
     // Configure the UART configurations
     status = sl_si91x_usart_set_configuration(uart_rs485_handle, &uart_rs485_config);
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("sl_si91x_usart_set_configuration: Error Code : %lu \n", status);
+      SL_PRINT_STRING_ERROR("sl_si91x_usart_set_configuration: Error Code : %lu \n", status);
       break;
     }
-    DEBUGOUT("UART configuration is successful \n");
+    SL_PRINT_STRING_ERROR("UART configuration is successful \n");
 
     // Initialize RS485 pins and Enable RS485 module
     status = sl_si91x_uart_rs485_init(UART_INSTANCE);
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("sl_si91x_uart_rs485_init: Error Code : %lu \n", status);
+      SL_PRINT_STRING_ERROR("sl_si91x_uart_rs485_init: Error Code : %lu \n", status);
       break;
     }
-    DEBUGOUT("RS485 initialization successful\n");
+    SL_PRINT_STRING_ERROR("RS485 initialization successful\n");
     // Get RS485 configurations
     sl_si91x_get_uart_rs485_configure(&rs485_configs);
     // Check whether current mode is set to SL_UART_RS485_RECEIVE and RS485 transfer mode is software controlled half-duplex mode
@@ -124,40 +130,40 @@ void uart_rs485_example_init(void)
       // Enable Driver enable
       status = sl_si91x_uart_rs485_de_enable(UART_INSTANCE, DISABLE);
       if (status != SL_STATUS_OK) {
-        DEBUGOUT("sl_si91x_uart_rs485_de_enable: Error Code : %lu \n", status);
+        SL_PRINT_STRING_ERROR("sl_si91x_uart_rs485_de_enable: Error Code : %lu \n", status);
         break;
       }
     } else {
       // Enable Driver enable
       status = sl_si91x_uart_rs485_de_enable(UART_INSTANCE, ENABLE);
       if (status != SL_STATUS_OK) {
-        DEBUGOUT("sl_si91x_uart_rs485_de_enable: Error Code : %lu \n", status);
+        SL_PRINT_STRING_ERROR("sl_si91x_uart_rs485_de_enable: Error Code : %lu \n", status);
         break;
       }
     }
-    DEBUGOUT("RS485 DE enable successful\n");
+    SL_PRINT_STRING_ERROR("RS485 DE enable successful\n");
     // Enable Receiver Enable
     status = sl_si91x_uart_rs485_re_enable(UART_INSTANCE, ENABLE);
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("sl_si91x_uart_rs485_re_enable: Error Code : %lu \n", status);
+      SL_PRINT_STRING_ERROR("sl_si91x_uart_rs485_re_enable: Error Code : %lu \n", status);
       break;
     }
-    DEBUGOUT("RS485 RE enable successful\n");
+    SL_PRINT_STRING_ERROR("RS485 RE enable successful\n");
 
     // Configure RS485 configurations
     status = sl_si91x_uart_rs485_set_configuration(UART_INSTANCE);
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("sl_si91x_uart_rs485_set_configuration: Error Code : %lu \n", status);
+      SL_PRINT_STRING_ERROR("sl_si91x_uart_rs485_set_configuration: Error Code : %lu \n", status);
       break;
     }
-    DEBUGOUT("RS485 configuration is successful \n");
+    SL_PRINT_STRING_ERROR("RS485 configuration is successful \n");
     // Register user callback function
     status = sl_si91x_usart_multiple_instance_register_event_callback(UART_INSTANCE, uart_rs485_callback_event);
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("sl_si91x_usart_multiple_instance_register_event_callback: Error Code : %lu \n", status);
+      SL_PRINT_STRING_ERROR("sl_si91x_usart_multiple_instance_register_event_callback: Error Code : %lu \n", status);
       break;
     }
-    DEBUGOUT("UART user event callback registered successfully \n");
+    SL_PRINT_STRING_ERROR("UART user event callback registered successfully \n");
 
   } while (false);
 }
@@ -177,15 +183,15 @@ void uart_rs485_example_process_action(void)
           uint16_t uart_rs485_data = 0;
           if (current_slave == RS485_SLAVE1) {
             uart_rs485_data = RS485_SW_SLAVE1_ADDRESS;
-            DEBUGOUT("RS485 Device looking for Slave Address = 0x%X  \n", uart_rs485_data);
+            SL_PRINT_STRING_ERROR("RS485 Device looking for Slave Address = 0x%X  \n", uart_rs485_data);
 
           } else {
             uart_rs485_data = RS485_SW_SLAVE2_ADDRESS;
-            DEBUGOUT("RS485 Device looking for Slave Address = 0x%X  \n", uart_rs485_data);
+            SL_PRINT_STRING_ERROR("RS485 Device looking for Slave Address = 0x%X  \n", uart_rs485_data);
           }
           status = sl_si91x_usart_send_data(uart_rs485_handle, &uart_rs485_data, sizeof(uart_rs485_data));
           if (status != SL_STATUS_OK) {
-            DEBUGOUT("sl_si91x_uart_send_data: Error Code : %lu \n", status);
+            SL_PRINT_STRING_ERROR("sl_si91x_uart_send_data: Error Code : %lu \n", status);
             current_mode = SL_UART_RS485_COMPLETED;
             break;
           }
@@ -197,7 +203,7 @@ void uart_rs485_example_process_action(void)
                                             uart_rs485_data_out,
                                             (sizeof(uart_rs485_data_out) / sizeof(uart_rs485_data_out[0])));
           if (status != SL_STATUS_OK) {
-            DEBUGOUT("sl_si91x_uart_send_data: Error Code : %lu \n", status);
+            SL_PRINT_STRING_ERROR("sl_si91x_uart_send_data: Error Code : %lu \n", status);
             current_mode = SL_UART_RS485_COMPLETED;
             break;
           }
@@ -209,12 +215,12 @@ void uart_rs485_example_process_action(void)
             uart_rs485_slave_addr = RS485_SLAVE2_ADDRESS;
           }
           sl_si91x_uart_rs485_transfer_hardware_address(UART_INSTANCE, &uart_rs485_slave_addr);
-          DEBUGOUT("RS485 Device looking for Slave Address = 0x%X  \n", uart_rs485_slave_addr);
+          SL_PRINT_STRING_ERROR("RS485 Device looking for Slave Address = 0x%X  \n", uart_rs485_slave_addr);
           status = sl_si91x_usart_send_data(uart_rs485_handle,
                                             uart_rs485_data_out,
                                             (sizeof(uart_rs485_data_out) / sizeof(uart_rs485_data_out[0])));
           if (status != SL_STATUS_OK) {
-            DEBUGOUT("sl_si91x_uart_send_data: Error Code : %lu \n", status);
+            SL_PRINT_STRING_ERROR("sl_si91x_uart_send_data: Error Code : %lu \n", status);
             current_mode = SL_UART_RS485_COMPLETED;
             break;
           }
@@ -228,7 +234,7 @@ void uart_rs485_example_process_action(void)
         if (rs485_configs.transfer_mode == SL_UART_HW_CTRL_HALF_DUPLEX_MODE) {
           current_mode                  = SL_UART_RS485_RECEIVE;
           uart_rs485_begin_transmission = true;
-          DEBUGOUT("RS485 Data send completed \n");
+          SL_PRINT_STRING_ERROR("RS485 Data send completed \n");
         } else {
           if (current_slave == RS485_SLAVE1) {
             current_mode  = SL_UART_RS485_SEND;
@@ -236,7 +242,7 @@ void uart_rs485_example_process_action(void)
           } else {
             current_mode                  = SL_UART_RS485_COMPLETED;
             uart_rs485_begin_transmission = false;
-            DEBUGOUT("RS485 Data send completed \n");
+            SL_PRINT_STRING_ERROR("RS485 Data send completed \n");
           }
         }
         if (current_slave == RS485_SLAVE2) {
@@ -265,7 +271,7 @@ void uart_rs485_example_process_action(void)
           uart_rs485_receive_complete = false;
           status = sl_si91x_usart_receive_data(uart_rs485_handle, &uart_rs485_rx_addr, sizeof(uart_rs485_rx_addr));
           if (status != SL_STATUS_OK) {
-            DEBUGOUT("sl_si91x_uart_receive_data: Error Code : %lu \n", status);
+            SL_PRINT_STRING_ERROR("sl_si91x_uart_receive_data: Error Code : %lu \n", status);
             current_mode = SL_UART_RS485_COMPLETED;
             break;
           }
@@ -275,7 +281,7 @@ void uart_rs485_example_process_action(void)
           if ((uart_rs485_rx_addr & (1 << BIT_POS_8)) && ((uart_rs485_rx_addr & 0xFF) == target_hw_address)) {
             status = sl_si91x_uart_rs485_address_received(UART_INSTANCE);
             if (status != SL_STATUS_OK) {
-              DEBUGOUT("sl_si91x_uart_rs485_address_received: Error Code : %lu \n", status);
+              SL_PRINT_STRING_ERROR("sl_si91x_uart_rs485_address_received: Error Code : %lu \n", status);
               current_mode = SL_UART_RS485_COMPLETED;
               break;
             }
@@ -286,7 +292,7 @@ void uart_rs485_example_process_action(void)
                                                  uart_rs485_data_in,
                                                  (sizeof(uart_rs485_data_in) / sizeof(uart_rs485_data_in[0])));
             if (status != SL_STATUS_OK) {
-              DEBUGOUT("sl_si91x_uart_receive_data: Error Code : %lu \n", status);
+              SL_PRINT_STRING_ERROR("sl_si91x_uart_receive_data: Error Code : %lu \n", status);
               current_mode = SL_UART_RS485_COMPLETED;
               break;
             }
@@ -306,20 +312,20 @@ void uart_rs485_example_process_action(void)
           }
           status = sl_si91x_uart_rs485_rx_hardware_address_set(UART_INSTANCE, &uart_rs485_rx_addr);
           if (status != SL_STATUS_OK) {
-            DEBUGOUT("sl_si91x_uart_rs485_rx_address_set: Error Code : %lu \n", status);
+            SL_PRINT_STRING_ERROR("sl_si91x_uart_rs485_rx_address_set: Error Code : %lu \n", status);
             break;
           }
 
           status = sl_si91x_usart_receive_data(uart_rs485_handle, &uart_rs485_rx_addr, sizeof(uart_rs485_rx_addr));
           if (status != SL_STATUS_OK) {
-            DEBUGOUT("sl_si91x_uart_receive_data: Error Code : %lu \n", status);
+            SL_PRINT_STRING_ERROR("sl_si91x_uart_receive_data: Error Code : %lu \n", status);
             current_mode = SL_UART_RS485_COMPLETED;
             break;
           }
 
           status = sl_si91x_uart_rs485_address_received(UART_INSTANCE);
           if (status != SL_STATUS_OK) {
-            DEBUGOUT("sl_si91x_uart_rs485_address_received: Error Code : %lu \n", status);
+            SL_PRINT_STRING_ERROR("sl_si91x_uart_rs485_address_received: Error Code : %lu \n", status);
             current_mode = SL_UART_RS485_COMPLETED;
             break;
           }
@@ -329,7 +335,7 @@ void uart_rs485_example_process_action(void)
                                                uart_rs485_data_in,
                                                (sizeof(uart_rs485_data_in) / sizeof(uart_rs485_data_in[0])));
           if (status != SL_STATUS_OK) {
-            DEBUGOUT("sl_si91x_uart_receive_data: Error Code : %lu \n", status);
+            SL_PRINT_STRING_ERROR("sl_si91x_uart_receive_data: Error Code : %lu \n", status);
             current_mode = SL_UART_RS485_COMPLETED;
             break;
           }
@@ -361,10 +367,10 @@ void uart_rs485_example_process_action(void)
         uint16_t uart_rs485_rx_addr = 0;
         // Send address
         uint16_t uart_rs485_data = RS485_SW_SLAVE1_ADDRESS;
-        DEBUGOUT("RS485 Device looking for Address = 0x%X  \n", uart_rs485_data);
+        SL_PRINT_STRING_ERROR("RS485 Device looking for Address = 0x%X  \n", uart_rs485_data);
         status = sl_si91x_usart_send_data(uart_rs485_handle, &uart_rs485_data, sizeof(uart_rs485_data));
         if (status != SL_STATUS_OK) {
-          DEBUGOUT("sl_si91x_uart_send_data (address): Error Code : %lu \n", status);
+          SL_PRINT_STRING_ERROR("sl_si91x_uart_send_data (address): Error Code : %lu \n", status);
           current_mode = SL_UART_RS485_COMPLETED;
           break;
         }
@@ -378,7 +384,7 @@ void uart_rs485_example_process_action(void)
                                           uart_rs485_data_out,
                                           (sizeof(uart_rs485_data_out) / sizeof(uart_rs485_data_out[0])));
         if (status != SL_STATUS_OK) {
-          DEBUGOUT("sl_si91x_uart_send_data (data): Error Code : %lu \n", status);
+          SL_PRINT_STRING_ERROR("sl_si91x_uart_send_data (data): Error Code : %lu \n", status);
           current_mode = SL_UART_RS485_COMPLETED;
           break;
         }
@@ -387,10 +393,10 @@ void uart_rs485_example_process_action(void)
         while (!uart_rs485_send_complete)
           ;
         uart_rs485_send_complete = false;
-        DEBUGOUT("RS485 Data send completed \n");
+        SL_PRINT_STRING_ERROR("RS485 Data send completed \n");
         status = sl_si91x_usart_receive_data(uart_rs485_handle, &uart_rs485_rx_addr, sizeof(uart_rs485_rx_addr));
         if (status != SL_STATUS_OK) {
-          DEBUGOUT("sl_si91x_uart_receive_data (address): Error Code : %lu \n", status);
+          SL_PRINT_STRING_ERROR("sl_si91x_uart_receive_data (address): Error Code : %lu \n", status);
           current_mode = SL_UART_RS485_COMPLETED;
           break;
         }
@@ -401,7 +407,7 @@ void uart_rs485_example_process_action(void)
         if (uart_rs485_rx_addr & (1 << BIT_POS_8)) {
           status = sl_si91x_uart_rs485_address_received(UART_INSTANCE);
           if (status != SL_STATUS_OK) {
-            DEBUGOUT("sl_si91x_uart_rs485_address_received: Error Code : %lu \n", status);
+            SL_PRINT_STRING_ERROR("sl_si91x_uart_rs485_address_received: Error Code : %lu \n", status);
             current_mode = SL_UART_RS485_COMPLETED;
             break;
           }
@@ -413,7 +419,7 @@ void uart_rs485_example_process_action(void)
                                              uart_rs485_data_in,
                                              (sizeof(uart_rs485_data_in) / sizeof(uart_rs485_data_in[0])));
         if (status != SL_STATUS_OK) {
-          DEBUGOUT("sl_si91x_uart_receive_data (data): Error Code : %lu \n", status);
+          SL_PRINT_STRING_ERROR("sl_si91x_uart_receive_data (data): Error Code : %lu \n", status);
           current_mode = SL_UART_RS485_COMPLETED;
           break;
         }
@@ -433,7 +439,7 @@ void uart_rs485_example_process_action(void)
         uint16_t uart_rs485_rx_addr = 0;
         status = sl_si91x_usart_receive_data(uart_rs485_handle, &uart_rs485_rx_addr, sizeof(uart_rs485_rx_addr));
         if (status != SL_STATUS_OK) {
-          DEBUGOUT("sl_si91x_uart_receive_data (address): Error Code : %lu \n", status);
+          SL_PRINT_STRING_ERROR("sl_si91x_uart_receive_data (address): Error Code : %lu \n", status);
           current_mode = SL_UART_RS485_COMPLETED;
           break;
         }
@@ -444,7 +450,7 @@ void uart_rs485_example_process_action(void)
         if (uart_rs485_rx_addr & (1 << BIT_POS_8)) {
           status = sl_si91x_uart_rs485_address_received(UART_INSTANCE);
           if (status != SL_STATUS_OK) {
-            DEBUGOUT("sl_si91x_uart_rs485_address_received: Error Code : %lu \n", status);
+            SL_PRINT_STRING_ERROR("sl_si91x_uart_rs485_address_received: Error Code : %lu \n", status);
             current_mode = SL_UART_RS485_COMPLETED;
             break;
           }
@@ -455,7 +461,7 @@ void uart_rs485_example_process_action(void)
                                              uart_rs485_data_in,
                                              (sizeof(uart_rs485_data_in) / sizeof(uart_rs485_data_in[0])));
         if (status != SL_STATUS_OK) {
-          DEBUGOUT("sl_si91x_uart_receive_data (data): Error Code : %lu \n", status);
+          SL_PRINT_STRING_ERROR("sl_si91x_uart_receive_data (data): Error Code : %lu \n", status);
           current_mode = SL_UART_RS485_COMPLETED;
           break;
         }
@@ -466,10 +472,10 @@ void uart_rs485_example_process_action(void)
         uart_rs485_compare_data();
         // Send address
         uint16_t uart_rs485_data = RS485_SW_SLAVE1_ADDRESS;
-        DEBUGOUT("RS485 Device looking for Address = 0x%X  \n", uart_rs485_data);
+        SL_PRINT_STRING_ERROR("RS485 Device looking for Address = 0x%X  \n", uart_rs485_data);
         status = sl_si91x_usart_send_data(uart_rs485_handle, &uart_rs485_data, sizeof(uart_rs485_data));
         if (status != SL_STATUS_OK) {
-          DEBUGOUT("sl_si91x_uart_send_data (address): Error Code : %lu \n", status);
+          SL_PRINT_STRING_ERROR("sl_si91x_uart_send_data (address): Error Code : %lu \n", status);
           current_mode = SL_UART_RS485_COMPLETED;
           break;
         }
@@ -483,7 +489,7 @@ void uart_rs485_example_process_action(void)
                                           uart_rs485_data_out,
                                           (sizeof(uart_rs485_data_out) / sizeof(uart_rs485_data_out[0])));
         if (status != SL_STATUS_OK) {
-          DEBUGOUT("sl_si91x_uart_send_data (data): Error Code : %lu \n", status);
+          SL_PRINT_STRING_ERROR("sl_si91x_uart_send_data (data): Error Code : %lu \n", status);
           current_mode = SL_UART_RS485_COMPLETED;
           break;
         }
@@ -491,7 +497,7 @@ void uart_rs485_example_process_action(void)
         while (!uart_rs485_send_complete)
           ;
         uart_rs485_send_complete = false;
-        DEBUGOUT("RS485 Data send completed \n");
+        SL_PRINT_STRING_ERROR("RS485 Data send completed \n");
         uart_rs485_begin_transmission = false;
         current_mode                  = SL_UART_RS485_COMPLETED;
       }
@@ -516,9 +522,9 @@ static void uart_rs485_compare_data(void)
   }
 
   if (data_index == UART_RS485_BUFFER_SIZE) {
-    DEBUGOUT("Received Data comparison successful \n");
+    SL_PRINT_STRING_ERROR("Received Data comparison successful \n");
   } else {
-    DEBUGOUT("Received Data comparison failed \n");
+    SL_PRINT_STRING_ERROR("Received Data comparison failed \n");
   }
 }
 

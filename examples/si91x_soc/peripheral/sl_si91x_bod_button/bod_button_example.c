@@ -60,7 +60,13 @@ static volatile uint8_t button_number = 0;
 void user_bod_button_callback(void)
 {
   button_number = sl_si91x_bod_button_value_read();
-  DEBUGOUT("BOD Button number: %d \r\n", button_number);
+  /* Note: All status messages in this example — both success and failure — are
+ * intentionally emitted via SL_PRINT_STRING_ERROR so that they remain visible
+ * on the console at the default log level. This is a demonstration choice, not
+ * a recommendation: in production code, ERROR severity should be reserved for
+ * actual failures, with successful operations logged via SL_PRINT_STRING_INFO
+ * (or SL_PRINT_STRING_DEBUG for verbose trace). */
+  SL_PRINT_STRING_ERROR("BOD Button number: %d \r\n", button_number);
 }
 /******************************************************************************
 **************************   BoD Button example init  *************************
@@ -81,15 +87,15 @@ void bod_button_example_init(void)
     // Apply the button configuration using the calculated min/max values
     sl_si91x_bod_button_configuration(button_max_value, button1_min_value, button2_min_value, button3_min_value);
 
-    DEBUGOUT("BOD Button Configuration successful \r\n");
+    SL_PRINT_STRING_ERROR("BOD Button Configuration successful \r\n");
 
     // Enable wakeup on button press if configured
     if (sl_bod_button_uc_config_param.button_wakeup_enable == ENABLE) {
       status = sl_si91x_bod_button_wakeup_enable_v2(sl_bod_button_uc_config_param.button_wakeup_enable);
       if (status == SL_STATUS_OK)
-        DEBUGOUT("BOD Button Wakeup enabled successful \r\n");
+        SL_PRINT_STRING_ERROR("BOD Button Wakeup enabled successful \r\n");
       else {
-        DEBUGOUT("BOD Button Wakeup enable Fail \r\n");
+        SL_PRINT_STRING_ERROR("BOD Button Wakeup enable Fail \r\n");
         break;
       }
     }
@@ -97,15 +103,15 @@ void bod_button_example_init(void)
     // Register the user callback for button events
     status = sl_si91x_bod_button_register_callback(user_bod_button_callback);
     if (!status)
-      DEBUGOUT("BOD Button call back registration successful \r\n");
+      SL_PRINT_STRING_ERROR("BOD Button call back registration successful \r\n");
     else {
-      DEBUGOUT("BOD Button call back registration Failed \r\n");
+      SL_PRINT_STRING_ERROR("BOD Button call back registration Failed \r\n");
       break;
     }
 
     /* Enable button interrupt */
     sl_si91x_bod_button_enable_interrupt();
-    DEBUGOUT("BOD Button interrupt enabled successful \r\n");
+    SL_PRINT_STRING_ERROR("BOD Button interrupt enabled successful \r\n");
   } while (false);
 }
 /******************************************************************************
@@ -117,7 +123,7 @@ void bod_button_process_action(void)
   sl_status_t status = sl_si91x_bod_get_battery_status(&vbatt);
   if (status != SL_STATUS_OK) {
     // Print error if reading battery voltage fails
-    DEBUGOUT("Vbat read failed\r\n");
+    SL_PRINT_STRING_ERROR("Vbat read failed\r\n");
   } else if (lastVbatt != vbatt) {
     // If battery voltage has changed, reconfigure button thresholds
     sl_si91x_bod_button_set_configuration(sl_bod_button_uc_config_param,
@@ -132,9 +138,9 @@ void bod_button_process_action(void)
 
     status = sl_si91x_bod_button_wakeup_enable_v2(sl_bod_button_uc_config_param.button_wakeup_enable);
     if (status == SL_STATUS_OK)
-      DEBUGOUT("BOD Button Wakeup enabled successful \r\n");
+      SL_PRINT_STRING_ERROR("BOD Button Wakeup enabled successful \r\n");
     else
-      DEBUGOUT("BOD Button Wakeup enable Fail \r\n");
+      SL_PRINT_STRING_ERROR("BOD Button Wakeup enable Fail \r\n");
 
     // Enable button interrupt
     sl_si91x_bod_button_enable_interrupt();

@@ -13,7 +13,10 @@
   - [Application Build Environment](#application-build-environment)
   - [Configuration Parameters](#configuration-parameters)
   - [Test the Application](#test-the-application)
-  
+  - [Troubleshooting](#troubleshooting)
+  - [Resources](#resources)
+  - [Report Bugs/Support](#report-bugssupport)
+
 ## Purpose/Scope
 
 This application demonstrates the process of writing to and reading from SiWx91x flash.
@@ -23,18 +26,8 @@ This application demonstrates the process of writing to and reading from SiWx91x
 ### Hardware Requirements
 
 - A Windows PC.
-- **SoC Mode**:
-  - Standalone
-    - BRD4002A Wireless pro kit mainboard [SI-MB4002A]
-    - Radio Boards 
-  	  - BRD4338A [SiWx917-RB4338A]
-      - BRD4339B [SiWx917-RB4339B]
-  	  - BRD4340A [SiWx917-RB4340A]
-  	  - BRD4343A [SiWx917-RB4343A]
-  - Kits
-  	- SiWx917 Pro Kit [Si917-PK6031A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-pro-kit?tab=overview)
-  	- SiWx917 Pro Kit [Si917-PK6032A]
-    - SiWx917 AC1 Module Explorer Kit (BRD2708A)
+- Silicon Labs SiWx91x Evaluation Kit [[BRD4002](https://www.silabs.com/development-tools/wireless/wireless-pro-kit-mainboard?tab=overview) + [BRD4338A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-rb4338a-wifi-6-bluetooth-le-soc-radio-board?tab=overview) / [BRD4342A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx91x-rb4342a-wifi-6-bluetooth-le-soc-radio-board?tab=overview) / [BRD4343A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4343a-wi-fi-6-bluetooth-le-8mb-flash-radio-board-for-module?tab=overview) / [BRD4343C](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4343c-wi-fi-6-bluetooth-le-8mb-flash-radio-board-for-module?tab=overview)]
+- SiWx917 AC1 Module Explorer Kit [BRD2708A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-ek2708a-explorer-kit)
 
 ### Software Requirements
 
@@ -93,3 +86,16 @@ Refer to the instructions [here](https://docs.silabs.com/wiseconnect/latest/wise
 - After successful execution of the application, the output will be displayed on the console.
 
   ![Output](resources/readme/output_prints.png)
+
+## Troubleshooting
+
+For troubleshooting information, see [WiSeConnect Troubleshooting](https://docs.silabs.com/wiseconnect/latest/wiseconnect-developers-guide-troubleshooting/).
+
+## Resources
+
+- [WiSeConnect Documentation](https://docs.silabs.com/wiseconnect/latest/)
+- [WiSeConnect Examples](https://docs.silabs.com/wiseconnect/latest/wiseconnect-examples/)
+
+## Report Bugs/Support
+
+To report bugs or get support, visit [Silicon Labs Community](https://community.silabs.com/).

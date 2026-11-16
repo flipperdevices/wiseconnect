@@ -38,6 +38,7 @@
 #include "sl_net.h"
 #include <string.h>
 #include <stdint.h>
+#include <inttypes.h>
 #include "lwip/sockets.h"
 #include "sl_net_for_lwip.h"
 #include "sl_si91x_driver.h"
@@ -51,6 +52,12 @@
 /******************************************************
  *                      Macros
  ******************************************************/
+/* Defaults migrated from sl_wifi_filter_broadcast(5000, 1, 1). */
+#define BCAST_FILTER_ENABLE      (1U)
+#define MCAST_FILTER_ENABLE      (1U)
+#define FILTER_MODE              (0U)
+#define BEACON_DROP_THRESHOLD_MS (5000U)
+
 /******************************************************
  *                    Constants
  ******************************************************/
@@ -58,6 +65,11 @@
 #define SERVER_PORT       5001
 #define NUMBER_OF_PACKETS 20
 #define DATA              "hello from tcp client"
+/* Pace bursts to avoid overwhelming lwIP/NWP TX queues on small-packet tests. */
+#define TX_PACE_EVERY_PACKETS       10
+#define TX_PACE_DELAY_MS            1
+#define TX_TRANSIENT_RETRY_DELAY_MS 1
+#define TX_STALL_ABORT_RETRIES      300
 
 /******************************************************
  *               Variable Definitions
@@ -72,7 +84,6 @@ const osThreadAttr_t thread_attributes = {
   .stack_size = 3072,
   .priority   = osPriorityLow,
   .tz_module  = 0,
-  .reserved   = 0,
 };
 
 static const sl_wifi_device_configuration_t client_configuration = {
@@ -98,10 +109,13 @@ static const sl_wifi_device_configuration_t client_configuration = {
 #endif
                                                   ),
                    .bt_feature_bit_map         = 0,
-                   .ext_tcp_ip_feature_bit_map = (SL_SI91X_CONFIG_FEAT_EXTENTION_VALID),
+                   .ext_tcp_ip_feature_bit_map = (SL_SI91X_CONFIG_FEAT_EXTENSION_VALID),
                    .ble_feature_bit_map        = 0,
                    .ble_ext_feature_bit_map    = 0,
-                   .config_feature_bit_map = (SL_SI91X_FEAT_SLEEP_GPIO_SEL_BITMAP | SL_WIFI_ENABLE_ENHANCED_MAX_PSP) }
+                   .config_feature_bit_map = (SL_SI91X_FEAT_SLEEP_GPIO_SEL_BITMAP | SL_WIFI_ENABLE_ENHANCED_MAX_PSP) },
+  .ta_pool         = { .tx_ratio_in_buffer_pool = 0, .rx_ratio_in_buffer_pool = 0, .global_ratio_in_buffer_pool = 0 },
+  .efuse_data_type = SL_SI91X_EFUSE_MFG_SW_VERSION,
+  .nwp_fw_image_number = SL_SI91X_NWP_FW_IMAGE_NUMBER_0
 };
 
 static sl_net_wifi_lwip_context_t wifi_client_context;
@@ -130,41 +144,52 @@ static void application_start(void *argument)
   sl_wifi_performance_profile_v2_t performance_profile = { .profile = ASSOCIATED_POWER_SAVE_LOW_LATENCY };
   status = sl_net_init(SL_NET_WIFI_CLIENT_INTERFACE, &client_configuration, &wifi_client_context, NULL);
   if (status != SL_STATUS_OK) {
-    printf("Failed to start Wi-Fi Client interface: 0x%lx\r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "Failed to start Wi-Fi Client interface: 0x%" PRIx32 "", (uint32_t)status);
     return;
   }
-  printf("Wi-Fi Client interface success\r\n");
+  SL_DEBUG_LOG_V2(INFO, "Wi-Fi Client interface success\r\n");
 
 #ifdef SLI_SI91X_MCU_INTERFACE
   uint8_t xtal_enable = 1;
   status              = sl_si91x_m4_ta_secure_handshake(SL_SI91X_ENABLE_XTAL, 1, &xtal_enable, 0, NULL);
   if (status != SL_STATUS_OK) {
-    printf("Failed to bring m4_ta_secure_handshake: 0x%lx\r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "Failed to bring m4_ta_secure_handshake: 0x%" PRIx32 "", (uint32_t)status);
     return;
   }
-  printf("m4_ta_secure_handshake Success\r\n");
+  SL_DEBUG_LOG_V2(INFO, "m4_ta_secure_handshake Success\r\n");
 #endif
 
   status = sl_net_up(SL_NET_WIFI_CLIENT_INTERFACE, SL_NET_DEFAULT_WIFI_CLIENT_PROFILE_ID);
   if (status != SL_STATUS_OK) {
-    printf("Failed to bring Wi-Fi client interface up: 0x%lx\r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "Failed to bring Wi-Fi client interface up: 0x%" PRIx32 "", (uint32_t)status);
     return;
   }
-  printf("Wi-Fi client connected\r\n");
+  SL_DEBUG_LOG_V2(INFO, "Wi-Fi client connected\r\n");
 
-  status = sl_wifi_filter_broadcast(5000, 1, 1);
+  sl_wifi_groupcast_filter_config_t groupcast_filter_config = { 0 };
+  groupcast_filter_config.enable_bcast_filter               = (uint8_t)BCAST_FILTER_ENABLE;
+  groupcast_filter_config.enable_mcast_filter               = (uint8_t)MCAST_FILTER_ENABLE;
+  groupcast_filter_config.filter_mode                       = (uint8_t)FILTER_MODE;
+
+  status = sl_wifi_set_groupcast_filter_config(&groupcast_filter_config);
   if (status != SL_STATUS_OK) {
-    printf("\r\nsl_wifi_filter_broadcast Failed, Error Code : 0x%lX\r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "sl_wifi_set_groupcast_filter_config failed, Error Code : 0x%" PRIx32 "", (uint32_t)status);
     return;
   }
-  printf("Filter Broadcast Done\r\n");
+
+  status = sl_wifi_set_beacon_drop_threshold(SL_WIFI_CLIENT_INTERFACE, (uint16_t)BEACON_DROP_THRESHOLD_MS);
+  if (status != SL_STATUS_OK) {
+    SL_DEBUG_LOG_V2(ERROR, "sl_wifi_set_beacon_drop_threshold failed, Error Code : 0x%" PRIx32 "", (uint32_t)status);
+    return;
+  }
+  SL_DEBUG_LOG_V2(INFO, "Filter Broadcast Done\n");
 
   status = sl_net_get_profile(SL_NET_WIFI_CLIENT_INTERFACE, SL_NET_DEFAULT_WIFI_CLIENT_PROFILE_ID, &profile);
   if (status != SL_STATUS_OK) {
-    printf("Failed to get client profile: 0x%lx\r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "Failed to get client profile: 0x%" PRIx32 "", (uint32_t)status);
     return;
   }
-  printf("\r\nSuccess to get client profile\r\n");
+  SL_DEBUG_LOG_V2(INFO, "Success to get client profile\n");
 
   ip_address.type = SL_IPV4;
   memcpy(&ip_address.ip.v4.bytes, &profile.ip.ip.v4.ip_address.bytes, sizeof(sl_ipv4_address_t));
@@ -173,28 +198,22 @@ static void application_start(void *argument)
   // set performance profile
   status = sl_wifi_set_performance_profile_v2(&performance_profile);
   if (status != SL_STATUS_OK) {
-    printf("\r\nPower save configuration Failed, Error Code : 0x%lX\r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "Power save configuration Failed, Error Code : 0x%" PRIx32 "", (uint32_t)status);
     return;
   }
-  printf("\r\nPerformance profile set\r\n");
+  SL_DEBUG_LOG_V2(INFO, "\nPerformance profile set\r\n");
 
   send_data_to_tcp_server();
 
 #ifdef SLI_SI91X_MCU_INTERFACE
-
-#if (SL_SI91X_TICKLESS_MODE == 0)
-  sl_si91x_power_manager_sleep();
-#else
   osSemaphoreId_t wait_semaphore;
   wait_semaphore = osSemaphoreNew(1, 0, NULL);
   if (wait_semaphore == NULL) {
-    printf("Failed to create semaphore\r\n");
+    SL_DEBUG_LOG_V2(ERROR, "Failed to create semaphore\r\n");
     return;
   }
   // Waiting forever using semaphore to put M4 to sleep in tick less mode
   osSemaphoreAcquire(wait_semaphore, osWaitForever);
-#endif
-
 #endif
 }
 
@@ -204,6 +223,7 @@ void send_data_to_tcp_server()
   int return_value  = 0;
   int sent_bytes;
   int packet_count                  = 0;
+  int transient_retry_total         = 0;
   sl_ipv4_address_t ip              = { 0 };
   struct sockaddr_in server_address = { 0 };
   socklen_t socket_length           = sizeof(struct sockaddr_in);
@@ -217,38 +237,52 @@ void send_data_to_tcp_server()
   //!Create socket
   client_socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
   if (client_socket < 0) {
-    printf("\r\nSocket creation failed with bsd error: %d\r\n", errno);
+    SL_DEBUG_LOG_V2(ERROR, "Socket creation failed with bsd error: %d\r\n", errno);
     return;
   }
-  printf("\r\nTCP Socket Create Success\r\n");
+  SL_DEBUG_LOG_V2(INFO, "TCP Socket Create Success\r\n");
 
   //! Socket connect
   return_value = connect(client_socket, (struct sockaddr *)&server_address, socket_length);
   if (return_value < 0) {
-    printf("\r\nSocket connect failed with bsd error: %d\r\n", errno);
+    SL_DEBUG_LOG_V2(ERROR, "Socket connect failed with bsd error: %d\r\n", errno);
     close(client_socket);
     return;
   }
-  printf("\r\nTCP Socket Connect Success\r\n");
+  SL_DEBUG_LOG_V2(INFO, "TCP Socket Connect Success\r\n");
 
   //! send data
   while (packet_count < NUMBER_OF_PACKETS) {
     sent_bytes = send(client_socket, DATA, strlen(DATA), 0);
     if (sent_bytes < 0) {
-      if (errno == ENOBUFS)
+      /* Under load, queue-full/backpressure errors are transient; retry with small delay. */
+      if (errno == ENOBUFS || errno == EAGAIN || errno == EWOULDBLOCK) {
+        transient_retry_total++;
+        if (transient_retry_total >= TX_STALL_ABORT_RETRIES) {
+          SL_DEBUG_LOG_V2(WARN, "TX stall detected at packet %d (errno=%d)", packet_count, errno);
+          close(client_socket);
+          return;
+        }
+        osDelay(TX_TRANSIENT_RETRY_DELAY_MS);
         continue;
-      printf("\r\nSend failed with bsd error:%d\r\n", errno);
+      }
+      SL_DEBUG_LOG_V2(ERROR, "Send failed with bsd error:%d", errno);
       close(client_socket);
       return;
     }
+    transient_retry_total = 0;
     packet_count++;
+    /* Insert tiny pacing periodically to reduce burst pressure on TX path. */
+    if ((packet_count % TX_PACE_EVERY_PACKETS) == 0) {
+      osDelay(TX_PACE_DELAY_MS);
+    }
   }
 
-  printf("\r\n%d packets sent success\r\n", packet_count);
+  SL_DEBUG_LOG_V2(INFO, "%d packets sent success\n", packet_count);
 
   //!Socket close
   close(client_socket);
-  printf("\r\nSocket close success\r\n");
+  SL_DEBUG_LOG_V2(INFO, "Socket close success\n");
 
   return;
 }

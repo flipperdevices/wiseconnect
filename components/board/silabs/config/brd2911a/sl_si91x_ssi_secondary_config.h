@@ -94,10 +94,10 @@ extern "C" {
 #define SL_SSI_SLAVE_MISO__PORT HP
 #endif
 #ifndef SL_SSI_SLAVE_MISO__PIN
-#define SL_SSI_SLAVE_MISO__PIN 26
+#define SL_SSI_SLAVE_MISO__PIN 28
 #endif
 #ifndef SL_SSI_SLAVE_MISO_LOC
-#define SL_SSI_SLAVE_MISO_LOC 10
+#define SL_SSI_SLAVE_MISO_LOC 6
 #endif
 
 // SSI_SLAVE SCK_ on GPIO_25
@@ -108,7 +108,7 @@ extern "C" {
 #define SL_SSI_SLAVE_SCK__PIN 25
 #endif
 #ifndef SL_SSI_SLAVE_SCK_LOC
-#define SL_SSI_SLAVE_SCK_LOC 14
+#define SL_SSI_SLAVE_SCK_LOC 10
 #endif
 
 // SSI_SLAVE CS0_ on GPIO_28
@@ -116,10 +116,10 @@ extern "C" {
 #define SL_SSI_SLAVE_CS0__PORT HP
 #endif
 #ifndef SL_SSI_SLAVE_CS0__PIN
-#define SL_SSI_SLAVE_CS0__PIN 28
+#define SL_SSI_SLAVE_CS0__PIN 25
 #endif
 #ifndef SL_SSI_SLAVE_CS0_LOC
-#define SL_SSI_SLAVE_CS0_LOC 6
+#define SL_SSI_SLAVE_CS0_LOC 14
 #endif
 // [SSI_SLAVE_SL_SSI_SLAVE]$
 // <<< sl:end pin_tool >>>

@@ -2,7 +2,7 @@ id: memlcd_917
 package: platform_siwx91x
 label: Memory LCD SPI driver
 description: >
-  Provides a driver implementation to drive the LCD device connected to the Si91x MCU via SPI.
+  This component provides a driver implementation to drive the LCD device connected to the SiWx91x MCU via SPI.
 category: Device|Si91x|MCU|Hardware
 quality: production
 metadata:
@@ -28,6 +28,7 @@ requires:
   - name: rsilib_spi
   - name: ls013b7dh03
   - name: status
+  - name: log_none
 provides:
   - name: memlcd_917
   - name: memlcd_driver

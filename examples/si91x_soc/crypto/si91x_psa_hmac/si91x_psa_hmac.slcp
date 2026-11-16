@@ -5,7 +5,7 @@ description: 'This example project demonstrates the PSA HMAC APIs in SI91x.
   '
 category: example|crypto
 quality: production
-label: SI91x - SoC PSA HMAC
+label: SiWx91x Platform - PSA HMAC
 component:
 - id: sl_main
 - id: freertos
@@ -28,7 +28,6 @@ component:
 - id: wifi_resources
 - id: network_manager
 - id: basic_network_config_manager
-- id: sl_si91x_basic_buffers
 source:
 - path: psa_hmac_app.c
 - path: app.c
@@ -42,20 +41,35 @@ other_file:
 - path: resources/readme/output.png
 toolchain_settings:
 - option: gcc_compiler_option
-  value: -Wall -Werror
+  value: -Wall -Werror -Wno-error=deprecated-declarations
+- option: llvm_compiler_option
+  value: -Wall -Werror -Wno-error=deprecated-declarations
 ui_hints:
   highlight:
   - path: readme.md
     focus: true
 readme:
 - path: readme.md
+filter:
+- name: Device Type
+  value:
+  - SoC
+- name: MCU
+  value:
+  - 32-bit MCU
+- name: Level
+  value:
+  - Beginner
+- name: Wireless Technology
+  value:
+  - Wi-Fi
 post_build:
   profile: wiseconnect_soc
 sdk_extension:
 - id: wiseconnect3_sdk
   vendor: silabs
-  version: 4.0.1
+  version: 4.1.2
 sdk:
   id: simplicity_sdk
   vendor: silabs
-  version: 2025.12.2
+  version: 2026.6.2

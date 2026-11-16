@@ -15,6 +15,7 @@
  *
  ******************************************************************************/
 #include "psa_asymmetric_key_storage_app.h"
+#include <inttypes.h>
 #include "psa/crypto.h"
 #include <stdio.h>
 
@@ -42,7 +43,7 @@ void test_import_and_export_volatile_plain_key()
   /* Import a private key */
   ret = psa_import_key(&key_attr, private_key, sizeof(private_key), &import_key_id);
   if (ret != PSA_SUCCESS) {
-    printf("Import Private Key failed with error: status %ld\n", ret);
+    printf("Import Private Key failed with error: status %" PRId32 "\n", ret);
   } else {
     printf("Import Private Key success\n");
   }
@@ -50,7 +51,7 @@ void test_import_and_export_volatile_plain_key()
   /* Export the private key */
   ret = psa_export_key(import_key_id, key_buffer, sizeof(key_buffer), &len);
   if (ret != PSA_SUCCESS || memcmp(key_buffer, private_key, len) != 0) {
-    printf("Export Private Key failed with error: status %ld\n", ret);
+    printf("Export Private Key failed with error: status %" PRId32 "\n", ret);
   } else {
     printf("Export Private Key success\n");
   }
@@ -65,7 +66,7 @@ void test_import_and_export_volatile_plain_key()
   /* Generate and export the asymmetric public key */
   ret = psa_export_public_key(import_key_id, key_buffer, sizeof(key_buffer), &len);
   if (ret != PSA_SUCCESS) {
-    printf("Export Public Key failed with error: status %ld\n", ret);
+    printf("Export Public Key failed with error: status %" PRId32 "\n", ret);
   } else {
     printf("Export Public Key success\n");
   }
@@ -80,7 +81,7 @@ void test_import_and_export_volatile_plain_key()
   // Destroy key
   ret = psa_destroy_key(import_key_id);
   if (ret != PSA_SUCCESS) {
-    printf("Destroy key failed with error: %ld\n", ret);
+    printf("Destroy key failed with error: %" PRId32 "\n", ret);
   } else {
     printf("Destroy Key Success\n");
   }
@@ -104,7 +105,7 @@ void test_generate_and_export_volatile_plain_key()
   /* Generate a private key */
   ret = psa_generate_key(&key_attr, &generate_key_id);
   if (ret != PSA_SUCCESS) {
-    printf("Generate Private Key failed with error: status %ld\n", ret);
+    printf("Generate Private Key failed with error: status %" PRId32 "\n", ret);
   } else {
     printf("Generate Private Key success\n");
   }
@@ -112,7 +113,7 @@ void test_generate_and_export_volatile_plain_key()
   /* Export the private key */
   ret = psa_export_key(generate_key_id, key_buffer, sizeof(key_buffer), &len);
   if (ret != PSA_SUCCESS) {
-    printf("Export Private Key failed with error: status %ld\n", ret);
+    printf("Export Private Key failed with error: status %" PRId32 "\n", ret);
   } else {
     printf("Export Private Key success\n");
   }
@@ -127,7 +128,7 @@ void test_generate_and_export_volatile_plain_key()
   /* Generate and export the asymmetric public key */
   ret = psa_export_public_key(generate_key_id, key_buffer, sizeof(key_buffer), &len);
   if (ret != PSA_SUCCESS) {
-    printf("Export Public Key failed with error: status %ld\n", ret);
+    printf("Export Public Key failed with error: status %" PRId32 "\n", ret);
   } else {
     printf("Export Public Key success\n");
   }
@@ -142,7 +143,7 @@ void test_generate_and_export_volatile_plain_key()
   /* Destroy key */
   ret = psa_destroy_key(generate_key_id);
   if (ret != PSA_SUCCESS) {
-    printf("Destroy Key failed with error: %ld\n", ret);
+    printf("Destroy Key failed with error: %" PRId32 "\n", ret);
   } else {
     printf("Destroy Key success\n");
   }
@@ -173,7 +174,7 @@ void test_import_and_export_persistent_plain_key()
   /* Import a private key */
   ret = psa_import_key(&key_attr, private_key, sizeof(private_key), &import_key_id);
   if (ret != PSA_SUCCESS) {
-    printf("Import Private Key failed with error: status %ld\n", ret);
+    printf("Import Private Key failed with error: status %" PRId32 "\n", ret);
   } else {
     printf("Import Private Key success\n");
   }
@@ -181,7 +182,7 @@ void test_import_and_export_persistent_plain_key()
   /* Export the private key */
   ret = psa_export_key(import_key_id, key_buffer, sizeof(key_buffer), &len);
   if (ret != PSA_SUCCESS || memcmp(key_buffer, private_key, len) != 0) {
-    printf("Export Private Key failed with error: status %ld\n", ret);
+    printf("Export Private Key failed with error: status %" PRId32 "\n", ret);
   } else {
     printf("Export Private Key success\n");
   }
@@ -196,7 +197,7 @@ void test_import_and_export_persistent_plain_key()
   /* Generate and export the asymmetric public key */
   ret = psa_export_public_key(import_key_id, key_buffer, sizeof(key_buffer), &len);
   if (ret != PSA_SUCCESS) {
-    printf("Export Public Key failed with error: status %ld\n", ret);
+    printf("Export Public Key failed with error: status %" PRId32 "\n", ret);
   } else {
     printf("Export Public Key success\n");
   }
@@ -211,7 +212,7 @@ void test_import_and_export_persistent_plain_key()
   // Destroy key
   ret = psa_destroy_key(import_key_id);
   if (ret != PSA_SUCCESS) {
-    printf("Destroy key failed with error: %ld\n", ret);
+    printf("Destroy key failed with error: %" PRId32 "\n", ret);
   } else {
     printf("Destroy Key Success\n");
   }
@@ -237,7 +238,7 @@ void test_generate_and_export_persistent_plain_key()
   /* Generate a private key */
   ret = psa_generate_key(&key_attr, &generate_key_id);
   if (ret != PSA_SUCCESS) {
-    printf("Generate Private Key failed with error: status %ld\n", ret);
+    printf("Generate Private Key failed with error: status %" PRId32 "\n", ret);
   } else {
     printf("Generate Private Key success\n");
   }
@@ -245,7 +246,7 @@ void test_generate_and_export_persistent_plain_key()
   /* Export the private key */
   ret = psa_export_key(generate_key_id, key_buffer, sizeof(key_buffer), &len);
   if (ret != PSA_SUCCESS) {
-    printf("Export Private Key failed with error: status %ld\n", ret);
+    printf("Export Private Key failed with error: status %" PRId32 "\n", ret);
   } else {
     printf("Export Private Key success\n");
   }
@@ -260,7 +261,7 @@ void test_generate_and_export_persistent_plain_key()
   /* Generate and export the asymmetric public key */
   ret = psa_export_public_key(generate_key_id, key_buffer, sizeof(key_buffer), &len);
   if (ret != PSA_SUCCESS) {
-    printf("Export Public Key failed with error: status %ld\n", ret);
+    printf("Export Public Key failed with error: status %" PRId32 "\n", ret);
   } else {
     printf("Export Public Key success\n");
   }
@@ -275,7 +276,7 @@ void test_generate_and_export_persistent_plain_key()
   /* Destroy key */
   ret = psa_destroy_key(generate_key_id);
   if (ret != PSA_SUCCESS) {
-    printf("Destroy Key failed with error: %ld\n", ret);
+    printf("Destroy Key failed with error: %" PRId32 "\n", ret);
   } else {
     printf("Destroy Key success\n");
   }
@@ -298,7 +299,7 @@ void test_psa_asymmetric_key_storage()
   psa_status_t ret;
   ret = psa_crypto_init();
   if (ret != PSA_SUCCESS) {
-    printf("PSA Crypto Init failed with status : %ld\n", ret);
+    printf("PSA Crypto Init failed with status : %" PRId32 "\n", ret);
   } else {
     printf("PSA Crypto Init Success\n");
   }

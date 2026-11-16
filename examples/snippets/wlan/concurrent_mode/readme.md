@@ -1,8 +1,13 @@
 # Wi-Fi - Concurrent Mode
 
+## High-Level Overview
+
+SiWx91x concurrent mode example: Run Wi-Fi station and soft AP together and measure UDP/TCP throughput on both interfaces using iPerf in SoC and NCP modes.
+
 ## Table of Contents
 
 - [Wi-Fi - Concurrent Mode](#wi-fi---concurrent-mode)
+  - [High-Level Overview](#high-level-overview)
   - [Table of Contents](#table-of-contents)
   - [Purpose/Scope](#purposescope)
   - [Prerequisites/Setup Requirements](#prerequisitessetup-requirements)
@@ -24,6 +29,9 @@
       - [UDP Rx Throughput](#udp-rx-throughput)
       - [TCP Tx Throughput](#tcp-tx-throughput)
       - [TCP Rx Throughput](#tcp-rx-throughput)
+  - [Troubleshooting](#troubleshooting)
+  - [Resources](#resources)
+  - [Report Bugs and Get Support](#report-bugs-and-get-support)
 
 ## Purpose/Scope
 
@@ -38,32 +46,50 @@ In this application, the SiWx91x's STA instance gets connected to a wireless Acc
 - Wireless Access Point
 - **SoC Mode**:
   - Standalone
-    - BRD4002A Wireless Pro Kit Mainboard [SI-MB4002A]
+    - BRD4002B Wireless Pro Kit Mainboard [SI-MB4002B](https://www.silabs.com/development-tools/wireless/wireless-pro-kit-mainboard?tab=overview)
     - Radio Boards 
-  	  - BRD4338A [SiWx917-RB4338A]
-    	- BRD4343A [SiWx917-RB4343A]
+  	  - BRD4338A [SiWx917-RB4338A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-rb4338a-wifi-6-bluetooth-le-soc-radio-board?tab=overview)
+  	  - BRD4342A [SiWx917-RB4342A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx91x-rb4342a-wifi-6-bluetooth-le-soc-radio-board?tab=overview)
+  	  - BRD4339B [SiWx917-RB4339B](https://docs.silabs.com/wiseconnect/latest/wiseconnect-getting-started/getting-started-with-at)
+  	  - BRD4340A [SiWx917-RB4340A](https://docs.silabs.com/wiseconnect/latest/wiseconnect-getting-started/getting-started-with-at)
+    	- BRD4343A [SiWx917-RB4343A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4343a-wi-fi-6-bluetooth-le-8mb-flash-radio-board-for-module?tab=overview)
+    	- BRD4343C [SiWx917-RB4343C](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4343c-wi-fi-6-bluetooth-le-8mb-flash-radio-board-for-module?tab=overview)
   - Kits
+  	- SiWG917 Dev Kit [BRD2605A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-dk2605a-wifi-6-bluetooth-le-soc-dev-kit?tab=overview)
+  	- SiWG917 Dev Kit [BRD2605B]
   	- SiWx917 Pro Kit [Si917-PK6031A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-pro-kit?tab=overview)
   	- SiWx917 Pro Kit [Si917-PK6032A]
-    - SiWx917 AC1 Module Explorer Kit (BRD2708A)
+    - SiWx917 AC1 Module Explorer Kit [BRD2708A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-ek2708a-explorer-kit?tab=overview)
   	
-- **NCP Mode**:
-  - Standalone
-    - BRD4002A Wireless Pro Kit Mainboard [SI-MB4002A]
-    - EFR32xG24 Wireless 2.4 GHz +10 dBm Radio Board [xG24-RB4186C](https://www.silabs.com/development-tools/wireless/xg24-rb4186c-efr32xg24-wireless-gecko-radio-board?tab=overview)
-	- EFR32FG25 863-876 MHz +16 dBm Radio Board [FG25-RB4271A](https://www.silabs.com/development-tools/wireless/proprietary/fg25-rb4271a-efr32fg25-radio-board?tab=overview)
+- **NCP Mode** (select either the EFR32 or STM32 host MCU platform; a single platform is sufficient to run the application):
+  - **Option 1: EFR32 host**
+    - Standalone
+      - BRD4002B Wireless Pro Kit Mainboard [SI-MB4002B](https://www.silabs.com/development-tools/wireless/wireless-pro-kit-mainboard?tab=overview)
+      - EFR32xG24 Wireless 2.4 GHz +10 dBm Radio Board [xG24-RB4186C](https://www.silabs.com/development-tools/wireless/xg24-rb4186c-efr32xg24-wireless-gecko-radio-board?tab=overview)
+  	- EFR32xG25 863-876 MHz +16 dBm Radio Board [FG25-RB4271A](https://www.silabs.com/development-tools/wireless/proprietary/fg25-rb4271a-efr32fg25-radio-board?tab=overview)
+      - NCP Expansion Kit with NCP Radio Boards
+        - [BRD4346A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-rb4346a-wifi-6-bluetooth-le-soc-4mb-flash-radio-board?tab=overview) + [BRD8045A](https://www.silabs.com/development-tools/wireless/wi-fi/expansion-adapter-board-for-co-processor-radio-boards?tab=overview)
+        - [BRD4357A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4357a-wi-fi-6-bluetooth-le-4mb-flash-radio-board-for-rcp-and-ncp-modules?tab=overview) + [BRD8045A](https://www.silabs.com/development-tools/wireless/wi-fi/expansion-adapter-board-for-co-processor-radio-boards?tab=overview)
+        - [BRD4357C](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4357c-wi-fi-6-bluetooth-le-4mb-flash-radio-board-for-rcp-and-ncp-modules?tab=overview) + [BRD8045A](https://www.silabs.com/development-tools/wireless/wi-fi/expansion-adapter-board-for-co-processor-radio-boards?tab=overview)
+    - Kits
+    	- EFR32xG24 Pro Kit +10 dBm [xG24-PK6009A](https://www.silabs.com/development-tools/wireless/efr32xg24-pro-kit-10-dbm?tab=overview)
+
+  - **Option 2: STM32F411RE host**
+    - [STM32F411RE](https://www.st.com/en/microcontrollers-microprocessors/stm32f411re.html) MCU
     - NCP Expansion Kit with NCP Radio Boards
-      - (BRD4346A + BRD8045A) [SiWx917-EB4346A]
-      - (BRD4357A + BRD8045A) [SiWx917-EB4357A]
-  - Kits
-  	- EFR32xG24 Pro Kit +10 dBm [xG24-PK6009A](https://www.silabs.com/development-tools/wireless/efr32xg24-pro-kit-10-dbm?tab=overview)
-  - Interface and Host MCU Supported
-    - SPI - EFR32 
-    - UART - EFR32
+      - [BRD4346A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-rb4346a-wifi-6-bluetooth-le-soc-4mb-flash-radio-board?tab=overview) + [BRD8045C](https://www.silabs.com/development-tools/wireless/wi-fi/shield-adapter-board-for-co-processor-radio-boards?tab=overview)
+      - [BRD4357A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4357a-wi-fi-6-bluetooth-le-4mb-flash-radio-board-for-rcp-and-ncp-modules?tab=overview) + [BRD8045C](https://www.silabs.com/development-tools/wireless/wi-fi/shield-adapter-board-for-co-processor-radio-boards?tab=overview)
+      - [BRD4357C](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4357c-wi-fi-6-bluetooth-le-4mb-flash-radio-board-for-rcp-and-ncp-modules?tab=overview) + [BRD8045C](https://www.silabs.com/development-tools/wireless/wi-fi/shield-adapter-board-for-co-processor-radio-boards?tab=overview)
+
+  - Interface and host MCU supported
+    - SPI : EFR32 and STM32
+    - UART : EFR32
 
 ### Software Requirements
 
 - Simplicity Studio
+
+- [Keil IDE](https://www.keil.com/) (to be used with STM32F411RE MCU)
 
 ### Setup Diagram
 
@@ -92,7 +118,7 @@ The application can be configured to suit your requirements and development envi
 
 - STA instance related parameters:
 
-  - DEFAULT_WIFI_CLIENT_PROFILE_SSID refers to the name to which the Si91x module gets connected to.
+  - DEFAULT_WIFI_CLIENT_PROFILE_SSID refers to the name to which the SiWx91x module gets connected to.
 
   	```c
   	#define DEFAULT_WIFI_CLIENT_PROFILE_SSID               "YOUR_AP_SSID"
@@ -128,13 +154,13 @@ The application can be configured to suit your requirements and development envi
 > Note:
 >
 > 1. In concurrent mode, STA and AP should be configured on the same channel. The STA instance shall first scan for the specified external AP, wherein the channel number of AP is fetched and passed as an argument during SoftAP creation.
-> 2. Valid values for CHANNEL_NO are 1 to 11 in 2.4 GHz band and 36 to 48 and 149 to 165 in 5 GHz. In this example, default configured band is 2.4 GHz.
+> 2. Valid values for CHANNEL_NO are 1 to 14 in the 2.4 GHz band. The default region code is set to US.
 
 - Other STA instance configurations can be modified if required in `default_wifi_ap_profile` configuration structure.
 
 > Note:
 >
-> 1. This application is not providing the facility to configure the access point’s IP Parameters. Default IP address of the Silicon Labs access point is **192.168.100.76**.
+> 1. This application lets you configure the access point IP parameters. By default, the Silicon Labs access point uses the IPv4 address 192.168.10.10.
 > 2. In concurrent mode, the IP networks of Silicon Labs STA and Silicon Labs access point both should be different. Configure Wireless Access Point IP network (Ex: 192.168.0.1) other than Silicon Labs access point IP network.
 
 #### Open **sl_wifi_device.h** file. You can also refer to `sl_wifi_default_concurrent_configuration` and modify/create configurations as per your needs and requirements.
@@ -152,7 +178,7 @@ Configure the following parameters in `app.c` to test throughput app as per requ
       #define SERVER_PORT        <remote_port>      // Remote server port
       #define SERVER_IP  "192.168.0.100"    // Remote server IP address
       #define SOCKET_ASYNC_FEATURE 1                // Type of socket used. Synchronous = 0, Asynchronous = 1
-	  #define LISTEN_ON_AP_INTERFACE 1  // DUT wait on recieve either on STA or AP interface
+	  #define LISTEN_ON_AP_INTERFACE 1  // DUT wait on receive either on STA or AP interface
 	  To listen_on_station = 0, listen_on_ap = 1
       ```
 
@@ -299,3 +325,27 @@ The iPerf command to start the TCP client is:
   > `C:\> iperf.exe -c 192.168.0.100 -p 5001 -i 1 -t 30`  
 
   ![Figure: TCP_RX](resources/readme/TCP_RX.png)
+
+## Troubleshooting
+
+If you encounter issues while running the Concurrent Mode example, check the following:
+
+- Verify that STA and AP credentials in `sl_net_default_values.h` and concurrent configuration in `sl_wifi_device.h` match your setup, using `sl_wifi_default_concurrent_configuration` as a reference.
+- Confirm that `SERVER_IP`, `SERVER_PORT`, `LISTENING_PORT`, and `THROUGHPUT_TYPE` in `app.c` match the iPerf server or client setup on the remote PC.
+- Start the iPerf server or client on the PC before the SiWx91x device attempts to connect for throughput tests.
+- Ensure that the remote PC and client devices are connected to the correct network (third-party AP for STA, SiWx91x soft AP for AP-side tests).
+- If vendor-specific IE features are enabled, verify that IE buffer length and identifier settings match [Vendor Specific Information Element (IE) Support](#vendor-specific-information-element-ie-support).
+- For NCP mode, verify that the host interface matches the project variant.
+
+## Resources
+
+- [WiSeConnect Getting Started Guide](https://docs.silabs.com/wiseconnect/latest/wiseconnect-getting-started/)
+- [WiSeConnect Examples](https://docs.silabs.com/wiseconnect/latest/wiseconnect-examples/#example-folder-structure)
+- [WiSeConnect Recommended Settings Guide](https://docs.silabs.com/wiseconnect/latest/wiseconnect-developers-guide-prog-recommended-settings/)
+- [iPerf 2.0.8 Download](https://sourceforge.net/projects/iperf2/files/iperf-2.0.8-win.zip/download)
+
+## Report Bugs and Get Support
+
+Report issues and get help from the Silicon Labs community:
+
+- [Silicon Labs Community](https://www.silabs.com/community)

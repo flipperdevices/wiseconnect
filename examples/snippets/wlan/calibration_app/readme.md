@@ -1,6 +1,14 @@
 # Wi-Fi - Calibration App
 
+## High-Level Overview
+
+SiWx91x calibration example: Calibrate carrier frequency offset and Tx gain offset using a spectrum analyzer and serial CLI commands, then store calibration data to flash or eFuse in SoC and NCP modes.
+
+## Table of Contents
+
 - [Wi-Fi - Calibration App](#wi-fi---calibration-app)
+  - [High-Level Overview](#high-level-overview)
+  - [Table of Contents](#table-of-contents)
   - [Purpose/Scope](#purposescope)
   - [Prerequisites/Setup Requirements](#prerequisitessetup-requirements)
     - [Hardware Requirements](#hardware-requirements)
@@ -13,6 +21,9 @@
       - [Update XO Ctune and Gain Offset](#update-xo-ctune-and-gain-offset)
     - [Spectrum Analyzer Settings](#spectrum-analyzer-settings)
     - [Acronyms and Abbreviations](#acronyms-and-abbreviations)
+  - [Troubleshooting](#troubleshooting)
+  - [Resources](#resources)
+  - [Report Bugs and Get Support](#report-bugs-and-get-support)
 
 ## Purpose/Scope
 
@@ -23,36 +34,54 @@ This application demonstrates the procedure to calibrate the carrier frequency o
 ### Hardware Requirements
 
 - Windows PC
-- SiWx91x Wi-Fi Evaluation Kit. The SiWx91x supports multiple operating modes. See [Operating Modes](https://docs.silabs.com/wiseconnect/latest/wiseconnect-api-reference-guide-si91x-driver/sl-si91-x-constants#sl-si91x-operation-mode-t) for details.
+- SiWx91x Wi-Fi Evaluation Kit. The SiWx91x supports multiple operating modes. See [Operating Modes](https://docs.silabs.com/wiseconnect/latest/wiseconnect-api-reference-guide-wi-fi/sl-wifi-types#sl-wifi-operation-mode-t) for details.
 - **SoC Mode**:
   - Standalone
-    - BRD4002A Wireless Pro Kit Mainboard [SI-MB4002A]
+    - BRD4002B Wireless Pro Kit Mainboard [SI-MB4002B](https://www.silabs.com/development-tools/wireless/wireless-pro-kit-mainboard?tab=overview)
     - Radio Boards 
-  	  - BRD4338A [SiWx917-RB4338A]
-  	  - BRD4343A [SiWx917-RB4343A]
+  	  - BRD4338A [SiWx917-RB4338A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-rb4338a-wifi-6-bluetooth-le-soc-radio-board?tab=overview)
+  	  - BRD4342A [SiWx917-RB4342A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx91x-rb4342a-wifi-6-bluetooth-le-soc-radio-board?tab=overview)
+  	  - BRD4339B [SiWx917-RB4339B](https://docs.silabs.com/wiseconnect/latest/wiseconnect-getting-started/getting-started-with-at)
+  	  - BRD4340A [SiWx917-RB4340A](https://docs.silabs.com/wiseconnect/latest/wiseconnect-getting-started/getting-started-with-at)
+  	  - BRD4343A [SiWx917-RB4343A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4343a-wi-fi-6-bluetooth-le-8mb-flash-radio-board-for-module?tab=overview)
+  	  - BRD4343C [SiWx917-RB4343C](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4343c-wi-fi-6-bluetooth-le-8mb-flash-radio-board-for-module?tab=overview)
   - Kits
+  	- SiWG917 Dev Kit [BRD2605A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-dk2605a-wifi-6-bluetooth-le-soc-dev-kit?tab=overview)
+  	- SiWG917 Dev Kit [BRD2605B]
   	- SiWx917 Pro Kit [Si917-PK6031A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-pro-kit?tab=overview)
   	- SiWx917 Pro Kit [Si917-PK6032A]
-    - SiWx917 AC1 Module Explorer Kit (BRD2708A)
+    - SiWx917 AC1 Module Explorer Kit [BRD2708A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-ek2708a-explorer-kit?tab=overview)
   	
-- **NCP Mode**:
-  - Standalone
-    - BRD4002A Wireless Pro Kit Mainboard [SI-MB4002A]
-    - EFR32xG24 Wireless 2.4 GHz +10 dBm Radio Board [xG24-RB4186C](https://www.silabs.com/development-tools/wireless/xg24-rb4186c-efr32xg24-wireless-gecko-radio-board?tab=overview)
+- **NCP Mode** (select either the EFR32 or STM32 host MCU platform; a single platform is sufficient to run the application):
+  - **Option 1: EFR32 host**
+    - Standalone
+      - BRD4002B Wireless Pro Kit Mainboard [SI-MB4002B](https://www.silabs.com/development-tools/wireless/wireless-pro-kit-mainboard?tab=overview)
+      - EFR32xG24 Wireless 2.4 GHz +10 dBm Radio Board [xG24-RB4186C](https://www.silabs.com/development-tools/wireless/xg24-rb4186c-efr32xg24-wireless-gecko-radio-board?tab=overview)
+      - NCP Expansion Kit with NCP Radio Boards
+        - [BRD4346A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-rb4346a-wifi-6-bluetooth-le-soc-4mb-flash-radio-board?tab=overview) + [BRD8045A](https://www.silabs.com/development-tools/wireless/wi-fi/expansion-adapter-board-for-co-processor-radio-boards?tab=overview)
+        - [BRD4357A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4357a-wi-fi-6-bluetooth-le-4mb-flash-radio-board-for-rcp-and-ncp-modules?tab=overview) + [BRD8045A](https://www.silabs.com/development-tools/wireless/wi-fi/expansion-adapter-board-for-co-processor-radio-boards?tab=overview)
+        - [BRD4357C](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4357c-wi-fi-6-bluetooth-le-4mb-flash-radio-board-for-rcp-and-ncp-modules?tab=overview) + [BRD8045A](https://www.silabs.com/development-tools/wireless/wi-fi/expansion-adapter-board-for-co-processor-radio-boards?tab=overview)
+    - Kits
+    	- EFR32xG24 Pro Kit +10 dBm [xG24-PK6009A](https://www.silabs.com/development-tools/wireless/efr32xg24-pro-kit-10-dbm?tab=overview)
+    - Spectrum Analyzer
+    - RF Cable connects between EVK and Spectrum Analyzer.
+
+  - **Option 2: STM32F411RE host**
+    - [STM32F411RE](https://www.st.com/en/microcontrollers-microprocessors/stm32f411re.html) MCU
     - NCP Expansion Kit with NCP Radio Boards
-      - (BRD4346A + BRD8045A) [SiWx917-EB4346A]
-      - (BRD4357A + BRD8045A) [SiWx917-EB4357A]
-  - Kits
-  	- EFR32xG24 Pro Kit +10 dBm [xG24-PK6009A](https://www.silabs.com/development-tools/wireless/efr32xg24-pro-kit-10-dbm?tab=overview)
-  - Spectrum Analyzer
-  - RF Cable connects between EVK and Spectrum Analyzer.
-  - Interface and Host MCU Supported
-    - SPI - EFR32 
-    - UART - EFR32
+      - [BRD4346A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-rb4346a-wifi-6-bluetooth-le-soc-4mb-flash-radio-board?tab=overview) + [BRD8045C](https://www.silabs.com/development-tools/wireless/wi-fi/shield-adapter-board-for-co-processor-radio-boards?tab=overview)
+      - [BRD4357A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4357a-wi-fi-6-bluetooth-le-4mb-flash-radio-board-for-rcp-and-ncp-modules?tab=overview) + [BRD8045C](https://www.silabs.com/development-tools/wireless/wi-fi/shield-adapter-board-for-co-processor-radio-boards?tab=overview)
+      - [BRD4357C](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4357c-wi-fi-6-bluetooth-le-4mb-flash-radio-board-for-rcp-and-ncp-modules?tab=overview) + [BRD8045C](https://www.silabs.com/development-tools/wireless/wi-fi/shield-adapter-board-for-co-processor-radio-boards?tab=overview)
+
+  - Interface and host MCU supported
+    - SPI : EFR32 and STM32
+    - UART : EFR32
 
 ### Software Requirements
 
 - Simplicity Studio
+
+- [Keil IDE](https://www.keil.com/) (to be used with STM32F411RE MCU)
 
 ### Setup Diagram
 
@@ -270,3 +299,28 @@ The frequency error section shows the error that needs to be adjusted. You can a
 |A7 | Dual band SiWx91x EVK |
 
   ![Calibration Output](resources/readme/output.png)
+
+## Troubleshooting
+
+If you encounter issues while running the Calibration App example, check the following:
+
+- Verify the U.Fl to SMA cable and spectrum analyzer connections match the setup diagram in [Setup Diagram](#setup-diagram).
+- Configure the spectrum analyzer using the settings in [Spectrum Analyzer Settings](#spectrum-analyzer-settings) before starting the transmit test.
+- Use a serial terminal (Docklight or Tera Term) to send `sl_freq_offset` commands; iterate until frequency error is within +/- 2 KHz tolerance.
+- Call `sl_freq_offset` before `sl_calib_write` when using the XO ctune value from the hardware register.
+- Ensure gain offset values passed to `sl_calib_write` are integers (not floating point); use `gain_offset = observed_power_level + cable_loss - configured_power_level` and pass `2 * calculated_value`.
+- Calibrate gain offset for channel-1, channel-6, and channel-11 in the 2 GHz band and set the corresponding flags in `sl_calib_write`.
+- After frequency offset correction, issue `sl_calib_write` once to persist all calibration values to flash.
+- Use `sl_calib_read` to verify values were written correctly after calibration.
+
+## Resources
+
+- [WiSeConnect Getting Started Guide](https://docs.silabs.com/wiseconnect/latest/wiseconnect-getting-started/)
+- [WiSeConnect Examples](https://docs.silabs.com/wiseconnect/latest/wiseconnect-examples/#example-folder-structure)
+- [WiSeConnect Recommended Settings Guide](https://docs.silabs.com/wiseconnect/latest/wiseconnect-developers-guide-prog-recommended-settings/)
+
+## Report Bugs and Get Support
+
+Report issues and get help from the Silicon Labs community:
+
+- [Silicon Labs Community](https://www.silabs.com/community)

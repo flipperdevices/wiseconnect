@@ -38,7 +38,7 @@ void sl_si91x_m4_updater_app(void)
 {
   sl_status_t status = SL_STATUS_FAIL;
   uint32_t app_addr  = 0;
-  DEBUGOUT("\r\n M4 Updater Start ...\n");
+  DEBUGOUT("\r\n M4 Updater Start ...\r\n");
   status = sl_si91x_get_m4_app_addr(&app_addr);
   if (status != SL_STATUS_OK) {
     while (1)

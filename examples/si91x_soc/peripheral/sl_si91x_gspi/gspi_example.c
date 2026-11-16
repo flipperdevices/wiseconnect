@@ -97,43 +97,50 @@ void gspi_example_init(void)
     init_timer_for_sync();
     // Version information of GSPI driver
     version = sl_si91x_gspi_get_version();
-    DEBUGOUT("GSPI version is fetched successfully \n");
-    DEBUGOUT("API version is %d.%d.%d\n", version.release, version.major, version.minor);
+    /* Note: All status messages in this example — both success and failure — are
+ * intentionally emitted via SL_PRINT_STRING_ERROR so that they remain visible
+ * on the console at the default log level. This is a demonstration choice, not
+ * a recommendation: in production code, ERROR severity should be reserved for
+ * actual failures, with successful operations logged via SL_PRINT_STRING_INFO
+ * (or SL_PRINT_STRING_DEBUG for verbose trace). */
+    SL_PRINT_STRING_ERROR("GSPI version is fetched successfully \n");
+    SL_PRINT_STRING_ERROR("API version is %d.%d.%d\n", version.release, version.major, version.minor);
     // Pass the address of void pointer, it will be updated with the address
     // of GSPI instance which can be used in other APIs.
     status = sl_si91x_gspi_init(SL_GSPI_MASTER, &gspi_driver_handle);
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("sl_si91x_gspi_init: Error Code : %lu \n", status);
+      SL_PRINT_STRING_ERROR("sl_si91x_gspi_init: Error Code : %lu \n", status);
       break;
     }
-    DEBUGOUT("GSPI initialization is successful \n");
+    SL_PRINT_STRING_ERROR("GSPI initialization is successful \n");
     // Fetching the status of GSPI i.e., busy, data lost and mode fault
     gspi_status = sl_si91x_gspi_get_status(gspi_driver_handle);
-    DEBUGOUT("GSPI status is fetched successfully \n");
-    DEBUGOUT("Busy: %d\n", gspi_status.busy);
-    DEBUGOUT("Data_Lost: %d\n", gspi_status.data_lost);
-    DEBUGOUT("Mode_Fault: %d\n", gspi_status.mode_fault);
+    SL_PRINT_STRING_ERROR("GSPI status is fetched successfully \n");
+    SL_PRINT_STRING_ERROR("Busy: %d\n", gspi_status.busy);
+    SL_PRINT_STRING_ERROR("Data_Lost: %d\n", gspi_status.data_lost);
+    SL_PRINT_STRING_ERROR("Mode_Fault: %d\n", gspi_status.mode_fault);
     //Configuration of all other parameters that are required by GSPI
     // gspi_configuration structure is from sl_si91x_gspi_init.h file.
     // The user can modify this structure with the configuration of
     // his choice by filling this structure.
     status = sl_si91x_gspi_set_configuration(gspi_driver_handle, &config);
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("sl_si91x_gspi_control: Error Code : %lu \n", status);
+      SL_PRINT_STRING_ERROR("sl_si91x_gspi_control: Error Code : %lu \n", status);
       break;
     }
-    DEBUGOUT("GSPI configuration is successful \n");
+    SL_PRINT_STRING_ERROR("GSPI configuration is successful \n");
     // Register user callback function
     status = sl_si91x_gspi_register_event_callback(gspi_driver_handle, callback_event);
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("sl_si91x_gspi_register_event_callback: Error Code : %lu \n", status);
+      SL_PRINT_STRING_ERROR("sl_si91x_gspi_register_event_callback: Error Code : %lu \n", status);
       break;
     }
-    DEBUGOUT("GSPI user event callback registered successfully \n");
+    SL_PRINT_STRING_ERROR("GSPI user event callback registered successfully \n");
     // Fetching and printing the current clock division factor
-    DEBUGOUT("Current Clock division factor is %lu \n", sl_si91x_gspi_get_clock_division_factor(gspi_driver_handle));
+    SL_PRINT_STRING_ERROR("Current Clock division factor is %lu \n",
+                          sl_si91x_gspi_get_clock_division_factor(gspi_driver_handle));
     // Fetching and printing the current frame length
-    DEBUGOUT("Current Frame Length is %lu \n", sl_si91x_gspi_get_frame_length());
+    SL_PRINT_STRING_ERROR("Current Frame Length is %lu \n", sl_si91x_gspi_get_frame_length());
     if (sl_si91x_gspi_get_frame_length() > GSPI_BIT_WIDTH) {
       gspi_division_factor = sizeof(gspi_data_out[0]);
     }
@@ -171,16 +178,16 @@ void gspi_example_process_action(void)
                                              sizeof(gspi_data_out) / gspi_division_factor);
         if (status != SL_STATUS_OK) {
           // If it fails to execute the API, it will not execute rest of the things
-          DEBUGOUT("sl_si91x_gspi_transfer_data: Error Code : %lu \n", status);
+          SL_PRINT_STRING_ERROR("sl_si91x_gspi_transfer_data: Error Code : %lu \n", status);
           current_mode = SL_GSPI_TRANSMISSION_COMPLETED;
           break;
         }
-        DEBUGOUT("GSPI transfer begin successfully \n");
+        SL_PRINT_STRING_ERROR("GSPI transfer begin successfully \n");
         begin_transmission = false;
       }
       if (transfer_complete) {
         transfer_complete = false;
-        DEBUGOUT("GSPI transfer completed successfully \n");
+        SL_PRINT_STRING_ERROR("GSPI transfer completed successfully \n");
         // After comparing the loopback transfer, it compares the gspi_data_out and
         // gspi_data_in.
         compare_loop_back_data();
@@ -209,11 +216,11 @@ void gspi_example_process_action(void)
           sl_si91x_gspi_send_data(gspi_driver_handle, gspi_data_out, sizeof(gspi_data_out) / gspi_division_factor);
         if (status != SL_STATUS_OK) {
           // If it fails to execute the API, it will not execute rest of the things
-          DEBUGOUT("sl_si91x_gspi_send_data: Error Code : %lu \n", status);
+          SL_PRINT_STRING_ERROR("sl_si91x_gspi_send_data: Error Code : %lu \n", status);
           current_mode = SL_GSPI_TRANSMISSION_COMPLETED;
           break;
         }
-        DEBUGOUT("GSPI send begin successfully \n");
+        SL_PRINT_STRING_ERROR("GSPI send begin successfully \n");
         begin_transmission = false;
       }
       if (transfer_complete) {
@@ -223,10 +230,10 @@ void gspi_example_process_action(void)
         if (SL_USE_RECEIVE) {
           current_mode       = SL_GSPI_RECEIVE_DATA;
           begin_transmission = true;
-          DEBUGOUT("GSPI send completed \n");
+          SL_PRINT_STRING_ERROR("GSPI send completed \n");
           break;
         }
-        DEBUGOUT("GSPI send completed \n");
+        SL_PRINT_STRING_ERROR("GSPI send completed \n");
         // If receive macro is not enabled, current mode is set to completed.
         current_mode = SL_GSPI_TRANSMISSION_COMPLETED;
       }
@@ -241,18 +248,18 @@ void gspi_example_process_action(void)
           sl_si91x_gspi_receive_data(gspi_driver_handle, gspi_data_in, sizeof(gspi_data_in) / gspi_division_factor);
         if (status != SL_STATUS_OK) {
           // If it fails to execute the API, it will not execute rest of the things
-          DEBUGOUT("sl_si91x_gspi_receive_data: Error Code : %lu \n", status);
+          SL_PRINT_STRING_ERROR("sl_si91x_gspi_receive_data: Error Code : %lu \n", status);
           current_mode = SL_GSPI_TRANSMISSION_COMPLETED;
           break;
         }
-        DEBUGOUT("GSPI receive begin successfully \n");
+        SL_PRINT_STRING_ERROR("GSPI receive begin successfully \n");
         begin_transmission = false;
         //Waiting till the receive is completed
       }
       if (transfer_complete) {
         // If DMA is enabled, it will wait until transfer_complete flag is set.
         transfer_complete = false;
-        DEBUGOUT("GSPI receive completed \n");
+        SL_PRINT_STRING_ERROR("GSPI receive completed \n");
         compare_loop_back_data();
         // At last, current mode is set to completed
         current_mode = SL_GSPI_TRANSMISSION_COMPLETED;
@@ -292,9 +299,9 @@ static void compare_loop_back_data(void)
     }
   }
   if (data_index == GSPI_BUFFER_SIZE) {
-    DEBUGOUT("Data comparison successful, Loop Back Test Passed \n");
+    SL_PRINT_STRING_ERROR("Data comparison successful, Loop Back Test Passed \n");
   } else {
-    DEBUGOUT("Data comparison failed, Loop Back Test failed \n");
+    SL_PRINT_STRING_ERROR("Data comparison failed, Loop Back Test failed \n");
   }
 }
 
@@ -326,15 +333,15 @@ static void init_timer_for_sync(void)
   sl_status_t status;
   status = sl_si91x_ulp_timer_configure_clock(&sl_timer_clk_handle);
   if (status != SL_STATUS_OK) {
-    DEBUGOUT("sl_si91x_ulp_timer_configure_clock failed, error code: %ld", status);
+    SL_PRINT_STRING_ERROR("sl_si91x_ulp_timer_configure_clock failed, error code: %ld", status);
   }
   status = sl_si91x_ulp_timer_set_configuration(&sl_timer_handle_timer0);
   if (status != SL_STATUS_OK) {
-    DEBUGOUT("sl_si91x_ulp_timer_set_configuration failed, error code: %ld", status);
+    SL_PRINT_STRING_ERROR("sl_si91x_ulp_timer_set_configuration failed, error code: %ld", status);
   }
   status = sl_si91x_ulp_timer_set_count(TIMER_0, TIMER_FREQUENCY * INITIAL_COUNT);
   if (status != SL_STATUS_OK) {
-    DEBUGOUT("sl_si91x_ulp_timer_set_count failed, error code: %ld", status);
+    SL_PRINT_STRING_ERROR("sl_si91x_ulp_timer_set_count failed, error code: %ld", status);
   }
 }
 
@@ -351,16 +358,16 @@ static void wait_for_sync(uint16_t time_ms)
 
   status = sl_si91x_ulp_timer_start(TIMER_0);
   if (status != SL_STATUS_OK) {
-    DEBUGOUT("sl_si91x_ulp_timer_start failed, error code: %ld", status);
+    SL_PRINT_STRING_ERROR("sl_si91x_ulp_timer_start failed, error code: %ld", status);
   }
   status = sl_si91x_ulp_timer_get_count(TIMER_0, &start_time);
   if (status != SL_STATUS_OK) {
-    DEBUGOUT("sl_si91x_ulp_timer_get_count failed, error code: %ld", status);
+    SL_PRINT_STRING_ERROR("sl_si91x_ulp_timer_get_count failed, error code: %ld", status);
   }
   do {
     status = sl_si91x_ulp_timer_get_count(TIMER_0, &current_time);
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("sl_si91x_ulp_timer_get_count failed, error code: %ld", status);
+      SL_PRINT_STRING_ERROR("sl_si91x_ulp_timer_get_count failed, error code: %ld", status);
     }
   } while (!((current_time - start_time) > end_time));
   sl_si91x_ulp_timer_stop(TIMER_0);

@@ -37,7 +37,7 @@
 #include "em_device.h"
 #include "sli_sleeptimer.h"
 #include "sl_sleeptimer_config.h"
-
+#include "sl_log_helper.h"
 #ifdef __cplusplus
 extern "C" {
 #endif

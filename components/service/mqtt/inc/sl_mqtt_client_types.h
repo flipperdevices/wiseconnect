@@ -30,11 +30,31 @@
 #pragma once
 #include <stdint.h>
 #include <stdbool.h>
+#include "sl_status.h"
 #include "sl_slist.h"
 #include "sl_net_constants.h"
 #include "sl_ip_types.h"
 #include "sl_wifi_device.h"
 #include "sl_si91x_socket_utility.h"
+
+/******************************************************
+ *               Configurable Macros
+ ******************************************************/
+
+/**
+ * @brief Maximum allowed MQTT RX payload size for large message reassembly.
+ * @note This defines the maximum payload size that the SDK will accept for reassembly.
+ *       - Default: 8192 bytes (8 KB)
+ *       - You override this value by defining SL_MQTT_CLIENT_MAX_RX_PAYLOAD_SIZE
+ *         in your application or project configuration before including MQTT headers.
+ *       - Set to 0 to disable large payload reassembly. Fragmented messages will be discarded,
+ *         but small messages that fit within a single chunk will still be received normally.
+ *       - Memory is allocated dynamically (using malloc) only when large messages are received
+ *          and is freed immediately after the message is delivered to the application.
+ */
+#ifndef SL_MQTT_CLIENT_MAX_RX_PAYLOAD_SIZE
+#define SL_MQTT_CLIENT_MAX_RX_PAYLOAD_SIZE 8192
+#endif
 
 typedef enum MQTTStatus {
   MQTTSuccess = 0,     /**< Function completed successfully. */
@@ -91,11 +111,12 @@ typedef enum {
  * @brief MQTT Protocol versions.
  * 
  * @details
- *   This enumeration defines the supported versions of the MQTT protocol. The version determines the protocol features and behaviors used by the MQTT client.
+ *   This enumeration defines the supported versions of the MQTT protocol. The version determines the protocol features and behaviors used by the MQTT client. Only MQTT version 3.1.1 is supported by the Network Wireless Processor (NWP).
  */
 typedef enum {
-  SL_MQTT_VERSION_3,  ///< MQTT Version 3.0
-  SL_MQTT_VERSION_3_1 ///< MQTT Version 3.1
+  SL_MQTT_VERSION_3,    ///< MQTT Version 3.0 (Currently not supported)
+  SL_MQTT_VERSION_3_1,  ///< MQTT Version 3.1 (Currently not supported)
+  SL_MQTT_VERSION_3_1_1 ///< MQTT Version 3.1.1
 } sl_mqtt_version_t;
 
 /**
@@ -128,8 +149,30 @@ typedef enum {
   SL_MQTT_CLIENT_SUBSCRIBE_FAILED,    ///< Error status indicating that the MQTT client failed to subscribe to a topic.
   SL_MQTT_CLIENT_UNSUBSCRIBED_FAILED, ///< Error status indicating that the MQTT client failed to unsubscribe from a topic.
   SL_MQTT_CLIENT_DISCONNECT_FAILED, ///< Error status indicating that the MQTT client failed to disconnect from the broker.
-  SL_MQTT_CLIENT_UNKNOWN_ERROR      ///< Error status indicating that an unknown error occurred in the MQTT client.
+  SL_MQTT_CLIENT_RECEIVE_FAILED,    ///< Error status indicating that the MQTT message receive operation failed.
+  SL_MQTT_CLIENT_RECEIVE_PAYLOAD_TOO_LARGE, ///< Error status indicating that the received payload exceeds SL_MQTT_CLIENT_MAX_RX_PAYLOAD_SIZE.
+  SL_MQTT_CLIENT_RECEIVE_MEMORY_ALLOCATION_FAILED, ///< Error status indicating that memory allocation failed during message reassembly.
+  SL_MQTT_CLIENT_RECEIVE_DATA_CORRUPTED, ///< Error status indicating data corruption during message reassembly (e.g., buffer overflow, invalid lengths).
+  SL_MQTT_CLIENT_UNKNOWN_ERROR ///< Error status indicating that an unknown error occurred in the MQTT client.
 } sl_mqtt_client_error_status_t;
+
+/**
+ * @brief MQTT Client error information passed with @ref SL_MQTT_CLIENT_ERROR_EVENT.
+ *
+ * @details
+ *   This structure holds the MQTT client error status and the underlying SDK/firmware status code.
+ *   The `error_status` indicates the error type encountered during the client's operations,
+ *   and `status_code` provides the detailed firmware/SDK reason code when available.
+ *
+ * @note
+ *   For host-side validation errors with no firmware status, `status_code` is
+ *   typically SL_STATUS_FAIL. For reassembly buffer allocation failure,
+ *   `status_code` is SL_STATUS_ALLOCATION_FAILED.
+ */
+typedef struct {
+  sl_mqtt_client_error_status_t error_status; ///< High-level MQTT client error classification.
+  sl_status_t status_code;                    ///< Underlying SDK/firmware status code.
+} sl_mqtt_client_error_info_t;
 
 /**
  * @enum sl_mqtt_client_disconnection_reason_t
@@ -178,6 +221,32 @@ typedef enum {
  */
 
 /**
+ * @brief
+ *   Advanced TCP/TLS configuration options for the MQTT client.
+ *
+ * @details
+ *   This structure holds advanced TCP and TLS configuration parameters that can be
+ *   applied to the MQTT client before connecting. Use @ref sl_mqtt_client_set_tcp_tls_advanced_configuration
+ *   to apply these options after initializing the client and before calling connect.
+ *
+ * @note The ssl_ciphers_bitmap and ssl_ext_ciphers_bitmap fields accept cipher suite bitmaps
+ *   as defined in sl_si91x_socket_constants.h (e.g., SL_SI91X_TLS_DHE_RSA_WITH_AES_256_CBC_SHA256).
+ *   Invalid or unsupported cipher combinations may result in TLS handshake failures.
+ *   Use 0 for firmware default cipher suites.
+ */
+typedef struct {
+  uint16_t
+    tcp_keepalive_initial_time_sec; ///< Idle time before the first keep-alive probe in seconds (0 = firmware default).
+  uint8_t tcp_max_retry_count;      ///< Maximum TCP retransmission attempts (0 = firmware default).
+  uint8_t
+    max_retransmission_timeout_value; ///< Retransmission timeout cap as a power-of-2 scaling factor (0 = firmware default).
+  uint32_t
+    ssl_ciphers_bitmap; ///< TLS 1.2 and below cipher suite selection bitmap (0 = firmware default). See sl_si91x_socket_constants.h for valid values.
+  uint32_t
+    ssl_ext_ciphers_bitmap; ///< TLS 1.3 cipher suite selection bitmap (0 = firmware default). See sl_si91x_socket_constants.h for valid values.
+} sl_mqtt_client_tcp_tls_advanced_options_t;
+
+/**
  * @brief 
  *   Structure representing the MQTT Client Last Will message.
  * 
@@ -210,8 +279,9 @@ typedef struct {
   uint8_t *topic;             ///< Pointer to the topic name. Must not be NULL.
   uint16_t
     topic_length; ///< Length of the topic name. It should not exceed 202 bytes that includes NULL termination character.
-  uint8_t *content;        ///< Pointer to the message content. Must not be NULL.
-  uint32_t content_length; ///< Length of the message content. It should not exceed 1024 bytes.
+  uint8_t *content; ///< Pointer to the message content. Must not be NULL.
+  uint32_t
+    content_length; ///< Length of the message content. For RX, the SDK automatically reassembles fragmented payloads.
 } sl_mqtt_client_message_t;
 
 /**
@@ -291,7 +361,7 @@ typedef struct {
   uint16_t minimum_back_off_time; ///< Minimum back-off time (in seconds) between two successive reconnect attempts.
   uint16_t maximum_back_off_time; ///< Maximum back-off time (in seconds) between two successive reconnect attempts.
   bool is_clean_session;          ///< Clean session flag to send to the broker in the connect request.
-  sl_mqtt_version_t mqt_version;  ///< MQTT protocol version used by the client.
+  sl_mqtt_version_t mqt_version;  ///< This parameter is currently not supported.
   uint16_t client_port;           ///< Port number used by the client for the connection.
   sl_net_credential_id_t
     credential_id;    ///< Credential ID for the username and password used in the MQTT connect request.
@@ -316,8 +386,11 @@ typedef struct {
  *   The type of event that occurred. This is of type @ref sl_mqtt_client_event_t.
  * 
  * @param event_data
- *   Pointer to the event data. This parameter is non-null only for events of type MQTT_CLIENT_MESSAGE_RECEIVED and MQTT_CLIENT_ERROR.
- * 
+ *   Pointer to event-specific data, or NULL if the event has no data.
+ *   For @ref SL_MQTT_CLIENT_ERROR_EVENT, cast to @ref sl_mqtt_client_error_info_t * which includes
+ *   `error_status` and `status_code`.
+ *   Use these values only inside the callback; do not save this pointer.
+ *
  * @param context
  *   Pointer to the user-provided context. This context is provided at the time of the API call (e.g., @ref sl_mqtt_client_init). The caller must ensure that the lifecycle of the context is retained until the callback is invoked. The deallocation of the context is also the responsibility of the caller.
  */
@@ -373,6 +446,10 @@ typedef struct {
  * 
  * @details
  *   This structure represents the handle for an MQTT client. It holds the current state of the client, broker configuration, last will message configuration, client configuration, subscription list, and event handler.
+ *
+ * @note
+ *   This structure is managed internally by the SDK. Users should not modify its members directly.
+ *   Use the provided APIs (e.g., @ref sl_mqtt_client_init, @ref sl_mqtt_client_connect, @ref sl_mqtt_client_deinit) to manage the client lifecycle.
  */
 typedef struct {
   sl_mqtt_client_connection_state_t state; ///< Current state of the MQTT client.
@@ -386,6 +463,9 @@ typedef struct {
     *subscription_list_head; ///< Pointer to the head of the subscription linked list.
   sl_mqtt_client_event_handler_t
     client_event_handler; ///< Function pointer to the event handler, provided at the time of @ref sl_mqtt_client_init.
+  sl_mqtt_client_tcp_tls_advanced_options_t
+    tcp_options; ///< Advanced TCP/TLS configuration options, set via @ref sl_mqtt_client_set_tcp_tls_advanced_configuration.
+  bool tcp_options_configured; ///< Flag indicating if advanced TCP/TLS options have been set.
 } sl_mqtt_client_t;
 
 /** @} */

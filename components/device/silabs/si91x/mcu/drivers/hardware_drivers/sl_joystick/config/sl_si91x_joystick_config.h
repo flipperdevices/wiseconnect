@@ -33,7 +33,10 @@
 
 // <<< Use Configuration Wizard in Context Menu >>>
 
-// <e>Channel selection
+// <e JOYSTICK_CHANNEL_ENABLE> Channel selection
+// <i> Enable to select the Joystick ADC channel
+// <i> Default: 1
+#define JOYSTICK_CHANNEL_ENABLE 1
 
 // <o JOYSTICK_ADC_CHANNEL> Joystick ADC channel (make sure to install selected ADC channel/instance)
 //   <SL_ADC_CHANNEL_1=>  channel_1

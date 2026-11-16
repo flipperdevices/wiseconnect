@@ -1,7 +1,8 @@
 id: sl_crc
 label: CRC
 package: platform_siwx91x
-description: This application contains an example code to demonstrate CRC Generation on DMA transferred data.
+description: >
+  This component provides CRC generation for DMA-transferred data.
 category: Device|Si91x|MCU|Peripheral
 quality: production
 metadata:
@@ -9,7 +10,8 @@ metadata:
     license: Zlib
 root_path: "components/device/silabs/si91x/mcu/drivers/unified_api"
 requires:
-  - name: sl_dma 
+  - name: sl_dma
+  - name: log_none
 source:
   - path: "src/sl_si91x_crc.c"
 include:

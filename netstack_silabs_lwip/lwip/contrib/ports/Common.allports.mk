@@ -60,6 +60,7 @@ LWIPDIR?=$(CONTRIBDIR)/..
 
 CFLAGS+=-I. \
 	-I$(CONTRIBDIR) \
+	-I$(CONTRIBDIR)/ports/silabs \
 	-I$(LWIPDIR)/include \
 	-I$(LWIPARCH)/include
 

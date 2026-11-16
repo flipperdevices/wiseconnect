@@ -1,8 +1,13 @@
 # Wi-Fi - Azure IoT MQTT Client Application
 
+## High-Level Overview
+
+SiWx91x Azure IoT MQTT example: Connect to a Wi-Fi access point and Azure IoT Hub, send device-to-cloud telemetry, receive cloud-to-device messages, and measure current with Energy Profiler in SoC and NCP modes.
+
 ## Table of Contents
 
 - [Wi-Fi - Azure IoT MQTT Client Application](#wi-fi---azure-iot-mqtt-client-application)
+  - [High-Level Overview](#high-level-overview)
   - [Table of Contents](#table-of-contents)
   - [Purpose/Scope](#purposescope)
   - [Prerequisites/Setup Requirements](#prerequisitessetup-requirements)
@@ -21,33 +26,65 @@
     - [1.3.1 ***Register IoT Device with Symmetric Key Authentication in IoT Hub:***](#131-register-iot-device-with-symmetric-key-authentication-in-iot-hub)
     - [1.3.2 ***Register IoT Device with X.509 Authenticated Device with IoT Hub***](#132-register-iot-device-with-x509-authenticated-device-with-iot-hub)
   - [Documentation](#documentation)
+  - [Troubleshooting](#troubleshooting)
+  - [Resources](#resources)
+  - [Report Bugs and Get Support](#report-bugs-and-get-support)
 ## Purpose/Scope
 
 This application demonstrates how to configure the SiWx91x module as an Azure device endpoint. It also explains how to establish a connection with the Azure IoT Hub, send telemetry messages to Hub from the device (D2C), and receive the messages from the IoT Hub (C2D).
 
 ## Prerequisites/Setup Requirements
 
+> **NOTE:** The application uses SNTP to obtain Unix time required for SAS token generation. SAS token generation requires access to the NTP server `0.pool.ntp.org` before the device can connect to Azure IoT Hub over MQTT.
+
 ### Hardware Requirements  
 
 - A Windows PC
 - A Wireless Access Point
-- SoC Mode:
-  - Radio Boards
-    - [BRD4338A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-rb4338a-wifi-6-bluetooth-le-soc-radio-board)
-  	- [BRD4343A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4343a-wi-fi-6-bluetooth-le-8mb-flash-radio-board-for-module)
-    - [BRD4342A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx91x-rb4342a-wifi-6-bluetooth-le-soc-radio-board)
+- **SoC Mode**:
+  - Standalone
+    - BRD4002B Wireless Pro Kit Mainboard [SI-MB4002B](https://www.silabs.com/development-tools/wireless/wireless-pro-kit-mainboard?tab=overview)
+    - Radio Boards
+  	  - BRD4338A [SiWx917-RB4338A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-rb4338a-wifi-6-bluetooth-le-soc-radio-board?tab=overview)
+  	  - BRD4342A [SiWx917-RB4342A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx91x-rb4342a-wifi-6-bluetooth-le-soc-radio-board?tab=overview)
+  	  - BRD4339B [SiWx917-RB4339B](https://docs.silabs.com/wiseconnect/latest/wiseconnect-getting-started/getting-started-with-at)
+  	  - BRD4340A [SiWx917-RB4340A](https://docs.silabs.com/wiseconnect/latest/wiseconnect-getting-started/getting-started-with-at)
+  	  - BRD4343A [SiWx917-RB4343A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4343a-wi-fi-6-bluetooth-le-8mb-flash-radio-board-for-module?tab=overview)
+  	  - BRD4343C [SiWx917-RB4343C](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4343c-wi-fi-6-bluetooth-le-8mb-flash-radio-board-for-module?tab=overview)
+  - Kits
+	- SiWG917 Dev Kit [BRD2605B]
+  	- SiWx917 Pro Kit [Si917-PK6031A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-pro-kit?tab=overview)
+  	- SiWx917 Pro Kit [Si917-PK6032A]
+    - SiWx917 AC1 Module Explorer Kit [BRD2708A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-ek2708a-explorer-kit?tab=overview)
   - For Soc Mode, the Simplicity Studio Energy Profiler can be used for the current consumption measurement - [Simplicity Studio Energy Profiler](#using-simplicity-studio-energy-profiler-for-current-measurement).
   - USB to UART converter
-- NCP Mode:
-  - Silicon Labs [BRD4180B](https://www.silabs.com/)
-  - Host MCU Eval Kit. This example has been tested with:
-    - Silicon Labs [WSTK + EFR32MG21](https://www.silabs.com/development-tools/wireless/efr32xg21-bluetooth-starter-kit)
-  - Interface and Host MCU Supported
-    - SPI - EFR32 
+- **NCP Mode** (select either the EFR32 or STM32 host MCU platform; a single platform is sufficient to run the application):
+  - **Option 1: EFR32 host**
+    - Standalone
+      - BRD4002B Wireless Pro Kit Mainboard [SI-MB4002B](https://www.silabs.com/development-tools/wireless/wireless-pro-kit-mainboard?tab=overview)
+      - EFR32xG24 Wireless 2.4 GHz +10 dBm Radio Board [xG24-RB4186C](https://www.silabs.com/development-tools/wireless/xg24-rb4186c-efr32xg24-wireless-gecko-radio-board?tab=overview)
+      - NCP Expansion Kit with NCP Radio Boards
+        - [BRD4346A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-rb4346a-wifi-6-bluetooth-le-soc-4mb-flash-radio-board?tab=overview) + [BRD8045A](https://www.silabs.com/development-tools/wireless/wi-fi/expansion-adapter-board-for-co-processor-radio-boards?tab=overview)
+        - [BRD4357A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4357a-wi-fi-6-bluetooth-le-4mb-flash-radio-board-for-rcp-and-ncp-modules?tab=overview) + [BRD8045A](https://www.silabs.com/development-tools/wireless/wi-fi/expansion-adapter-board-for-co-processor-radio-boards?tab=overview)
+        - [BRD4357C](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4357c-wi-fi-6-bluetooth-le-4mb-flash-radio-board-for-rcp-and-ncp-modules?tab=overview) + [BRD8045A](https://www.silabs.com/development-tools/wireless/wi-fi/expansion-adapter-board-for-co-processor-radio-boards?tab=overview)
+    - Kits
+    	- EFR32xG24 Pro Kit +10 dBm [xG24-PK6009A](https://www.silabs.com/development-tools/wireless/efr32xg24-pro-kit-10-dbm?tab=overview)
+
+  - **Option 2: STM32F411RE host**
+    - [STM32F411RE](https://www.st.com/en/microcontrollers-microprocessors/stm32f411re.html) MCU
+    - NCP Expansion Kit with NCP Radio Boards
+      - [BRD4346A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-rb4346a-wifi-6-bluetooth-le-soc-4mb-flash-radio-board?tab=overview) + [BRD8045C](https://www.silabs.com/development-tools/wireless/wi-fi/shield-adapter-board-for-co-processor-radio-boards?tab=overview)
+      - [BRD4357A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4357a-wi-fi-6-bluetooth-le-4mb-flash-radio-board-for-rcp-and-ncp-modules?tab=overview) + [BRD8045C](https://www.silabs.com/development-tools/wireless/wi-fi/shield-adapter-board-for-co-processor-radio-boards?tab=overview)
+      - [BRD4357C](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4357c-wi-fi-6-bluetooth-le-4mb-flash-radio-board-for-rcp-and-ncp-modules?tab=overview) + [BRD8045C](https://www.silabs.com/development-tools/wireless/wi-fi/shield-adapter-board-for-co-processor-radio-boards?tab=overview)
+
+  - Interface and host MCU supported
+    - SPI : EFR32 and STM32
+    - UART : EFR32
 
 ### Software Requirements
 
 - Simplicity Studio
+- [Keil IDE](https://www.keil.com/) (to be used with STM32F411RE MCU)
   - Download the [Simplicity Studio IDE](https://www.silabs.com/developers/simplicity-studio).
   - Follow the [Simplicity Studio user guide](https://docs.silabs.com/simplicity-studio-5-users-guide/1.1.0/ss-5-users-guide-getting-started/install-ss-5-and-software#install-ssv5) to install Simplicity Studio IDE.
 
@@ -85,7 +122,7 @@ In the Project explorer pane, expand the **config** folder and open the ``sl_net
 
 - STA instance related parameters
 
-	- DEFAULT_WIFI_CLIENT_PROFILE_SSID refers to the name with which the Wi-Fi network shall be advertised. The Si91X module is connected to it.
+	- DEFAULT_WIFI_CLIENT_PROFILE_SSID refers to the name with which the Wi-Fi network shall be advertised. The SiWx91x module is connected to it.
 	
 	```c
   	#define DEFAULT_WIFI_CLIENT_PROFILE_SSID               "YOUR_AP_SSID"      
@@ -439,3 +476,29 @@ The device is now successfully registered to IoT Hub with Symmetric key authenti
 - Azure middleware : [Azure middleware document](https://azure.github.io/azure-iot-middleware-freertos/)
 
 - Core MQTT: [Core MQTT document](https://freertos.github.io/coreMQTT-Agent/main/) 
+
+## Troubleshooting
+
+If you encounter issues while running the Azure IoT MQTT Client example, check the following:
+
+- Verify that `DEFAULT_WIFI_CLIENT_PROFILE_SSID`, `DEFAULT_WIFI_CLIENT_CREDENTIAL`, and `DEFAULT_WIFI_CLIENT_SECURITY_TYPE` in `sl_net_default_values.h` match your access point settings and that the AP has internet access.
+- Confirm that the device can reach the NTP server `0.pool.ntp.org`. SAS token generation requires a successful SNTP time sync before the device can connect to Azure IoT Hub over MQTT.
+- Confirm that `democonfigHOSTNAME`, `democonfigDEVICE_ID`, and authentication credentials in `demo_config.h` match your Azure IoT Hub and registered device settings.
+- For symmetric key authentication, set `USE_SYMMETRIC_KEY` to `1` and configure `democonfigDEVICE_SYMMETRIC_KEY` from the IoT Hub primary connection string as described in [Register IoT Device with Symmetric Key Authentication in IoT Hub](#131-register-iot-device-with-symmetric-key-authentication-in-iot-hub).
+- For X.509 authentication, set `USE_SYMMETRIC_KEY` to `0`, generate and convert device certificates using `certificate_to_array.py`, and include the generated `.h` files as described in [Register IoT Device with X.509 Authenticated Device with IoT Hub](#132-register-iot-device-with-x509-authenticated-device-with-iot-hub).
+- Replace the default cloud connectivity certificates in the WiseConnect SDK with valid certificates. The included certificates are for reference only.
+- If telemetry or C2D messages are not visible, verify that the device connected to IoT Hub successfully and use the Azure CLI commands in [Appendix-2](#appendix-2--steps-to-check-telemetry-message-on-azure-cloud) and [Appendix-3](#appendix-3--steps-to-send-c2d-message-from-the-cloud).
+- When you use Energy Profiler, revert the target part and board name to the defaults before you flash the application binary.
+
+## Resources
+
+- [WiSeConnect Getting Started Guide](https://docs.silabs.com/wiseconnect/latest/wiseconnect-getting-started/)
+- [Azure IoT Middleware for FreeRTOS](https://azure.github.io/azure-iot-middleware-freertos/)
+- [Azure IoT Hub Documentation](https://docs.microsoft.com/en-us/azure/iot-hub/)
+- [WiSeConnect Recommended Settings Guide](https://docs.silabs.com/wiseconnect/latest/wiseconnect-developers-guide-prog-recommended-settings/)
+
+## Report Bugs and Get Support
+
+Report issues and get help from the Silicon Labs community:
+
+- [Silicon Labs Community](https://www.silabs.com/community)

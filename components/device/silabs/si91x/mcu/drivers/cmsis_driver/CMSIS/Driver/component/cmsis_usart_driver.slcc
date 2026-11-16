@@ -2,7 +2,7 @@ id: cmsis_usart_driver
 label: CMSIS USART DRIVER
 package: platform_siwx91x
 description: >
-  CMSIS USART Driver include path
+  This component provides the CMSIS USART driver include path for the SiWx91x.
 category: Device|Si91x|MCU|Internal|CMSIS Drivers
 quality: production
 metadata:

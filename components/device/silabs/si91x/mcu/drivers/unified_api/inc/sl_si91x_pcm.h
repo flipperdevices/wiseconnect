@@ -223,6 +223,33 @@ sl_status_t sl_si91x_pcm_transmit_data(sl_i2s_handle_t pcm_handle, const void *d
 
 /***************************************************************************/
 /**
+* @brief Wrapper to configure PCM transmit/receive channels.
+ *
+ * @details This API wraps sl_si91x_i2s_config_transmit_receive to configure the
+ *PCM DMA transmit or receive channels. The transfer_type field in the
+ *xfer_config structure determines whether transmit or receive is configured.
+ *
+ * @pre Pre-conditions:
+ *      - @ref sl_si91x_pcm_init must be called before this function.
+ *
+ * @param[in] pcm_handle Pointer to the I2S/PCM driver handle @ref
+ *sl_i2s_handle_t.
+ * @param[in] xfer_config Pointer to the structure that stores transfer
+ *parameters.
+ *
+ * @return sl_status_t Status code indicating the result:
+ *         - SL_STATUS_OK  - Operation successful.
+ *         - SL_STATUS_INVALID_PARAMETER  - Parameters are invalid.
+ *         - SL_STATUS_NULL_POINTER  - Invalid null pointer received as an
+ *argument.
+ *
+ * For more information on status codes, see [SL STATUS
+ *DOCUMENTATION](https://docs.silabs.com/gecko-platform/latest/platform-common/status).
+ ******************************************************************************/
+sl_status_t sl_si91x_pcm_config_transmit_receive(sl_i2s_handle_t pcm_handle, sl_i2s_xfer_config_t *xfer_config);
+
+/***************************************************************************/
+/**
  * @brief To receive PCM data.
  * 
  * @details This API configures the PCM Rx DMA channel descriptors and triggers 
@@ -244,6 +271,41 @@ sl_status_t sl_si91x_pcm_transmit_data(sl_i2s_handle_t pcm_handle, const void *d
  * For more information on status codes, see [SL STATUS DOCUMENTATION](https://docs.silabs.com/gecko-platform/latest/platform-common/status).
  ******************************************************************************/
 sl_status_t sl_si91x_pcm_receive_data(sl_i2s_handle_t pcm_handle, const void *data, uint32_t size);
+
+/***************************************************************************/
+/**
+* @brief To perform full-duplex PCM transfer (simultaneous transmit and
+ *receive).
+ *
+ * @details This API configures both the PCM Tx and Rx DMA channel descriptors
+ *and triggers the DMA transfers for both directions.
+ *
+ * @pre Pre-conditions:
+ *      - @ref sl_si91x_pcm_init must be called before this function.
+ *      - @ref sl_si91x_pcm_config_transmit_receive must be called before this
+ *function.
+ *
+ * @param[in] pcm_handle Pointer to the I2S/PCM driver handle @ref
+ *sl_i2s_handle_t.
+ * @param[in] data_in Address of the receive data buffer.
+ * @param[in] data_out Address of the transmit data buffer.
+ * @param[in] data_in_size Size of the data to be received.
+ * @param[in] data_out_size Size of the data to be transmitted.
+ *
+ * @return sl_status_t Status code indicating the result:
+ *         - SL_STATUS_OK  - Success.
+ *         - SL_STATUS_INVALID_PARAMETER  - Parameters are invalid.
+ *         - SL_STATUS_NULL_POINTER  - Invalid null pointer received as an
+ *argument.
+ *
+ * For more information on status codes, see [SL STATUS
+ *DOCUMENTATION](https://docs.silabs.com/gecko-platform/latest/platform-common/status).
+ ******************************************************************************/
+sl_status_t sl_si91x_pcm_transfer(sl_i2s_handle_t pcm_handle,
+                                  void *data_in,
+                                  const void *data_out,
+                                  uint32_t data_in_size,
+                                  uint32_t data_out_size);
 
 /***************************************************************************/
 /**

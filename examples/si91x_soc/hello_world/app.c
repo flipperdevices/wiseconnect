@@ -15,6 +15,7 @@
  *
  ******************************************************************************/
 #include "app.h"
+#include "sl_log_helper.h"
 #include <stdio.h>
 
 /*******************************************************************************
@@ -22,7 +23,14 @@
  ******************************************************************************/
 void app_init(void)
 {
-  printf("Hello World!\r\n");
+  /* Note: All status messages in this example — both success and failure — are
+ * intentionally emitted via SL_PRINT_STRING_ERROR so that they remain visible
+ * on the console at the default log level. This is a demonstration choice, not
+ * a recommendation: in production code, ERROR severity should be reserved for
+ * actual failures, with successful operations logged via SL_PRINT_STRING_INFO
+ * (or SL_PRINT_STRING_DEBUG for verbose trace). */
+
+  SL_PRINT_STRING_ERROR("Hello World!\r\n");
 }
 
 /*******************************************************************************

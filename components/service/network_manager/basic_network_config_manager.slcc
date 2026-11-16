@@ -13,10 +13,14 @@ provides:
 - name: basic_network_config_manager
 - name: network_config_manager
 source:
-- path: src/sl_net_credentials.c
+- path: src/sli_net_credentials.c
+- path: src/si91x/sl_net_credentials.c
+  condition: ["sl_si91x_wireless"]
 - path: src/sl_net_basic_profiles.c
 requires:
 - name: network_manager
 - name: basic_credential_manager
+- name: log_none
+  condition: ["device_si91x"]
 conflicts:
 - name: nvm3_network_config_manager

@@ -7,8 +7,6 @@ ui_hints:
 quality: production
 define:
 - name: SIWG917M100MGTBA
-  unless:
-  - device_content_override
 - name: SLI_SI917
   value: '1'
 - name: SLI_SI917B0
@@ -32,8 +30,6 @@ define:
 source:
 - path: components/device/silabs/si91x/mcu/core/chip/src/system_si91x.c
 - path: components/device/silabs/si91x/mcu/core/chip/src/startup_si91x.c
-  unless:
-  - siwx917_soc_custom_startup
 include:
 - file_list:
   - path: system_si91x.h
@@ -56,6 +52,7 @@ provides:
 - name: device_has_mpu
 - name: device_has_chip
 requires:
+- name: sl_si91x_agents_md
 - name: rsilib_chip
 - name: cmsis_common
   condition:

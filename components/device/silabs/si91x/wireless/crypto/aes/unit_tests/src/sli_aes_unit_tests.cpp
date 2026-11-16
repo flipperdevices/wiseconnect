@@ -38,7 +38,7 @@ class AESMultipartTest : public ::testing::Test {
 protected:
   void SetUp() override
   {
-    RESET_FAKE(sli_si91x_driver_send_command);
+    RESET_FAKE(sli_wifi_send_command);
     FFF_RESET_HISTORY();
   }
 
@@ -134,7 +134,7 @@ TEST(sl_aes_unit_tests, aes_multipart_valid_ctr_returns_ok)
   uint16_t ctr_encrypt_chunk_length = 16;
   uint8_t ctr_encrypt_flags         = FIRST_CHUNK;
 
-  sli_si91x_driver_send_command_fake.return_val  = SL_STATUS_OK;
+  sli_wifi_send_command_fake.return_val          = SL_STATUS_OK;
   sli_wifi_host_get_buffer_data_fake.custom_fake = my_host_get_buffer_data_fake;
   sl_status_t ctr_encrypt_status =
     sl_si91x_aes_multipart(&ctr_encrypt_config, ctr_encrypt_chunk_length, ctr_encrypt_flags, ctr_encrypt_output);
@@ -159,7 +159,7 @@ TEST(sl_aes_unit_tests, aes_multipart_valid_cbc_returns_ok)
   uint16_t cbc_encrypt_chunk_length = 16;
   uint8_t cbc_encrypt_flags         = FIRST_CHUNK;
 
-  sli_si91x_driver_send_command_fake.return_val  = SL_STATUS_OK;
+  sli_wifi_send_command_fake.return_val          = SL_STATUS_OK;
   sli_wifi_host_get_buffer_data_fake.custom_fake = my_host_get_buffer_data_fake;
 
   sl_status_t cbc_encrypt_status =
@@ -184,7 +184,7 @@ TEST(sl_aes_unit_tests, aes_multipart_valid_ctr_decrypt_returns_ok)
   uint16_t ctr_decrypt_chunk_length = 16;
   uint8_t ctr_decrypt_flags         = FIRST_CHUNK;
 
-  sli_si91x_driver_send_command_fake.return_val  = SL_STATUS_OK;
+  sli_wifi_send_command_fake.return_val          = SL_STATUS_OK;
   sli_wifi_host_get_buffer_data_fake.custom_fake = my_host_get_buffer_data_fake;
 
   sl_status_t ctr_decrypt_status =
@@ -209,7 +209,7 @@ TEST(sl_aes_unit_tests, aes_multipart_valid_ctr_multiple_chunks_returns_ok)
   uint16_t chunk_length = 16;
   uint8_t aes_flags     = FIRST_CHUNK;
 
-  sli_si91x_driver_send_command_fake.return_val  = SL_STATUS_OK;
+  sli_wifi_send_command_fake.return_val          = SL_STATUS_OK;
   sli_wifi_host_get_buffer_data_fake.custom_fake = my_host_get_buffer_data_fake;
 
   // First chunk

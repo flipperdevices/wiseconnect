@@ -34,6 +34,7 @@
 sl_status_t sl_memlcd_init(void)
 {
 #ifdef SI917_DEVKIT
+  SL_PRINT_STRING_ERROR("memlcd: not supported on this board configuration");
   return SL_STATUS_NOT_SUPPORTED;
 #else
   sl_memlcd_t memlcd = {

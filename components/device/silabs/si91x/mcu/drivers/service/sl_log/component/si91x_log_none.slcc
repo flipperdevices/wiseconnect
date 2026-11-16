@@ -1,8 +1,8 @@
 id: si91x_log_none
-label: Si91x Log None
+label: Log None
 package: platform_siwx91x
 description: >
-  A None component that disables the logging system and any size impact on the code
+  This component disables the logging system with no code size impact.
 category: Services|Log
 quality: evaluation
 metadata:

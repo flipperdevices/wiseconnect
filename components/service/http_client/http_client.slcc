@@ -14,6 +14,8 @@ provides:
 source:
 - path: si91x_socket/sl_http_client.c
   condition: ["sl_si91x_internal_stack"]
+- path: si91x_socket/sl_http_client.c
+  condition: ["sl_si91x_network_dual_stack"]
 include:
 - path: inc
 - path: inc
@@ -25,7 +27,9 @@ define:
 
 requires:
 - name: sl_si91x_socket
-
+  condition: ["sl_si91x_internal_stack"]
+- name: sl_si91x_socket
+  condition: ["sl_si91x_network_dual_stack"]
 
 template_contribution:
 - name: console_headers

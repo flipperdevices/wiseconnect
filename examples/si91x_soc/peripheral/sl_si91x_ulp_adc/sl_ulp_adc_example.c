@@ -87,37 +87,43 @@ void adc_example_init(void)
   do {
     // Version information of ADC driver
     version = sl_si91x_adc_get_version();
-    DEBUGOUT("ADC version is fetched successfully \n");
-    DEBUGOUT("API version is %d.%d.%d\n", version.release, version.major, version.minor);
+    /* Note: All status messages in this example — both success and failure — are
+ * intentionally emitted via SL_PRINT_STRING_ERROR so that they remain visible
+ * on the console at the default log level. This is a demonstration choice, not
+ * a recommendation: in production code, ERROR severity should be reserved for
+ * actual failures, with successful operations logged via SL_PRINT_STRING_INFO
+ * (or SL_PRINT_STRING_DEBUG for verbose trace). */
+    SL_PRINT_STRING_ERROR("ADC version is fetched successfully \n");
+    SL_PRINT_STRING_ERROR("API version is %d.%d.%d\n", version.release, version.major, version.minor);
     status = sl_si91x_adc_init(sl_adc_channel_config, sl_adc_config, vref_value);
     /* Due to calling trim_efuse API on ADC init in driver it will change the
       clock frequency, if we don't initialize the debug again it will print
       the garbage data in console output. */
     DEBUGINIT();
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("sl_si91x_adc_init: Error Code : %lu \n", status);
+      SL_PRINT_STRING_ERROR("sl_si91x_adc_init: Error Code : %lu \n", status);
       break;
     }
-    DEBUGOUT("ADC Initialization Success\n");
+    SL_PRINT_STRING_ERROR("ADC Initialization Success\n");
     status = sl_si91x_adc_set_channel_configuration(sl_adc_channel_config, sl_adc_config);
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("sl_si91x_adc_channel_set_configuration: Error Code : %lu \n", status);
+      SL_PRINT_STRING_ERROR("sl_si91x_adc_channel_set_configuration: Error Code : %lu \n", status);
       break;
     }
-    DEBUGOUT("ADC Channel Configuration Successfully \n");
+    SL_PRINT_STRING_ERROR("ADC Channel Configuration Successfully \n");
     // Register user callback function
     status = sl_si91x_adc_register_event_callback(callback_event);
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("sl_si91x_adc_register_event_callback: Error Code : %lu \n", status);
+      SL_PRINT_STRING_ERROR("sl_si91x_adc_register_event_callback: Error Code : %lu \n", status);
       break;
     }
-    DEBUGOUT("ADC user event callback registered successfully \n");
+    SL_PRINT_STRING_ERROR("ADC user event callback registered successfully \n");
     status = sl_si91x_adc_start(sl_adc_config);
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("sl_si91x_adc_start: Error Code : %lu \n", status);
+      SL_PRINT_STRING_ERROR("sl_si91x_adc_start: Error Code : %lu \n", status);
       break;
     }
-    DEBUGOUT("ADC started Successfully\n");
+    SL_PRINT_STRING_ERROR("ADC started Successfully\n");
   } while (false);
 }
 
@@ -154,7 +160,7 @@ void adc_example_process_action(void)
       break;
     case SL_ULP_ADC_POWER_STATE_TRANSITION:
       if (current_power_state == SL_SI91X_POWER_MANAGER_PS4) {
-        DEBUGOUT("Switching adc from PS4->PS2 state \n");
+        SL_PRINT_STRING_ERROR("Switching adc from PS4->PS2 state \n");
         // Stop the ADC
         status = sl_si91x_adc_stop(sl_adc_config);
         // De-initialise the ADC
@@ -166,7 +172,7 @@ void adc_example_process_action(void)
         // switching the power state PS4 to PS2 mode.
         status = sl_si91x_power_manager_add_ps_requirement(SL_SI91X_POWER_MANAGER_PS2);
         if (status != SL_STATUS_OK) {
-          DEBUGOUT("sl_si91x_power_manager_add_ps_requirement: Error Code : %lu \n", status);
+          SL_PRINT_STRING_ERROR("sl_si91x_power_manager_add_ps_requirement: Error Code : %lu \n", status);
           break;
         }
         /* Due to calling trim_efuse API on power manager it will change the clock
@@ -185,7 +191,7 @@ void adc_example_process_action(void)
         // triggering and processing
         ulp_adc_current_mode = SL_ULP_ADC_PROCESS_ACTION;
       } else if (current_power_state == SL_SI91X_POWER_MANAGER_PS2) {
-        DEBUGOUT("Switching the adc from PS2->PS4 state\n");
+        SL_PRINT_STRING_ERROR("Switching the adc from PS2->PS4 state\n");
         // Stop the ADC
         status = sl_si91x_adc_stop(sl_adc_config);
         // De-initialise the ADC
@@ -193,7 +199,7 @@ void adc_example_process_action(void)
         // switching the power state from PS2 to PS4 mode
         status = sl_si91x_power_manager_add_ps_requirement(SL_SI91X_POWER_MANAGER_PS4);
         if (status != SL_STATUS_OK) {
-          DEBUGOUT("sl_si91x_power_manager_add_ps_requirement: Error Code : %lu \n", status);
+          SL_PRINT_STRING_ERROR("sl_si91x_power_manager_add_ps_requirement: Error Code : %lu \n", status);
           break;
         }
         /* Due to calling trim_efuse API om power manager it will change the clock
@@ -213,16 +219,16 @@ void adc_example_process_action(void)
         //  stop the adc
         status = sl_si91x_adc_stop(sl_adc_config);
         if (status != SL_STATUS_OK) {
-          DEBUGOUT("sl_si91x_adc_stop: Error Code : %lu \n", status);
+          SL_PRINT_STRING_ERROR("sl_si91x_adc_stop: Error Code : %lu \n", status);
         }
-        DEBUGOUT("ADC stopped successfully \n");
+        SL_PRINT_STRING_ERROR("ADC stopped successfully \n");
         //  de initializing the adc
         status = sl_si91x_adc_deinit(sl_adc_config);
         if (status != SL_STATUS_OK) {
-          DEBUGOUT("sl_si91x_adc_deinit: Error Code : %lu \n", status);
+          SL_PRINT_STRING_ERROR("sl_si91x_adc_deinit: Error Code : %lu \n", status);
         }
         chnl0_complete_flag = false;
-        DEBUGOUT("ADC deinit successfully \n");
+        SL_PRINT_STRING_ERROR("ADC deinit successfully \n");
         ulp_adc_current_mode = SL_ULP_ADC_TRANSMISSION_COMPLETED;
       }
       break;
@@ -272,7 +278,7 @@ static void adc_read_data_fifo_mode(void)
   for (chnl_num = 0; chnl_num < sl_adc_config.num_of_channel_enable; chnl_num++) {
     status = sl_si91x_adc_read_data(sl_adc_channel_config, adc_channel);
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("sl_si91x_adc_read_data: Error Code : %lu \n", status);
+      SL_PRINT_STRING_ERROR("sl_si91x_adc_read_data: Error Code : %lu \n", status);
     }
     for (sample_length = 0; sample_length < sl_adc_channel_config.num_of_samples[adc_channel]; sample_length++) {
       /* In two’s complement format, the MSb (11th bit) of the conversion
@@ -290,7 +296,7 @@ static void adc_read_data_fifo_mode(void)
       if (sl_adc_channel_config.input_type[adc_channel]) {
         vout = vout - (vref_value / 2);
       }
-      printf("ADC Measured input[%ld] :%.2fV \n", sample_length, (double)vout);
+      SL_PRINT_STRING_ERROR("ADC Measured input[%ld] :%ldmV \n", sample_length, (int32_t)(vout * 1000.0f));
     }
   }
 }
@@ -304,7 +310,7 @@ static void adc_read_data_static_mode(void)
   float vout = 0.0f;
   status     = sl_si91x_adc_read_data_static(sl_adc_channel_config, sl_adc_config, &adc_value);
   if (status != SL_STATUS_OK) {
-    DEBUGOUT("sl_si91x_adc_read_data_static: Error Code : %lu \n", status);
+    SL_PRINT_STRING_ERROR("sl_si91x_adc_read_data_static: Error Code : %lu \n", status);
   }
   // Read the data from register and store it in variable.
   adc_output[0] = (int16_t)adc_value;
@@ -322,9 +328,9 @@ static void adc_read_data_static_mode(void)
   // For differential type it will give vout.
   if (sl_adc_channel_config.input_type[adc_channel]) {
     vout = vout - (vref_value / 2);
-    DEBUGOUT("Differential ended input  :%lf\n", (double)vout);
+    SL_PRINT_STRING_ERROR("Differential ended input  :%ldmV\n", (int32_t)(vout * 1000.0f));
   } else {
-    DEBUGOUT("Single ended input :%lf\n", (double)vout);
+    SL_PRINT_STRING_ERROR("Single ended input :%ldmV\n", (int32_t)(vout * 1000.0f));
   }
 }
 /*******************************************************************************
@@ -344,9 +350,9 @@ static void configuring_ps2_power_state(void)
   config.ulpss_ram_banks = 0;
   peri.m4ss_peripheral   = 0;
   // Ored value for ulpss peripheral.
-  peri.ulpss_peripheral = SL_SI91X_POWER_MANAGER_ULPSS_PG_MISC | SL_SI91X_POWER_MANAGER_ULPSS_PG_SSI
-                          | SL_SI91X_POWER_MANAGER_ULPSS_PG_I2S | SL_SI91X_POWER_MANAGER_ULPSS_PG_I2C
-                          | SL_SI91X_POWER_MANAGER_ULPSS_PG_IR | SL_SI91X_POWER_MANAGER_ULPSS_PG_FIM;
+  peri.ulpss_peripheral = SL_SI91X_POWER_MANAGER_ULPSS_PG_SSI | SL_SI91X_POWER_MANAGER_ULPSS_PG_I2S
+                          | SL_SI91X_POWER_MANAGER_ULPSS_PG_I2C | SL_SI91X_POWER_MANAGER_ULPSS_PG_IR
+                          | SL_SI91X_POWER_MANAGER_ULPSS_PG_FIM;
   // Ored value for npss peripheral.
   peri.npss_peripheral = SL_SI91X_POWER_MANAGER_NPSS_PG_MCURTC | SL_SI91X_POWER_MANAGER_NPSS_PG_MCUWDT
                          | SL_SI91X_POWER_MANAGER_NPSS_PG_MCUPS | SL_SI91X_POWER_MANAGER_NPSS_PG_MCUTS
@@ -357,18 +363,18 @@ static void configuring_ps2_power_state(void)
     status = sl_si91x_power_manager_remove_peripheral_requirement(&peri);
     if (status != SL_STATUS_OK) {
       // If status is not OK, return with the error code.
-      DEBUGOUT("sl_si91x_power_manager_remove_peripheral_requirement failed, "
-               "Error Code: 0x%lX",
-               status);
+      SL_PRINT_STRING_ERROR("sl_si91x_power_manager_remove_peripheral_requirement failed, "
+                            "Error Code: 0x%lX",
+                            status);
       break;
     }
     // RAM retention modes are configured and passed into this API.
     status = sl_si91x_power_manager_configure_ram_retention(&config);
     if (status != SL_STATUS_OK) {
       // If status is not OK, return with the error code.
-      DEBUGOUT("sl_si91x_power_manager_configure_ram_retention failed, Error "
-               "Code: 0x%lX",
-               status);
+      SL_PRINT_STRING_ERROR("sl_si91x_power_manager_configure_ram_retention failed, Error "
+                            "Code: 0x%lX",
+                            status);
       break;
     }
   } while (false);

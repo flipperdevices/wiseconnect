@@ -38,6 +38,9 @@
 #include <stdio.h>
 #include <string.h>
 
+//! Application include file
+#include "app.h"
+
 //! BLE include file to refer BLE APIs
 #include "ble_config.h"
 #include "rsi_common_apis.h"
@@ -57,7 +60,6 @@ const osThreadAttr_t thread_attributes = {
   .stack_size = 3072,
   .priority   = osPriorityNormal,
   .tz_module  = 0,
-  .reserved   = 0,
 };
 
 const osThreadAttr_t ble_thread_attributes = {
@@ -69,7 +71,6 @@ const osThreadAttr_t ble_thread_attributes = {
   .stack_size = 2048,
   .priority   = osPriorityNormal,
   .tz_module  = 0,
-  .reserved   = 0,
 };
 
 const osThreadAttr_t wifi_thread_attributes = {
@@ -78,10 +79,9 @@ const osThreadAttr_t wifi_thread_attributes = {
   .cb_mem     = 0,
   .cb_size    = 0,
   .stack_mem  = 0,
-  .stack_size = 2048,
+  .stack_size = 4096,
   .priority   = osPriorityNormal,
   .tz_module  = 0,
-  .reserved   = 0,
 };
 
 static const sl_wifi_device_configuration_t config = {
@@ -105,10 +105,10 @@ static const sl_wifi_device_configuration_t config = {
                    .bt_feature_bit_map = (SL_SI91X_BT_RF_TYPE | SL_SI91X_ENABLE_BLE_PROTOCOL),
 #ifdef RSI_PROCESS_MAX_RX_DATA
                    .ext_tcp_ip_feature_bit_map =
-                     (SL_SI91X_CONFIG_FEAT_EXTENTION_VALID | SL_SI91X_EXT_TCP_MAX_RECV_LENGTH),
+                     (SL_SI91X_CONFIG_FEAT_EXTENSION_VALID | SL_SI91X_EXT_TCP_MAX_RECV_LENGTH),
 #else
                    .ext_tcp_ip_feature_bit_map =
-                     (SL_SI91X_EXT_TCP_IP_WINDOW_DIV | SL_SI91X_CONFIG_FEAT_EXTENTION_VALID),
+                     (SL_SI91X_EXT_TCP_IP_WINDOW_DIV | SL_SI91X_CONFIG_FEAT_EXTENSION_VALID),
 #endif
                    //!ENABLE_BLE_PROTOCOL in bt_feature_bit_map
                    .ble_feature_bit_map =
@@ -116,7 +116,7 @@ static const sl_wifi_device_configuration_t config = {
                        | SL_SI91X_BLE_MAX_NBR_CENTRALS(RSI_BLE_MAX_NBR_CENTRALS)
                        | SL_SI91X_BLE_MAX_NBR_ATT_SERV(RSI_BLE_MAX_NBR_ATT_SERV)
                        | SL_SI91X_BLE_MAX_NBR_ATT_REC(RSI_BLE_MAX_NBR_ATT_REC))
-                      | SL_SI91X_FEAT_BLE_CUSTOM_FEAT_EXTENTION_VALID | SL_SI91X_BLE_PWR_INX(RSI_BLE_PWR_INX)
+                      | SL_SI91X_FEAT_BLE_CUSTOM_FEAT_EXTENSION_VALID | SL_SI91X_BLE_PWR_INX(RSI_BLE_PWR_INX)
                       | SL_SI91X_BLE_PWR_SAVE_OPTIONS(RSI_BLE_PWR_SAVE_OPTIONS)
                       | SL_SI91X_916_BLE_COMPATIBLE_FEAT_ENABLE
 #if RSI_BLE_GATT_ASYNC_ENABLE
@@ -143,15 +143,21 @@ static const sl_wifi_device_configuration_t config = {
 #endif
                       ),
                    .config_feature_bit_map = SL_SI91X_FEAT_SLEEP_GPIO_SEL_BITMAP },
-  .ta_pool = { .tx_ratio_in_buffer_pool     = TX_POOL_RATIO,
-               .rx_ratio_in_buffer_pool     = RX_POOL_RATIO,
-               .global_ratio_in_buffer_pool = GLOBAL_POOL_RATIO }
+  .ta_pool             = { .tx_ratio_in_buffer_pool     = TX_POOL_RATIO,
+                           .rx_ratio_in_buffer_pool     = RX_POOL_RATIO,
+                           .global_ratio_in_buffer_pool = GLOBAL_POOL_RATIO },
+  .efuse_data_type     = SL_SI91X_EFUSE_MFG_SW_VERSION,
+  .nwp_fw_image_number = SL_SI91X_NWP_FW_IMAGE_NUMBER_0
 };
 
 osThreadId_t wifi_app_thread_id;
 osThreadId_t ble_app_thread_id;
 osSemaphoreId_t wlan_ble_thread_sem1, ble_main_task_sem, ble_conn_sem;
 osSemaphoreId_t commonsem;
+#if SL_BLE_DYNAMIC_DISABLE_THROUGHPUT_DEMO
+osMessageQueueId_t ble_disable_done_queue;
+osMessageQueueId_t ble_enable_done_queue;
+#endif
 
 //! Function prototypes
 extern void rsi_wlan_app_task(void);
@@ -165,10 +171,10 @@ void rsi_wlan_ble_app_init(void)
   //! WiSeConnect initialization
   status = sl_wifi_init(&config, NULL, sl_wifi_default_event_handler);
   if (status != SL_STATUS_OK) {
-    LOG_PRINT("\r\nWi-Fi Initialization Failed, Error Code : 0x%lX\r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "Wi-Fi Initialization Failed, Error Code : 0x%lX\r\n", status);
     return;
   }
-  LOG_PRINT("\r\nWi-Fi initialization is successful\n");
+  SL_DEBUG_LOG_V2(INFO, "Wi-Fi initialization is successful\r\n");
 
 #if ENABLE_TLS && LOAD_CERTIFICATE
   clear_and_load_certificates_in_flash();
@@ -177,6 +183,10 @@ void rsi_wlan_ble_app_init(void)
   ble_conn_sem         = osSemaphoreNew(1, 0, NULL);
   ble_main_task_sem    = osSemaphoreNew(1, 0, NULL);
   wlan_ble_thread_sem1 = osSemaphoreNew(1, 0, NULL);
+#if SL_BLE_DYNAMIC_DISABLE_THROUGHPUT_DEMO
+  ble_disable_done_queue = osMessageQueueNew(1, sizeof(int32_t), NULL);
+  ble_enable_done_queue  = osMessageQueueNew(1, sizeof(int32_t), NULL);
+#endif
 
   //! BLE initialization
   rsi_ble_app_init();
@@ -184,14 +194,14 @@ void rsi_wlan_ble_app_init(void)
   //! Thread created for WIFI task
   wifi_app_thread_id = osThreadNew((osThreadFunc_t)rsi_wlan_app_task, NULL, &wifi_thread_attributes);
   if (wifi_app_thread_id == NULL) {
-    LOG_PRINT("\r\nwifi_app_thread failed to create\r\n");
+    SL_DEBUG_LOG_V2(ERROR, "wifi_app_thread failed to create\r\n");
     return;
   }
 
   //! Thread created for BLE task
   ble_app_thread_id = osThreadNew((osThreadFunc_t)rsi_ble_app_task, NULL, &ble_thread_attributes);
   if (ble_app_thread_id == NULL) {
-    LOG_PRINT("\r\nwifi_app_thread failed to create\r\n");
+    SL_DEBUG_LOG_V2(ERROR, "wifi_app_thread failed to create\r\n");
     return;
   }
 
@@ -199,6 +209,15 @@ void rsi_wlan_ble_app_init(void)
   osSemaphoreAcquire(commonsem, osWaitForever);
   return;
 }
+
+#if SL_BLE_DYNAMIC_DISABLE_THROUGHPUT_DEMO
+/* Optional sl_wifi_init helper; dynamic throughput reconnect uses wifi_app_init_and_reconnect()
+ * without calling this (same pattern as wifi_station_ble_provisioning_aws). */
+void rsi_wlan_init_wifi(void)
+{
+  sl_wifi_init(&config, NULL, sl_wifi_default_event_handler);
+}
+#endif
 
 void app_init(void)
 {

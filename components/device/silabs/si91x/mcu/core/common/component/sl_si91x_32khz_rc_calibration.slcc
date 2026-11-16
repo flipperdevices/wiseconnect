@@ -1,5 +1,5 @@
 id: sl_si91x_32khz_rc_calibration
-label: SL SI91X 32KHZ RC CALIBRATION
+label: 32KHZ RC Calibration
 package: platform_siwx91x
 metadata:
   sbom:

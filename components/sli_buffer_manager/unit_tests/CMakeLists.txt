@@ -10,6 +10,8 @@ include_directories(../../../tests/unit_tests/inc
                     ../../gsdk/service/mem_pool/inc
                     ../../common/inc
                     ../../protocol/wifi/inc
+                    ../../device/silabs/si91x/mcu/drivers/service/sl_log/inc
+                    ../../device/silabs/si91x/wireless/unit_tests/inc
 )
 
 # Add unit test cpp here

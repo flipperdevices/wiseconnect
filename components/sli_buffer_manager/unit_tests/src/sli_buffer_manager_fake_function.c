@@ -35,6 +35,9 @@ DEFINE_FFF_GLOBALS
 DEFINE_FAKE_VALUE_FUNC(uint32_t, CORE_EnterAtomic);
 DEFINE_FAKE_VOID_FUNC1(CORE_ExitAtomic, uint32_t);
 DEFINE_FAKE_VALUE_FUNC(uint32_t, osKernelGetTickCount);
+DEFINE_FAKE_VALUE_FUNC0(uint32_t, osKernelGetTickFreq);
+DEFINE_FAKE_VALUE_FUNC1(osStatus_t, osDelay, uint32_t);
+DEFINE_FAKE_VOID_FUNC_VARARG(sl_redirect_log, const char *, ...);
 DEFINE_FAKE_VOID_FUNC5(sli_mem_pool_create, sli_mem_pool_handle_t *, uint32_t, uint32_t, void *, uint32_t);
 DEFINE_FAKE_VALUE_FUNC1(void *, sli_mem_pool_alloc, sli_mem_pool_handle_t *);
 DEFINE_FAKE_VOID_FUNC2(sli_mem_pool_free, sli_mem_pool_handle_t *, void *);

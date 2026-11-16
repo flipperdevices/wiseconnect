@@ -1,8 +1,8 @@
-# SL UART RS485
+# SiWx91x Platform UART RS485
 
 ## Table of Contents
 
-- [SL UART RS485](#sl-uart-rs485)
+- [SiWx91x Platform UART RS485](#platform-siwx91x-uart-rs485)
   - [Table of Contents](#table-of-contents)
   - [Purpose/Scope](#purposescope)
   - [Overview](#overview)
@@ -18,6 +18,9 @@
   - [Getting Started](#getting-started)
   - [Application Build Environment](#application-build-environment)
   - [Test the Application](#test-the-application)
+  - [Troubleshooting](#troubleshooting)
+  - [Resources](#resources)
+  - [Report Bugs/Support](#report-bugssupport)
 
 ## Purpose/Scope
 
@@ -35,7 +38,7 @@
 
 ## About Example Code
 
-- In this example, first UART gets initialized if it is not initialized already with clock and DMA configurations if DMA is enabled using  [sl_si91x_usart_init](https://docs.silabs.com/wiseconnect/latest/wiseconnect-api-reference-guide-si91x-peripherals/usart#sl-si91x-usart-init).  
+- In this example, first UART gets initialized if it is not initialized already with clock and DMA configurations if DMA is enabled using  [sl_si91x_usart_init](https://docs.silabs.com/wiseconnect/latest/wiseconnect-api-reference-guide-si91x-peripherals/usart#sl-si91x-usart-init).
 **Note:** If the UART/USART instance is already selected for debug output logs, initialization will return `SL_STATUS_NOT_AVAILABLE`.
 - After initialization, the UART is configured with default settings from the Universal Configuration (UC), including the UART transmit and receive lines, using the API [sl_si91x_usart_set_configuration](https://docs.silabs.com/wiseconnect/latest/wiseconnect-api-reference-guide-si91x-peripherals/usart#sl-si91x-usart-set-configuration).
 - RS485 mode is initialized and configured using the APIs [sl_si91x_uart_rs485_init](https://docs.silabs.com/wiseconnect/latest/wiseconnect-api-reference-guide-si91x-peripherals/usart#sl-si91x-uart-rs485-init) and [sl_si91x_uart_rs485_set_configuration](https://docs.silabs.com/wiseconnect/latest/wiseconnect-api-reference-guide-si91x-peripherals/usart#sl-si91x-uart-rs485-set-configuration).
@@ -57,8 +60,8 @@
 ### Hardware Requirements
 
 - Windows PC
-- 3 Silicon Labs Si917 Evaluation Kit [WPK(4002A) + BRD4338A]
-- 3 RS485 Transceivers 
+- Silicon Labs SiWx91x Evaluation Kit [[BRD4002](https://www.silabs.com/development-tools/wireless/wireless-pro-kit-mainboard?tab=overview) + [BRD4338A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-rb4338a-wifi-6-bluetooth-le-soc-radio-board?tab=overview) / [BRD4342A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx91x-rb4342a-wifi-6-bluetooth-le-soc-radio-board?tab=overview) / [BRD4343A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4343a-wi-fi-6-bluetooth-le-8mb-flash-radio-board-for-module?tab=overview) / [BRD4343C](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4343c-wi-fi-6-bluetooth-le-8mb-flash-radio-board-for-module?tab=overview)]
+- Three RS485 Transceivers
 
 ### Software Requirements
 
@@ -81,7 +84,7 @@ Refer [here](https://docs.silabs.com/wiseconnect/latest/wiseconnect-developers-g
 
   ------------------------------------------------------------------------------
 
-  | SI91X Interface        | Default SI91X Pin | External RS485 Driver Pin |
+  | SIWX91X Interface        | Default SIWX91X Pin | External RS485 Driver Pin |
   | -----------------------|-------------------|---------------------------|
   | Transmit Data (TxD)    | GPIO7[P20]        |           DI              |
   | Receive Data (RxD)     | GPIO6[P19]        |           RO              |
@@ -94,7 +97,7 @@ Refer [here](https://docs.silabs.com/wiseconnect/latest/wiseconnect-developers-g
 
   ------------------------------------------------------------------------------
 
-  | SI91X Interface        | Default SI91X Pin    | External RS485 Driver Pin |
+  | SIWX91X Interface        | Default SIWX91X Pin    | External RS485 Driver Pin |
   | -----------------------|----------------------|---------------------------|
   | Transmit Data (TxD)    | GPIO30[P35]          |           DI              |
   | Receive Data (RxD)     | GPIO29[P33]          |           RO              |
@@ -103,7 +106,10 @@ Refer [here](https://docs.silabs.com/wiseconnect/latest/wiseconnect-developers-g
 
   ------------------------------------------------------------------------------
 
-## Steps for N-board setup 
+> **Note:**
+>- On the 4342A PSRAM board, GPIO8 [F8] must not be used as the UART1 Receiver Enable (~RE) pin. Use another available GPIO pin instead.
+
+## Steps for N-board setup
 
 - Create N applications for N boards.
 - Each secondary board needs to be assigned with unique address.
@@ -130,25 +136,69 @@ For details on the project folder structure, see the [WiSeConnect Examples](http
 
 ## Application Build Environment
 
+- Configure the following macros in [`uart_rs485_example.c`](uart_rs485_example.c) if required:
+
+- `UART_RS485_BUFFER_SIZE`: Defines the length (in bytes) of the buffer used to send and receive RS485 UART data. By default, it is set to 1024.
+
+  ```c
+  #define UART_RS485_BUFFER_SIZE     1024   // Data send and receive length
+  ```
+
+- `UART_RS485_BAUDRATE`: Specifies the UART baud rate used for RS485 transmission and reception. By default, it is set to 115200.
+
+  ```c
+  #define UART_RS485_BAUDRATE        115200 // Baud rate set to 115200
+  ```
+
+- `NON_UC_DEFAULT_CONFIG`: When enabled (set to 1), applies the default UART configurations in the non-UC (non Universal Configuration) case. By default, it is set to 0.
+
+  ```c
+  #define NON_UC_DEFAULT_CONFIG      0      // Enable this macro to set the default configurations in non_uc case
+  ```
+
+- `RS485_SLAVE1`: Address identifier used to select the first RS485 slave node. By default, it is set to 1.
+
+  ```c
+  #define RS485_SLAVE1               1      // RS485 slave1
+  ```
+
+- `RS485_SLAVE2`: Address identifier used to select the second RS485 slave node. By default, it is set to 2.
+
+  ```c
+  #define RS485_SLAVE2               2      // RS485 slave2
+  ```
+
+- `TRANSMISSION_COUNT_TRIGGER`: Defines the number of send/receive cycles to be executed by the example. By default, it is set to 3.
+
+  ```c
+  #define TRANSMISSION_COUNT_TRIGGER 3      // Defines the number of send/receive cycles
+  ```
+
+- `DELAY_MS`: Delay (in milliseconds) inserted between send/receive mode transitions. By default, it is set to 30.
+
+  ```c
+  #define DELAY_MS                   30     // 30 ms delay added between transitions
+  ```
+
 - This example demonstrates RS485 multi-slave communication using three Simplicity Studio projects: one master (sending) and two slaves (receiving). Below are the necessary configurations and changes required in the application code.
 
-  - Master Project: 
-    - Set `current_mode = SL_UART_RS485_SEND` and `current_slave = RS485_SLAVE1`in [`uart_rs485_example.c`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.1-content-for-docs/examples/si91x_soc/peripheral/sl_si91x_uart_rs485/uart_rs485_example.c) application.
+  - Master Project:
+    - Set `current_mode = SL_UART_RS485_SEND` and `current_slave = RS485_SLAVE1`in [`uart_rs485_example.c`](uart_rs485_example.c) application.
     - This configures the master to transmit data to RS485_SLAVE1 in half-duplex mode, once SLAVE1 data transfer is done, current slave is changed to RS485_SLAVE2 and sends data to RS485_SLAVE2 in one direction(master sends, SLAVE2 receives).
 
   - Slave Project 1:
-    - Set `current_mode = SL_UART_RS485_RECEIVE` and `current_slave = RS485_SLAVE1` in [`uart_rs485_example.c`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.1-content-for-docs/examples/si91x_soc/peripheral/sl_si91x_uart_rs485/uart_rs485_example.c) application.
+    - Set `current_mode = SL_UART_RS485_RECEIVE` and `current_slave = RS485_SLAVE1` in [`uart_rs485_example.c`](uart_rs485_example.c) application.
     - This configures the slave to listen for and process messages addressed to `RS485_HW_SLAVE1_ADDRESS`.
 
   - Slave Project 2:
-    - Set `current_mode = SL_UART_RS485_RECEIVE` and `current_slave = RS485_SLAVE2` in [`uart_rs485_example.c`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.1-content-for-docs/examples/si91x_soc/peripheral/sl_si91x_uart_rs485/uart_rs485_example.c) application.
+    - Set `current_mode = SL_UART_RS485_RECEIVE` and `current_slave = RS485_SLAVE2` in [`uart_rs485_example.c`](uart_rs485_example.c) application.
     - This configures the slave to handle messages directed to `RS485_HW_SLAVE2_ADDRESS`.
 
 - This setup enables the master project to transmit data to two distinct slave projects, using RS485 addressing. The same steps apply to software-controlled half-duplex mode.
 
 - In `hardware-controlled half-duplex` mode, configure `Transfer Mode = HW_CTRL_HALF_DUPLEX`, enable both `SEND Enable(SEND Addr Enable)` and `RECEIVE Enable(ADDR Match Enable)` in the UC settings.
 
-- In `software-controlled half-duplex` mode, configure `Transfer Mode = SW_CTRL_HALF_DUPLEX` disable both `SEND Enable(SEND Addr Enable)` and `RECEIVE Enable(ADDR Match Enable)` in the UC settings, as shown in the provided snapshots. 
+- In `software-controlled half-duplex` mode, configure `Transfer Mode = SW_CTRL_HALF_DUPLEX` disable both `SEND Enable(SEND Addr Enable)` and `RECEIVE Enable(ADDR Match Enable)` in the UC settings, as shown in the provided snapshots.
 
 - RECEIVE Enable(ADDR Match Enable):
   - Configures the RS485 hardware to enable the receiver functionality.
@@ -200,7 +250,7 @@ For details on the project folder structure, see the [WiSeConnect Examples](http
 - EN is typically required to enable the RS485 transceiver or UART functionality, depending on the context.
 
 - **DMA Configuration**
-  - Enable/Disable the DMA configuration. 
+  - Enable/Disable the DMA configuration.
 
 - **UART UC Configuration**
   - Baud Rate: The speed of transfer can be configured.
@@ -247,5 +297,21 @@ For details on the project folder structure, see the [WiSeConnect Examples](http
 > - In a project utilizing both RS485-capable UART0 and UART1, the application must use uint16_t data buffers for both UARTs to ensure proper handling of the 9-bit data inherent in RS485.
 > - The application has been tested on the BRD4338A board using the RS485 interface, where the 9th bit is utilized for addressing. Users may need to modify the application to accommodate their specific protocol requirements.
 > - This application has been tested with an RS485 module, which supports half-duplex communication, and an RS422 module, which supports full-duplex communication.
-> - Ensure that the slave is started before the master to avoid application failures. 
+> - Ensure that the slave is started before the master to avoid application failures.
 > - User may need to modify the application to suit their specific requirements when more than 2 slaves are connected.
+
+## Troubleshooting
+
+- If the project does not build, ensure Simplicity Studio and the WiSeConnect extension are installed and the board is connected.
+- If the device is not detected, reinstall the connectivity firmware and check USB drivers.
+
+## Resources
+
+- [WiSeConnect Getting Started](https://docs.silabs.com/wiseconnect/latest/wiseconnect-getting-started/)
+- [WiSeConnect Examples](https://docs.silabs.com/wiseconnect/latest/wiseconnect-examples/)
+- [SiWx91x SoC Documentation](https://docs.silabs.com/wiseconnect/latest/)
+
+## Report Bugs/Support
+
+For issues and support, use the Silicon Labs Community or your normal support channel.
+

@@ -40,6 +40,7 @@ extern "C" {
 #include "rsi_rom_efuse.h"
 #include "sl_status.h"
 #include "sl_si91x_clock_manager.h"
+#include "sl_log_helper.h"
 /***************************************************************************/
 /**
  * @addtogroup EFUSE eFuse Controller

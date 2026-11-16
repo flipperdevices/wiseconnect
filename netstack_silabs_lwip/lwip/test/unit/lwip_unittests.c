@@ -98,7 +98,7 @@ int main(void)
     pbuf_suite,
     timers_suite,
     etharp_suite,
-    #if SL_LWIP_ETHARP_ONDEMAND_TIMER && defined(LWIP_TESTMODE)
+    #if SL_LWIP_ETHARP_ONDEMAND_TIMER && LWIP_TESTMODE
     etharp_ondemand_suite,
     #endif
     acd_suite,

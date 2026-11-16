@@ -71,13 +71,13 @@
 #define AFE_TYPE        1
 #define FEATURE_ENABLES 0
 /*=======================================================================*/
-//! Band command paramters
+//! Band command parameters
 /*=======================================================================*/
 
 //! RSI_BAND_2P4GHZ(2.4GHz) or RSI_BAND_5GHZ(5GHz) or RSI_DUAL_BAND
 #define RSI_BAND RSI_BAND_2P4GHZ
 /*=======================================================================*/
-//! set region command paramters
+//! set region command parameters
 /*=======================================================================*/
 
 //! RSI_ENABLE or RSI_DISABLE Set region support
@@ -93,7 +93,7 @@
 #define RSI_MODULE_TYPE 1
 
 /*=======================================================================*/
-//! set region AP command paramters
+//! set region AP command parameters
 /*=======================================================================*/
 
 //! RSI_ENABLE or RSI_DISABLE Set region AP support

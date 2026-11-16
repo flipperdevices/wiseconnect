@@ -40,7 +40,7 @@
 DECLARE_FAKE_VALUE_FUNC1(sli_si91x_socket_t *, sli_get_si91x_socket, int32_t);
 DECLARE_FAKE_VOID_FUNC1(sli_si91x_set_remote_socket_termination_callback,
                         sl_si91x_socket_remote_termination_callback_t);
-DECLARE_FAKE_VOID_FUNC1(sli_si91x_host_free_buffer, sl_wifi_buffer_t *);
+DECLARE_FAKE_VALUE_FUNC1(sl_status_t, sli_buffer_manager_free_buffer, sli_buffer_t);
 DECLARE_FAKE_VALUE_FUNC3(void *, sli_wifi_host_get_buffer_data, sl_wifi_buffer_t *, uint16_t, uint16_t *);
 DECLARE_FAKE_VALUE_FUNC6(int,
                          sli_si91x_select,
@@ -56,20 +56,36 @@ DECLARE_FAKE_VALUE_FUNC2(int, sli_si91x_shutdown, int, int);
 DECLARE_FAKE_VALUE_FUNC3(int, sli_si91x_connect, int, const struct sockaddr *, socklen_t);
 DECLARE_FAKE_VALUE_FUNC3(int, sli_si91x_bind, int, const struct sockaddr *, socklen_t);
 DECLARE_FAKE_VALUE_FUNC3(sl_status_t, sli_create_and_send_socket_request, int, int, const int *);
-DECLARE_FAKE_VALUE_FUNC6(sl_status_t,
-                         sli_si91x_send_socket_command,
-                         sli_si91x_socket_t *,
-                         uint32_t,
-                         const void *,
-                         uint32_t,
-                         uint32_t,
-                         sl_wifi_buffer_t **);
-DECLARE_FAKE_VALUE_FUNC3(sl_status_t,
-                         sli_si91x_driver_send_socket_data,
-                         const sli_si91x_socket_send_request_t *,
-                         const void *,
-                         uint32_t);
-DECLARE_FAKE_VALUE_FUNC2(sl_status_t,
-                         sli_si91x_add_tls_extension,
+DECLARE_FAKE_VALUE_FUNC3(int,
+                         sli_si91x_configure_tls_extension,
                          sli_si91x_tls_extensions_t *,
-                         const sl_si91x_socket_type_length_value_t *);
+                         const sl_si91x_socket_type_length_value_t *,
+                         socklen_t);
+DECLARE_FAKE_VALUE_FUNC7(int,
+                         sl_si91x_sendto_async,
+                         int,
+                         const uint8_t *,
+                         size_t,
+                         int32_t,
+                         const struct sockaddr *,
+                         socklen_t,
+                         sl_si91x_socket_data_transfer_complete_handler_t);
+DECLARE_FAKE_VALUE_FUNC3(sl_status_t,
+                         sli_si91x_send_socket_data,
+                         sli_si91x_socket_t *,
+                         const sli_si91x_socket_send_request_t *,
+                         const void *);
+DECLARE_FAKE_VALUE_FUNC5(sl_status_t,
+                         sli_wifi_async_send_command,
+                         uint32_t,
+                         sli_wifi_command_type_t,
+                         const void *,
+                         uint32_t,
+                         void *);
+DECLARE_FAKE_VALUE_FUNC5(sl_status_t,
+                         sli_wifi_receive_response_buffer,
+                         uint16_t,
+                         uint16_t,
+                         sli_wifi_wait_period_t,
+                         uint8_t,
+                         void **);

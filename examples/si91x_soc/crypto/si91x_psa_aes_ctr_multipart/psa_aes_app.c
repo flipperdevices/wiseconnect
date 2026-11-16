@@ -15,6 +15,7 @@
  *
  ******************************************************************************/
 #include "psa_aes_app.h"
+#include <inttypes.h>
 #include "psa/crypto.h"
 #include <stdio.h>
 #include <sl_constants.h>
@@ -88,13 +89,13 @@ void test_psa_aes(psa_algorithm_t alg)
   if (status == PSA_SUCCESS) {
     printf("\n PSA crypto library initialization Success \n");
   } else {
-    printf("\n PSA crypto library initialization failed with error: %ld\n", status);
+    printf("\n PSA crypto library initialization failed with error: %" PRId32 "\n", status);
     SL_ASSERT(FALSE);
   }
 
   for (int i = 0; i < NB_TESTS; i++) {
 
-    psa_key_id_t key_id;
+    psa_key_id_t key_id = 0;
     psa_key_attributes_t key_attr;
     size_t out_len   = 0;
     size_t out_total = 0;
@@ -110,7 +111,7 @@ void test_psa_aes(psa_algorithm_t alg)
       printf("\n\n Encryption/Decryption with %d size key for AES \n\n", (key_len_test_data[i] * 8));
       printf("\n Import a volatile plain %d size key for AES \n", (key_len_test_data[i] * 8));
       status = psa_import_key(&key_attr, aes_key_16, sizeof(aes_key_16), &key_id);
-    } else if (i == 1) { // 256 key size
+    } else { // 256 key size
       printf("\n\n Encryption/Decryption with %d size key for AES \n\n", (key_len_test_data[i] * 8));
       printf("\n Import a volatile plain %d size key for AES \n", (key_len_test_data[i] * 8));
       status = psa_import_key(&key_attr, aes_key_32, sizeof(aes_key_32), &key_id);
@@ -120,7 +121,7 @@ void test_psa_aes(psa_algorithm_t alg)
     if (status == PSA_SUCCESS) {
       printf("\n Key import Success \n");
     } else {
-      printf("\n Key import Failed with error: %ld\n", status);
+      printf("\n Key import Failed with error: %" PRId32 "\n", status);
       SL_ASSERT(FALSE);
     }
 
@@ -132,7 +133,7 @@ void test_psa_aes(psa_algorithm_t alg)
     if (status == PSA_SUCCESS) {
       printf("\n Encryption Setup Success \n");
     } else {
-      printf("\n Encryption Setup Failed with error: %ld\n", status);
+      printf("\n Encryption Setup Failed with error: %" PRId32 "\n", status);
       SL_ASSERT(FALSE);
     }
 
@@ -141,7 +142,7 @@ void test_psa_aes(psa_algorithm_t alg)
     if (status == PSA_SUCCESS) {
       printf("\n IV Set Success \n");
     } else {
-      printf("\n IV Set Failed with error: %ld\n", status);
+      printf("\n IV Set Failed with error: %" PRId32 "\n", status);
       SL_ASSERT(FALSE);
     }
 
@@ -155,7 +156,7 @@ void test_psa_aes(psa_algorithm_t alg)
     if (status == PSA_SUCCESS) {
       printf("\n First Chunk Encryption Success \n");
     } else {
-      printf("\n First Chunk Encryption Failed with error: %ld\n", status);
+      printf("\n First Chunk Encryption Failed with error: %" PRId32 "\n", status);
       SL_ASSERT(FALSE);
     }
     out_total += out_len;
@@ -171,7 +172,7 @@ void test_psa_aes(psa_algorithm_t alg)
       if (status == PSA_SUCCESS) {
         printf("\n Middle Chunk Encryption Success \n");
       } else {
-        printf("\n Middle Chunk Encryption Failed with error: %ld\n", status);
+        printf("\n Middle Chunk Encryption Failed with error: %" PRId32 "\n", status);
         SL_ASSERT(FALSE);
       }
     }
@@ -182,7 +183,7 @@ void test_psa_aes(psa_algorithm_t alg)
     if (status == PSA_SUCCESS && memcmp(encryption_output, res_test_data[i], sizeof(msg_test_data)) == 0) {
       printf("\n Multipart Encryption Success \n");
     } else {
-      printf("\n Multipart Encryption Failed with error: %ld\n", status);
+      printf("\n Multipart Encryption Failed with error: %" PRId32 "\n", status);
       SL_ASSERT(FALSE);
     }
 
@@ -194,7 +195,7 @@ void test_psa_aes(psa_algorithm_t alg)
     if (status == PSA_SUCCESS) {
       printf("\n Decryption Setup Success \n");
     } else {
-      printf("\n Decryption Setup Failed with error: %ld\n", status);
+      printf("\n Decryption Setup Failed with error: %" PRId32 "\n", status);
       SL_ASSERT(FALSE);
     }
 
@@ -202,7 +203,7 @@ void test_psa_aes(psa_algorithm_t alg)
     if (status == PSA_SUCCESS) {
       printf("\n IV Set Success \n");
     } else {
-      printf("\n IV Set Failed with error: %ld\n", status);
+      printf("\n IV Set Failed with error: %" PRId32 "\n", status);
       SL_ASSERT(FALSE);
     }
 
@@ -217,7 +218,7 @@ void test_psa_aes(psa_algorithm_t alg)
     if (status == PSA_SUCCESS) {
       printf("\n First Chunk Decryption Success \n");
     } else {
-      printf("\n First Chunk Decryption Failed with error: %ld\n", status);
+      printf("\n First Chunk Decryption Failed with error: %" PRId32 "\n", status);
       SL_ASSERT(FALSE);
     }
     out_total += out_len;
@@ -233,7 +234,7 @@ void test_psa_aes(psa_algorithm_t alg)
       if (status == PSA_SUCCESS) {
         printf("\n Middle Chunk Decryption Success \n");
       } else {
-        printf("\n Middle Chunk Decryption Failed with error: %ld\n", status);
+        printf("\n Middle Chunk Decryption Failed with error: %" PRId32 "\n", status);
         SL_ASSERT(FALSE);
       }
     }
@@ -244,14 +245,14 @@ void test_psa_aes(psa_algorithm_t alg)
     if (status == PSA_SUCCESS && memcmp(decryption_output, msg_test_data, sizeof(msg_test_data)) == 0) {
       printf("\n Multipart Decryption Success \n");
     } else {
-      printf("\n Multipart Decryption Failed with error: %ld\n", status);
+      printf("\n Multipart Decryption Failed with error: %" PRId32 "\n", status);
       SL_ASSERT(FALSE);
     }
 
     /* Destroy a volatile plain key for AES */
     status = psa_destroy_key(key_id);
     if (status != PSA_SUCCESS) {
-      printf("Destroy key failed with error: %ld\n", status);
+      printf("Destroy key failed with error: %" PRId32 "\n", status);
     }
   }
 }

@@ -36,76 +36,108 @@
 #include "rsi_ps_ram_func.h"
 #include "si91x_device.h"
 #include "core_cm4.h"
+#include <stdint.h>
+#include <string.h>
+
+#if defined(SL_COMPONENT_CATALOG_PRESENT)
+#include "sl_component_catalog.h"
+#endif
 
 /*---------------------------------------------------------------------------
- * To ignore -Wpedantic warnings
- *---------------------------------------------------------------------------*/
+  * To ignore -Wpedantic warnings
+  *---------------------------------------------------------------------------*/
 #if defined(__GNUC__)
 #pragma GCC diagnostic ignored "-Wpedantic"
 #endif
 
 /*---------------------------------------------------------------------------
- * External References
- *---------------------------------------------------------------------------*/
+  * External References
+  *---------------------------------------------------------------------------*/
 extern uint32_t __StackTop;
 extern int main(void); /*!< The entry point for the application  */
 
+#if defined(__GNUC__) && defined(SL_CATALOG_SL_MAIN_PRESENT) && defined(SL_CATALOG_KERNEL_PRESENT)
+/*
+ * When LTO is enabled, GCC may resolve the main() call in the reset handler
+ * directly to the user's main() definition, bypassing the linker's --wrap=main
+ * redirection. This is a known GCC LTO limitation (GCC bugzilla #24415).
+ * To guarantee correct startup sequencing, call __wrap_main() explicitly.
+ * Guard on SL_CATALOG_SL_MAIN_PRESENT because sl_main is the component
+ * that provides both --wrap=main and __wrap_main().
+ */
+extern int *__wrap_main(void);
+#endif
+
 /*---------------------------------------------------------------------------
- * Symbols defined in linker script
- *---------------------------------------------------------------------------*/
+  * Symbols defined in linker script
+  *---------------------------------------------------------------------------*/
 extern unsigned long _sidata;       /*!< Start address for the initialization 
-                                      values of the .data section.            */
+                                       values of the .data section.            */
 extern unsigned long _sdata;        /*!< Start address for the .data section     */
 extern unsigned long _edata;        /*!< End address for the .data section       */
 extern unsigned long __bss_start__; /*!< Start address for the .bss section     */
 extern unsigned long __bss_end__;   /*!< End address for the .bss section         */
 
-#if (SLI_SI91X_MCU_PSRAM_PRESENT == ENABLE) && defined(DATA_SEGMENT_IN_PSRAM)
-extern unsigned long _slpcode; /*!< Start address for the initialization
-                                      values of the .sleep_psram_driver section.            */
-extern unsigned long _scode;   /*!< Start address for the .sleep_psram_driver section     */
-extern unsigned long _ecode;   /*!< End address for the .sleep_psram_driver section       */
-#endif
-
-// Enable only if code classification component is intalled, PSRAM is present, and data segment is in PSRAM
 #if (SLI_SI91X_MCU_PSRAM_PRESENT == ENABLE) && defined(SL_SI91X_CODE_CLASSIFIER_ENABLE) \
   && defined(DATA_SEGMENT_IN_PSRAM)
 extern unsigned long _classified_text_;               /*!< Start address for the initialization
-                                       values of the .classified_text section.            */
+                                        values of the .classified_text section.            */
 extern unsigned long _classified_text_section_start_; /*!< Start address for the .classified_text section     */
 extern unsigned long _classified_text_section_end_;   /*!< End address for the .classified_text section       */
 
 extern unsigned long _classified_data_;               /*!< Start address for the initialization
-                                       values of the .classified_data section.            */
+                                        values of the .classified_data section.            */
 extern unsigned long _classified_data_section_start_; /*!< Start address for the .classified_data section     */
 extern unsigned long _classified_data_section_end_;   /*!< End address for the .classified_data section       */
 #endif
 
 #if (SLI_SI91X_MCU_PSRAM_PRESENT == ENABLE) && defined(SL_SI91X_CODE_CLASSIFIER_ENABLE) \
   && !defined(BSS_SEGMENT_IN_PSRAM)
-extern unsigned long _classified_bss_;               /*!< Start address for the initialization
-                                       values of the .classified_data section.            */
-extern unsigned long _classified_bss_section_start_; /*!< Start address for the .classified_data section     */
-extern unsigned long _classified_bss_section_end_;   /*!< End address for the .classified_data section   */
+extern unsigned long _classified_bss_section_start_; /*!< Start address for the .classified_bss section     */
+extern unsigned long _classified_bss_section_end_;   /*!< End address for the .classified_bss section       */
 #endif
 
 /*---------------------------------------------------------------------------
- * Internal References
- *---------------------------------------------------------------------------*/
+  * Internal References
+  *---------------------------------------------------------------------------*/
 void Default_Reset_Handler(void);  /*!< Default reset handler                */
 static void Default_Handler(void); /*!< Default exception handler            */
 void Copy_Table();
 void Zero_Table();
 #define WEAK __attribute__((weak))
+
+/* Copy text_ram when RAM execution, code classification (LTO), or PSRAM .data
+ * placement is enabled. PSRAM needs this for SL_SI91X_RETAINED_DATA in text_ram: Clang's
+ * copy table only initializes .data, not text_ram. No-op when linker spans are empty. */
+#if defined(SLI_SI91X_MCU_ENABLE_RAM_BASED_EXECUTION) || defined(SLI_CODE_CLASSIFICATION_GCC_USE_USED) \
+  || defined(DATA_SEGMENT_IN_PSRAM)
+/** Copy text_ram from LMA to VMA in SRAM; run before Copy_Table(). */
+#if defined(__GNUC__) && !defined(__clang__)
+__attribute__((optimize("no-tree-loop-distribute-patterns")))
+#endif
+static void
+copy_functions_to_ram(void)
+{
+  extern unsigned long __lma_ramfuncs_start__;
+  extern unsigned long __ramfuncs_start__;
+  extern unsigned long __ramfuncs_end__;
+
+  const volatile unsigned long *pulSrc = &__lma_ramfuncs_start__;
+  for (volatile unsigned long *pulDest = &__ramfuncs_start__; pulDest < &__ramfuncs_end__;) {
+    *(pulDest++) = *(pulSrc++);
+  }
+}
+#endif
+
 /**
- *@brief The minimal vector table for a Cortex M4.  Note that the proper constructs
- *       must be placed on this to ensure that it ends up at physical address
- *       0x00000000.
- */
+  *@brief The minimal vector table for a Cortex M4.  Note that the proper constructs
+  *       must be placed on this to ensure that it ends up at physical address
+  *       0x00000000.
+  */
 const tVectorEntry __VECTOR_TABLE[SI91X_VECTOR_TABLE_ENTRIES] __attribute__((aligned(512))) __VECTOR_TABLE_ATTRIBUTE = {
   /*----------------------------------------------------------------------------
- * Exception / Interrupt Vector table
- *----------------------------------------------------------------------------*/
+  * Exception / Interrupt Vector table
+  *----------------------------------------------------------------------------*/
 
   { (void *)&__StackTop },       /*!< The initial stack  pointer (0x00)            */
   { RSI_Default_Reset_Handler }, /*!< Reset Handler                               */
@@ -201,13 +233,13 @@ const tVectorEntry __VECTOR_TABLE[SI91X_VECTOR_TABLE_ENTRIES] __attribute__((ali
 };
 
 /*----------------------------------------------------------------------------
- * Default Handler for Exceptions / Interrupts
- *----------------------------------------------------------------------------*/
+  * Default Handler for Exceptions / Interrupts
+  *----------------------------------------------------------------------------*/
 /**
- * @brief  This is the code that gets never called, Dummy handler
- * @param  None
- * @retval None
- */
+  * @brief  This is the code that gets never called, Dummy handler
+  * @param  None
+  * @retval None
+  */
 void Default_Reset_Handler(void)
 {
   /*Generic Default reset handler for CM4 */
@@ -216,49 +248,57 @@ void Default_Reset_Handler(void)
 }
 
 /**
- * @brief  This is the code that gets called when the processor first
- *         starts execution following a reset event. Only the absolutely
- *         necessary set is performed, after which the application
- *         supplied main() routine is called.
- */
+  * @brief  This is the code that gets called when the processor first
+  *         starts execution following a reset event. Only the absolutely
+  *         necessary set is performed, after which the application
+  *         supplied main() routine is called.
+  */
 
 void Copy_Table(void)
 {
-  /* Initialize data and bss */
   const volatile unsigned long *pulSrc;
-  volatile unsigned long *pulDest;
-  pulSrc = &_sidata;
-  /* Copy the data segment initializers from flash to SRAM */
-  for (pulDest = &_sdata; pulDest < &_edata;) {
-    *(pulDest++) = *(pulSrc++);
+
+#if defined(__clang__)
+  /* Linker .copy.table: .data row only { __etext, __data_start__, word_count }; text_ram copied in copy_functions_to_ram() before this. */
+  typedef struct {
+    uint32_t const *src;
+    uint32_t *dest;
+    uint32_t wlen;
+  } si91x_copy_row_t;
+
+  extern const char __copy_table_start__;
+  extern const char __copy_table_end__;
+
+  if ((uintptr_t)&__copy_table_end__ > (uintptr_t)&__copy_table_start__) {
+    const si91x_copy_row_t *row     = (const si91x_copy_row_t *)(const void *)&__copy_table_start__;
+    const si91x_copy_row_t *row_end = (const si91x_copy_row_t *)(const void *)&__copy_table_end__;
+    for (; row < row_end; ++row) {
+      for (uint32_t i = 0u; i < row->wlen; ++i) {
+        row->dest[i] = row->src[i];
+      }
+    }
+  } else {
+    pulSrc = &_sidata;
+    for (volatile unsigned long *pulDest = &_sdata; pulDest < &_edata;) {
+      *(pulDest++) = *(pulSrc++);
+    }
   }
-#if (SLI_SI91X_MCU_PSRAM_PRESENT == ENABLE) && defined(DATA_SEGMENT_IN_PSRAM)
-  /* Copy the sleep PSRAM driver segment to SRAM */
-  pulSrc = &_slpcode;
-  for (pulDest = &_scode; pulDest < &_ecode;) {
+#else
+  pulSrc = &_sidata;
+  for (volatile unsigned long *pulDest = &_sdata; pulDest < &_edata;) {
     *(pulDest++) = *(pulSrc++);
   }
 #endif
-
 #if (SLI_SI91X_MCU_PSRAM_PRESENT == ENABLE) && defined(SL_SI91X_CODE_CLASSIFIER_ENABLE) \
   && defined(DATA_SEGMENT_IN_PSRAM)
   /* Copy the classified text segment to SRAM */
   pulSrc = &_classified_text_;
-  for (pulDest = &_classified_text_section_start_; pulDest < &_classified_text_section_end_;) {
+  for (volatile unsigned long *pulDest = &_classified_text_section_start_; pulDest < &_classified_text_section_end_;) {
     *(pulDest++) = *(pulSrc++);
   }
 
   pulSrc = &_classified_data_;
-  for (pulDest = &_classified_data_section_start_; pulDest < &_classified_data_section_end_;) {
-    *(pulDest++) = *(pulSrc++);
-  }
-#endif
-
-#if (SLI_SI91X_MCU_PSRAM_PRESENT == ENABLE) && defined(SL_SI91X_CODE_CLASSIFIER_ENABLE) \
-  && !defined(BSS_SEGMENT_IN_PSRAM)
-  /* Copy the classified BSS segment from RAM to PSRAM */
-  pulSrc = &_classified_bss_;
-  for (pulDest = &_classified_bss_section_start_; pulDest < &_classified_bss_section_end_;) {
+  for (volatile unsigned long *pulDest = &_classified_data_section_start_; pulDest < &_classified_data_section_end_;) {
     *(pulDest++) = *(pulSrc++);
   }
 #endif
@@ -266,32 +306,78 @@ void Copy_Table(void)
 
 void Zero_Table(void)
 {
-  uint32_t *pulDest;
-  pulDest = &__bss_start__;
+  unsigned long *pulDest;
 
+#if defined(__clang__)
+  typedef struct {
+    uint32_t *dest;
+    uint32_t wlen;
+  } si91x_zero_row_t;
+
+  extern const char __zero_table_start__;
+  extern const char __zero_table_end__;
+
+  if ((uintptr_t)&__zero_table_end__ > (uintptr_t)&__zero_table_start__) {
+    const si91x_zero_row_t *row     = (const si91x_zero_row_t *)(const void *)&__zero_table_start__;
+    const si91x_zero_row_t *row_end = (const si91x_zero_row_t *)(const void *)&__zero_table_end__;
+    for (; row < row_end; ++row) {
+      for (uint32_t i = 0u; i < row->wlen; ++i) {
+        row->dest[i] = 0UL;
+      }
+    }
+  } else {
+    pulDest = &__bss_start__;
+    while (pulDest < &__bss_end__) {
+      *pulDest++ = 0UL;
+    }
+  }
+#else
+  pulDest = &__bss_start__;
   while (pulDest < &__bss_end__) {
     *pulDest++ = 0UL;
   }
+#endif
 #if (SLI_SI91X_MCU_PSRAM_PRESENT == ENABLE) && defined(SL_SI91X_CODE_CLASSIFIER_ENABLE) \
   && !defined(BSS_SEGMENT_IN_PSRAM)
-  pulDest = &_classified_bss_section_start_;
-  for (; pulDest < &_classified_bss_section_end_;) {
+  /* Classified BSS in PSRAM: no load image - zero-init only */
+  pulDest = (unsigned long *)&_classified_bss_section_start_;
+  for (; pulDest < (unsigned long *)&_classified_bss_section_end_;) {
     *pulDest++ = 0UL;
+  }
+#endif
+
+#if (SLI_SI91X_MCU_PSRAM_PRESENT == ENABLE) && defined(DATA_SEGMENT_IN_PSRAM)
+  /* LTO-safe retained BSS (variables tagged SL_SI91X_RETAINED_BSS): always in internal
+   * RAM, NOLOAD, so it must be zero-initialized here. Section is emitted by the
+   * PSRAM linker whenever data is placed in PSRAM. */
+  {
+    extern unsigned long __retained_bss_start__;
+    extern unsigned long __retained_bss_end__;
+    pulDest = (unsigned long *)&__retained_bss_start__;
+    for (; pulDest < (unsigned long *)&__retained_bss_end__;) {
+      *pulDest++ = 0UL;
+    }
   }
 #endif
 }
 
 #if defined(SLI_SI91X_MCU_ENABLE_RAM_BASED_EXECUTION)
-__attribute__((section(".ramVector"))) char ram_vector[sizeof(__VECTOR_TABLE)];
+/* VTOR must be 512-byte aligned for SI91X_VECTOR_TABLE_ENTRIES (91 words); same as flash __VECTOR_TABLE */
+__attribute__((aligned(512), section(".ramVector"))) char ram_vector[sizeof(__VECTOR_TABLE)];
 __attribute__((section(".reset_handler")))
 #endif
-
-/*---------------------------------------------------------------------------
- * Reset Handler called on controller reset
- *---------------------------------------------------------------------------*/
-void RSI_Default_Reset_Handler(void)
+ 
+ /*---------------------------------------------------------------------------
+  * Reset Handler called on controller reset
+  *---------------------------------------------------------------------------*/
+ void RSI_Default_Reset_Handler(void)
 {
-
+  /* NVIC must use this image's vector table (flash __Vectors). ROM may leave VTOR elsewhere. */
+  SCB->VTOR = (uint32_t)__Vectors;
+#if defined(SLI_SI91X_MCU_ENABLE_RAM_BASED_EXECUTION) || defined(SLI_CODE_CLASSIFICATION_GCC_USE_USED) \
+  || defined(DATA_SEGMENT_IN_PSRAM)
+  copy_functions_to_ram();
+#endif
   Copy_Table();
   /* Zero fill the bss segment */
   Zero_Table();
@@ -307,23 +393,27 @@ void RSI_Default_Reset_Handler(void)
   /* This macro enables support for C++ linkage in the startup code. */
 #ifdef SUPPORT_CPLUSPLUS
   /* Initialize global and static C++ objects. This function must be called after SystemInit() to ensure that the hardware is 
-   properly initialized before any global or static constructors are executed. */
+    properly initialized before any global or static constructors are executed. */
   extern void __libc_init_array(void);
   __libc_init_array();
 #endif
   /* Call the application's entry point.*/
+#if defined(__GNUC__) && defined(SL_CATALOG_SL_MAIN_PRESENT) && defined(SL_CATALOG_KERNEL_PRESENT)
+  __wrap_main();
+#else
   main();
+#endif
 }
 
 /*----------------------------------------------------------------------------
- * Exception / Interrupt Handler
- *----------------------------------------------------------------------------*/
+  * Exception / Interrupt Handler
+  *----------------------------------------------------------------------------*/
 /* Cortex-M Processor Exceptions */
 /**
- *@brief Provide weak aliases for each Exception handler to the Default_Handler.
- *       As they are weak aliases, any function with the same name will override
- *       this definition.
- */
+  *@brief Provide weak aliases for each Exception handler to the Default_Handler.
+  *       As they are weak aliases, any function with the same name will override
+  *       this definition.
+  */
 #pragma weak Reset_Handler      = RSI_Default_Reset_Handler
 #pragma weak NMI_Handler        = Default_Handler
 #pragma weak HardFault_Handler  = Default_Handler
@@ -335,8 +425,8 @@ void RSI_Default_Reset_Handler(void)
 #pragma weak PendSV_Handler     = Default_Handler
 #pragma weak SysTick_Handler    = Default_Handler
 /*----------------------------------------------------------------------------
- * external interrupts
- *----------------------------------------------------------------------------*/
+  * external interrupts
+  *----------------------------------------------------------------------------*/
 #pragma weak IRQ000_Handler  = Default_Handler
 #pragma weak IRQ001_Handler  = Default_Handler
 #pragma weak IRQ002_Handler  = Default_Handler
@@ -438,12 +528,12 @@ void RSI_Default_Reset_Handler(void)
 #pragma weak IRQ098_Handler  = Default_Handler
 
 /**
- * @brief  This is the code that gets called when the processor receives an
- *         unexpected interrupt.  This simply enters an infinite loop,
- *         preserving the system state for examination by a debugger.
- * @param  None
- * @retval None
- */
+  * @brief  This is the code that gets called when the processor receives an
+  *         unexpected interrupt.  This simply enters an infinite loop,
+  *         preserving the system state for examination by a debugger.
+  * @param  None
+  * @retval None
+  */
 __attribute__((used)) static void Default_Handler(void)
 {
   /* Go into an infinite loop. */

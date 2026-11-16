@@ -31,7 +31,7 @@ The AT Commands application is a Command-Line Interface (CLI) application design
 - A Micro-coaxial connector plug to SMA-female cable (RF connector) for connecting the U.Fl port of the Si917 radio board to the Spectrum Analyzer or Signal Generator.
 - **SoC Mode**:
   - Standalone
-    - BRD4002A Wireless Pro Kit Mainboard [SI-MB4002A]
+    - BRD4002B Wireless Pro Kit Mainboard [SI-MB4002B]
     - Radio Boards 
   	  - BRD4338A [SiWx917-RB4338A]
       - BRD4339B [SiWx917-RB4339B]

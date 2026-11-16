@@ -79,6 +79,15 @@ extern "C" {
 sl_status_t sl_si91x_debug_swo_init(void);
 
 /**
+ * De-initialize SWO Debug
+ *
+ * @return Status code
+ * @retval SL_STATUS_NOT_INITIALIZED SWO was not initialized
+ * @retval SL_STATUS_OK SWO de-initialized successfully
+ */
+sl_status_t sl_si91x_debug_swo_deinit(void);
+
+/**
  * Enable an ITM channel
  *
  * @details

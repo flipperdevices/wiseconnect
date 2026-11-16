@@ -71,7 +71,7 @@ void command_parser(uint8_t argc, uint8_t **argv)
           //! increment the max_no_of_args
           max_no_of_args++;
         } else {
-          //! check if modules_lut_entry->submodules != NULL then update the current_module_lut and call display fucntion
+          //! check if modules_lut_entry->submodules != NULL then update the current_module_lut and call display function
           if (module_lut_entry->sub_modules != NULL) {
             current_module_lut = module_lut_entry->sub_modules;
             //! call display sub_module function
@@ -80,7 +80,7 @@ void command_parser(uint8_t argc, uint8_t **argv)
             printf("\r\n sub_modules LUT not present\r\n");
             break;
           }
-          //! check if modules_lut_entry->commands != NULL then update the current_command_lut and call display fucntion
+          //! check if modules_lut_entry->commands != NULL then update the current_command_lut and call display function
           if (module_lut_entry->commands != NULL) {
             current_command_lut = module_lut_entry->commands;
             //! call display command function
@@ -95,7 +95,7 @@ void command_parser(uint8_t argc, uint8_t **argv)
         printf("\r\n call current_module_lut custom_handler\r\n");
         break;
       }
-    } else { //! if user input wrong sub_module and commands then call display fucntion
+    } else { //! if user input wrong sub_module and commands then call display function
       printf("\r\n Command parser: Enter correct module_name \r\n");
       //! call display sub_module function
       display_submodule(&argv[current_cmd_index], current_module_lut);

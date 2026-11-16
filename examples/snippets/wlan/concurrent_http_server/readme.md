@@ -1,8 +1,13 @@
 # Wi-Fi - Concurrent HTTP Server
 
+## High-Level Overview
+
+SiWx91x concurrent HTTP server example: Run Wi-Fi station and soft AP together, serve a provisioning webpage on the AP instance, and connect the STA to a third-party access point using credentials entered on the webpage.
+
 ## Table of Contents
 
 - [Wi-Fi - Concurrent HTTP Server](#wi-fi---concurrent-http-server)
+  - [High-Level Overview](#high-level-overview)
   - [Table of Contents](#table-of-contents)
   - [Purpose/Scope](#purposescope)
   - [Prerequisites/Setup Requirements](#prerequisitessetup-requirements)
@@ -13,6 +18,9 @@
   - [Test the Application](#test-the-application)
   - [Steps to create webpage](#steps-to-create-webpage)
   - [Steps to add additional information on webpage](#steps-to-add-additional-information-on-webpage)
+  - [Troubleshooting](#troubleshooting)
+  - [Resources](#resources)
+  - [Report Bugs and Get Support](#report-bugs-and-get-support)
 
 ## Purpose/Scope
 
@@ -25,19 +33,46 @@ In this example application, the SiWx91x's AP instance acts as an HTTP Server an
 
 - Windows PC
 - SoC Mode:
-  - Silicon Labs [BRD4388A](https://www.silabs.com/)
-- NCP Mode:
   - Standalone
-    - BRD4002A Wireless Pro Kit Mainboard [SI-MB4002A]
-    - EFR32xG24 Wireless 2.4 GHz +10 dBm Radio Board [xG24-RB4186C](https://www.silabs.com/development-tools/wireless/xg24-rb4186c-efr32xg24-wireless-gecko-radio-board?tab=overview)
+    - BRD4002B Wireless Pro Kit Mainboard [SI-MB4002B](https://www.silabs.com/development-tools/wireless/wireless-pro-kit-mainboard?tab=overview)
+    - Radio Boards 
+	  - BRD4338A [SiWx917-RB4338A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-rb4338a-wifi-6-bluetooth-le-soc-radio-board?tab=overview)
+	  - BRD4342A [SiWx917-RB4342A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx91x-rb4342a-wifi-6-bluetooth-le-soc-radio-board?tab=overview)
+	  - BRD4339B [SiWx917-RB4339B](https://docs.silabs.com/wiseconnect/latest/wiseconnect-getting-started/getting-started-with-at)
+	  - BRD4340A [SiWx917-RB4340A](https://docs.silabs.com/wiseconnect/latest/wiseconnect-getting-started/getting-started-with-at)
+	  - BRD4343A [SiWx917-RB4343A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4343a-wi-fi-6-bluetooth-le-8mb-flash-radio-board-for-module?tab=overview)
+	  - BRD4343C [SiWx917-RB4343C](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4343c-wi-fi-6-bluetooth-le-8mb-flash-radio-board-for-module?tab=overview)
+  - Kits
+	- SiWG917 Dev Kit [BRD2605B]
+    - SiWx917 AC1 Module Explorer Kit [BRD2708A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-ek2708a-explorer-kit?tab=overview)
+
+- **NCP Mode** (select either the EFR32 or STM32 host MCU platform; a single platform is sufficient to run the application):
+  - **Option 1: EFR32 host**
+    - Silicon Labs [BRD4180B](https://www.silabs.com/development-tools/wireless/slwrb4180b-efr32xg21-wireless-gecko-radio-board?tab=overview)
+    - Host MCU Eval Kit. This example has been tested with:
+      - Silicon Labs [WSTK + EFR32MG21](https://www.silabs.com/development-tools/wireless/efr32xg21-bluetooth-starter-kit)
     - NCP Expansion Kit with NCP Radio Boards
-      - (BRD4346A + BRD8045A) [SiWx917-EB4346A]
-      - (BRD4357A + BRD8045A) [SiWx917-EB4357A]
+      - [BRD4346A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-rb4346a-wifi-6-bluetooth-le-soc-4mb-flash-radio-board?tab=overview) + [BRD8045A](https://www.silabs.com/development-tools/wireless/wi-fi/expansion-adapter-board-for-co-processor-radio-boards?tab=overview)
+      - [BRD4357A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4357a-wi-fi-6-bluetooth-le-4mb-flash-radio-board-for-rcp-and-ncp-modules?tab=overview) + [BRD8045A](https://www.silabs.com/development-tools/wireless/wi-fi/expansion-adapter-board-for-co-processor-radio-boards?tab=overview)
+      - [BRD4357C](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4357c-wi-fi-6-bluetooth-le-4mb-flash-radio-board-for-rcp-and-ncp-modules?tab=overview) + [BRD8045A](https://www.silabs.com/development-tools/wireless/wi-fi/expansion-adapter-board-for-co-processor-radio-boards?tab=overview)
+
+  - **Option 2: STM32F411RE host**
+    - [STM32F411RE](https://www.st.com/en/microcontrollers-microprocessors/stm32f411re.html) MCU
+    - NCP Expansion Kit with NCP Radio Boards
+      - [BRD4346A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-rb4346a-wifi-6-bluetooth-le-soc-4mb-flash-radio-board?tab=overview) + [BRD8045C](https://www.silabs.com/development-tools/wireless/wi-fi/shield-adapter-board-for-co-processor-radio-boards?tab=overview)
+      - [BRD4357A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4357a-wi-fi-6-bluetooth-le-4mb-flash-radio-board-for-rcp-and-ncp-modules?tab=overview) + [BRD8045C](https://www.silabs.com/development-tools/wireless/wi-fi/shield-adapter-board-for-co-processor-radio-boards?tab=overview)
+      - [BRD4357C](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4357c-wi-fi-6-bluetooth-le-4mb-flash-radio-board-for-rcp-and-ncp-modules?tab=overview) + [BRD8045C](https://www.silabs.com/development-tools/wireless/wi-fi/shield-adapter-board-for-co-processor-radio-boards?tab=overview)
+
+  - Interface and host MCU supported
+    - SPI : EFR32 and STM32
+    - UART : EFR32
 
 ### Software Requirements
 
 - Simplicity Studio
 
+
+- [Keil IDE](https://www.keil.com/) (to be used with STM32F411RE MCU)
 
 ## Getting Started
 
@@ -85,7 +120,7 @@ The application can be configured to suit your requirements and development envi
 
 NOTE:
 > 1. In concurrent mode, STA and AP should be configured on the same channel. 
-> 2. Valid values for CHANNEL_NO are 1 to 11 in 2.4 GHz band and 36 to 48 and 149 to 165 in 5 GHz. In this example, default configured band is 2.4 GHz.
+> 2. Valid values for CHANNEL_NO are 1 to 14 in the 2.4 GHz band. The default region code is set to US.
 > 3. The `sli_si91x_accept_async` function in sl_http_server_start is not thread-safe.
 > 4. For WPA3 security (including WPA3 Personal and WPA3 Personal Transition modes), enable the SL_SI91X_EXT_FEAT_IEEE_80211W bit in the .ext_custom_feature_bit_map field of boot configuration.
 
@@ -135,3 +170,26 @@ Refer to the instructions [here](https://docs.silabs.com/wiseconnect/latest/wise
 
   ## Steps to add additional information on webpage
   > If the user wants to add additional information to the webpage, they need to update the login.h file.
+
+## Troubleshooting
+
+If you encounter issues while running the Concurrent HTTP Server example, check the following:
+
+- Verify the default SSID (`MY_AP_SSID`) and passphrase (`MY_AP_PASSPHRASE`) in `sl_net_default_values.h`, or update them as described in [Application Build Environment](#application-build-environment).
+- Connect a client device to the SiWx91x soft AP and open the served webpage in a browser before you enter third-party AP credentials.
+- Enter the correct SSID, password, and security type on the webpage. The server stops after the `/connect` POST request, and the STA connects using those credentials.
+- If the STA fails to connect, confirm that the third-party AP is reachable and that the credentials match the target network.
+- For custom webpages, verify that new handlers are registered in `sl_http_server_handler_t` in `app.c` as described in [Steps to create webpage](#steps-to-create-webpage).
+- For NCP mode, verify that the host interface (SPI or UART) matches the project variant.
+
+## Resources
+
+- [WiSeConnect Getting Started Guide](https://docs.silabs.com/wiseconnect/latest/wiseconnect-getting-started/)
+- [WiSeConnect Examples](https://docs.silabs.com/wiseconnect/latest/wiseconnect-examples/#example-folder-structure)
+- [WiSeConnect Recommended Settings Guide](https://docs.silabs.com/wiseconnect/latest/wiseconnect-developers-guide-prog-recommended-settings/)
+
+## Report Bugs and Get Support
+
+Report issues and get help from the Silicon Labs community:
+
+- [Silicon Labs Community](https://www.silabs.com/community)

@@ -1,6 +1,6 @@
 /***************************************************************************/ /**
  * @file
- * @brief SI91x IO Stream Log Component.
+ * @brief SiWx91x IO Stream Log component.
  *******************************************************************************
  * # License
  * <b>Copyright 2019 Silicon Laboratories Inc. www.silabs.com</b>
@@ -53,6 +53,9 @@
 #include "sl_si91x_iostream_swo.h"
 #endif
 
+#ifdef SL_CATALOG_IOSTREAM_DEBUG_SI91X_PRESENT
+#include "sl_si91x_iostream_debug.h"
+#endif
 /*******************************************************************************
   *************************** LOCAL VARIABLES *******************************
   ******************************************************************************/
@@ -75,13 +78,16 @@ extern sl_iostream_instance_info_t sl_si91x_iostream_instance_vuart_info;
 extern sl_iostream_instance_info_t sl_si91x_iostream_instance_swo_info;
 #endif
 
+#ifdef SL_CATALOG_IOSTREAM_DEBUG_SI91X_PRESENT
+extern sl_iostream_instance_info_t sl_si91x_iostream_instance_debug_info;
+#endif
 /*******************************************************************************
  ***************************Local Function Prototypes *****************************
  ******************************************************************************/
 
 #if defined(SL_CATALOG_IOSTREAM_SWO_SI91X_PRESENT) && (IOSTREAM_LOG_TYPE == SL_SI91X_IOSTREAM_SWO_LOG)
 /***************************************************************************/ /**
- * Si91x iostream SWO init function.
+ * SiWx91x IO Stream SWO init function.
  *
  * @return 
  *         SL_STATUS_OK   - SWO initialized succesfully
@@ -101,13 +107,23 @@ __STATIC_INLINE sl_status_t sli_si91x_iostream_log_rtt_init(void);
 
 #elif defined(SL_CATALOG_IOSTREAM_VUART_SI91X_PRESENT) && (IOSTREAM_LOG_TYPE == SL_SI91X_IOSTREAM_VUART_LOG)
 /***************************************************************************/ /**
- * Si91x iostream Vuart init function.
+ * SiWx91x IO Stream VUART init function.
  *
  * @return 
  *         SL_STATUS_OK   - Vuart initialized succesfully
  *         SL_STATUS_FAIL - Unable to initialize Vuart
  ******************************************************************************/
 __STATIC_INLINE sl_status_t sli_si91x_iostream_log_vuart_init(void);
+
+#elif defined(SL_CATALOG_IOSTREAM_DEBUG_SI91X_PRESENT) && (IOSTREAM_LOG_TYPE == SL_SI91X_IOSTREAM_DEBUG_LOG)
+/***************************************************************************/ /**
+ * SiWx91x IO Stream DEBUG init function.
+ *
+ * @return 
+ *         SL_STATUS_OK   - DEBUG initialized succesfully
+ *         SL_STATUS_FAIL - Unable to initialize DEBUG
+ ******************************************************************************/
+__STATIC_INLINE sl_status_t sli_si91x_iostream_log_debug_init(void);
 #else
 #define INVALID_LOG_TYPE
 #endif
@@ -208,6 +224,36 @@ sl_status_t sli_si91x_iostream_log_init(void)
 
 #else
 #error IOSTREAM VUART component not installed
+#endif
+#endif
+
+#if (IOSTREAM_LOG_TYPE == SL_SI91X_IOSTREAM_DEBUG_LOG)
+#ifdef SL_CATALOG_IOSTREAM_DEBUG_SI91X_PRESENT
+/*******************************************************************************
+ * This function initializes iostream debug module. The debug message type
+ * (printf, ML profiler, virtual UART TX, ...) is selected in the IO Stream
+ * Debug UC config (SL_SI91X_IOSTREAM_DEBUG_MSG_TYPE) and applied internally
+ * by sl_si91x_iostream_debug_init().
+  *******************************************************************************/
+sl_status_t sli_si91x_iostream_log_debug_init()
+{
+  sl_status_t status = SL_STATUS_OK;
+  status             = sl_si91x_iostream_debug_init();
+  if (status != SL_STATUS_OK) {
+    return status;
+  }
+  return status;
+}
+/*******************************************************************************
+ * This function initalizes debug and sets it as log stream
+  *******************************************************************************/
+sl_status_t sli_si91x_iostream_log_init(void)
+{
+  sl_si91x_log_stream_info = sl_si91x_iostream_instance_debug_info;
+  return sli_si91x_iostream_log_debug_init();
+}
+#else
+#error IOSTREAM DEBUG (iostream_debug_si91x) component not installed
 #endif
 #endif
 

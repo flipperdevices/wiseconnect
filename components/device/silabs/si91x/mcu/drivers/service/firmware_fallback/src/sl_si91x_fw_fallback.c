@@ -33,6 +33,7 @@
 #include "si91x_device.h"
 #include "core_cm4.h"
 #ifdef SL_SI91X_FW_FALLBACK
+#include "sli_wifi_utility.h"
 #include "sl_si91x_driver.h"
 #include "sli_siwx917_soc.h"
 #include "sl_device.h"
@@ -88,12 +89,12 @@ static uint8_t sl_m4_upadter_ota_flag = 0;
 sl_status_t sl_si91x_ab_upgrade_get_rps_configs(const uint8_t *image_buffer, ota_image_info_t *ota_st)
 {
   if ((image_buffer == NULL) || (ota_st == NULL)) {
-    DEBUGOUT("\r\n[get_rps_cfgs] Error: NULL pointer passed!\r\n");
+    DEBUGOUT("[get_rps_cfgs] Error: NULL pointer passed!");
     return SL_STATUS_NULL_POINTER;
   }
 
   const sl_wifi_firmware_header_t *rps_config_t = (const sl_wifi_firmware_header_t *)image_buffer;
-  DEBUGOUT("\r\n[get_rps_cfgs] Magic number: %lx\r\n", rps_config_t->magic_no);
+  DEBUGOUT("[get_rps_cfgs] Magic number: %lx", rps_config_t->magic_no);
 
   if (rps_config_t->magic_no == SLI_SI91X_RPS_MAGIC_NO) {
 
@@ -107,7 +108,7 @@ sl_status_t sl_si91x_ab_upgrade_get_rps_configs(const uint8_t *image_buffer, ota
     } else if ((ota_st->ota_image_type & BIT(0)) == SL_SI91X_NWP_RPS_BIT) {
       ota_st->ota_image_offset += SLI_SI91X_NWP_FLASH_BASE_ADDR;
     } else {
-      DEBUGOUT("\r\n[get_rps_cfgs] Error: Unknown image type!\r\n");
+      DEBUGOUT("[get_rps_cfgs] Error: Unknown image type!");
       return SL_SI91X_AB_ERR_UNKNOWN_IMG;
     }
 
@@ -117,7 +118,7 @@ sl_status_t sl_si91x_ab_upgrade_get_rps_configs(const uint8_t *image_buffer, ota
     ota_image_type    = ota_st->ota_image_type;
     return SL_STATUS_OK;
   } else {
-    DEBUGOUT("\r\n[get_rps_cfgs] Error: Magic number mismatch!\r\n");
+    DEBUGOUT("[get_rps_cfgs] Error: Magic number mismatch!");
     return SL_SI91X_AB_ERR_MAGIC_NUMBER;
   }
 }
@@ -135,6 +136,7 @@ int16_t sl_si91x_select_default_nwp_fw(const uint8_t fw_image_number)
 {
   uint16_t boot_cmd = 0;
   if (fw_image_number != 0 && fw_image_number != 1) {
+    DEBUGOUT("[select_default_nwp_fw] Error: Invalid firmware image number. line no: %d", __LINE__);
     return SL_STATUS_INVALID_PARAMETER; // Error if firmware image number is not 0 or 1
   }
 
@@ -185,6 +187,7 @@ sl_status_t sl_si91x_flash_write(uint32_t address, const uint8_t *buffer, uint32
 
   // Validate length (ensure it fits within the buffer limit)
   if ((length > SL_SI91X_MAX_OTA_IMAGE_CHUNK_SIZE) || (buffer == NULL) || (length == 0)) {
+    DEBUGOUT("[flash_write] Error: Invalid parameters passed. line no: %d", __LINE__);
     return SL_STATUS_INVALID_PARAMETER; // Error if length exceeds 1024 bytes
   }
 
@@ -198,13 +201,13 @@ sl_status_t sl_si91x_flash_write(uint32_t address, const uint8_t *buffer, uint32
   request_size = offsetof(sl_si91x_fw_fallback_request_t, data) + length;
 
   // Send firmware update command
-  status = sli_si91x_driver_send_command(SLI_SI91X_FW_FALLBACK_REQ_FROM_HOST,
-                                         SLI_WIFI_COMMON_CMD,
-                                         &fw_request,
-                                         request_size,
-                                         SLI_WIFI_WAIT_FOR_RESPONSE(SL_SI91X_NWP_RESPONSE_TIMEOUT),
-                                         NULL,
-                                         NULL);
+  status = sli_wifi_send_command(SLI_COMMON_REQ_FW_FALLBACK_FROM_HOST,
+                                 SLI_WIFI_COMMON_CMD,
+                                 &fw_request,
+                                 request_size,
+                                 SLI_WIFI_WAIT_FOR_RESPONSE(SL_SI91X_NWP_RESPONSE_TIMEOUT),
+                                 NULL,
+                                 NULL);
 
   return status;
 }
@@ -228,11 +231,13 @@ sl_status_t sl_si91x_fw_fallback_ota_flash_write(const sl_si91x_fw_fallback_conf
 
   // Validate input parameters
   if (config == NULL || data_buffer == NULL) {
+    DEBUGOUT("[ota_flash_write] Error: NULL pointer passed. line no: %d", __LINE__);
     return SL_STATUS_NULL_POINTER;
   }
 
   // Validate data length (ensure it fits within the buffer limit)
   if (config->ota_image_data_length > SL_SI91X_MAX_OTA_IMAGE_CHUNK_SIZE || config->ota_image_data_length == 0) {
+    DEBUGOUT("[ota_flash_write] Error: Invalid data length. line no: %d", __LINE__);
     return SL_STATUS_INVALID_PARAMETER; // Error if length exceeds 1024 bytes
   }
 
@@ -251,13 +256,13 @@ sl_status_t sl_si91x_fw_fallback_ota_flash_write(const sl_si91x_fw_fallback_conf
   request_size = offsetof(sl_si91x_fw_fallback_request_t, data) + config->ota_image_data_length;
 
   // Send firmware update command
-  status = sli_si91x_driver_send_command(SLI_SI91X_FW_FALLBACK_REQ_FROM_HOST,
-                                         SLI_WIFI_COMMON_CMD,
-                                         &fw_request,
-                                         request_size,
-                                         SLI_WIFI_WAIT_FOR_RESPONSE(SL_SI91X_NWP_RESPONSE_TIMEOUT),
-                                         NULL,
-                                         NULL);
+  status = sli_wifi_send_command(SLI_COMMON_REQ_FW_FALLBACK_FROM_HOST,
+                                 SLI_WIFI_COMMON_CMD,
+                                 &fw_request,
+                                 request_size,
+                                 SLI_WIFI_WAIT_FOR_RESPONSE(SL_SI91X_NWP_RESPONSE_TIMEOUT),
+                                 NULL,
+                                 NULL);
 
   return status;
 }
@@ -279,7 +284,7 @@ sl_status_t sl_si91x_verify_image(uint32_t flash_address)
   sl_si91x_fw_fallback_request_t fw_request = { 0 };
 
   if (flash_address == 0) {
-    DEBUGOUT("\r\n [verify_image] Error: Invalid flash address (0x00000000)\r\n");
+    DEBUGOUT("[verify_image] Error: Invalid flash address (0x00000000)");
     return SL_STATUS_INVALID_PARAMETER;
   }
 
@@ -290,17 +295,17 @@ sl_status_t sl_si91x_verify_image(uint32_t flash_address)
   if (sl_m4_upadter_ota_flag == SL_SI91X_M4_UPDATER_OTA_FLAG) {
     fw_request.m4_updater_ota = sl_m4_upadter_ota_flag;
   }
-  DEBUGOUT("\r\n ota_flag=%X \r\n", fw_request.m4_updater_ota);
+  DEBUGOUT("verify_image]ota_flag=%X", fw_request.m4_updater_ota);
   size_t request_size = offsetof(sl_si91x_fw_fallback_request_t, data);
 
   // Send firmware update command
-  status = sli_si91x_driver_send_command(SLI_SI91X_FW_FALLBACK_REQ_FROM_HOST,
-                                         SLI_WIFI_COMMON_CMD,
-                                         &fw_request,
-                                         request_size,
-                                         SLI_WIFI_WAIT_FOR_RESPONSE(SL_SI91X_NWP_RESPONSE_TIMEOUT),
-                                         NULL,
-                                         NULL);
+  status = sli_wifi_send_command(SLI_COMMON_REQ_FW_FALLBACK_FROM_HOST,
+                                 SLI_WIFI_COMMON_CMD,
+                                 &fw_request,
+                                 request_size,
+                                 SLI_WIFI_WAIT_FOR_RESPONSE(SL_SI91X_NWP_RESPONSE_TIMEOUT),
+                                 NULL,
+                                 NULL);
   return status;
 }
 /***************************************************************************/ /**
@@ -320,7 +325,7 @@ static sl_status_t sli_si91x_validate_ab_info(uint32_t address, sl_si91x_fw_ab_s
 
   // **Validate Inputs: NULL Pointer & Zero Address**
   if (slot_info == NULL || address == 0) {
-    DEBUGOUT("\r\n[validate_ab_info] Error: %s. Aborting operation.\r\n",
+    DEBUGOUT("[validate_ab_info] Error: %s. Aborting operation.",
              (slot_info == NULL) ? "Slot info pointer is NULL" : "Invalid address (0x00000000)");
     return (slot_info == NULL) ? SL_STATUS_NULL_POINTER : SL_STATUS_INVALID_PARAMETER;
   }
@@ -329,7 +334,7 @@ static sl_status_t sli_si91x_validate_ab_info(uint32_t address, sl_si91x_fw_ab_s
 
   // Check if retrieving slot information was successful
   if (status != SL_STATUS_OK) {
-    DEBUGOUT("\r\n[validate_ab_info] Error: Failed to retrieve slot information. Status: %lX\r\n", status);
+    DEBUGOUT("[validate_ab_info] Error: Failed to retrieve slot information. Status: %lX", status);
 
     // If the error is due to invalid slot info (0xFFFFFFFF), allow the erase to proceed
     if (status == SL_SI91X_AB_ERR_INVALID_SLOT_INFO) {
@@ -342,7 +347,7 @@ static sl_status_t sli_si91x_validate_ab_info(uint32_t address, sl_si91x_fw_ab_s
     return status;
   }
 
-  DEBUGOUT("\r\n[validate_ab_info] Validating slot info. Address: %lX, Active M4 Slot: %u\r\n",
+  DEBUGOUT("[validate_ab_info] Validating slot info. Address: %lX, Active M4 Slot: %u",
            address,
            slot_info->m4_slot_info.current_active_M4_slot);
 
@@ -351,8 +356,8 @@ static sl_status_t sli_si91x_validate_ab_info(uint32_t address, sl_si91x_fw_ab_s
       && address >= slot_info->m4_slot_info.m4_slot_A.slot_image_offset
       && address
            < (slot_info->m4_slot_info.m4_slot_A.slot_image_offset + slot_info->m4_slot_info.m4_slot_A.image_size)) {
-    DEBUGOUT("\r\n [validate_ab_info] Error: Erase operation overlaps with active M4 Slot A "
-             "(Offset: %lX, Size: %lu bytes). Erase aborted.\n",
+    DEBUGOUT("[validate_ab_info] Error: Erase operation overlaps with active M4 Slot A "
+             "(Offset: %lX, Size: %lu bytes). Erase aborted.",
              slot_info->m4_slot_info.m4_slot_A.slot_image_offset,
              slot_info->m4_slot_info.m4_slot_A.image_size);
     return SL_SI91X_AB_ERR_ERASE_ACTIVE_SLOT;
@@ -363,8 +368,8 @@ static sl_status_t sli_si91x_validate_ab_info(uint32_t address, sl_si91x_fw_ab_s
       && address >= slot_info->m4_slot_info.m4_slot_B.slot_image_offset
       && address
            < (slot_info->m4_slot_info.m4_slot_B.slot_image_offset + slot_info->m4_slot_info.m4_slot_B.image_size)) {
-    DEBUGOUT("\r\n [validate_ab_info] Error: Erase operation overlaps with active M4 Slot B "
-             "(Offset: %lX, Size: %lu bytes). Erase aborted.\n",
+    DEBUGOUT("[validate_ab_info] Error: Erase operation overlaps with active M4 Slot B "
+             "(Offset: %lX, Size: %lu bytes). Erase aborted.",
              slot_info->m4_slot_info.m4_slot_B.slot_image_offset,
              slot_info->m4_slot_info.m4_slot_B.image_size);
     return SL_SI91X_AB_ERR_ERASE_ACTIVE_SLOT;
@@ -394,7 +399,7 @@ sl_status_t sl_si91x_flash_erase(uint32_t address, uint32_t length)
   // Validate slot information and check if the address is within an active slot
   status = sli_si91x_validate_ab_info(address, &slot_info);
   if (status != SL_STATUS_OK) {
-    DEBUGOUT("\r\n [flash_erase] Error: Failed to validate the slot information: %lX\n", status);
+    DEBUGOUT("[flash_erase] Error: Failed to validate the slot information: %lX", status);
     return status;
   }
 
@@ -408,14 +413,14 @@ sl_status_t sl_si91x_flash_erase(uint32_t address, uint32_t length)
   size_t request_size = offsetof(sl_si91x_fw_fallback_request_t, data);
 
   // Send firmware update command
-  status = sli_si91x_driver_send_command(SLI_SI91X_FW_FALLBACK_REQ_FROM_HOST,
-                                         SLI_WIFI_COMMON_CMD,
-                                         &fw_request,
-                                         request_size,
-                                         SLI_WIFI_WAIT_FOR_RESPONSE(SL_SI91X_NWP_RESPONSE_TIMEOUT),
-                                         NULL,
-                                         NULL);
-  DEBUGOUT("\r\n [flash_erase] Erase Success %lX\n", status);
+  status = sli_wifi_send_command(SLI_COMMON_REQ_FW_FALLBACK_FROM_HOST,
+                                 SLI_WIFI_COMMON_CMD,
+                                 &fw_request,
+                                 request_size,
+                                 SLI_WIFI_WAIT_FOR_RESPONSE(SL_SI91X_NWP_RESPONSE_TIMEOUT),
+                                 NULL,
+                                 NULL);
+  DEBUGOUT("[flash_erase] Erase Success %lX", status);
   return status;
 }
 
@@ -452,7 +457,7 @@ sl_status_t sl_si91x_ab_upgrade_set_slot_info(uint32_t new_image_offset,
                                (uint8_t *)&fw_slot_info,
                                sizeof(sl_si91x_fw_ab_slot_management_t));
   if (status != SL_STATUS_OK) {
-    DEBUGOUT("\r\n [upgrade_ab_info] Error: Failed to read slot info from flash. Status: %lX\r\n", status);
+    DEBUGOUT("[upgrade_ab_info] Error: Failed to read slot info from flash. Status: %lX", status);
     return SL_SI91X_AB_ERR_FLASH_READ;
   }
 
@@ -462,7 +467,7 @@ sl_status_t sl_si91x_ab_upgrade_set_slot_info(uint32_t new_image_offset,
   if (need_flash_update) {
     // Handle OTA update for M4
     if (image_type == SL_SI91X_AB_OTA_IMAGE_TYPE_M4) {
-      DEBUGOUT("\r\nProcessing Slot-Info update for M4 :%lX \r\n", new_image_offset);
+      DEBUGOUT("[upgrade_ab_info] Processing Slot-Info update for M4 :%lX", new_image_offset);
       if (fw_slot_info.m4_slot_info.current_active_M4_slot == SLOT_A) {
         fw_slot_info.m4_slot_info.current_active_M4_slot      = SLOT_B;
         fw_slot_info.m4_slot_info.m4_slot_B.slot_image_offset = new_image_offset;
@@ -478,7 +483,7 @@ sl_status_t sl_si91x_ab_upgrade_set_slot_info(uint32_t new_image_offset,
 
     // Handle OTA update for NWP
     if (image_type == SL_SI91X_AB_OTA_IMAGE_TYPE_NWP) {
-      DEBUGOUT("\r\nProcessing Slot-Info update for NWP\r\n");
+      DEBUGOUT("[upgrade_ab_info] Processing Slot-Info update for NWP");
       if (fw_slot_info.nwp_slot_info.current_active_nwp_slot == SLOT_A) {
         fw_slot_info.nwp_slot_info.current_active_nwp_slot      = SLOT_B;
         fw_slot_info.nwp_slot_info.nwp_slot_B.slot_image_offset = new_image_offset;
@@ -499,7 +504,7 @@ sl_status_t sl_si91x_ab_upgrade_set_slot_info(uint32_t new_image_offset,
     // Erase and write backup slot info
     status = sli_si91x_erase_slot_info(SLI_SI91X_BACKUP_SLOT_INFO_FLASH_OFFSET);
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("\r\n [upgrade_ab_info] Error: Failed to erase backup slot info. Status: %lX\r\n", status);
+      DEBUGOUT("[upgrade_ab_info] Error: Failed to erase backup slot info. Status: %lX", status);
       return status;
     }
 
@@ -507,7 +512,7 @@ sl_status_t sl_si91x_ab_upgrade_set_slot_info(uint32_t new_image_offset,
                                   (uint8_t *)&fw_slot_info,
                                   sizeof(sl_si91x_fw_ab_slot_management_t));
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("\r\n [upgrade_ab_info] Error: Failed to write backup slot info. Status: %lX\r\n", status);
+      DEBUGOUT("[upgrade_ab_info] Error: Failed to write backup slot info. Status: %lX", status);
       return status;
     }
 
@@ -516,13 +521,13 @@ sl_status_t sl_si91x_ab_upgrade_set_slot_info(uint32_t new_image_offset,
                                  (uint8_t *)&verify_fw_slot_info,
                                  sizeof(sl_si91x_fw_ab_slot_management_t));
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("\r\n [upgrade_ab_info] Error: Failed to read backup slot info. Status: %lX\r\n", status);
+      DEBUGOUT("[upgrade_ab_info] Error: Failed to read backup slot info. Status: %lX", status);
       return SL_SI91X_AB_ERR_FLASH_READ;
     }
 
     if ((sli_si91x_calculate_firmware_slot_crc(&verify_fw_slot_info) != verify_fw_slot_info.slot_struct_crc)
         || (verify_fw_slot_info.slot_magic_word != SLI_SI91X_AB_FW_SLOT_MAGIC_WORD)) {
-      DEBUGOUT("\r\n [upgrade_ab_info] Error: Backup slot info verification failed. Status: "
+      DEBUGOUT("[upgrade_ab_info] Error: Backup slot info verification failed. Status: "
                "SL_SI91X_AB_ERR_BACKUP_VERIFY\r\n");
       return SL_SI91X_AB_ERR_BACKUP_VERIFY;
     }
@@ -530,7 +535,7 @@ sl_status_t sl_si91x_ab_upgrade_set_slot_info(uint32_t new_image_offset,
     // Erase and write actual slot info
     status = sli_si91x_erase_slot_info(SLI_SI91X_SLOT_INFO_FLASH_OFFSET);
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("\r\n [upgrade_ab_info] Error: Failed to erase slot info. Status: %lX\r\n", status);
+      DEBUGOUT("[upgrade_ab_info] Error: Failed to erase slot info. Status: %lX", status);
       return status;
     }
 
@@ -538,7 +543,7 @@ sl_status_t sl_si91x_ab_upgrade_set_slot_info(uint32_t new_image_offset,
                                   (uint8_t *)&fw_slot_info,
                                   sizeof(sl_si91x_fw_ab_slot_management_t));
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("\r\n [upgrade_ab_info] Error: Failed to write slot info. Status: %lX\r\n", status);
+      DEBUGOUT("[upgrade_ab_info] Error: Failed to write slot info. Status: %lX", status);
       return status;
     }
 
@@ -547,13 +552,13 @@ sl_status_t sl_si91x_ab_upgrade_set_slot_info(uint32_t new_image_offset,
                                  (uint8_t *)&verify_fw_slot_info,
                                  sizeof(sl_si91x_fw_ab_slot_management_t));
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("\r\n [upgrade_ab_info] Error: Failed to read written slot info. Status: %lX\r\n", status);
+      DEBUGOUT("[upgrade_ab_info] Error: Failed to read written slot info. Status: %lX", status);
       return SL_SI91X_AB_ERR_FLASH_READ;
     }
 
     if ((sli_si91x_calculate_firmware_slot_crc(&verify_fw_slot_info) != verify_fw_slot_info.slot_struct_crc)
         || (verify_fw_slot_info.slot_magic_word != SLI_SI91X_AB_FW_SLOT_MAGIC_WORD)) {
-      DEBUGOUT("\r\n [upgrade_ab_info] Error: Written slot info verification failed. Status: "
+      DEBUGOUT("[upgrade_ab_info] Error: Written slot info verification failed. Status: "
                "SL_SI91X_AB_ERR_FLASH_VERIFY\r\n");
       return SL_SI91X_AB_ERR_FLASH_VERIFY;
     }
@@ -561,12 +566,12 @@ sl_status_t sl_si91x_ab_upgrade_set_slot_info(uint32_t new_image_offset,
     if ((fw_slot_info.m4_slot_info.current_active_M4_slot != verify_fw_slot_info.m4_slot_info.current_active_M4_slot)
         || (fw_slot_info.nwp_slot_info.current_active_nwp_slot
             != verify_fw_slot_info.nwp_slot_info.current_active_nwp_slot)) {
-      DEBUGOUT("\r\n [upgrade_ab_info] Error: Active slot mismatch after verification. Status: "
+      DEBUGOUT("[upgrade_ab_info] Error: Active slot mismatch after verification. Status: "
                "SL_SI91X_AB_ERR_FLASH_VERIFY\r\n");
       return SL_SI91X_AB_ERR_FLASH_VERIFY;
     }
   }
-  DEBUGOUT("\r\n [upgrade_ab_info] Slot update successful\n");
+  DEBUGOUT("[upgrade_ab_info] Slot update successful");
   return status;
 }
 
@@ -582,7 +587,7 @@ sl_status_t sl_si91x_ab_upgrade_set_slot_info(uint32_t new_image_offset,
 sl_status_t sl_si91x_ab_get_slot_info(sl_si91x_fw_ab_slot_management_t *ab_slot_info_t)
 {
   if (ab_slot_info_t == NULL) {
-    DEBUGOUT("\r\n [get_ab_info]Error: NULL pointer passed for slot_info!\n");
+    DEBUGOUT("[get_ab_info]Error: NULL pointer passed for slot_info!");
     return SL_STATUS_NULL_POINTER;
   }
 
@@ -594,20 +599,20 @@ sl_status_t sl_si91x_ab_get_slot_info(sl_si91x_fw_ab_slot_management_t *ab_slot_
                                            sizeof(sl_si91x_fw_ab_slot_management_t));
 
   if (status != SL_STATUS_OK) {
-    DEBUGOUT("\r\n [get_ab_info]Error: Failed to read slot info from flash. Status: %lX\r\n", status);
+    DEBUGOUT("[get_ab_info]Error: Failed to read slot info from flash. Status: %lX", status);
     return SL_SI91X_AB_ERR_FLASH_READ;
   }
 
   // Check if the magic number is 0xFF (invalid slot information)
   if (ab_slot_info_t->slot_magic_word == 0xFFFFFFFF) {
-    DEBUGOUT("\r\n [get_ab_info]Error: Slot info magic number is 0xFFFFFFFF, indicating invalid slot info.\n");
+    DEBUGOUT("[get_ab_info]Error: Slot info magic number is 0xFFFFFFFF, indicating invalid slot info.");
     return SL_SI91X_AB_ERR_INVALID_SLOT_INFO;
   }
 
   // Verify CRC and Magic Word of the read-back structure
   if ((sli_si91x_calculate_firmware_slot_crc(ab_slot_info_t) != ab_slot_info_t->slot_struct_crc)
       || (ab_slot_info_t->slot_magic_word != SLI_SI91X_AB_FW_SLOT_MAGIC_WORD)) {
-    DEBUGOUT("\r\n [get_ab_info]Error: CRC verification failed for primary slot info. Reading from backup...\n");
+    DEBUGOUT("[get_ab_info]Error: CRC verification failed for primary slot info. Reading from backup...");
 
     // Clear the slot_info_t structure before reading from backup
     memset(ab_slot_info_t, 0, sizeof(sl_si91x_fw_ab_slot_management_t));
@@ -618,25 +623,25 @@ sl_status_t sl_si91x_ab_get_slot_info(sl_si91x_fw_ab_slot_management_t *ab_slot_
                                  sizeof(sl_si91x_fw_ab_slot_management_t));
 
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("\r\n [get_ab_info]Error: Failed to read backup slot info. Status: %lX\r\n", status);
+      DEBUGOUT("[get_ab_info]Error: Failed to read backup slot info. Status: %lX", status);
       return SL_SI91X_AB_ERR_FLASH_READ;
     }
 
     // Check again if magic number is 0xFFFFFFFF in backup slot
     if (ab_slot_info_t->slot_magic_word == 0xFFFFFFFF) {
-      DEBUGOUT("\r\n [get_ab_info]Error: Backup slot info magic number is 0xFFFFFFFF, indicating invalid slot info.\n");
+      DEBUGOUT("[get_ab_info]Error: Backup slot info magic number is 0xFFFFFFFF, indicating invalid slot info.");
       return SL_SI91X_AB_ERR_INVALID_SLOT_INFO;
     }
 
     // Verify CRC and Magic Word of the read-back structure from backup
     if ((sli_si91x_calculate_firmware_slot_crc(ab_slot_info_t) != ab_slot_info_t->slot_struct_crc)
         || (ab_slot_info_t->slot_magic_word != SLI_SI91X_AB_FW_SLOT_MAGIC_WORD)) {
-      DEBUGOUT("\r\n [get_ab_info]Error: CRC verification failed for backup slot info\n");
+      DEBUGOUT("[get_ab_info]Error: CRC verification failed for backup slot info");
       return SL_SI91X_AB_ERR_FLASH_VERIFY;
     }
   }
 
-  DEBUGOUT("\r\n  [get_ab_info] Slot info successfully retrieved. Active M4 Slot: %X %lX, Active NWP Slot: %X \r\n",
+  DEBUGOUT("[get_ab_info] Slot info successfully retrieved. Active M4 Slot: %X %lX, Active NWP Slot: %X",
            ab_slot_info_t->m4_slot_info.current_active_M4_slot,
            ((ab_slot_info_t->m4_slot_info.current_active_M4_slot == SLOT_A)
               ? ab_slot_info_t->m4_slot_info.m4_slot_A.slot_image_offset
@@ -666,7 +671,7 @@ sl_status_t sl_si91x_toggle_slot_info(bool toggle_m4_image, bool toggle_nwp_imag
   // Get the current slot information
   status = sl_si91x_ab_get_slot_info(&slot_info);
   if (status != SL_STATUS_OK) {
-    DEBUGOUT("\r\n [toggle_ab_info] Failed to get slot information: %lX\r\n", status);
+    DEBUGOUT("[toggle_ab_info] Failed to get slot information: %lX", status);
     return status;
   }
 
@@ -679,12 +684,12 @@ sl_status_t sl_si91x_toggle_slot_info(bool toggle_m4_image, bool toggle_nwp_imag
                                   ? slot_info.m4_slot_info.m4_slot_B.image_size
                                   : slot_info.m4_slot_info.m4_slot_A.image_size;
 
-    DEBUGOUT("\r\n  [toggle_ab_info] Switching M4 slot to %s\r\n",
+    DEBUGOUT("[toggle_ab_info] Switching M4 slot to %s",
              (slot_info.m4_slot_info.current_active_M4_slot == SLOT_A) ? "B" : "A");
 
     status = sl_si91x_ab_upgrade_set_slot_info(new_image_offset, new_image_size, SL_SI91X_AB_OTA_IMAGE_TYPE_M4);
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("\r\n  [toggle_ab_info] Failed to set M4 slot information: %lX\r\n", status);
+      DEBUGOUT("[toggle_ab_info] Failed to set M4 slot information: %lX", status);
       return status;
     }
   }
@@ -698,12 +703,12 @@ sl_status_t sl_si91x_toggle_slot_info(bool toggle_m4_image, bool toggle_nwp_imag
                                   ? slot_info.nwp_slot_info.nwp_slot_B.image_size
                                   : slot_info.nwp_slot_info.nwp_slot_A.image_size;
 
-    DEBUGOUT("\r\n  [toggle_ab_info] Switching NWP slot to %s\r\n",
+    DEBUGOUT("[toggle_ab_info] Switching NWP slot to %s",
              (slot_info.nwp_slot_info.current_active_nwp_slot == SLOT_A) ? "B" : "A");
 
     status = sl_si91x_ab_upgrade_set_slot_info(new_image_offset, new_image_size, SL_SI91X_AB_OTA_IMAGE_TYPE_NWP);
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("\r\n  [toggle_ab_info] Failed to set NWP slot information: %lX\r\n", status);
+      DEBUGOUT("[toggle_ab_info] Failed to set NWP slot information: %lX", status);
       return status;
     }
   }
@@ -723,7 +728,7 @@ static sl_status_t sli_si91x_erase_slot_info(uint32_t flash_offset)
 {
   sl_status_t status  = SL_STATUS_FAIL;
   uint32_t erase_size = sizeof(sl_si91x_fw_ab_slot_management_t);
-  DEBUGOUT("\r\n [erase_slot_info]  erase slot info offset: %lX\r\n", flash_offset);
+  DEBUGOUT("[erase_slot_info]  erase slot info offset: %lX", flash_offset);
   status = sl_si91x_flash_erase(flash_offset, erase_size);
   return status;
 }
@@ -761,16 +766,16 @@ sl_status_t sl_si91x_burn_nwp_security_version(uint32_t flash_address)
 
   size_t request_size = offsetof(sl_si91x_fw_fallback_request_t, data);
 
-  // DEBUGOUT("\r\n integratiy+request_size:%u %u \r\n", sizeof(sl_si91x_fw_fallback_request_t), request_size);
+  // DEBUGOUT("[burn_nwp_security_version] integratiy+request_size:%u %u", sizeof(sl_si91x_fw_fallback_request_t), request_size);
 
   // Send firmware update command
-  status = sli_si91x_driver_send_command(SLI_SI91X_FW_FALLBACK_REQ_FROM_HOST,
-                                         SLI_WIFI_COMMON_CMD,
-                                         &fw_request,
-                                         request_size,
-                                         SLI_WIFI_WAIT_FOR_RESPONSE(SL_SI91X_NWP_RESPONSE_TIMEOUT),
-                                         NULL,
-                                         NULL);
+  status = sli_wifi_send_command(SLI_COMMON_REQ_FW_FALLBACK_FROM_HOST,
+                                 SLI_WIFI_COMMON_CMD,
+                                 &fw_request,
+                                 request_size,
+                                 SLI_WIFI_WAIT_FOR_RESPONSE(SL_SI91X_NWP_RESPONSE_TIMEOUT),
+                                 NULL,
+                                 NULL);
   return status;
 }
 
@@ -797,13 +802,13 @@ sl_status_t sl_si91x_fallback_load_qspi_keys(uint32_t image_offset)
   size_t request_size = offsetof(sl_si91x_fw_fallback_request_t, data);
 
   // Send firmware update command
-  status = sli_si91x_driver_send_command(SLI_SI91X_FW_FALLBACK_REQ_FROM_HOST,
-                                         SLI_WIFI_COMMON_CMD,
-                                         &fw_request,
-                                         request_size,
-                                         SLI_WIFI_WAIT_FOR_RESPONSE(SL_SI91X_NWP_RESPONSE_TIMEOUT),
-                                         NULL,
-                                         NULL);
+  status = sli_wifi_send_command(SLI_COMMON_REQ_FW_FALLBACK_FROM_HOST,
+                                 SLI_WIFI_COMMON_CMD,
+                                 &fw_request,
+                                 request_size,
+                                 SLI_WIFI_WAIT_FOR_RESPONSE(SL_SI91X_NWP_RESPONSE_TIMEOUT),
+                                 NULL,
+                                 NULL);
   return status;
 }
 
@@ -833,16 +838,16 @@ void sl_si91x_nwp_soft_reset_from_updater(const uint32_t m4_slot_image_offset)
   size_t request_size = offsetof(sl_si91x_fw_fallback_request_t, data);
 
   // Send firmware update command
-  status = sli_si91x_driver_send_command(SLI_SI91X_FW_FALLBACK_REQ_FROM_HOST,
-                                         SLI_WIFI_COMMON_CMD,
-                                         &fw_request,
-                                         request_size,
-                                         SLI_WIFI_WAIT_FOR_RESPONSE(3000),
-                                         NULL,
-                                         NULL);
+  status = sli_wifi_send_command(SLI_COMMON_REQ_FW_FALLBACK_FROM_HOST,
+                                 SLI_WIFI_COMMON_CMD,
+                                 &fw_request,
+                                 request_size,
+                                 SLI_WIFI_WAIT_FOR_RESPONSE(3000),
+                                 NULL,
+                                 NULL);
   (void)status;
   // Wait for the memory to match the expected value(SL_SI91X_MEM_CHECK_VALUE) for the NWP firmware
-  while ((*addr != SL_SI91X_MEM_CHECK_VALUE)) {
+  while (*addr != SL_SI91X_MEM_CHECK_VALUE) {
     __NOP();
     // Continue checking until a match is found
   }
@@ -917,7 +922,8 @@ static sl_status_t sli_si91x_calculate_firmware_slot_crc(sl_si91x_fw_ab_slot_man
 sl_status_t sl_si91x_flash_read(uint32_t address, uint8_t *buffer, uint32_t length)
 {
   if (buffer == NULL || length == 0) {
-    DEBUGOUT("\r\nError: Invalid parameters passed to sl_si91x_flash_read. Address: %lX, Length: %lu\r\n",
+    DEBUGOUT("[flash_read] Error: Invalid parameters passed to sl_si91x_flash_read. "
+             "Address: %lX, Length: %lu",
              address,
              length);
     return SL_STATUS_INVALID_PARAMETER; // Prevent invalid buffer usage
@@ -956,6 +962,7 @@ sl_status_t sl_si91x_get_m4_app_addr(uint32_t *app_addr)
                                sizeof(sl_si91x_fw_ab_slot_management_t));
 
   if (status != SL_STATUS_OK) {
+    DEBUGOUT("[m4_app_addr] Flash read error,line %d", __LINE__);
     return SL_SI91X_AB_ERR_FLASH_READ; // Flash read error
   }
 
@@ -963,7 +970,7 @@ sl_status_t sl_si91x_get_m4_app_addr(uint32_t *app_addr)
   if ((fw_slot_info_t.slot_magic_word != SLI_SI91X_AB_FW_SLOT_MAGIC_WORD)
       || (sli_si91x_calculate_firmware_slot_crc(&fw_slot_info_t) != fw_slot_info_t.slot_struct_crc)) {
 
-    DEBUGOUT("\r\nSlot info corrupted, reading from backup...\n");
+    DEBUGOUT("[m4_app_addr] Slot info corrupted, reading from backup...", __LINE__);
 
     memset(&fw_slot_info_t, 0, sizeof(sl_si91x_fw_ab_slot_management_t)); // Clear memory again before backup read
     // Read from backup location
@@ -972,14 +979,17 @@ sl_status_t sl_si91x_get_m4_app_addr(uint32_t *app_addr)
                                  sizeof(sl_si91x_fw_ab_slot_management_t));
 
     if (status != SL_STATUS_OK) {
+      DEBUGOUT("[m4_app_addr] Backup read error,line %d", __LINE__);
       return SL_SI91X_AB_ERR_FLASH_READ; // Backup read error
     }
 
     // Validate backup CRC and Magic Word
-    if ((fw_slot_info_t.slot_magic_word != SLI_SI91X_AB_FW_SLOT_MAGIC_WORD)) {
+    if (fw_slot_info_t.slot_magic_word != SLI_SI91X_AB_FW_SLOT_MAGIC_WORD) {
+      DEBUGOUT("[m4_app_addr] Magic number mismatch,line %d", __LINE__);
       return SL_SI91X_AB_ERR_MAGIC_NUMBER; // Magic number mismatch
     }
     if (sli_si91x_calculate_firmware_slot_crc(&fw_slot_info_t) != fw_slot_info_t.slot_struct_crc) {
+      DEBUGOUT("[m4_app_addr] CRC verification failed,line %d", __LINE__);
       return SL_SI91X_AB_ERR_CRC_MISMATCH; // CRC verification failed
     }
   }
@@ -995,7 +1005,7 @@ sl_status_t sl_si91x_get_m4_app_addr(uint32_t *app_addr)
 
   // Convert offset to actual address
   (*app_addr) += SL_SI91X_CHUNK_LENGTH;
-  DEBUGOUT("\r\n [m4_app_addr] app_addr:%lX Current_M4_Slot:%X Current Slot Offset:%lX\r\n",
+  DEBUGOUT("[m4_app_addr] app_addr:%lX Current_M4_Slot:%X Current Slot Offset:%lX",
            *app_addr,
            fw_slot_info_t.m4_slot_info.current_active_M4_slot,
            (fw_slot_info_t.m4_slot_info.current_active_M4_slot == SLOT_A)

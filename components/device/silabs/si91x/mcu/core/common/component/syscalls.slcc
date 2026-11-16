@@ -1,7 +1,7 @@
 id: syscalls
 package: platform_siwx91x
 description: >
-  Provides system calls support for the Si91x.
+  This component provides system calls support for the SiWx91x.
 label: System Calls
 category: Device|Si91x|MCU|Common
 quality: production
@@ -19,6 +19,8 @@ include:
         unless: [no_syscalls]
 provides:
   - name: syscalls
+  - name: sl_syscalls
+    condition: [device_si91x]
   - name: no_syscalls
     condition: [sl_usart_iostream]
 requires:

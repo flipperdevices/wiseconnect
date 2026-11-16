@@ -1,8 +1,8 @@
-# SL CONFIG TIMER OCU NON DMA
+# SiWx91x Platform Config Timer Basic and OCU without DMA
 
 ## Table of Contents
 
-- [SL CONFIG TIMER OCU NON DMA](#sl-config-timer-ocu-non-dma)
+- [SiWx91x Platform Config Timer Basic and OCU without DMA](#platform-siwx91x-config-timer-basic-and-ocu-without-dma)
   - [Table of Contents](#table-of-contents)
   - [Purpose/Scope](#purposescope)
   - [Overview](#overview)
@@ -16,6 +16,9 @@
     - [Pin Configuration for OCU PWM mode use case](#pin-configuration-for-ocu-pwm-mode-use-case)
     - [Macros for CT Configurations](#macros-for-ct-configurations)
   - [Test the Application](#test-the-application)
+  - [Troubleshooting](#troubleshooting)
+  - [Resources](#resources)
+  - [Report Bugs/Support](#report-bugssupport)
     - [Run the application in counter mode](#run-the-application-in-counter-mode)
     - [Run the application in Output Compare Unit PWM mode](#run-the-application-in-output-compare-unit-pwm-mode)
 
@@ -24,7 +27,7 @@
 - This Config Timer example demonstrates 2 use cases of a timer:
   - First as free-running timer. Counter-0 is configured to generate interrupt. Once interrupt is trigerred we get the console message and timer is deinitialized.
   - Second as a waveform generator producing two PWM outputs: counter-1 generates a square wave (50%-duty cycle) and counter-0 will produce a waveform whose duty cycle continuously varies from 100% to 0% then 0% to 100%.
-  
+
 
 ## Overview
 
@@ -44,7 +47,7 @@
 ## About Example Code
 
 - This example demonstrates the Config Timer as a normal counter and Output Compare unit for PWM output generator.
-- Configure the following macros in'config_timer_ocu_non_dma_example.h'[(https://github.com/SiliconLabs/wiseconnect/blob/v4.0.1-content-for-docs/examples/si91x_soc/peripheral/sl_si91x_ct_ocu_non_dma/config_timer_ocu_non_dma_example.h)]Two macros are present: CT_PWM_MODE_USECASE and CT_COUNTER_MODE_USECASE. By default, the normal counter use case is enabled.
+- Configure the following macros in'config_timer_ocu_non_dma_example.h'[(https://github.com/SiliconLabs/wiseconnect/blob/v4.1.2-content-for-docs/examples/si91x_soc/peripheral/sl_si91x_ct_ocu_non_dma/config_timer_ocu_non_dma_example.h)]Two macros are present: CT_PWM_MODE_USECASE and CT_COUNTER_MODE_USECASE. By default, the normal counter use case is enabled.
 - Enable only one of the following use case macros at a time.
   - If **CT_PWM_MODE_USECASE** is enabled:
     - The Config Timer is initialized using [sl_si91x_config_timer_init()](https://docs.silabs.com/wiseconnect/latest/wiseconnect-api-reference-guide-si91x-peripherals/config-timer#sl-si91x-config-timer-init) API.
@@ -67,13 +70,13 @@
     - Starts counter-0 using [sl_si91x_config_timer_start_on_software_trigger()](https://docs.silabs.com/wiseconnect/latest/wiseconnect-api-reference-guide-si91x-peripherals/config-timer#sl-si91x-config-timer-start-on-software-trigger) API.
     - Generates the console message once the interrupt is triggered.
   -
-  
+
 ## Prerequisites/Setup Requirements
 
 ### Hardware Requirements
 
 - Windows PC.
-- Silicon Labs Si917 Evaluation Kit [[BRD4002](https://www.silabs.com/development-tools/wireless/wireless-pro-kit-mainboard?tab=overview) + [BRD4338A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-rb4338a-wifi-6-bluetooth-le-soc-radio-board?tab=overview) / [BRD4342A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx91x-rb4342a-wifi-6-bluetooth-le-soc-radio-board?tab=overview) / [BRD4343A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4343a-wi-fi-6-bluetooth-le-8mb-flash-radio-board-for-module?tab=overview)].
+- Silicon Labs SiWx91x Evaluation Kit [[BRD4002](https://www.silabs.com/development-tools/wireless/wireless-pro-kit-mainboard?tab=overview) + [BRD4338A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-rb4338a-wifi-6-bluetooth-le-soc-radio-board?tab=overview) / [BRD4342A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx91x-rb4342a-wifi-6-bluetooth-le-soc-radio-board?tab=overview) / [BRD4343A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4343a-wi-fi-6-bluetooth-le-8mb-flash-radio-board-for-module?tab=overview) / [BRD4343C](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4343c-wi-fi-6-bluetooth-le-8mb-flash-radio-board-for-module?tab=overview)].
 - SiWx917 AC1 Module Explorer Kit [BRD2708A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-ek2708a-explorer-kit)
 
 ### Software Requirements
@@ -100,35 +103,46 @@ For details on the project folder structure, see the [WiSeConnect Examples](http
 
 ## Application Build Environment
 
-- Configure the following macros in 'config_timer_ocu_non_dma_example.h'[(https://github.com/SiliconLabs/wiseconnect/blob/v4.0.1-content-for-docs/examples/si91x_soc/peripheral/sl_si91x_ct_ocu_non_dma/config_timer_ocu_non_dma_example.h)](enable any one at a time).
+- Configure the following macros in 'config_timer_ocu_non_dma_example.h'[(https://github.com/SiliconLabs/wiseconnect/blob/v4.1.2-content-for-docs/examples/si91x_soc/peripheral/sl_si91x_ct_ocu_non_dma/config_timer_ocu_non_dma_example.h)](enable any one at a time).
 
-  ```C
-    #define CT_PWM_MODE_USECASE           1      -  To run PWM output code
-    #define CT_COUNTER_MODE_USECASE       1      -  To run normal counter code
+- `CT_PWM_MODE_USECASE`: When enabled (`SET`), runs the PWM output use case using the Output Compare Unit to generate waveforms on CT Output-0 and CT Output-1. Enable only one use-case macro at a time. By default, it is set to `CLEAR` (disabled).
+
+  ```c
+    #define CT_PWM_MODE_USECASE     CLEAR //< To run OCU PWM output code
   ```
 
-- Also enable the CT configuration macro for the PWM mode use case by setting `CT_PWM_MODE_USECASE` to `1` and ensuring `CT_COUNTER_MODE_USECASE` is set to `0` in the `config_timer_ocu_non_dma_example.h`[(https://github.com/SiliconLabs/wiseconnect/blob/v4.0.1-content-for-docs/examples/si91x_soc/peripheral/sl_si91x_ct_ocu_non_dma/config_timer_ocu_non_dma_example.h)] file.
+- `CT_COUNTER_MODE_USECASE`: When enabled (`SET`), runs the normal counter use case where the Config Timer is used as a free-running counter that triggers an interrupt on match. Enable only one use-case macro at a time. By default, it is set to `SET` (enabled).
 
-- In the `config_timer_ocu_non_dma_example.c`[(https://github.com/SiliconLabs/wiseconnect/blob/v4.0.1-content-for-docs/examples/si91x_soc/peripheral/sl_si91x_ct_ocu_non_dma/config_timer_ocu_non_dma_example.c)] file, configure the "TIME_PERIOD_VALUE" macro to facilitate user-defined adjustments of the time period value for a counter-mode use case. Modify or update the following macro as necessary to allow flexible customization of the timer's period and compare value.
+  ```c
+    #define CT_COUNTER_MODE_USECASE SET   //< To run normal counter code
+  ```
 
-  ```C
+- Also enable the CT configuration macro for the PWM mode use case by setting `CT_PWM_MODE_USECASE` to `SET` and ensuring `CT_COUNTER_MODE_USECASE` is set to `CLEAR` in the `config_timer_ocu_non_dma_example.h`[(https://github.com/SiliconLabs/wiseconnect/blob/v4.1.2-content-for-docs/examples/si91x_soc/peripheral/sl_si91x_ct_ocu_non_dma/config_timer_ocu_non_dma_example.h)] file.
+
+- In the `config_timer_ocu_non_dma_example.c`[(https://github.com/SiliconLabs/wiseconnect/blob/v4.1.2-content-for-docs/examples/si91x_soc/peripheral/sl_si91x_ct_ocu_non_dma/config_timer_ocu_non_dma_example.c)] file, configure the "TIME_PERIOD_VALUE" macro to facilitate user-defined adjustments of the time period value for a counter-mode use case. Modify or update the following macro as necessary to allow flexible customization of the timer's period and compare value.
+
+- `TIME_PERIOD_VALUE`: Time period (in microseconds) used to compute the match value of the counter for the counter-mode use case. By default, it is set to 1000.
+
+  ```c
    #define TIME_PERIOD_VALUE     1000         // Time period in microseconds
-   
   ```
 
-  - Change following macros in `config_timer_ocu_non_dma_example.c`[(https://github.com/SiliconLabs/wiseconnect/blob/v4.0.1-content-for-docs/examples/si91x_soc/peripheral/sl_si91x_ct_ocu_non_dma/config_timer_ocu_non_dma_example.c)]file to change counter-number used for counter-mode use case, by default application is using counter-0 to use counter-1 change it to 'SL_COUNTER_1'.
+- Change the following macro in `config_timer_ocu_non_dma_example.c`[(https://github.com/SiliconLabs/wiseconnect/blob/v4.1.2-content-for-docs/examples/si91x_soc/peripheral/sl_si91x_ct_ocu_non_dma/config_timer_ocu_non_dma_example.c)] file to change the counter number used for the counter-mode use case. By default, the application uses counter-0; to use counter-1, change it to `SL_COUNTER_1`.
 
-  ```C
-  #define CT_COUNTER_USED            SL_COUNTER_0  -  For using counter-0
+- `CT_COUNTER_USED`: Selects which Config Timer counter (`SL_COUNTER_0` or `SL_COUNTER_1`) is used for the normal counter-mode application. By default, it is set to `SL_COUNTER_0`.
+
+  ```c
+    #define CT_COUNTER_USED   SL_COUNTER_0 // counter number used for normal counter application
   ```
+
 - Use the following CT configurations to run the application either in Normal counter mode (using Counter-0 or Counter-1) or in PWM mode.
 - In Simplicity Studio, search for **"Config Timer"** in the Software Components tab to add or configure the required timer component for your project.
-  
+
   > ![Figure: Pin configuration](resources/uc_screen/uc_screen.png)
 
    **Note:**
   > The Config Timer supports only 16-bit counter mode, with a maximum match value of 65,535.
- 
+
 ### Pin Configuration for OCU PWM mode use case
 
 |  Discription  | GPIO    | Breakout pin  | Explorer kit Breakout pin|
@@ -139,17 +153,17 @@ For details on the project folder structure, see the [WiSeConnect Examples](http
 > ![Figure: Pin configuration](resources/readme/image502e.png)
 
 ### Pin Configuration for INPUT EVENT mode use case
-|  Discription  | GPIO    | Breakout pin  | 
+|  Discription  | GPIO    | Breakout pin  |
 | ------------- | ------- | ------------- |
-|    input-0    | GPIO_25 |     P25       | 
+|    input-0    | GPIO_25 |     P25       |
 
 ### Macros for CT Configurations
 
- In the `config_timer_ocu_non_dma_example.c`[(https://github.com/SiliconLabs/wiseconnect/blob/v4.0.1-content-for-docs/examples/si91x_soc/peripheral/sl_si91x_ct_ocu_non_dma/config_timer_ocu_non_dma_example.c)]file,these macros are present.
- 
-- \ref SL_CT_MODE_32BIT_ENABLE_MACRO , for possible values refer \ref sl_config_timer_mode_t
-- \ref SL_COUNTER0_DIRECTION_MACRO , for possible values refer \ref sl_counter0_direction_t
-- \ref SL_COUNTER1_DIRECTION_MACRO , for possible values refer \ref sl_counter1_direction_t
+ In the `config_timer_ocu_non_dma_example.c`[(https://github.com/SiliconLabs/wiseconnect/blob/v4.1.2-content-for-docs/examples/si91x_soc/peripheral/sl_si91x_ct_ocu_non_dma/config_timer_ocu_non_dma_example.c)]file,these macros are present.
+
+- \ref SL_CT_MODE_32BIT_ENABLE_MACRO,  for possible values refer \ref sl_config_timer_mode_t
+- \ref SL_COUNTER0_DIRECTION_MACRO,  for possible values refer \ref sl_counter0_direction_t
+- \ref SL_COUNTER1_DIRECTION_MACRO,  for possible values refer \ref sl_counter1_direction_t
 - \ref SL_COUNTER0_PERIODIC_ENABLE_MACRO, true to enable Counter0 Periodic mode & false to skip Counter0 Periodic mode.
 - \ref SL_COUNTER1_PERIODIC_ENABLE_MACRO, true to enable Counter1 Periodic mode & false to skip Counter1 Periodic mode.
 - \ref SL_COUNTER0_SYNC_TRIGGER_ENABLE_MACRO, true to enable Counter0 sync trigger & false to skip Counter0 sync trigger.
@@ -160,7 +174,7 @@ For details on the project folder structure, see the [WiSeConnect Examples](http
 
 ### Run the application in counter mode
 
-- To verify the counter mode, ensure that `CT_COUNTER_MODE_USECASE` is enabled in`config_timer_ocu_non_dma_example.h`[(https://github.com/SiliconLabs/wiseconnect/blob/v4.0.1-content-for-docs/examples/si91x_soc/peripheral/sl_si91x_ct_ocu_non_dma/config_timer_ocu_non_dma_example.h)] Build and flash the application. When the timer reaches the configured match value, an interrupt is triggered automatically. You will see a console message indicating that the interrupt has occurred, confirming that the counter mode is working as expected.
+- To verify the counter mode, ensure that `CT_COUNTER_MODE_USECASE` is enabled in`config_timer_ocu_non_dma_example.h`[(https://github.com/SiliconLabs/wiseconnect/blob/v4.1.2-content-for-docs/examples/si91x_soc/peripheral/sl_si91x_ct_ocu_non_dma/config_timer_ocu_non_dma_example.h)] Build and flash the application. When the timer reaches the configured match value, an interrupt is triggered automatically. You will see a console message indicating that the interrupt has occurred, confirming that the counter mode is working as expected.
 - Following prints will be observed on the console:
 
   > ![Figure: Result](resources/readme/OutputConsole_CT.png)
@@ -180,3 +194,19 @@ For details on the project folder structure, see the [WiSeConnect Examples](http
 > **Note:**
 >
 > - Interrupt handlers are implemented in the driver layer, and user callbacks are provided for custom code. If you want to write your own interrupt handler instead of using the default one, make the driver interrupt handler a weak handler. Then, copy the necessary code from the driver handler to your custom interrupt handler.
+
+## Troubleshooting
+
+- If the project does not build, ensure Simplicity Studio and the WiSeConnect extension are installed and the board is connected.
+- If the device is not detected, reinstall the connectivity firmware and check USB drivers.
+
+## Resources
+
+- [WiSeConnect Getting Started](https://docs.silabs.com/wiseconnect/latest/wiseconnect-getting-started/)
+- [WiSeConnect Examples](https://docs.silabs.com/wiseconnect/latest/wiseconnect-examples/)
+- [SiWx91x SoC Documentation](https://docs.silabs.com/wiseconnect/latest/)
+
+## Report Bugs/Support
+
+For issues and support, use the Silicon Labs Community or your normal support channel.
+

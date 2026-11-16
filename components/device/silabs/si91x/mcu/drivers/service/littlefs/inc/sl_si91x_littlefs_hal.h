@@ -36,6 +36,7 @@ extern "C" {
 #endif
 #include "lfs.h"
 #include "rsi_qspi_proto.h"
+#include "sl_log_helper.h"
 #include "sl_status.h"
 
 // flash page size

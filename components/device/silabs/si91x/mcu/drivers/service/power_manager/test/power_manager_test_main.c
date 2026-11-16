@@ -60,7 +60,6 @@ const osThreadAttr_t test_thread_attributes = {
   .stack_size = 3072,
   .priority   = osPriorityLow,
   .tz_module  = 0,
-  .reserved   = 0,
 };
 /*******************************************************************************
  ************************  Test Function Prototypes  ****************************
@@ -157,26 +156,29 @@ static sl_status_t test_initialize_wireless(void)
   // requirements.
   // Wifi device configuration
   const sl_wifi_device_configuration_t client_init_configuration = {
-    .boot_option = LOAD_NWP_FW,
-    .mac_address = NULL,
-    .band        = SL_WIFI_BAND_MODE_2_4GHZ,
-    .region_code = SL_WIFI_REGION_US,
-    .boot_config = { .oper_mode = SL_SI91X_CLIENT_MODE,
-                     .coex_mode = SL_SI91X_WLAN_ONLY_MODE,
-                     .feature_bit_map =
-                       (SL_WIFI_FEAT_SECURITY_OPEN | SL_WIFI_FEAT_WPS_DISABLE | SL_SI91X_FEAT_ULP_GPIO_BASED_HANDSHAKE),
-                     .tcp_ip_feature_bit_map =
-                       (SL_SI91X_TCP_IP_FEAT_DHCPV4_CLIENT | SL_SI91X_TCP_IP_FEAT_DNS_CLIENT | SL_SI91X_TCP_IP_FEAT_SSL
+    .boot_option     = LOAD_NWP_FW,
+    .mac_address     = NULL,
+    .band            = SL_WIFI_BAND_MODE_2_4GHZ,
+    .region_code     = SL_WIFI_REGION_US,
+    .boot_config     = { .oper_mode = SL_SI91X_CLIENT_MODE,
+                         .coex_mode = SL_SI91X_WLAN_ONLY_MODE,
+                         .feature_bit_map =
+                           (SL_WIFI_FEAT_SECURITY_OPEN | SL_WIFI_FEAT_WPS_DISABLE | SL_SI91X_FEAT_ULP_GPIO_BASED_HANDSHAKE),
+                         .tcp_ip_feature_bit_map =
+                           (SL_SI91X_TCP_IP_FEAT_DHCPV4_CLIENT | SL_SI91X_TCP_IP_FEAT_DNS_CLIENT | SL_SI91X_TCP_IP_FEAT_SSL
                         | SL_SI91X_TCP_IP_FEAT_ICMP | SL_SI91X_TCP_IP_FEAT_EXTENSION_VALID),
-                     .custom_feature_bit_map     = (SL_WIFI_SYSTEM_CUSTOM_FEAT_EXTENSION_VALID),
-                     .ext_custom_feature_bit_map = SL_SI91X_EXT_FEAT_FRONT_END_SWITCH_PINS_ULP_GPIO_4_5_0,
-                     .bt_feature_bit_map         = 0,
-                     .ext_tcp_ip_feature_bit_map =
-                       (SL_SI91X_EXT_TCP_IP_WINDOW_SCALING | SL_SI91X_EXT_TCP_IP_TOTAL_SELECTS(10)
-                        | SL_SI91X_CONFIG_FEAT_EXTENTION_VALID),
-                     .ble_feature_bit_map     = 0,
-                     .ble_ext_feature_bit_map = 0,
-                     .config_feature_bit_map  = SL_SI91X_FEAT_SLEEP_GPIO_SEL_BITMAP }
+                         .custom_feature_bit_map     = (SL_WIFI_SYSTEM_CUSTOM_FEAT_EXTENSION_VALID),
+                         .ext_custom_feature_bit_map = SL_SI91X_EXT_FEAT_FRONT_END_SWITCH_PINS_ULP_GPIO_4_5_0,
+                         .bt_feature_bit_map         = 0,
+                         .ext_tcp_ip_feature_bit_map =
+                           (SL_SI91X_EXT_TCP_IP_WINDOW_SCALING | SL_SI91X_EXT_TCP_IP_TOTAL_SELECTS(10)
+                        | SL_SI91X_CONFIG_FEAT_EXTENSION_VALID),
+                         .ble_feature_bit_map     = 0,
+                         .ble_ext_feature_bit_map = 0,
+                         .config_feature_bit_map  = SL_SI91X_FEAT_SLEEP_GPIO_SEL_BITMAP },
+    .ta_pool         = { .tx_ratio_in_buffer_pool = 0, .rx_ratio_in_buffer_pool = 0, .global_ratio_in_buffer_pool = 0 },
+    .efuse_data_type = SL_SI91X_EFUSE_MFG_SW_VERSION,
+    .nwp_fw_image_number = SL_SI91X_NWP_FW_IMAGE_NUMBER_0
   };
   // Initialize the wifi interface.
   sl_wifi_init(&client_init_configuration, NULL, NULL);
@@ -239,9 +241,11 @@ void test_power_manager_core_entercritical(void)
   UnityPrintf("Testing Power Manager Core Enter Critical \n");
 
   UnityPrintf("Testing with correct parameters \n");
-  sl_si91x_power_manager_core_entercritical();
+  sli_si91x_power_manager_irq_state_t irq_state = sli_si91x_power_manager_core_entercritical();
   UnityPrintf("Power Manager Core Enter Critical successfully \n");
 
+  UnityPrintf("Verifying IRQ state is returned \n");
+  sli_si91x_power_manager_core_exitcritical(irq_state);
   UnityPrintf("Power Manager Core Enter Critical test completed \n");
 }
 
@@ -253,9 +257,17 @@ void test_power_manager_core_exitcritical(void)
   UnityPrintf("\n");
   UnityPrintf("Testing Power Manager Core Exit Critical \n");
 
-  UnityPrintf("Testing with correct parameters \n");
-  sl_si91x_power_manager_core_exitcritical();
+  UnityPrintf("Testing with IRQ previously enabled (irq_state == 0) \n");
+  sli_si91x_power_manager_irq_state_t irq_state = sli_si91x_power_manager_core_entercritical();
+  sli_si91x_power_manager_core_exitcritical(irq_state);
   UnityPrintf("Power Manager Core Exit Critical successfully \n");
+
+  UnityPrintf("Testing nested critical sections \n");
+  sli_si91x_power_manager_irq_state_t outer_state = sli_si91x_power_manager_core_entercritical();
+  sli_si91x_power_manager_irq_state_t inner_state = sli_si91x_power_manager_core_entercritical();
+  sli_si91x_power_manager_core_exitcritical(inner_state);
+  sli_si91x_power_manager_core_exitcritical(outer_state);
+  UnityPrintf("Nested critical sections handled successfully \n");
 
   UnityPrintf("Power Manager Core Exit Critical test completed \n");
 }
@@ -611,7 +623,7 @@ void test_power_manager_sleep(void)
   UnityPrintf("Testing Power Manager move into sleep mode \n");
   sl_status_t status;
 
-  status = sl_si91x_power_manager_sleep();
+  status = sli_si91x_power_manager_sleep();
   TEST_ASSERT_EQUAL_HEX(SL_STATUS_OK, status);
   UnityPrintf("Power Manager move into sleep mode successfully \n");
   // Calendar clock is stopped as it is not needed.
@@ -632,7 +644,7 @@ void test_power_manager_standby(void)
   UnityPrintf("\n");
   UnityPrintf("Testing Power Manager move into standby mode \n");
 
-  sl_si91x_power_manager_standby();
+  sli_si91x_power_manager_standby();
   UnityPrintf("Power Manager move into standby mode successfully \n");
 
   UnityPrintf("Power Manager move into standby mode test completed \n");
@@ -774,7 +786,7 @@ void test_power_manager_get_requirement_table(void)
   UnityPrintf("Power Manager get requirement table test completed \n");
 }
 /*******************************************************************************
- * Function to test power manger request PS1 state.
+ * Function to test power manager request PS1 state.
  ******************************************************************************/
 void test_power_manager_request_ps1_state(void)
 {

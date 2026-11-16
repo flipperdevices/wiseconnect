@@ -2,7 +2,7 @@ id: power_manager_advance_config
 label: Power Manager Advance Configuration
 package: platform_siwx91x
 description: >
-  Provides optimized configuration for the peripheral enable/disable as well as the RAM retention.
+  This component provides optimized configuration for the peripheral enable/disable and RAM retention.
   The default configuration provides the best current measurement, if needed user can modify the 
   configuration which may impact the current numbers.
   RAM configuration is provided either by size or by Bank number, the user can opt for anyone. 

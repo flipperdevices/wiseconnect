@@ -31,10 +31,14 @@
 #include "fff.h"
 #include "sl_status.h"
 #include "sli_mem_pool.h"
+#include "cmsis_os2.h"
 
 DECLARE_FAKE_VALUE_FUNC(uint32_t, CORE_EnterAtomic);
 DECLARE_FAKE_VOID_FUNC1(CORE_ExitAtomic, uint32_t);
 DECLARE_FAKE_VALUE_FUNC(uint32_t, osKernelGetTickCount);
+DECLARE_FAKE_VALUE_FUNC0(uint32_t, osKernelGetTickFreq);
+DECLARE_FAKE_VALUE_FUNC1(osStatus_t, osDelay, uint32_t);
+DECLARE_FAKE_VOID_FUNC_VARARG(sl_redirect_log, const char *, ...);
 DECLARE_FAKE_VOID_FUNC5(sli_mem_pool_create, sli_mem_pool_handle_t *, uint32_t, uint32_t, void *, uint32_t);
 DECLARE_FAKE_VALUE_FUNC1(void *, sli_mem_pool_alloc, sli_mem_pool_handle_t *);
 DECLARE_FAKE_VOID_FUNC2(sli_mem_pool_free, sli_mem_pool_handle_t *, void *);

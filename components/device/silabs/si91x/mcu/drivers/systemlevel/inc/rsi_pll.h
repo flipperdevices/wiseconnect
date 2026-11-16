@@ -650,7 +650,7 @@ typedef enum CLK_PRESENT {
   MODEM_PLL_CLK_PRESENT, /*!< Modem PLL clock present */
 } CLK_PRESENT_T;
 
-STATIC INLINE void _usdelay(uint32_t delayUs, cdDelay delayCb)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void _usdelay(uint32_t delayUs, cdDelay delayCb)
 {
   if (delayCb != NULL) {
     delayCb(delayUs);

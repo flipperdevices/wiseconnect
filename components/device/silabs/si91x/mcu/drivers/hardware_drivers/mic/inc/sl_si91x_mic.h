@@ -21,6 +21,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include "sl_status.h"
+#include "sl_log_helper.h"
 
 /** 
  * @addtogroup Mic Mic

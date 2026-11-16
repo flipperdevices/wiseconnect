@@ -189,7 +189,7 @@ static int32_t sli_si91x_connect_to_network(Network *n, uint8_t flags, const sl_
         (sl_si91x_socket_type_length_value_t *)malloc(sizeof(sl_si91x_socket_type_length_value_t) + alpn_length);
 
       if (alpn_value == NULL) {
-        SL_DEBUG_LOG("\r\nMemory allocation failed for ALPN value\r\n");
+        SL_DEBUG_LOG_V2(ERROR, "Memory allocation failed for ALPN value\r\n");
         return FAILURE;
       }
 
@@ -209,7 +209,7 @@ static int32_t sli_si91x_connect_to_network(Network *n, uint8_t flags, const sl_
                                                       sizeof(sl_si91x_socket_type_length_value_t) + alpn_length);
 
       if (socket_return_value < 0) {
-        SL_DEBUG_LOG("\r\nSet Socket option failed with bsd error: %d\r\n", errno);
+        SL_DEBUG_LOG_V2(ERROR, "Set Socket option failed with bsd error: %d\r\n", errno);
         close(n->socket_id);
         free(alpn_value);
         return sli_si91x_get_aws_error(errno);
@@ -229,7 +229,7 @@ static int32_t sli_si91x_connect_to_network(Network *n, uint8_t flags, const sl_
             (sl_si91x_socket_type_length_value_t *)malloc(sizeof(sl_si91x_socket_type_length_value_t) + sni_length);
 
           if (sni_value == NULL) {
-            SL_DEBUG_LOG("\r\nMemory allocation failed for SNI value\r\n");
+            SL_DEBUG_LOG_V2(ERROR, "Memory allocation failed for SNI value\r\n");
             return FAILURE;
           }
 
@@ -249,7 +249,7 @@ static int32_t sli_si91x_connect_to_network(Network *n, uint8_t flags, const sl_
                          sni_value,
                          sizeof(sl_si91x_socket_type_length_value_t) + sni_length)
   < 0) {
-            SL_DEBUG_LOG("\r\nSet Socket option for SNI failed with bsd error: %d\r\n", errno);
+            SL_DEBUG_LOG_V2(ERROR, "Set Socket option for SNI failed with bsd error: %d\r\n", errno);
             close(n->socket_id);
             free(sni_value);
             return sli_si91x_get_aws_error(errno);
@@ -282,13 +282,15 @@ IoT_Error_t iot_tls_connect(Network *pNetwork, TLSConnectParams *params)
 
   do {
 #ifdef SLI_SI91X_ENABLE_IPV6
-	  status = sl_net_dns_resolve_hostname(pNetwork->tlsConnectParams.pDestinationURL,
+	  status = sl_net_dns_resolve_hostname_v2(pNetwork->tlsConnectParams.pDestinationURL,
 	                                        SLI_WIFI_WAIT_FOR_DNS_RESOLUTION,
+                                          SLI_WIFI_DNS_RETRY_COUNT,
 	  									                    SL_NET_DNS_TYPE_IPV6, 
 	                                        &dns_query_response);
 #else
-    status = sl_net_dns_resolve_hostname(pNetwork->tlsConnectParams.pDestinationURL,
+    status = sl_net_dns_resolve_hostname_v2(pNetwork->tlsConnectParams.pDestinationURL,
                                        SLI_WIFI_WAIT_FOR_DNS_RESOLUTION,
+                                       SLI_WIFI_DNS_RETRY_COUNT,
                                        SL_NET_DNS_TYPE_IPV4, 
                                        &dns_query_response);
 #endif
@@ -307,6 +309,10 @@ IoT_Error_t iot_tls_connect(Network *pNetwork, TLSConnectParams *params)
                             &dns_query_response,
                             pNetwork->tlsConnectParams.DestinationPort,
                             CLIENT_PORT);
+  /* After new TLS connection, reset select_given so the app re-arms select for this socket. */
+  if (status == SUCCESS) {
+    select_given = 0;
+  }
   return status;
 }
 
@@ -365,11 +371,11 @@ IoT_Error_t iot_tls_read(Network *pNetwork, unsigned char *pMsg, size_t len, Tim
 
   // Check if semaphore acquisition timed out.
   if (select_status == osErrorTimeout) {
-      SL_DEBUG_LOG("Error: Semaphore acquisition timed out. Puback not received.\n");
+      SL_DEBUG_LOG_V2(ERROR, "Error: Semaphore acquisition timed out. Puback not received.\r\n");
       return MQTT_REQUEST_TIMEOUT_ERROR; // Return an error code indicating that the MQTT request timed out.
   }
   if (select_status == osErrorParameter) {
-    SL_DEBUG_LOG("Error: Invalid parameter in semaphore acquisition.\n");
+    SL_DEBUG_LOG_V2(ERROR, "Error: Invalid parameter in semaphore acquisition.\r\n");
     return NETWORK_SSL_READ_ERROR; // Return a generic failure code for parameter error.
   }
   qos1_publish_handle = 1;
@@ -409,6 +415,10 @@ IoT_Error_t iot_tls_read(Network *pNetwork, unsigned char *pMsg, size_t len, Tim
 IoT_Error_t iot_tls_disconnect(Network *pNetwork)
 {
   int32_t status = close(pNetwork->socket_id);
+  /* Clear select_given and flush select table so the single select slot is freed when socket closes
+   * (firmware may not send select response on close); next connection can then register select successfully. */
+  select_given = 0;
+  (void)sli_si91x_flush_select_request_table(0);
   if (status) {
     return sli_si91x_get_aws_error(status);
   }

@@ -135,6 +135,8 @@ static sl_status_t validate_bjt_parameters(const adc_config_t *sl_bjt_temperatur
   sl_status_t status = SL_STATUS_OK;
 
   if (sl_bjt_temperature_sensor_config == NULL) {
+    SL_PRINT_STRING_ERROR("validate_bjt_parameters: sl_bjt_temperature_sensor_config is NULL,line no : %d\r\n",
+                          (int)__LINE__);
     status = SL_STATUS_NULL_POINTER;
   }
   // Validates the ADC operation mode, if it is not either static or fifo mode it returns error code.
@@ -142,6 +144,8 @@ static sl_status_t validate_bjt_parameters(const adc_config_t *sl_bjt_temperatur
   else if ((sl_bjt_temperature_sensor_config->operation_mode != SL_ADC_STATIC_MODE)
            || (sl_bjt_temperature_sensor_config->num_of_channel_enable < MINIMUM_NUMBER_OF_CHANNELS)
            || (sl_bjt_temperature_sensor_config->num_of_channel_enable > MAXIMUM_NUMBER_OF_CHANNELS)) {
+    SL_PRINT_STRING_ERROR("validate_bjt_parameters: sl_bjt_temperature_sensor_config is invalid,line no : %d\r\n",
+                          (int)__LINE__);
     status = SL_STATUS_INVALID_PARAMETER;
   }
 
@@ -158,15 +162,27 @@ static sl_status_t validate_bjt_channel_parameters(const adc_ch_config_t *sl_bjt
   sl_status_t status = SL_STATUS_OK;
 
   if (sl_bjt_temperature_sensor_channel_config == NULL) {
+    SL_PRINT_STRING_ERROR(
+      "validate_bjt_channel_parameters: sl_bjt_temperature_sensor_channel_config is NULL,line no : %d\r\n",
+      (int)__LINE__);
     status = SL_STATUS_NULL_POINTER;
   } // Validate input type
   else if (sl_bjt_temperature_sensor_channel_config->input_type[0] != SL_ADC_SINGLE_ENDED) {
+    SL_PRINT_STRING_ERROR(
+      "validate_bjt_channel_parameters: sl_bjt_temperature_sensor_channel_config is invalid,line no : %d\r\n",
+      (int)__LINE__);
     status = SL_STATUS_INVALID_PARAMETER;
   } // Verify the user given sampling rate is proper or not
   else if (sl_bjt_temperature_sensor_channel_config->sampling_rate[0] > MAX_SAMPLING_RATE) {
+    SL_PRINT_STRING_ERROR(
+      "validate_bjt_channel_parameters: sl_bjt_temperature_sensor_channel_config is invalid,line no : %d\r\n",
+      (int)__LINE__);
     status = SL_STATUS_INVALID_RANGE;
   } else if ((sl_bjt_temperature_sensor_channel_config->num_of_samples[0] < CHANNEL_SAMPLE_LENGTH)
              || (sl_bjt_temperature_sensor_channel_config->num_of_samples[0] > CHANNEL_SAMPLE_LENGTH)) {
+    SL_PRINT_STRING_ERROR(
+      "validate_bjt_channel_parameters: sl_bjt_temperature_sensor_channel_config is invalid,line no : %d\r\n",
+      (int)__LINE__);
     status = SL_STATUS_INVALID_COUNT;
   }
 
@@ -184,32 +200,50 @@ sl_status_t sl_si91x_bjt_temperature_sensor_init(adc_ch_config_t sl_bjt_temperat
   // If the status is not equal to SL_STATUS_OK, returns error code.
   status = validate_bjt_parameters(&sl_bjt_temperature_sensor_config);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si91x_bjt_temperature_sensor_init: validate_bjt_parameters failed,line no : %d\r\n",
+                          (int)__LINE__);
     return status;
   }
   // Validate BJT channel parameters, if the parameters incorrect
   // If the status is not equal to SL_STATUS_OK, returns error code.
   status = validate_bjt_channel_parameters(&sl_bjt_temperature_sensor_channel_config);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR(
+      "sl_si91x_bjt_temperature_sensor_init: validate_bjt_channel_parameters failed,line no : %d\r\n",
+      (int)__LINE__);
     return status;
   }
   //Initializing the adc to initialize the channel and operation mode
   status = sl_si91x_adc_init(sl_bjt_temperature_sensor_channel_config, sl_bjt_temperature_sensor_config, VREF_VALUE);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si91x_bjt_temperature_sensor_init: sl_si91x_adc_init failed,line no : %d\r\n",
+                          (int)__LINE__);
     return status;
   }
   // Configure ADC to initialize the channel and operation mode
   status =
     sl_si91x_adc_set_channel_configuration(sl_bjt_temperature_sensor_channel_config, sl_bjt_temperature_sensor_config);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR(
+      "sl_si91x_bjt_temperature_sensor_init: sl_si91x_adc_set_channel_configuration failed,line no : %d\r\n",
+      (int)__LINE__);
     return status;
   }
   // Register user callback function
   status = sl_si91x_adc_register_event_callback(callback_event);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR(
+      "sl_si91x_bjt_temperature_sensor_init: sl_si91x_adc_register_event_callback failed,line no : %d\r\n",
+      (int)__LINE__);
     return status;
   }
   // starting the adc configuration.
   status = sl_si91x_adc_start(sl_bjt_temperature_sensor_config);
+  if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si91x_bjt_temperature_sensor_init: sl_si91x_adc_start failed,line no : %d\r\n",
+                          (int)__LINE__);
+    return status;
+  }
   return status;
 }
 
@@ -234,6 +268,9 @@ sl_status_t sl_si91x_bjt_temperature_sensor_bg_set_channel_configuration(
     // Configure ADC to configure band gap the positive input selection and opamp gain
     status = sl_si91x_adc_set_channel_configuration(sl_bjt_temperature_sensor_channel_config, sl_bjt_config);
     if (status != SL_STATUS_OK) {
+      SL_PRINT_STRING_ERROR("sl_si91x_bjt_temperature_sensor_bg_set_channel_configuration: "
+                            "sl_si91x_adc_set_channel_configuration failed,line no : %d\r\n",
+                            (int)__LINE__);
       status = SL_STATUS_FAIL;
     }
   }
@@ -260,11 +297,16 @@ sl_status_t sl_si91x_bjt_temperature_sensor_read_data(double *temp_data)
   float adc_off = 0;
   float Vbg     = 0;
   if (temp_data == NULL) {
+    SL_PRINT_STRING_ERROR("sl_si91x_bjt_temperature_sensor_read_data: temp_data is NULL,line no : %d\r\n",
+                          (int)__LINE__);
     return SL_STATUS_NULL_POINTER;
   }
   //Initializing and configuring the band gap
   status = sl_si91x_bjt_temperature_sensor_bg_set_channel_configuration(sl_bjt_channel_config);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si91x_bjt_temperature_sensor_read_data: "
+                          "sl_si91x_bjt_temperature_sensor_bg_set_channel_configuration failed,line no : %d\r\n",
+                          (int)__LINE__);
     return status;
   }
   if (chnl0_complete_flag) {
@@ -275,6 +317,9 @@ sl_status_t sl_si91x_bjt_temperature_sensor_read_data(double *temp_data)
   //Initializing and configuring the bjt temperature sensor
   status = sl_si91x_bjt_temperature_sensor_set_channel_configuration(sl_bjt_channel_config);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si91x_bjt_temperature_sensor_read_data: "
+                          "sl_si91x_bjt_temperature_sensor_set_channel_configuration failed,line no : %d\r\n",
+                          (int)__LINE__);
     return status;
   }
   // We are just reading multiple times so that we will not get previous ADC values
@@ -323,6 +368,11 @@ sl_status_t sl_si91x_bjt_temperature_sensor_set_channel_configuration(
         POS_IP_BJT; /* Positive input to ADC from temperature sensor */
       // Configure ADC channel to configure the BJT positive input selection
       status = sl_si91x_adc_set_channel_configuration(sl_bjt_temperature_sensor_channel_config, sl_bjt_config);
+      if (status != SL_STATUS_OK) {
+        SL_PRINT_STRING_ERROR("sl_si91x_bjt_temperature_sensor_set_channel_configuration: "
+                              "sl_si91x_adc_set_channel_configuration failed,line no : %d\r\n",
+                              (int)__LINE__);
+      }
     }
   }
   return status;
@@ -376,12 +426,16 @@ sl_status_t sl_si91x_bjt_temperature_sensor_deinit(adc_config_t sl_bjt_temperatu
 
   status = validate_bjt_parameters(&sl_bjt_temperature_sensor_config);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si91x_bjt_temperature_sensor_deinit: validate_bjt_parameters failed,line no : %d\r\n",
+                          (int)__LINE__);
     return status;
   }
 
   if (AUX_ADC_DAC_COMP->AUXADC_CTRL_1_b.ADC_ENABLE == ENABLE) {
     status = sl_si91x_adc_stop(sl_bjt_temperature_sensor_config);
     if (status != SL_STATUS_OK) {
+      SL_PRINT_STRING_ERROR("sl_si91x_bjt_temperature_sensor_deinit: sl_si91x_adc_stop failed,line no : %d\r\n",
+                            (int)__LINE__);
       return status;
     }
   }
@@ -402,6 +456,8 @@ sl_status_t sl_si91x_get_bjt_temperature_sensor_conversion(double *temp_data,
   do {
     if (temp_data == NULL) {
       status = SL_STATUS_NULL_POINTER;
+      SL_PRINT_STRING_ERROR("sl_si91x_get_bjt_temperature_sensor_conversion: temp_data is NULL,line no : %d\r\n",
+                            (int)__LINE__);
       break;
     }
     switch (current_temperature_mode) {

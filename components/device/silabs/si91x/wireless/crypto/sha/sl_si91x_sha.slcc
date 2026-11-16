@@ -17,6 +17,7 @@ include:
 - path: inc
   file_list:
     - path: sl_si91x_sha.h
+    - path: sl_si91x_sha3.h
 
 requires:
 - name: sl_si91x_crypto

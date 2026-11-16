@@ -30,10 +30,26 @@
 #include "sl_si91x_ble.h"
 #include "sl_rsi_utility.h"
 #include "sli_wifi_power_profile.h"
+#include "rsi_ble_apis.h"
+#include "rsi_common.h"
+#include "sli_si91x_driver.h"
+#include <string.h>
+
 extern bool device_initialized;
 
 /*=======================================================================*/
+static sl_status_t sli_map_rsi_ble_status(int32_t rsi_status)
+{
+  if (rsi_status == RSI_SUCCESS) {
+    return SL_STATUS_OK;
+  }
 
+  if (rsi_status < 0) {
+    return sli_convert_si91x_status_to_sl_status((si91x_status_t)rsi_status);
+  }
+
+  return (sl_status_t)rsi_status;
+}
 /**
  * @brief Sets the performance profile for the Si91x Bluetooth module.
  *
@@ -62,7 +78,7 @@ sl_status_t sl_si91x_bt_set_performance_profile(const sl_bt_performance_profile_
   sli_get_bt_current_performance_profile(&current_bt_profile_mode);
 
   // Send the power save command for the requested profile
-  status = sli_si91x_send_power_save_request(NULL, profile);
+  status = sli_wifi_send_power_save_request(NULL, profile);
   if (status != SL_STATUS_OK) {
     sli_save_bt_current_performance_profile(&current_bt_profile_mode);
     return status;
@@ -86,4 +102,72 @@ sl_status_t sl_si91x_bt_get_performance_profile(sl_bt_performance_profile_t *pro
 
   sli_get_bt_current_performance_profile(profile);
   return SL_STATUS_OK;
+}
+
+/**
+ * @brief
+ *   Utility to issue a disconnect request for each tracked BLE connection.
+ * @details
+ *   Application helper that iterates connected remote BLE devices tracked by
+ *   the driver and calls rsi_ble_disconnect() for each one. It is **not**
+ *   invoked automatically from sl_wifi_deinit() / sl_net_deinit(); the
+ *   application owns the full teardown sequence (stop ADV/SCAN, disconnect,
+ *   wait for events, then deinit).
+ *
+ *   For each peer, this API waits only for the disconnect **command response**
+ *   (command ACK). It does **not** wait for disconnect-complete events.
+ *   On a per-peer command failure the API continues remaining peers and
+ *   returns the first rsi_ble_disconnect() status after the loop.
+ *
+ *   The application is responsible for interpreting and mapping returned
+ *   error codes (host RSI_ERROR_* and firmware BLE statuses) as needed.
+ *
+ *   Recommended application teardown sequence before Wi-Fi/NWP deinit:
+ *   -# Stop BLE advertising and scanning (classic and/or AE) if active
+ *   -# Call @ref sl_si91x_ble_disconnect_all
+ *   -# Wait for BLE disconnect event(s), or until rsi_ble_is_device_connected()
+ *      returns false
+ *   -# Call sl_wifi_deinit() / sl_net_deinit() / rsi_ble_disable()
+ * @note
+ *   If this API is invoked as part of the sl_wifi_deinit() sequence, ensure
+ *   that any active BLE advertising and scanning roles are stopped before
+ *   calling this API. After the API call, wait for the BLE disconnect event(s)
+ *   to be received before invoking sl_wifi_deinit(). Additionally, the
+ *   application should not restart advertising or scanning from the BLE
+ *   disconnect event handler during this deinitialization flow.
+ * @return
+ *   SL_STATUS_OK if every disconnect command response succeeds.
+ *   Otherwise returns the first rsi_ble_disconnect() status value; the
+ *   application must map/interpret error codes.
+ */
+sl_status_t sl_si91x_ble_disconnect_all(void)
+{
+  int32_t rsi_status;
+  int32_t first_error = RSI_SUCCESS;
+  uint8_t remote_dev_addr[RSI_DEV_ADDR_LEN];
+  const rsi_bt_cb_t *le_cb;
+
+  if (!sl_si91x_is_device_initialized()) {
+    return SL_STATUS_NOT_INITIALIZED;
+  }
+
+  if ((rsi_driver_cb == NULL) || (rsi_driver_cb->ble_cb == NULL)) {
+    return SL_STATUS_NOT_INITIALIZED;
+  }
+
+  le_cb = rsi_driver_cb->ble_cb;
+
+  for (uint8_t inx = 0; inx < MAX_REMOTE_BLE_DEVICES; inx++) {
+    if (le_cb->remote_ble_info[inx].used == 0) {
+      continue;
+    }
+
+    memcpy(remote_dev_addr, le_cb->remote_ble_info[inx].remote_dev_bd_addr, RSI_DEV_ADDR_LEN);
+    rsi_status = rsi_ble_disconnect((const int8_t *)remote_dev_addr);
+    if ((rsi_status != RSI_SUCCESS) && (first_error == SL_STATUS_OK)) {
+      first_error = sli_map_rsi_ble_status(rsi_status);
+    }
+  }
+  /* Pass through rsi_ble_disconnect status; application owns mapping. */
+  return (sl_status_t)first_error;
 }

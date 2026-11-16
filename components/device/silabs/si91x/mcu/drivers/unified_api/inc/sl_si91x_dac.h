@@ -37,6 +37,7 @@ extern "C" {
 
 #include "sl_status.h"
 #include "rsi_dac.h"
+#include "sl_log_helper.h"
 
 /** @cond DO_NOT_INCLUDE_WITH_DOXYGEN */
 #ifndef UNUSED_PARAMETER

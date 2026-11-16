@@ -15,6 +15,7 @@
  * sections of the MSLA applicable to Source Code.
  *
  ******************************************************************************/
+#include <inttypes.h>
 #include "ulp_uart_example.h"
 #include "rsi_debug.h"
 #include "rsi_egpio.h"
@@ -70,7 +71,7 @@ static void configure_ps2_power_state(void);
 /*******************************************************************************
  **************************   GLOBAL VARIABLES   *******************************
  ******************************************************************************/
-sl_usart_handle_t usart_handle;
+static sl_usart_handle_t usart_handle;
 usart_mode_enum_t current_mode = SL_ULP_UART_SEND_DATA;
 sl_gpio_t ulp_gpio_rx          = { ULP_GPIO_PORT, ULP_GPIO_PIN };
 sl_gpio_t ulp_gpio_toggle      = { ULP_GPIO_PORT, ULP_GPIO_TOGGLE };
@@ -105,27 +106,35 @@ void usart_example_init(void)
     // Initialize the UART
     status = sl_si91x_usart_init(ULPUART, &usart_handle);
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("sl_si91x_usart_initialize: Error Code : %lu \n", status);
+      /* Note: All status messages in this example — both success and failure — are
+ * intentionally emitted via SL_PRINT_STRING_ERROR so that they remain visible
+ * on the console at the default log level. This is a demonstration choice, not
+ * a recommendation: in production code, ERROR severity should be reserved for
+ * actual failures, with successful operations logged via SL_PRINT_STRING_INFO
+ * (or SL_PRINT_STRING_DEBUG for verbose trace). */
+      SL_PRINT_STRING_ERROR("sl_si91x_usart_initialize: Error Code : %lu \n", status);
       break;
     }
-    DEBUGOUT("USART initialization is successful \n");
+    SL_PRINT_STRING_ERROR("USART initialization is successful \n");
     // Configure the USART configurations
     status = sl_si91x_usart_set_configuration(usart_handle, &usart_config);
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("sl_si91x_usart_set_configuration: Error Code : %lu \n", status);
+      SL_PRINT_STRING_ERROR("sl_si91x_usart_set_configuration: Error Code : %lu \n", status);
       break;
     }
-    DEBUGOUT("USART configuration is successful \n");
+    SL_PRINT_STRING_ERROR("USART configuration is successful \n");
 
     // Register user callback function
     status = sl_si91x_usart_multiple_instance_register_event_callback(ULPUART, ulp_uart_callback_event);
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("sl_si91x_usart_multiple_instance_register_event_callback: Error Code : %lu \n", status);
+      SL_PRINT_STRING_ERROR("sl_si91x_usart_multiple_instance_register_event_"
+                            "callback: Error Code : %lu \n",
+                            status);
       break;
     }
-    DEBUGOUT("USART user event callback registered successfully \n");
+    SL_PRINT_STRING_ERROR("USART user event callback registered successfully \n");
     sl_si91x_usart_get_configurations(ULPUART, &get_config);
-    DEBUGOUT("Baud Rate = %ld \n", get_config.baudrate);
+    SL_PRINT_STRING_ERROR("Baud Rate = %ld \n", get_config.baudrate);
   } while (false);
 }
 
@@ -164,7 +173,7 @@ void usart_example_process_action(void)
         if (status != SL_STATUS_OK) {
           // If it fails to execute the API, it will not execute rest of the
           // things
-          DEBUGOUT("sl_si91x_usart_send_data: Error Code : %lu \n", status);
+          SL_PRINT_STRING_ERROR("sl_si91x_usart_send_data: Error Code : %lu \n", status);
           current_mode = SL_ULP_UART_POWER_STATE_TRANSITION;
           break;
         }
@@ -179,7 +188,7 @@ void usart_example_process_action(void)
         ulp_uart_begin_transmission = true;
         break;
       }
-      DEBUGOUT("USART send completed successfully \n");
+      SL_PRINT_STRING_ERROR("USART send completed successfully \n");
       // Current mode is set to complete
       current_mode = SL_ULP_UART_POWER_STATE_TRANSITION;
       break;
@@ -191,11 +200,11 @@ void usart_example_process_action(void)
         if (status != SL_STATUS_OK) {
           // If it fails to execute the API, it will not execute rest of the
           // things
-          DEBUGOUT("sl_si91x_usart_receive_data: Error Code : %lu \n", status);
+          SL_PRINT_STRING_ERROR("sl_si91x_usart_receive_data: Error Code : %lu \n", status);
           current_mode = SL_ULP_UART_POWER_STATE_TRANSITION;
           break;
         }
-        DEBUGOUT("USART receive begin successfully \n");
+        SL_PRINT_STRING_ERROR("USART receive begin successfully \n");
         ulp_uart_begin_transmission = false;
       }
 
@@ -203,20 +212,20 @@ void usart_example_process_action(void)
 
         // Waiting till the receive is completed
         memcpy(&ulp_uart_data_in, (uint8_t *)RX_BUF_MEMORY, sizeof(ulp_uart_data_in[0]) * ULP_UART_BUFFER_SIZE);
-        // Update the receive compelete flag with 0.
+        // Update the receive complete flag with 0.
         ulp_uart_receive_complete = false;
         if ((USE_SEND) && (ulp_uart_count <= MAXIMUM_COUNT_VALUE)) {
           // If send macro is enabled, current mode is set to send
           current_mode                = SL_ULP_UART_SEND_DATA;
           ulp_uart_begin_transmission = true;
           compare_loop_back_data();
-          DEBUGOUT("USART receive completed \n");
+          SL_PRINT_STRING_ERROR("USART receive completed \n");
           ulp_uart_count++;
           break;
         }
 
-        DEBUGOUT("USART send completed successfully \n");
-        DEBUGOUT("USART receive completed \n");
+        SL_PRINT_STRING_ERROR("USART send completed successfully \n");
+        SL_PRINT_STRING_ERROR("USART receive completed \n");
         compare_loop_back_data();
         // If send macro is not enabled, current mode is set to completed.
         current_mode = SL_ULP_UART_POWER_STATE_TRANSITION;
@@ -267,9 +276,9 @@ void usart_example_process_action(void)
         // unregistering callback
         status = sl_si91x_usart_deinit(usart_handle);
         if (status != SL_STATUS_OK) {
-          DEBUGOUT("sl_si91x_usart_deinit : Invalid Parameters, "
-                   "Error Code : %lx \n",
-                   status);
+          SL_PRINT_STRING_ERROR("sl_si91x_usart_deinit : Invalid Parameters, "
+                                "Error Code : %lx \n",
+                                status);
           break;
         }
         current_mode = SL_ULP_UART_TRANSMISSION_COMPLETED;
@@ -301,9 +310,9 @@ static void compare_loop_back_data(void)
     sl_gpio_driver_set_pin(&ulp_gpio_toggle);
     // Clear the pin
     sl_gpio_driver_clear_pin(&ulp_gpio_toggle);
-    DEBUGOUT("Data comparison successful, Loop Back Test Passed \n");
+    SL_PRINT_STRING_ERROR("Data comparison successful, Loop Back Test Passed \n");
   } else {
-    DEBUGOUT("Data comparison failed, Loop Back Test failed \n");
+    SL_PRINT_STRING_ERROR("Data comparison failed, Loop Back Test failed \n");
   }
 }
 
@@ -351,10 +360,9 @@ static void configure_ps2_power_state(void)
   config.ulpss_ram_banks = SL_SI91X_POWER_MANAGER_ULPSS_RAM_BANK_2 | SL_SI91X_POWER_MANAGER_ULPSS_RAM_BANK_3;
   // Ored value for ulpss peripheral.
   // Ored value for ulpss peripheral.
-  peri.ulpss_peripheral = SL_SI91X_POWER_MANAGER_ULPSS_PG_MISC | SL_SI91X_POWER_MANAGER_ULPSS_PG_SSI
-                          | SL_SI91X_POWER_MANAGER_ULPSS_PG_I2S | SL_SI91X_POWER_MANAGER_ULPSS_PG_I2C
-                          | SL_SI91X_POWER_MANAGER_ULPSS_PG_IR | SL_SI91X_POWER_MANAGER_ULPSS_PG_FIM
-                          | SL_SI91X_POWER_MANAGER_ULPSS_PG_AUX;
+  peri.ulpss_peripheral = SL_SI91X_POWER_MANAGER_ULPSS_PG_SSI | SL_SI91X_POWER_MANAGER_ULPSS_PG_I2S
+                          | SL_SI91X_POWER_MANAGER_ULPSS_PG_I2C | SL_SI91X_POWER_MANAGER_ULPSS_PG_IR
+                          | SL_SI91X_POWER_MANAGER_ULPSS_PG_FIM | SL_SI91X_POWER_MANAGER_ULPSS_PG_AUX;
   // Ored value for npss peripheral.
   peri.npss_peripheral = SL_SI91X_POWER_MANAGER_NPSS_PG_MCURTC | SL_SI91X_POWER_MANAGER_NPSS_PG_MCUWDT
                          | SL_SI91X_POWER_MANAGER_NPSS_PG_MCUPS | SL_SI91X_POWER_MANAGER_NPSS_PG_MCUTS
@@ -365,12 +373,18 @@ static void configure_ps2_power_state(void)
     status = sl_si91x_power_manager_remove_peripheral_requirement(&peri);
     if (status != SL_STATUS_OK) {
       // If status is not OK, return with the error code.
-      DEBUGOUT("sl_si91x_power_manager_remove_peripheral_requirement failed, "
-               "Error Code: 0x%lX",
-               status);
+      SL_PRINT_STRING_ERROR("sl_si91x_power_manager_remove_peripheral_requirement failed, "
+                            "Error Code: 0x%lX",
+                            status);
       break;
     }
     // RAM retention modes are configured and passed into this API.
     sl_si91x_power_manager_configure_ram_retention(&config);
-  } while (false);
+    SL_PRINT_STRING_ERROR("sl_si91x_power_manager_configure_ram_retention failed, Error "
+                          "Code: 0x%lX",
+                          status);
+    break;
+  }
+
+  while (false);
 }

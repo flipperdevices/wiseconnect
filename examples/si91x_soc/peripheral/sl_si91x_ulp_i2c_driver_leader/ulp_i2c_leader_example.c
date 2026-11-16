@@ -82,16 +82,24 @@ void ulp_i2c_leader_example_init(void)
   // Initializing I2C instance (update i2c config-strucure name as per instance used)
   i2c_status = sl_i2c_driver_init(i2c_instance, &sl_i2c_config);
   if (i2c_status != SL_I2C_SUCCESS) {
-    DEBUGOUT("sl_i2c_driver_init : Invalid Parameters, Error Code : %u \n", i2c_status);
+    /* Note: All status messages in this example — both success and failure — are
+ * intentionally emitted via SL_PRINT_STRING_ERROR so that they remain visible
+ * on the console at the default log level. This is a demonstration choice, not
+ * a recommendation: in production code, ERROR severity should be reserved for
+ * actual failures, with successful operations logged via SL_PRINT_STRING_INFO
+ * (or SL_PRINT_STRING_DEBUG for verbose trace). */
+    SL_PRINT_STRING_ERROR("sl_i2c_driver_init : Invalid Parameters, Error Code : %u \n", i2c_status);
   } else {
-    DEBUGOUT("Successfully initialized & configured i2c leader in PS4 mode\n");
+    SL_PRINT_STRING_ERROR("Successfully initialized & configured i2c leader in PS4 mode\n");
   }
   // Configuring RX and TX FIFO thresholds
   i2c_status = sl_i2c_driver_configure_fifo_threshold(i2c_instance, I2C_TX_FIFO_THRESHOLD, I2C_RX_FIFO_THRESHOLD);
   if (i2c_status != SL_I2C_SUCCESS) {
-    DEBUGOUT("sl_i2c_driver_configure_fifo_threshold : Invalid Parameters, Error Code : %u \n", i2c_status);
+    SL_PRINT_STRING_ERROR("sl_i2c_driver_configure_fifo_threshold : Invalid "
+                          "Parameters, Error Code : %u \n",
+                          i2c_status);
   } else {
-    DEBUGOUT("Successfully configured i2c TX & RX FIFO thresholds\n");
+    SL_PRINT_STRING_ERROR("Successfully configured i2c TX & RX FIFO thresholds\n");
   }
   // Generating a buffer with values that needs to be sent.
   for (uint32_t loop = INITIAL_VALUE; loop < I2C_BUFFER_SIZE; loop++) {
@@ -131,7 +139,9 @@ void ulp_i2c_leader_example_process_action(void)
         i2c_status =
           sl_i2c_driver_send_data_blocking(i2c_instance, FOLLOWER_I2C_ADDR, i2c_write_buffer, I2C_BUFFER_SIZE);
         if (i2c_status != SL_I2C_SUCCESS) {
-          DEBUGOUT("sl_i2c_driver_send_data_blocking : Invalid Parameters,  Error Code : %u \n", i2c_status);
+          SL_PRINT_STRING_ERROR("sl_i2c_driver_send_data_blocking : Invalid "
+                                "Parameters,  Error Code : %u \n",
+                                i2c_status);
           if (i2c_status != SL_I2C_TIMEOUT) {
             i2c_send_data_flag = false;
           }
@@ -148,7 +158,9 @@ void ulp_i2c_leader_example_process_action(void)
         i2c_status =
           sl_i2c_driver_receive_data_blocking(i2c_instance, FOLLOWER_I2C_ADDR, i2c_read_buffer, I2C_BUFFER_SIZE);
         if (i2c_status != SL_I2C_SUCCESS) {
-          DEBUGOUT("sl_i2c_driver_receive_data_blocking : Invalid Parameters, Error Code : %u \n", i2c_status);
+          SL_PRINT_STRING_ERROR("sl_i2c_driver_receive_data_blocking : Invalid "
+                                "Parameters, Error Code : %u \n",
+                                i2c_status);
           if (i2c_status != SL_I2C_TIMEOUT) {
             i2c_receive_data_flag = false;
           }
@@ -164,7 +176,7 @@ void ulp_i2c_leader_example_process_action(void)
     case SL_ULP_I2C_POWER_STATE_TRANSITION:
       // After first cycle of data transfer changing to PS2 mode
       if (current_power_state == SL_SI91X_POWER_MANAGER_PS4) {
-        DEBUGOUT("Switching PS4->PS2 state, reset follower within 10 seconds\n");
+        SL_PRINT_STRING_ERROR("Switching PS4->PS2 state, reset follower within 10 seconds\n");
         // Control power management by adjusting clock references and shutting down
         // the power supply
         // This function is for demonstration purpose only. For more details, refer to the README file.
@@ -176,17 +188,18 @@ void ulp_i2c_leader_example_process_action(void)
         /* Due to calling trim_efuse API om power manager it will change the clock
     frequency, if we are not initialize the debug again it will print the
     garbage data or no data in console output. */
-        DEBUGINIT();
+        SL_PRINT_STRING_ERROR("DEBUGINIT();");
         // Configuring the ps2 power state by configuring
         // the ram retention and removing the unused peripherals
         configuring_ps2_power_state();
         // reconfiguring I2C leader as per new power mode
         i2c_status = sl_i2c_driver_leader_reconfig_on_power_mode_change(SL_I2C_ULP_MODE);
         if (i2c_status != SL_I2C_SUCCESS) {
-          DEBUGOUT("sl_i2c_driver_leader_reconfig_on_power_mode_change : Invalid Parameters, Error Code : %u \n",
-                   i2c_status);
+          SL_PRINT_STRING_ERROR("sl_i2c_driver_leader_reconfig_on_power_mode_"
+                                "change : Invalid Parameters, Error Code : %u \n",
+                                i2c_status);
         }
-        DEBUGOUT("Successfully re-configured I2C leader for PS2 mode\n");
+        SL_PRINT_STRING_ERROR("Successfully re-configured I2C leader for PS2 mode\n");
         // current power state is updated to PS2
         current_power_state = SL_SI91X_POWER_MANAGER_PS2;
         // Changing send data flag to true for next cycle of transfer
@@ -196,7 +209,7 @@ void ulp_i2c_leader_example_process_action(void)
       }
       // After second cycle of data transfer changing mode back to PS4.
       else if (current_power_state == SL_SI91X_POWER_MANAGER_PS2) {
-        DEBUGOUT("Switching PS2->PS4 state, reset follower within 10 seconds\n");
+        SL_PRINT_STRING_ERROR("Switching PS2->PS4 state, reset follower within 10 seconds\n");
         // Adding 10 seconds delay before 2nd cycle of transfer
         delay(TEN_SECOND_DELAY_ULP_MODE);
         // switching the power state from PS2 to PS4 mode
@@ -208,10 +221,11 @@ void ulp_i2c_leader_example_process_action(void)
         // reconfiguring I2C leader as per new power mode
         i2c_status = sl_i2c_driver_leader_reconfig_on_power_mode_change(SL_I2C_HP_MODE);
         if (i2c_status != SL_I2C_SUCCESS) {
-          DEBUGOUT("sl_i2c_driver_leader_reconfig_on_power_mode_change : Invalid Parameters, Error Code : %u \n",
-                   i2c_status);
+          SL_PRINT_STRING_ERROR("sl_i2c_driver_leader_reconfig_on_power_mode_"
+                                "change : Invalid Parameters, Error Code : %u \n",
+                                i2c_status);
         }
-        DEBUGOUT("Successfully re-configured I2C leader for PS4 mode\n");
+        SL_PRINT_STRING_ERROR("Successfully re-configured I2C leader for PS4 mode\n");
         // current power state is updated to last enum after the power state cycle
         // is completed
         current_power_state = LAST_ENUM_POWER_STATE;
@@ -224,7 +238,7 @@ void ulp_i2c_leader_example_process_action(void)
         // unregistering callback
         i2c_status = sl_i2c_driver_deinit(i2c_instance);
         if (i2c_status != SL_I2C_SUCCESS) {
-          DEBUGOUT("sl_i2c_driver_deinit : Invalid Parameters, Error Code : %u \n", i2c_status);
+          SL_PRINT_STRING_ERROR("sl_i2c_driver_deinit : Invalid Parameters, Error Code : %u \n", i2c_status);
           break;
         }
         current_mode = SL_ULP_I2C_TRANSMISSION_COMPLETED;
@@ -264,9 +278,11 @@ static void compare_data(void)
     }
   }
   if (data_index == I2C_BUFFER_SIZE) {
-    DEBUGOUT("Leader-Follower read-write Data comparison is successful, Test Case Passed \n");
+    SL_PRINT_STRING_ERROR("Leader-Follower read-write Data comparison is "
+                          "successful, Test Case Passed \n");
   } else {
-    DEBUGOUT("Leader-Follower read-write Data comparison is not successful, Test Case Failed \n");
+    SL_PRINT_STRING_ERROR("Leader-Follower read-write Data comparison is not "
+                          "successful, Test Case Failed \n");
   }
 }
 
@@ -289,9 +305,9 @@ static void configuring_ps2_power_state(void)
   peri.m4ss_peripheral = SL_SI91X_POWER_MANAGER_M4SS_PG_QSPI | SL_SI91X_POWER_MANAGER_M4SS_PG_EFUSE
                          | SL_SI91X_POWER_MANAGER_M4SS_PG_SDIO_SPI;
   // Ored value for ulpss peripheral.
-  peri.ulpss_peripheral = SL_SI91X_POWER_MANAGER_ULPSS_PG_MISC | SL_SI91X_POWER_MANAGER_ULPSS_PG_SSI
-                          | SL_SI91X_POWER_MANAGER_ULPSS_PG_I2S | SL_SI91X_POWER_MANAGER_ULPSS_PG_IR
-                          | SL_SI91X_POWER_MANAGER_ULPSS_PG_FIM | SL_SI91X_POWER_MANAGER_ULPSS_PG_AUX;
+  peri.ulpss_peripheral = SL_SI91X_POWER_MANAGER_ULPSS_PG_SSI | SL_SI91X_POWER_MANAGER_ULPSS_PG_I2S
+                          | SL_SI91X_POWER_MANAGER_ULPSS_PG_IR | SL_SI91X_POWER_MANAGER_ULPSS_PG_FIM
+                          | SL_SI91X_POWER_MANAGER_ULPSS_PG_AUX;
   // Ored value for npss peripheral.
   peri.npss_peripheral = SL_SI91X_POWER_MANAGER_NPSS_PG_MCUWDT | SL_SI91X_POWER_MANAGER_NPSS_PG_MCUPS
                          | SL_SI91X_POWER_MANAGER_NPSS_PG_MCUTS | SL_SI91X_POWER_MANAGER_NPSS_PG_MCUSTORE2

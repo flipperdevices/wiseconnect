@@ -18,9 +18,21 @@
 #ifndef NVIC_PRIORITIES_CONFIG_H_
 #define NVIC_PRIORITIES_CONFIG_H_
 
-#include "FreeRTOSConfig.h"
+/*
+ * NOTE:
+ * Keep this file OS-agnostic. Any OS-specific definitions (e.g. FreeRTOS
+ * interrupt priority macros) must be provided by the OS porting layer.
+ */
 
-#define DEFAULT_PRIORITY configMAX_SYSCALL_INTERRUPT_PRIORITY >> (8 - configPRIO_BITS)
+#if defined(SLI_SI91X_ENABLE_OS)
+#include "sl_si91x_os.h"
+#endif
+
+#ifndef SL_SI91X_OS_DEFAULT_IRQ_PRIORITY
+#define SL_SI91X_OS_DEFAULT_IRQ_PRIORITY (0U)
+#endif
+
+#define DEFAULT_PRIORITY SL_SI91X_OS_DEFAULT_IRQ_PRIORITY
 
 void sl_si91x_device_init_nvic();
 

@@ -26,4 +26,6 @@ requires:
 - name: sl_si91x_socket
 - name: bsd_socket
 - name: sl_si91x_asynchronous_socket
+- name: log_none
+  condition: ["device_si91x"]
 

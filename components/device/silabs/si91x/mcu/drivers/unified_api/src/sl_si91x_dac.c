@@ -117,6 +117,7 @@ sl_status_t sl_si91x_dac_init(sl_dac_clock_config_t *dac_clock)
     // Validate dac_clock NULL or not
     if (dac_clock == NULL) {
       status = SL_STATUS_NULL_POINTER;
+      SL_PRINT_STRING_ERROR("sl_si91x_dac_init: dac_clock is NULL,line no : %d\r\n", (int)__LINE__);
       break;
     }
 
@@ -156,11 +157,18 @@ sl_status_t sl_si91x_dac_set_configuration(sl_dac_config_t dac_config, float vre
     //Validate reference voltage it should range from 1.8v to 3.6v
     if ((vref_value > (float)MAXIMUM_REF_VOLT) || (vref_value < (float)MINIMUM_REF_VOLT)) {
       status = SL_STATUS_INVALID_RANGE;
+      SL_PRINT_STRING_ERROR("sl_si91x_dac_set_configuration: vref_value is "
+                            "invalid,line no : %d\r\n",
+                            (int)__LINE__);
       break;
     }
     //Validate DAC parameters.
     status = validate_dac_configuration_parameters(dac_config);
     if (status != SL_STATUS_OK) {
+      SL_PRINT_STRING_ERROR("sl_si91x_dac_set_configuration: validate_dac_configuration_parameters failed with status "
+                            "0x%04lX,line no : %d\r\n",
+                            (unsigned long)status,
+                            (int)__LINE__);
       break;
     }
     battery_status = RSI_BOD_SoftTriggerGetBatteryStatus();
@@ -186,6 +194,10 @@ sl_status_t sl_si91x_dac_set_configuration(sl_dac_config_t dac_config, float vre
       error_status = RSI_DAC_DynamicModeConfig(AUX_ADC_DAC_COMP, dac_config.adc_channel, DISABLE, DISABLE);
       status       = convert_rsi_to_sl_error_code(error_status);
       if (status != SL_STATUS_OK) {
+        SL_PRINT_STRING_ERROR(
+          "sl_si91x_dac_set_configuration: RSI_DAC_DynamicModeConfig failed with status 0x%04lX,line no : %d\r\n",
+          (unsigned long)status,
+          (int)__LINE__);
         break;
       }
     }
@@ -194,6 +206,10 @@ sl_status_t sl_si91x_dac_set_configuration(sl_dac_config_t dac_config, float vre
       error_status = RSI_DAC_SetFifoThreshold(AUX_ADC_DAC_COMP, dac_config.dac_fifo_threshold);
       status       = convert_rsi_to_sl_error_code(error_status);
       if (status != SL_STATUS_OK) {
+        SL_PRINT_STRING_ERROR(
+          "sl_si91x_dac_set_configuration: RSI_DAC_SetFifoThreshold failed with status 0x%04lX,line no : %d\r\n",
+          (unsigned long)status,
+          (int)__LINE__);
         break;
       }
     }
@@ -205,6 +221,7 @@ sl_status_t sl_si91x_dac_set_configuration(sl_dac_config_t dac_config, float vre
     error_status = RSI_AUX_RefVoltageConfig(vref_value, battery_status);
     status       = convert_rsi_to_sl_error_code(error_status);
   } while (false);
+
   return status;
 }
 
@@ -228,17 +245,23 @@ sl_status_t sl_si91x_dac_write_data(int16_t *data, uint16_t length)
     // Validate range of data length.
     if ((length < MINIMUM_DATA_LEN) || (length > MAXIMUM_DATA_LEN)) {
       status = SL_STATUS_INVALID_RANGE;
+      SL_PRINT_STRING_ERROR("sl_si91x_dac_write_data: length is invalid,line no : %d\r\n", (int)__LINE__);
       break;
     }
     // Validate length for static mode, it should be 1.
     if ((dac_operation_mode == SL_DAC_STATIC_MODE) && (length > STATIC_MAX_LEN)) {
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR("sl_si91x_dac_write_data: length is invalid,line no : %d\r\n", (int)__LINE__);
       break;
     }
     if ((dac_operation_mode == SL_DAC_STATIC_MODE) && (static_flag == true)) {
       error_status = RSI_DAC_InterruptUnMask(AUX_ADC_DAC_COMP, dac_operation_mode);
       status       = convert_rsi_to_sl_error_code(error_status);
       if (status != SL_STATUS_OK) {
+        SL_PRINT_STRING_ERROR(
+          "sl_si91x_dac_write_data: RSI_DAC_InterruptUnMask failed with status 0x%04lX,line no : %d\r\n",
+          (unsigned long)status,
+          (int)__LINE__);
         break;
       }
     }
@@ -269,6 +292,8 @@ sl_status_t sl_si91x_dac_get_achieved_sample_clock(uint32_t sample_rate, uint32_
   // Validate DAC sampling rate.
   if ((sample_rate > DAC_MAX_SAMPLE_RATE) || (sample_rate < DAC_MINI_SAMPLE_RATE)) {
     status = SL_STATUS_INVALID_RANGE;
+    SL_PRINT_STRING_ERROR("sl_si91x_dac_get_achieved_sample_clock: sample_rate is invalid,line no : %d\r\n",
+                          (int)__LINE__);
   } else {
     read_dac_sample_clock = dac_set_clock(sample_rate);
     *sample_clock         = (uint32_t)read_dac_sample_clock;
@@ -311,11 +336,13 @@ sl_status_t sl_si91x_dac_rewrite_data(int16_t *data, uint16_t length)
     // Validate the data is NULL or not.
     if (data == NULL) {
       status = SL_STATUS_NULL_POINTER;
+      SL_PRINT_STRING_ERROR("sl_si91x_dac_rewrite_data: data is NULL,line no : %d\r\n", (int)__LINE__);
       break;
     }
     // Validate range of data length.
     if ((length < MINIMUM_DATA_LEN) || (length > MAXIMUM_DATA_LEN)) {
       status = SL_STATUS_INVALID_RANGE;
+      SL_PRINT_STRING_ERROR("sl_si91x_dac_rewrite_data: length is invalid,line no : %d\r\n", (int)__LINE__);
       break;
     }
     //Reconfigure the UDMA ping or pong decriptor.
@@ -341,12 +368,16 @@ sl_status_t sl_si91x_dac_register_event_callback(sl_dac_callback_t callback_even
     // Validate user callback, if the parameters is NULL, it returns an error code.
     if (callback_event == NULL) {
       status = SL_STATUS_NULL_POINTER;
+      SL_PRINT_STRING_ERROR("sl_si91x_dac_register_event_callback: callback_event is NULL,line no : %d\r\n",
+                            (int)__LINE__);
       break;
     }
     // To validate the function pointer if the parameters is not NULL then, it
     // returns an error code
     if (user_callback != NULL) {
       status = SL_STATUS_BUSY;
+      SL_PRINT_STRING_ERROR("sl_si91x_dac_register_event_callback: user_callback is not NULL,line no : %d\r\n",
+                            (int)__LINE__);
       break;
     }
     // User callback address is passed to the static variable which is called
@@ -493,16 +524,22 @@ static sl_status_t validate_dac_configuration_parameters(sl_dac_config_t dac_con
     // Validate DAC sampling rate.
     if ((dac_config.dac_sample_rate > DAC_MAX_SAMPLE_RATE) || (dac_config.dac_sample_rate < DAC_MINI_SAMPLE_RATE)) {
       status = SL_STATUS_INVALID_RANGE;
+      SL_PRINT_STRING_ERROR("validate_dac_configuration_parameters: dac_sample_rate is invalid,line no : %d\r\n",
+                            (int)__LINE__);
       break;
     }
     // Validate DAC operating mode it should be static/fifo/Reference voltage for ADC.
     if (dac_config.operating_mode >= SL_DAC_OPERATION_MODE_LAST) {
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR("validate_dac_configuration_parameters: operating_mode is invalid,line no : %d\r\n",
+                            (int)__LINE__);
       break;
     }
     // Validate DAC fifo threshold it will be maximum 7.
     if (dac_config.dac_fifo_threshold > DAC_MAX_THRESHOLD) {
       status = SL_STATUS_INVALID_RANGE;
+      SL_PRINT_STRING_ERROR("validate_dac_configuration_parameters: dac_fifo_threshold is invalid,line no : %d\r\n",
+                            (int)__LINE__);
       break;
     }
     // Returns SL_STATUS_OK if the parameter are appropriate

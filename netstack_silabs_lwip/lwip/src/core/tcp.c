@@ -740,6 +740,7 @@ tcp_tmr_init(void)
  * @note Maintains compatibility with standard LWIP timer accounting
  * @note Automatically handles timer wraparound and overflow conditions
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 void
 tcp_tmr(void)
 {
@@ -776,6 +777,7 @@ tcp_tmr(void)
 /**
  * TCP timer - Standard lwIP implementation with fixed intervals.
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 void
 tcp_tmr(void)
 {
@@ -1475,6 +1477,7 @@ done:
  * Returns how much extra window would be advertised if we sent an
  * update now.
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 u32_t
 tcp_update_rcv_ann_wnd(struct tcp_pcb *pcb)
 {
@@ -1513,6 +1516,7 @@ tcp_update_rcv_ann_wnd(struct tcp_pcb *pcb)
  * @param pcb the tcp_pcb for which data is read
  * @param len the amount of bytes that have been read by the application
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 void
 tcp_recved(struct tcp_pcb *pcb, u16_t len)
 {
@@ -1737,6 +1741,7 @@ tcp_connect(struct tcp_pcb *pcb, const ip_addr_t *ipaddr, u16_t port,
  *
  * Automatically called from tcp_tmr().
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 void
 tcp_slowtmr(void)
 {
@@ -2024,6 +2029,7 @@ tcp_slowtmr_start:
  *
  * Automatically called from tcp_tmr().
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 void
 tcp_fasttmr(void)
 {
@@ -2084,6 +2090,7 @@ tcp_txnow(void)
 }
 
 /** Pass pcb->refused_data to the recv callback */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 err_t
 tcp_process_refused_data(struct tcp_pcb *pcb)
 {
@@ -2153,6 +2160,7 @@ tcp_process_refused_data(struct tcp_pcb *pcb)
  *
  * @param seg tcp_seg list of TCP segments to free
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 void
 tcp_segs_free(struct tcp_seg *seg)
 {
@@ -2168,6 +2176,7 @@ tcp_segs_free(struct tcp_seg *seg)
  *
  * @param seg single tcp_seg to free
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 void
 tcp_seg_free(struct tcp_seg *seg)
 {
@@ -2207,6 +2216,7 @@ tcp_setprio(struct tcp_pcb *pcb, u8_t prio)
  * @param seg the old tcp_seg
  * @return a copy of seg
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 struct tcp_seg *
 tcp_seg_copy(struct tcp_seg *seg)
 {

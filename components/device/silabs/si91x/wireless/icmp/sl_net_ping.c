@@ -29,7 +29,7 @@
 #include "sl_status.h"
 #include "sl_constants.h"
 #include "sl_net_ping.h"
-#include "sl_si91x_driver.h"
+#include "sli_wifi_utility.h"
 #include <string.h>
 
 /******************************************************
@@ -85,13 +85,13 @@ sl_status_t sl_si91x_send_ping(sl_ip_address_t ip_address, uint16_t ping_size)
   request.ping_size = ping_size;                                                       // Copy Ping size
   request.timeout   = SLI_CONVERT_TO_SI91X_PING_TIMEOUT(SLI_PING_RESPONSE_TIMEOUT_MS); // Copy Ping timeout
 
-  status = sli_si91x_driver_send_command(SLI_WLAN_REQ_PING_PACKET,
-                                         SLI_SI91X_NETWORK_CMD,
-                                         &request,
-                                         sizeof(sli_si91x_ping_request_t),
-                                         SLI_WIFI_RETURN_IMMEDIATELY,
-                                         NULL,
-                                         NULL);
+  status = sli_wifi_send_command(SLI_WIFI_REQ_PING_PACKET,
+                                 SLI_SI91X_NETWORK_CMD,
+                                 &request,
+                                 sizeof(sli_si91x_ping_request_t),
+                                 SLI_WIFI_RETURN_IMMEDIATELY,
+                                 NULL,
+                                 NULL);
   VERIFY_STATUS_AND_RETURN(status);
 
   return status;

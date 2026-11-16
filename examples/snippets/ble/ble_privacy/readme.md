@@ -1,19 +1,28 @@
-# BLE - Privacy 
+# BLE - Privacy
+
+## High-Level Overview
+
+Bluetooth LE supports a feature that reduces the ability to track an LE device over a period of time by changing the Bluetooth device address on a frequent basis, called the privacy of that...
 
 ## Table of Contents
 
-- [BLE - Privacy](#ble---privacy)
-  - [Table of Contents](#table-of-contents)
-  - [Purpose/Scope](#purposescope)
-  - [Prerequisites/Setup Requirements](#prerequisitessetup-requirements)
-    - [Hardware Requirements](#hardware-requirements)
-    - [Software Requirements](#software-requirements)
-    - [Setup Diagram](#setup-diagram)
+- [High-Level Overview](#high-level-overview)
+- [Table of Contents](#table-of-contents)
+- [Purpose/Scope](#purposescope)
+- [Prerequisites/Setup Requirements](#prerequisitessetup-requirements)
+  - [Hardware Requirements](#hardware-requirements)
+  - [Software Requirements](#software-requirements)
+  - [NCP mode: host application and project files](#ncp-mode-host-application-and-project-files)
+  - [Setup Diagram](#setup-diagram)
+- [Steps to Run Demo](#steps-to-run-demo)
   - [Getting Started](#getting-started)
-  - [Application Build Environment](#application-build-environment)
-  - [Test the Application](#test-the-application)
-    - [Verify BLE Privacy application as a **PERIPHERAL\_ROLE**](#verify-ble-privacy-application-as-a-peripheral_role)
-    - [Verify BLE Privacy application as a **CENTRAL\_ROLE**](#verify-ble-privacy-application-as-a-central_role)
+  - [Configuration and setup](#configuration-and-setup)
+  - [Steps for execution](#steps-for-execution)
+    - [Verify BLE Privacy application as a **PERIPHERAL_ROLE**](#verify-ble-privacy-application-as-a-peripheral_role)
+    - [Verify BLE Privacy application as a **CENTRAL_ROLE**](#verify-ble-privacy-application-as-a-central_role)
+- [Troubleshooting](#troubleshooting)
+- [Resources](#resources)
+- [Report Bugs and Get Support](#report-bugs-and-get-support)
 
 ## Purpose/Scope
 
@@ -28,31 +37,28 @@ The device address of the remote device, referred to as the private address, wil
 - SiWx91x Wi-Fi Evaluation Kit. The SiWx91x supports multiple operating modes. See [Operating Modes]() for details.
 - **SoC Mode**:
   - Standalone
-    - BRD4002A Wireless pro kit mainboard [SI-MB4002A]
-    - Radio Boards 
-      - BRD4338A [SiWx917-RB4338A]
-      - BRD4339B [SiWx917-RB4339B]
-      - BRD4340A [SiWx917-RB4340A]
-      - BRD4343A [SiWx917-RB4343A]
+     - [BRD4002B](https://www.silabs.com/development-tools/wireless/wireless-pro-kit-mainboard?tab=overview) Wireless Pro Kit Mainboard [SI-MB4002B]
+   - Radio Boards 
+      - [BRD4338A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-rb4338a-wifi-6-bluetooth-le-soc-radio-board?tab=overview) [SiWx917-RB4338A]
+      - [BRD4343A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4343a-wi-fi-6-bluetooth-le-8mb-flash-radio-board-for-module?tab=overview) [SiWx917-RB4343A]
+      - [BRD4343C](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4343c-wi-fi-6-bluetooth-le-8mb-flash-radio-board-for-module?tab=overview) [SiWx917-RB4343C]
   - Kits
-  	- SiWx917 Pro Kit [Si917-PK6031A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-pro-kit?tab=overview)
-  	- SiWx917 Pro Kit [Si917-PK6032A]
-    - SiWx917 AC1 Module Explorer Kit (BRD2708A)
-- **PSRAM Mode**:
-  - Standalone
-    - BRD4002A Wireless pro kit mainboard [SI-MB4002A]  
-    - Radio Boards [BRD4340A, BRD4342A, BRD4325G]
+  	 - SiWG917 Dev Kit [BRD2605B]
+  	 - SiWx917 Pro Kit [Si917-PK6031A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-pro-kit?tab=overview)
+  	 - SiWx917 Pro Kit [Si917-PK6032A]
+    - SiWx917 AC1 Module Explorer Kit [BRD2708A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-ek2708a-explorer-kit)
+  - PSRAM Mode:  
+    - Silicon Labs [[BRD4342A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx91x-rb4342a-wifi-6-bluetooth-le-soc-radio-board?tab=overview)]
 - **NCP Mode**:
   - Standalone
-    - BRD4002A Wireless pro kit mainboard [SI-MB4002A]
+    - [BRD4002B](https://www.silabs.com/development-tools/wireless/wireless-pro-kit-mainboard?tab=overview) Wireless Pro Kit Mainboard [SI-MB4002B]
     - EFR32xG24 Wireless 2.4 GHz +10 dBm Radio Board [xG24-RB4186C](https://www.silabs.com/development-tools/wireless/xg24-rb4186c-efr32xg24-wireless-gecko-radio-board?tab=overview)
     - NCP Expansion Kit with NCP Radio boards
-      - (BRD4346A + BRD8045A) [SiWx917-EB4346A]
-      - (BRD4357A + BRD8045A) [SiWx917-EB4357A]
+      - [[BRD8045A](https://www.silabs.com/development-tools/wireless/wi-fi/expansion-adapter-board-for-co-processor-radio-boards?tab=overview) + [BRD4346A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-rb4346a-wifi-6-bluetooth-le-soc-4mb-flash-radio-board?tab=overview) / [BRD4357A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4357a-wi-fi-6-bluetooth-le-4mb-flash-radio-board-for-rcp-and-ncp-modules?tab=overview) / [BRD4357C](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4357c-wi-fi-6-bluetooth-le-4mb-flash-radio-board-for-rcp-and-ncp-modules?tab=overview)]
   - Kits
   	- EFR32xG24 Pro Kit +10 dBm [xG24-PK6009A](https://www.silabs.com/development-tools/wireless/efr32xg24-pro-kit-10-dbm?tab=overview)
-  - Interface and Host MCU Supported
-    - SPI - EFR32 
+  - Interface and host MCU supported
+    - SPI : EFR32
 - Smartphone configured as BLE peripheral/Central.
 
 ### Software Requirements
@@ -62,11 +68,23 @@ The device address of the remote device, referred to as the private address, wil
 
 > **Note:** The provided mobile screenshots are from the 2.8.1 version of the Simplicity Connect App(formerly EFR Connect App), it is recommended to use the latest version.
 
+### NCP mode: host application and project files
+
+| Mode | Host / target | Project file (this example folder) |
+|------|----------------|-------------------------------------|
+| SoC | Application runs on SiWx91x. | `ble_privacy_soc.slcp` |
+| PSRAM | Application runs on SiWx91x with PSRAM-capable radio board. | `ble_privacy_psram.slcp` |
+| NCP (SPI) | Application runs on **EFR32** host; SiWx917 is the network co-processor over **SPI**. | `ble_privacy_ncp.slcp` |
+
+Open the `.slcp` for your kit from **`examples/snippets/ble/ble_privacy/`** in Simplicity Studio. For NCP, follow [Getting started with NCP mode](https://docs.silabs.com/wiseconnect/latest/wiseconnect-getting-started/getting-started-with-ncp-mode).
+
 ### Setup Diagram
   
 ![Figure: Setup Diagram for BLE Privacy example](resources/readme/ble_privacy_soc_ncp.png)
 
-## Getting Started
+## Steps to Run Demo
+
+### Getting Started
 
 Refer to the instructions [here](https://docs.silabs.com/wiseconnect/latest/wiseconnect-getting-started/) to:
 
@@ -78,7 +96,7 @@ Refer to the instructions [here](https://docs.silabs.com/wiseconnect/latest/wise
 
 For details on the project folder structure, see the [WiSeConnect Examples](https://docs.silabs.com/wiseconnect/latest/wiseconnect-examples/#example-folder-structure) page.
 
-## Application Build Environment
+### Configuration and setup
 
 The application can be configured to suit your requirements and development environment. Read through the following sections and make any changes needed.
 
@@ -195,7 +213,7 @@ The application can be configured to suit your requirements and development envi
 
 > **Note**: For recommended settings, please refer the [recommendations guide](https://docs.silabs.com/wiseconnect/latest/wiseconnect-developers-guide-prog-recommended-settings/).
 
-## Test the Application
+### Steps for execution
 
 Refer to the instructions [here](https://docs.silabs.com/wiseconnect/latest/wiseconnect-getting-started/) to:
 
@@ -283,3 +301,28 @@ Follow the below steps for the successful execution of the application:
       ![](resources/readme/output_3.png)
 
       ![](resources/readme/output_4.png)
+
+## Troubleshooting
+
+| Symptom | Things to check |
+|--------|------------------|
+| No connection / scan issues | Confirm the peer address type and `RSI_BLE_DEV_ADDR` / `RSI_REMOTE_DEVICE_NAME` match the peripheral; phones often use random addresses. |
+| Privacy / address resolution not demonstrable | This example relies on the **resolving list** and **Resolvable Private Addresses (RPAs)**. **Verify the peer uses an RPA** (typical after successful bonding when the peer has privacy enabled)—IRK exchange during SMP is required. A peer that stays on a **public** or **static random** address only does not exercise the same **RPA rotation and resolution** path; align `RSI_BLE_REMOTE_ADDR_TYPE` / directed-adv settings in `app.c` and `ble_config.h` with the peer. |
+| Extended advertising not seen | Use a central that supports extended scanning; verify PHY and advertising set configuration in `app.c` / `ble_config.h`. |
+| NCP: no boot or no HCI traffic | Update SiWx917 connectivity firmware; verify SPI/UART wiring per [NCP getting started](https://docs.silabs.com/wiseconnect/latest/wiseconnect-getting-started/getting-started-with-ncp-mode). Flash the correct `*_ncp.slcp` (or `*_uart_ncp.slcp`) on the **EFR32** host. |
+| Power save anomalies on NCP expansion board | See the power-save note under **Configuration and setup** and the *Getting started with SiWx91x NCP* guide. |
+| Build or flash errors | Open the `.slcp` that matches your kit (SoC vs PSRAM vs NCP) and matching SDK / WiSeConnect versions. |
+
+
+## Resources
+
+1. [WiSeConnect getting started](https://docs.silabs.com/wiseconnect/latest/wiseconnect-getting-started/)
+2. [WiSeConnect developers guide — developing for Silicon Labs hosts](https://docs.silabs.com/wiseconnect/latest/wiseconnect-developers-guide-developing-for-silabs-hosts/)
+3. [Programming recommended settings](https://docs.silabs.com/wiseconnect/latest/wiseconnect-developers-guide-prog-recommended-settings/)
+
+
+## Report Bugs and Get Support
+
+Report issues and get help from the Silicon Labs community:
+
+- [Silicon Labs Community](https://www.silabs.com/community)

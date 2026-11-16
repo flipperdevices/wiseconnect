@@ -192,7 +192,7 @@ enum t_cose_err_t create_tbs_hash(int32_t cose_algorithm_id,
      */
   (void)buffer_for_hash;
   (void)hash;
-  enum t_cose_err_t return_value;
+  enum t_cose_err_t return_value = T_COSE_ERR_FAIL;
   struct t_cose_crypto_hash hash_ctx;
   int32_t hash_alg_id;
 

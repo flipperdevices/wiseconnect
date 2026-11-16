@@ -22,5 +22,13 @@ provides:
 requires:
   - name: systemlevel_reg_spi
   - name: romdriver_clks
+  - name: code_classification
+    condition: [psram_core]
 define:
   - name: PLL_ROMDRIVER_PRESENT
+  - name: SL_CODE_COMPONENT_SYSTEMLEVEL_PLL
+    value: systemlevel_pll
+template_contribution:
+  - name: code_classification_components
+    value: systemlevel_pll
+    condition: [psram_core]

@@ -29,9 +29,10 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "clock_update.h"
 #include "rsi_debug.h"
 #include "rsi_rom_clks.h"
-#include "clock_update.h"
+#include "sl_log.h"
 #include "sl_si91x_psram_handle.h"
 #if defined(SL_SI91X_BOARD_INIT)
 #include "rsi_board.h"
@@ -78,9 +79,17 @@ int main()
   RSI_Board_Init();
 #endif // SL_SI91X_BOARD_INIT
 
+  sl_log_init_stage1();
+  (void)sl_log_init_stage2();
   /* Initialize debug UART */
-  DEBUGINIT();
-  DEBUGOUT("\r\nPSRAM driver example started\r\n");
+  SL_PRINT_STRING_ERROR("\r\nPSRAM driver example started\r\n");
+
+  /* Note: All status messages in this example — both success and failure — are
+ * intentionally emitted via SL_PRINT_STRING_ERROR so that they remain visible
+ * on the console at the default log level. This is a demonstration choice, not
+ * a recommendation: in production code, ERROR severity should be reserved for
+ * actual failures, with successful operations logged via SL_PRINT_STRING_INFO
+ * (or SL_PRINT_STRING_DEBUG for verbose trace). */
 
   status = sl_si91x_psram_uninit();
   status = sl_si91x_psram_init();
@@ -106,10 +115,10 @@ int main()
   }
 
   if (status_flag) {
-    DEBUGOUT("\r\nAuto Read Write Failed\r\n");
+    SL_PRINT_STRING_ERROR("\r\nAuto Read Write Failed\r\n");
     status_flag = 0;
   } else {
-    DEBUGOUT("\r\nAuto Write and Read successful from PSRAM\r\n");
+    SL_PRINT_STRING_ERROR("\r\nAuto Write and Read successful from PSRAM\r\n");
   }
 
   /* Write and read in manual blocking mode ----------------------------------*/
@@ -132,10 +141,10 @@ int main()
   }
 
   if (status_flag) {
-    DEBUGOUT("\r\nManual Read Write Failed\r\n");
+    SL_PRINT_STRING_ERROR("\r\nManual Read Write Failed\r\n");
     status_flag = 0;
   } else {
-    DEBUGOUT("\r\nManual Write and Read successful from PSRAM\r\n");
+    SL_PRINT_STRING_ERROR("\r\nManual Write and Read successful from PSRAM\r\n");
   }
 
   /* Write and read in manual dma mode ---------------------------------------*/
@@ -173,13 +182,14 @@ int main()
   }
 
   if (status_flag) {
-    DEBUGOUT("\r\nManual Read Write with DMA Failed\r\n");
+    SL_PRINT_STRING_ERROR("\r\nManual Read Write with DMA Failed\r\n");
     status_flag = 0;
   } else {
-    DEBUGOUT("\r\nManual Write and Read with DMA successful from PSRAM\r\n");
+    SL_PRINT_STRING_ERROR("\r\nManual Write and Read with DMA successful from PSRAM\r\n");
   }
 
-  DEBUGOUT("\r\n*************************************************************\r\n\n\n");
+  SL_PRINT_STRING_ERROR("\r\n***************************************************"
+                        "**********\r\n\n\n");
 
   while (1)
     ;

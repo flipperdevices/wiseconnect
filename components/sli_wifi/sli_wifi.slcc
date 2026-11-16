@@ -13,7 +13,8 @@ ui_hints:
   visibility: never
 source:
 - path: src/sli_wifi.c
-- path: src/sli_wifi_utility.c  
+- path: src/sli_wifi_utility.c
+- path: src/sli_wifi_power_profile.c  
 include:
 - path: inc
   file_list:
@@ -22,10 +23,8 @@ include:
     - path: sli_wifi.h
     - path: sli_wifi_utility.h
     - path: sli_wifi_power_profile.h
-    - path: sli_wifi_memory_manager.h
+    - path: sli_wifi_device_core_utilities.h
 provides:
     - name: sli_wifi
-requires:
     - name: sli_wifi_power_profile
-    - name: sli_wifi_memory_manager
-    - name: sli_buffer_manager
+requires: []

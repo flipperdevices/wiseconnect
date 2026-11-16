@@ -28,7 +28,8 @@
  *************************** LOCAL VARIABLES   *******************************
  ******************************************************************************/
 sl_sleeptimer_timer_handle_t timer1; //sleeptimer1 handle
-boolean_t delay_timeout = false;     //Indicates sleeptimer1 timeout
+/* Volatile: set in sleeptimer callback, read in main loop. Required for LTO. */
+static volatile boolean_t delay_timeout = false; //Indicates sleeptimer1 timeout
 
 /*******************************************************************************
  **********************  Local Function prototypes   ***************************
@@ -59,17 +60,23 @@ void joystick_example_init(void)
     // if we are not initialize the debug again it will print the garbage data in console output.
     DEBUGINIT();
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("sl_si91x_joystick_init: Error Code : %lu \n", status);
+      /* Note: All status messages in this example — both success and failure — are
+ * intentionally emitted via SL_PRINT_STRING_ERROR so that they remain visible
+ * on the console at the default log level. This is a demonstration choice, not
+ * a recommendation: in production code, ERROR severity should be reserved for
+ * actual failures, with successful operations logged via SL_PRINT_STRING_INFO
+ * (or SL_PRINT_STRING_DEBUG for verbose trace). */
+      SL_PRINT_STRING_ERROR("sl_si91x_joystick_init: Error Code : %lu \n", status);
       break;
     }
-    DEBUGOUT("Joystick Initialization Success\n");
+    SL_PRINT_STRING_ERROR("Joystick Initialization Success\n");
     //Start/Enable the Joystick
     status = sl_si91x_joystick_start(SL_JOYSTICK_ENABLED);
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("sl_si91x_joystick_start: Error Code : %lu \n", status);
+      SL_PRINT_STRING_ERROR("sl_si91x_joystick_start: Error Code : %lu \n", status);
       break;
     }
-    DEBUGOUT("Joystick started Successfully\n");
+    SL_PRINT_STRING_ERROR("Joystick started Successfully\n");
   } while (false);
 }
 
@@ -88,26 +95,26 @@ void joystick_example_process_action(void)
     //Get the Joystick position.
     status = sl_si91x_joystick_get_position(SL_JOYSTICK_ENABLED, &pos);
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("sl_si91x_joystick_get_position: Error Code : %lu \n", status);
+      SL_PRINT_STRING_ERROR("sl_si91x_joystick_get_position: Error Code : %lu \n", status);
     }
     switch (pos) {
       case SL_JOYSTICK_NONE:
-        printf("Not Pressed\n");
+        SL_PRINT_STRING_ERROR("Not Pressed\n");
         break;
       case SL_JOYSTICK_C:
-        printf("Center\n");
+        SL_PRINT_STRING_ERROR("Center\n");
         break;
       case SL_JOYSTICK_N:
-        printf("North\n");
+        SL_PRINT_STRING_ERROR("North\n");
         break;
       case SL_JOYSTICK_S:
-        printf("South\n");
+        SL_PRINT_STRING_ERROR("South\n");
         break;
       case SL_JOYSTICK_E:
-        printf("East\n");
+        SL_PRINT_STRING_ERROR("East\n");
         break;
       case SL_JOYSTICK_W:
-        printf("West\n");
+        SL_PRINT_STRING_ERROR("West\n");
         break;
     }
     delay_timeout = false;

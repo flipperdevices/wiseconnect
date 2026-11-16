@@ -1,10 +1,10 @@
 id: sl_si91x_spi_bus
 package: wifi
-description: 'This component implements SPI communication interface to Si91x from
+description: 'This component implements SPI communication interface to SiWx91x from
   the host MCU.
 
   '
-label: Si91x NCP SPI bus interface
+label: SiWx91x NCP SPI bus interface
 category: Device|Si91x|Wireless|Network Stack
 quality: production
 metadata:

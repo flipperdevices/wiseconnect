@@ -1,8 +1,13 @@
 # Wi-Fi - Concurrent Firmware Update from Host UART
 
+## High-Level Overview
+
+SiWx91x concurrent firmware update example: Run WLAN Tx/Rx in concurrent mode while updating the NWP firmware from a host PC over UART through an intermediary host MCU in NCP mode.
+
 ## Table of Contents
 
 - [Wi-Fi - Concurrent Firmware Update from Host UART](#wi-fi---concurrent-firmware-update-from-host-uart)
+  - [High-Level Overview](#high-level-overview)
   - [Table of Contents](#table-of-contents)
   - [Purpose/Scope](#purposescope)
   - [Prerequisites/Setup Requirements](#prerequisitessetup-requirements)
@@ -15,13 +20,16 @@
       - [Open **sl\_wifi\_device.h** file. You can also refer to `sl_wifi_default_concurrent_v6_configuration` and modify/create configurations as per your needs and requirements.](#open-sl_wifi_deviceh-file-you-can-also-refer-to-sl_wifi_default_concurrent_v6_configuration-and-modifycreate-configurations-as-per-your-needs-and-requirements)
       - [Configure the following parameters in **app.c** to test throughput app as per requirements](#configure-the-following-parameters-in-appc-to-test-throughput-app-as-per-requirements)
     - [Run the Python Script](#run-the-python-script)
+  - [Troubleshooting](#troubleshooting)
+  - [Resources](#resources)
+  - [Report Bugs and Get Support](#report-bugs-and-get-support)
 
 ## Purpose/Scope
 
 This application showcases a multithreaded program that simultaneously manages WLAN operations (basic Tx and Rx) in concurrent mode and firmware update procedures. The system is composed of three primary elements:
   - Host PC: Contains the firmware file and the Python script for updating firmware
-  - Host MCU: Acts as an intermediary between the PC and the Si91x device. It receives firmware data from the PC over UART and transfers it to the Si91x device via SPI.
-  - Si91x Device: The target embedded system that needs a firmware update. It receives firmware data from the Host MCU and updates its firmware.
+  - Host MCU: Acts as an intermediary between the PC and the SiWx91x device. It receives firmware data from the PC over UART and transfers it to the SiWx91x device via SPI.
+  - SiWx91x Device: The target embedded system that needs a firmware update. It receives firmware data from the Host MCU and updates its firmware.
   
 ## Prerequisites/Setup Requirements
 
@@ -31,11 +39,12 @@ This application showcases a multithreaded program that simultaneously manages W
 - Linux PC or Cygwin on Windows (to build and run the python script provided in release_package/utilities/python)
 - **NCP Mode**:
   - Standalone
-    - BRD4002A Wireless Pro Kit Mainboard [SI-MB4002A]
+    - BRD4002B Wireless Pro Kit Mainboard [SI-MB4002B](https://www.silabs.com/development-tools/wireless/wireless-pro-kit-mainboard?tab=overview)
     - NCP Expansion Kit with NCP Radio Boards
-      - (BRD4346A + BRD8045A) [SiWx917-EB4346A]
-      - (BRD4357A + BRD8045A) [SiWx917-EB4357A]
-    - EFR32FG25 863-876 MHz +16 dBm Radio Board [FG25-RB4271A](https://www.silabs.com/development-tools/wireless/proprietary/fg25-rb4271a-efr32fg25-radio-board?tab=overview)
+      - [BRD4346A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-rb4346a-wifi-6-bluetooth-le-soc-4mb-flash-radio-board?tab=overview) + [BRD8045A](https://www.silabs.com/development-tools/wireless/wi-fi/expansion-adapter-board-for-co-processor-radio-boards?tab=overview)
+      - [BRD4357A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4357a-wi-fi-6-bluetooth-le-4mb-flash-radio-board-for-rcp-and-ncp-modules?tab=overview) + [BRD8045A](https://www.silabs.com/development-tools/wireless/wi-fi/expansion-adapter-board-for-co-processor-radio-boards?tab=overview)
+      - [BRD4357C](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4357c-wi-fi-6-bluetooth-le-4mb-flash-radio-board-for-rcp-and-ncp-modules?tab=overview) + [BRD8045A](https://www.silabs.com/development-tools/wireless/wi-fi/expansion-adapter-board-for-co-processor-radio-boards?tab=overview)
+    - EFR32xG25 863-876 MHz +16 dBm Radio Board [FG25-RB4271A](https://www.silabs.com/development-tools/wireless/proprietary/fg25-rb4271a-efr32fg25-radio-board?tab=overview)
 
 ### Software Requirements
 
@@ -52,7 +61,7 @@ Refer to the instructions [here](https://docs.silabs.com/wiseconnect/latest/wise
 - [Install Simplicity Studio](https://docs.silabs.com/wiseconnect/latest/wiseconnect-developers-guide-developing-for-silabs-hosts/#install-simplicity-studio)
 - [Install WiSeConnect extension](https://docs.silabs.com/wiseconnect/latest/wiseconnect-developers-guide-developing-for-silabs-hosts/#install-the-wi-se-connect-extension)
 - [Connect your device to the computer](https://docs.silabs.com/wiseconnect/latest/wiseconnect-developers-guide-developing-for-silabs-hosts/#connect-si-wx91x-to-computer)
-- [Upgrade your connectivity firmware ](https://docs.silabs.com/wiseconnect/latest/wiseconnect-developers-guide-developing-for-silabs-hosts/#update-si-wx91x-connectivity-firmware)
+- [Upgrade your connectivity firmware ](https://docs.silabs.com/wiseconnect/latest/wiseconnect-developers-guide-developing-for-silabs-hosts/using-the-simplicity-studio-ide#update-siwx91x-connectivity-firmware)
 - [Create a Studio project ](https://docs.silabs.com/wiseconnect/latest/wiseconnect-developers-guide-developing-for-silabs-hosts/#create-a-project)
 
 For details on the project folder structure, see the [WiSeConnect Examples](https://docs.silabs.com/wiseconnect/latest/wiseconnect-examples/#example-folder-structure) page.
@@ -126,7 +135,7 @@ Refer to the instructions [here](https://docs.silabs.com/wiseconnect/latest/wise
 > Note:
 >
 > 1. In concurrent mode, STA and AP should be configured on the same channel. The STA instance shall first scan for the specified external AP, wherein the channel number of AP is fetched and passed as an argument during SoftAP creation.
-> 2. Valid values for CHANNEL_NO are 1 to 11 in 2.4 GHz band and 36 to 48 and 149 to 165 in 5 GHz. In this example, the default configured band is 2.4 GHz.
+> 2. Valid values for CHANNEL_NO are 1 to 14 in the 2.4 GHz band. The default region code is set to US.
 
 
 > Note:
@@ -183,3 +192,29 @@ Refer to the instructions [here](https://docs.silabs.com/wiseconnect/latest/wise
   8. If users intend to employ different configurations, they must make corresponding adjustments in both the Python script and the Host UART configuration.
 
 Note: Python 3.9.0 version used to test this application.
+
+## Troubleshooting
+
+If you encounter issues while running the Concurrent Firmware Update from Host UART example, check the following:
+
+- Flash and start the SiWx91x application before you run the Python firmware update script.
+- Verify that the COM port and baud rate (default 115200) in `fw_update_from_host_uart.py` match the host MCU UART connection.
+- Install the required Python libraries: `pip install pyserial` and `pip install print-color`.
+- Confirm that the host MCU completes the handshake with the Python script before firmware chunks are sent.
+- Ensure that the firmware file path you pass to the script points to a valid `.rps` image compatible with the target device.
+- If WLAN traffic fails during the update, verify concurrent mode Wi-Fi configuration in `sl_wifi_device.h` and throughput parameters in `app.c`.
+- If the update appears to hang after download, wait a few minutes while the device writes firmware to flash and reboots.
+- Match any custom chunk size or UART settings between the Python script and the host MCU firmware configuration.
+
+## Resources
+
+- [WiSeConnect Getting Started Guide](https://docs.silabs.com/wiseconnect/latest/wiseconnect-getting-started/)
+- [WiSeConnect Examples](https://docs.silabs.com/wiseconnect/latest/wiseconnect-examples/#example-folder-structure)
+- [SiWx91x Connectivity Firmware](https://docs.silabs.com/wiseconnect/latest/wiseconnect-developers-guide-developing-for-silabs-hosts/using-the-simplicity-studio-ide#update-siwx91x-connectivity-firmware)
+- [WiSeConnect Recommended Settings Guide](https://docs.silabs.com/wiseconnect/latest/wiseconnect-developers-guide-prog-recommended-settings/)
+
+## Report Bugs and Get Support
+
+Report issues and get help from the Silicon Labs community:
+
+- [Silicon Labs Community](https://www.silabs.com/community)

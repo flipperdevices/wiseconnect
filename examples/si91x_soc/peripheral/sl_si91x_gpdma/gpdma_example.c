@@ -20,6 +20,7 @@
  ============================================================================**/
 
 // Include Files
+#include "sl_log_helper.h"
 #include "sl_si91x_gpdma.h"
 #include "rsi_debug.h"
 #include <stdio.h>
@@ -75,23 +76,29 @@ static void fetch_done_callback();
   ******************************************************************************/
 static void transfer_complete_callback()
 {
-  DEBUGOUT("\r\nTransfer complete callback\r\n");
+  /* Note: All status messages in this example — both success and failure — are
+ * intentionally emitted via SL_PRINT_STRING_ERROR so that they remain visible
+ * on the console at the default log level. This is a demonstration choice, not
+ * a recommendation: in production code, ERROR severity should be reserved for
+ * actual failures, with successful operations logged via SL_PRINT_STRING_INFO
+ * (or SL_PRINT_STRING_DEBUG for verbose trace). */
+  SL_PRINT_STRING_ERROR("\r\nTransfer complete callback\r\n");
   gpdma_transfer_done = 1;
 }
 
 static void gpdma_controller_error_callback()
 {
-  DEBUGOUT("\r\nGPDMA controller error callback\r\n");
+  SL_PRINT_STRING_ERROR("\r\nGPDMA controller error callback\r\n");
 }
 
 static void hresp_error_callback()
 {
-  DEBUGOUT("\r\nHRESP error callback\r\n");
+  SL_PRINT_STRING_ERROR("\r\nHRESP error callback\r\n");
 }
 
 static void fetch_done_callback()
 {
-  DEBUGOUT("\r\nFetch done callback\r\n");
+  SL_PRINT_STRING_ERROR("\r\nFetch done callback\r\n");
 }
 
 /*******************************************************************************
@@ -146,26 +153,26 @@ void gpdma_example_init(void)
   //Allocate a channel for GPDMA transfer
   status = sl_si91x_gpdma_allocate_channel(&gpdma_channel, channel_priority, GPDMA_MAX_TRANSFER_LENGTH_CHANNEL0);
   if (status != SL_STATUS_OK) {
-    DEBUGOUT("\r\n Allocate channel fail %lu \r\n", status);
+    SL_PRINT_STRING_ERROR("\r\n Allocate channel fail with status=0x%04lX  \r\n", status);
   } else {
-    DEBUGOUT("\r\n Allocate channel success\r\n");
+    SL_PRINT_STRING_ERROR("\r\n Allocate channel success\r\n");
   }
 
   //Register the callback functions for GPDMA transfer
   status = sl_si91x_gpdma_register_callbacks(gpdma_channel, &callback_t);
   if (status != SL_STATUS_OK) {
-    DEBUGOUT("\r\n Register callback fail %lu \r\n", status);
+    SL_PRINT_STRING_ERROR("\r\n Register callback fail with status=0x%04lX  \r\n", status);
   } else {
-    DEBUGOUT("\r\n Register callback success\r\n");
+    SL_PRINT_STRING_ERROR("\r\n Register callback success\r\n");
   }
 
 #if SL_GPDMA_SIMPLE_TRANSFER
   //In simple transfer allocate a descriptor for GPDMA transfer
   status = sl_si91x_gpdma_allocate_descriptor(sl_descriptors_memory, GPDMA_TRANSFER_LENGTH, gpdma_channel);
   if (status != SL_STATUS_OK) {
-    DEBUGOUT("\r\n Descriptor allocation failed %lu \r\n", status);
+    SL_PRINT_STRING_ERROR("\r\n Descriptor allocation failed with status=0x%04lX \r\n", status);
   } else {
-    DEBUGOUT("\r\n Descriptor allocation success\r\n");
+    SL_PRINT_STRING_ERROR("\r\n Descriptor allocation success\r\n");
   }
 
 #else
@@ -174,9 +181,9 @@ void gpdma_example_init(void)
   status =
     sl_si91x_gpdma_build_descriptor(sl_descriptors_memory, &descriptor_config, GPDMA_TRANSFER_LENGTH, gpdma_channel);
   if (status != SL_STATUS_OK) {
-    DEBUGOUT("\r\n Build descriptor fail %lu \r\n", status);
+    SL_PRINT_STRING_ERROR("\r\n Build descriptor fail with status=0x%04lX  \r\n", status);
   } else {
-    DEBUGOUT("\r\n Build descriptor success\r\n");
+    SL_PRINT_STRING_ERROR("\r\n Build descriptor success\r\n");
   }
 
 #endif
@@ -192,7 +199,7 @@ void gpdma_example_process_action(void)
   if (gpdma_start_transfer) {
     status = sl_si91x_gpdma_transfer(gpdma_channel, src, dst);
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("\r\n Transfer_fail %lu \r\n", status);
+      SL_PRINT_STRING_ERROR("\r\n Transfer fail with status=0x%04lX  \r\n", status);
     }
     gpdma_start_transfer = 0;
   }
@@ -204,9 +211,9 @@ void gpdma_example_process_action(void)
       count++;
     }
     if (count == GPDMA_TRANSFER_LENGTH) {
-      DEBUGOUT("\r\n GPDMA Transfer success\r\n");
+      SL_PRINT_STRING_ERROR("\r\n GPDMA Transfer success\r\n");
     } else {
-      DEBUGOUT("\r\n GPDMA Transfer fail\r\n");
+      SL_PRINT_STRING_ERROR("\r\n GPDMA Transfer fail\r\n");
     }
     gpdma_transfer_done = 0;
   }

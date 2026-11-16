@@ -114,13 +114,13 @@ sl_status_t sli_queue_manager_dequeue_node(sli_queue_t *handle, sli_queue_node_t
  * 
  * @param handle Queue Handle.
  * @param id_handler Pointer to function which can identify the target node in the queue.
- * @param node_match_data User specific pointer which can be passed to id_handler.
+ * @param node_match_data User specific const pointer which can be passed to id_handler.
  * @param node Pointer to hold packet which is to be removed from the queue. 
  * @return sl_status_t
  */
 sl_status_t sli_queue_manager_remove_node_from_queue(sli_queue_t *handle,
                                                      sli_queue_manager_node_match_handler_t id_handler,
-                                                     void *node_match_data,
+                                                     const void *node_match_data,
                                                      void **data);
 
 /**
@@ -141,18 +141,24 @@ sl_status_t sli_queue_manager_flush_nodes_from_queue(sli_queue_t *handle,
  * @brief Flush all the nodes present in the queue.
  * 
  * @param handle Queue Handle.
- * @param flush_handler Pointer to function which can free the all nodes in the queue.   
+ * @param flush_handler Pointer to function which can free the all nodes in the queue. 
+ * @param context User specific pointer which can be passed to flush_handler. 
  * @return sl_status_t
  */
-sl_status_t sli_queue_manager_flush_queue(sli_queue_t *handle, sli_queue_manager_flush_handler_t flush_handler);
+sl_status_t sli_queue_manager_flush_queue(sli_queue_t *handle,
+                                          sli_queue_manager_flush_handler_t flush_handler,
+                                          void *context);
 
 /**
  * @brief De-Initialize the queue manager.
  * 
  * @param handle Queue Handle.
  * @param flush_handler Pointer to function which can free the all nodes in the queue. 
+ * @param context User specific pointer which can be passed to flush_handler. 
  * @return sl_status_t
  */
-sl_status_t sli_queue_manager_deinit(sli_queue_t *handle, sli_queue_manager_flush_handler_t flush_handler);
+sl_status_t sli_queue_manager_deinit(sli_queue_t *handle,
+                                     sli_queue_manager_flush_handler_t flush_handler,
+                                     void *context);
 
 #endif // SLI_QUEUE_MANAGER_H

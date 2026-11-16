@@ -35,7 +35,7 @@
 #include "cmsis_os2.h"
 #include "sl_core.h"
 #include "sl_slist.h"
-
+#include "sl_cmsis_utility.h"
 #define SLI_MEM_POOL_BLOCK_SIZE(x)               \
   (x                                             \
    + sizeof(sli_buffer_manager_mempool_handler_t \
@@ -67,6 +67,7 @@ typedef struct {
     *buffer_manager_mempool_handler; ///< pointer of the mempool from which the data has been allocated.
   uint8_t data[];                    ///< Data.
 } sli_internal_buffer_t;
+#pragma pack()
 
 typedef struct {
   sli_buffer_manager_mempool_handler_t *head; ///< Head of the queue.
@@ -109,8 +110,8 @@ static sl_status_t sli_buffer_manager_create_and_assign_mempool(sli_buffer_manag
                                                                 sli_buffer_manager_mempool_handler_t *mempool_handler,
                                                                 bool is_common_pool)
 {
-  CORE_irqState_t state           = CORE_EnterAtomic();
-  size_t buffer_size              = (configuration->block_count * SLI_MEM_POOL_BLOCK_SIZE(configuration->block_size));
+  CORE_irqState_t state = CORE_EnterAtomic();
+  size_t buffer_size    = (size_t)configuration->block_count * SLI_MEM_POOL_BLOCK_SIZE(configuration->block_size);
   mempool_handler->mempool_memory = malloc(buffer_size);
   if (mempool_handler->mempool_memory == NULL) {
     CORE_ExitAtomic(state);
@@ -132,6 +133,53 @@ static sl_status_t sli_buffer_manager_create_and_assign_mempool(sli_buffer_manag
   return SL_STATUS_OK;
 }
 
+/*
+ * @brief Function to check if all buffer pools are deallocated.
+ * @return true if all buffer pools are deallocated, false otherwise.
+ */
+
+static bool sli_buffer_manager_are_all_pools_deallocated()
+{
+  CORE_irqState_t state = CORE_EnterAtomic();
+
+  SL_DEBUG_LOG_V2(DEBUG, "Buffer Manager Pools Status:\r\n");
+
+  // Dedicated pools
+  for (uint8_t i = 0; i < SLI_MAX_MEMPOOL_HANDLERS_COUNT; i++) {
+    sli_buffer_manager_mempool_handler_t *handler = &dedicated_mempool_handlers[i];
+    if (handler->mempool_memory != NULL) {
+      SL_DEBUG_LOG_V2(DEBUG, "Dedicated Pool %u: Max Buffers = %u", i, handler->max_buffer_count);
+      SL_DEBUG_LOG_V2(DEBUG, "Dedicated Pool %u: Allocated = %u", i, handler->allocated_buffer_count);
+
+      if (handler->allocated_buffer_count > 0) {
+        CORE_ExitAtomic(state);
+        return false;
+      }
+    }
+  }
+
+  SL_DEBUG_LOG_V2(DEBUG, "Common Pools (Queue Size: %u):\r\n", common_mempool_queue.size);
+
+  // There shall be atleast one common pool, no need to check for null in first iteration.
+  sli_buffer_manager_mempool_handler_t *current = common_mempool_queue.head;
+
+  uint8_t pool_idx = 0;
+  do {
+    SL_DEBUG_LOG_V2(DEBUG, "Common Pool %u: Max Buffers = %u", pool_idx, current->max_buffer_count);
+    SL_DEBUG_LOG_V2(DEBUG, "Common Pool %u: Allocated = %u", pool_idx, current->allocated_buffer_count);
+    current = (sli_buffer_manager_mempool_handler_t *)current->next.node;
+    pool_idx++;
+
+    if (current->allocated_buffer_count > 0) {
+      CORE_ExitAtomic(state);
+      return false;
+    }
+  } while (current != common_mempool_queue.head && current != NULL);
+
+  CORE_ExitAtomic(state);
+  return true;
+}
+
 /**
  * @brief Function to allocate a buffer from the dedicated pool.
  *
@@ -147,28 +195,45 @@ static sl_status_t sli_buffer_manager_allocate_buffer_from_dedicated_pool(
   uint32_t start_time,
   uint32_t wait_duration_ms)
 {
+  CORE_irqState_t state = CORE_EnterAtomic();
+
   sli_buffer_manager_mempool_handler_t *mempool_handler = &dedicated_mempool_handlers[pool_type];
+  // uint8_t delay                                         = 2;
+  // uint8_t new_delay                                     = 2;
   if (mempool_handler->mempool_memory == NULL) {
+    CORE_ExitAtomic(state);
     return SL_STATUS_NOT_INITIALIZED;
   }
+
+  if (mempool_handler->max_buffer_count == 0) {
+    CORE_ExitAtomic(state);
+    return SL_STATUS_ALLOCATION_FAILED;
+  }
+
   *buffer = NULL;
+  CORE_ExitAtomic(state);
 
   do {
     CORE_irqState_t state = CORE_EnterAtomic();
-
-    if (mempool_handler->allocated_buffer_count >= mempool_handler->max_buffer_count) {
-      CORE_ExitAtomic(state);
-      continue;
+    if (mempool_handler->allocated_buffer_count < mempool_handler->max_buffer_count) {
+      *buffer = (sli_internal_buffer_t *)sli_mem_pool_alloc(&mempool_handler->mempool);
+      if (*buffer != NULL) {
+        (*buffer)->buffer_manager_mempool_handler = mempool_handler;
+        mempool_handler->allocated_buffer_count++;
+        CORE_ExitAtomic(state);
+        break;
+      }
     }
-
-    *buffer = (sli_internal_buffer_t *)sli_mem_pool_alloc(&mempool_handler->mempool);
-    if (*buffer != NULL) {
-      (*buffer)->buffer_manager_mempool_handler = mempool_handler;
-      mempool_handler->allocated_buffer_count++;
-    }
-
     CORE_ExitAtomic(state);
-  } while (((osKernelGetTickCount() - start_time) < wait_duration_ms) && (*buffer == NULL));
+    osDelay(SLI_SYSTEM_MS_TO_TICKS(2));
+    /*new_delay = (new_delay < 50) ? new_delay * 2 : 50; // Exponential backoff for delay with a maximum cap at 50 ms
+    uint8_t remanning_time = wait_duration_ms - (osKernelGetTickCount() - start_time);
+    if (new_delay > remanning_time) {
+      delay = remanning_time - 1;
+    } else {
+      delay = new_delay;
+    }*/
+  } while ((osKernelGetTickCount() - start_time) <= wait_duration_ms);
 
   return (*buffer == NULL) ? SL_STATUS_ALLOCATION_FAILED : SL_STATUS_OK;
 }
@@ -402,14 +467,20 @@ sl_status_t sli_buffer_manager_init(sli_buffer_manager_configuration_t *configur
   if (configuration->common_pool_info.block_count == 0 || configuration->common_pool_info.block_size == 0) {
     return SL_STATUS_INVALID_PARAMETER;
   }
+
+  // Validate dedicated pool configurations here itself to avoid allocation and free due to misconfiguration.
   for (uint8_t index = 0; index < SLI_BUFFER_MANAGER_MAX_POOL; index++) {
-    if (configuration->pool_info[index] == NULL) {
-      continue;
-    }
-    if (configuration->pool_info[index]->block_count == 0 || configuration->pool_info[index]->block_size == 0) {
-      sli_buffer_manager_free_all_mempools();
+    if (configuration->pool_info[index] != NULL && configuration->pool_info[index]->block_count != 0
+        && configuration->pool_info[index]->block_size == 0) {
       return SL_STATUS_INVALID_PARAMETER;
     }
+  }
+
+  for (uint8_t index = 0; index < SLI_BUFFER_MANAGER_MAX_POOL; index++) {
+    if (configuration->pool_info[index] == NULL || configuration->pool_info[index]->block_count == 0) {
+      continue;
+    }
+
     status = sli_buffer_manager_create_and_assign_mempool(configuration->pool_info[index],
                                                           &dedicated_mempool_handlers[index],
                                                           false);
@@ -432,6 +503,12 @@ sl_status_t sli_buffer_manager_init(sli_buffer_manager_configuration_t *configur
 
 sl_status_t sli_buffer_manager_deinit(void)
 {
+  bool are_deallocated = sli_buffer_manager_are_all_pools_deallocated();
+
+  if (!are_deallocated) {
+    return SL_STATUS_BUSY;
+  }
+
   sli_buffer_manager_free_all_mempools();
   return SL_STATUS_OK;
 }
@@ -444,6 +521,7 @@ sl_status_t sli_buffer_manager_allocate_buffer(const sli_buffer_manager_pool_typ
   sli_internal_buffer_t *internal_buffer = NULL;
   uint32_t start                         = osKernelGetTickCount();
   // Allocate buffer from the dedicated pool incase of SLI_BUFFER_MANAGER_ALLOCATION_TYPE_DEDICATED.
+
   if (allocation_type == SLI_BUFFER_MANAGER_ALLOCATION_TYPE_DEDICATED) {
     sl_status_t status =
       sli_buffer_manager_allocate_buffer_from_dedicated_pool(&internal_buffer, pool_type, start, wait_duration_ms);
@@ -482,7 +560,9 @@ sl_status_t sli_buffer_manager_allocate_buffer(const sli_buffer_manager_pool_typ
 
 sl_status_t sli_buffer_manager_free_buffer(sli_buffer_t buffer)
 {
-  SL_VERIFY_POINTER_OR_RETURN(buffer, SL_STATUS_NULL_POINTER);
+  if (buffer == NULL) {
+    return SL_STATUS_NULL_POINTER;
+  }
 
   CORE_irqState_t state = CORE_EnterAtomic();
 

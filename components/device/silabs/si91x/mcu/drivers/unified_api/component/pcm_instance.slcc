@@ -18,7 +18,7 @@ config_file:
 - path: config/sl_i2s_instances_config/sl_si91x_pcm_config.h
   override:
     component: sl_pcm
-    file_id: sl_pcm_config
+    file_id: sl_i2s_config
     vendor: silabs
 provides:
 - name: pcm_instance
@@ -38,6 +38,3 @@ template_contribution:
 requires:
 - name: sl_i2s
 - name: sl_pcm
-documentation:
-  docset: wiseconnect
-  document: wiseconnect-api-reference-guide-si91x-peripherals/i2s

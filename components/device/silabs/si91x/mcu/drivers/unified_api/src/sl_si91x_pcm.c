@@ -44,6 +44,9 @@ sl_status_t sl_si91x_pcm_init(uint32_t pcm_instance, sl_i2s_handle_t *pcm_handle
     /* Initialize I2S handle and store driver handle in pcm_driver_handle */
     status = sl_si91x_i2s_init(pcm_instance, pcm_handle);
     if (status != SL_STATUS_OK) {
+      SL_PRINT_STRING_ERROR("sl_si91x_pcm_init: i2s_init failed st=0x%04lX,line no : %d\r\n",
+                            (unsigned long)status,
+                            (int)__LINE__);
       break;
     }
   } while (false);
@@ -59,11 +62,22 @@ sl_status_t sl_si91x_pcm_deinit(sl_i2s_handle_t *pcm_handle)
   sl_status_t status = SL_STATUS_OK;
 
   do {
-    /* Deinitialize I2S handle and clear the driver handle */
-    status = sl_si91x_i2s_deinit(pcm_handle);
-    if (status != SL_STATUS_OK) {
+    if (pcm_handle == NULL) {
+      status = SL_STATUS_NULL_POINTER;
+      SL_PRINT_STRING_ERROR("sl_si91x_pcm_deinit: NULL handle pointer,line no : %d\r\n", (int)__LINE__);
       break;
     }
+
+    /* Deinitialize I2S handle and clear the driver handle */
+    status = sl_si91x_i2s_deinit_v2(*pcm_handle);
+    if (status != SL_STATUS_OK) {
+      SL_PRINT_STRING_ERROR("sl_si91x_pcm_deinit: i2s_deinit_v2 failed st=0x%04lX,line no : %d\r\n",
+                            (unsigned long)status,
+                            (int)__LINE__);
+      break;
+    }
+
+    *pcm_handle = NULL;
 
   } while (false);
 
@@ -81,6 +95,9 @@ sl_status_t sl_si91x_pcm_deinit_v2(sl_i2s_handle_t pcm_handle)
     /* Deinitialize I2S handle and clear the driver handle */
     status = sl_si91x_i2s_deinit_v2(pcm_handle);
     if (status != SL_STATUS_OK) {
+      SL_PRINT_STRING_ERROR("sl_si91x_pcm_deinit_v2: i2s_deinit_v2 failed st=0x%04lX,line no : %d\r\n",
+                            (unsigned long)status,
+                            (int)__LINE__);
       break;
     }
 
@@ -107,6 +124,9 @@ sl_status_t sl_si91x_pcm_set_configuration(sl_i2s_handle_t pcm_handle,
     /* Configure ARM full power mode for I2S */
     status = sl_si91x_i2s_configure_power_mode(pcm_handle, SL_I2S_FULL_POWER);
     if (status != SL_STATUS_OK) {
+      SL_PRINT_STRING_ERROR("sl_si91x_pcm_set_configuration: configure_power_mode st=0x%04lX,line no : %d\r\n",
+                            (unsigned long)status,
+                            (int)__LINE__);
       break;
     }
 
@@ -115,14 +135,20 @@ sl_status_t sl_si91x_pcm_set_configuration(sl_i2s_handle_t pcm_handle,
         && pcm_sampling_frequency != SL_PCM_SAMPLING_RATE_16000 && pcm_sampling_frequency != SL_I2S_SAMPLING_RATE_22050
         && pcm_sampling_frequency != SL_I2S_SAMPLING_RATE_24000) {
       status = SL_STATUS_INVALID_PARAMETER; // Set error status for invalid frequency
-      break;                                // Exit the loop
+      SL_PRINT_STRING_ERROR("sl_si91x_pcm_set_configuration: invalid sampling_frequency st=0x%04lX,line no : %d\r\n",
+                            (unsigned long)status,
+                            (int)__LINE__);
+      break; // Exit the loop
     }
 
     // Validate the provided resolution
     if (pcm_resolution != SL_I2S_RESOLUTION_16 && pcm_resolution != SL_I2S_RESOLUTION_24
         && pcm_resolution != SL_I2S_RESOLUTION_32) {
       status = SL_STATUS_INVALID_PARAMETER; // Set error status for invalid frequency
-      break;                                // Exit the loop
+      SL_PRINT_STRING_ERROR("sl_si91x_pcm_set_configuration: invalid resolution st=0x%04lX,line no : %d\r\n",
+                            (unsigned long)status,
+                            (int)__LINE__);
+      break; // Exit the loop
     }
 
     /* Initialize PCM transfer structure with the required configurations */
@@ -138,6 +164,9 @@ sl_status_t sl_si91x_pcm_set_configuration(sl_i2s_handle_t pcm_handle,
     status = sl_si91x_i2s_config_transmit_receive(pcm_handle, &pcm_xfer_config);
     if (status != SL_STATUS_OK) {
       status = SL_STATUS_INVALID_CONFIGURATION;
+      SL_PRINT_STRING_ERROR("sl_si91x_pcm_set_configuration: config_transmit_receive st=0x%04lX,line no : %d\r\n",
+                            (unsigned long)status,
+                            (int)__LINE__);
       break;
     }
 
@@ -146,6 +175,13 @@ sl_status_t sl_si91x_pcm_set_configuration(sl_i2s_handle_t pcm_handle,
   return status;
 }
 
+/***************************************************************************
+ * PCM peripheral and configure Tx/Rx channels
+ ******************************************************************************/
+sl_status_t sl_si91x_pcm_config_transmit_receive(sl_i2s_handle_t pcm_handle, sl_i2s_xfer_config_t *xfer_config)
+{
+  return sl_si91x_i2s_config_transmit_receive(pcm_handle, xfer_config);
+}
 /*******************************************************************************
  * Configure PCM transmit and send data on the Tx line.
  ******************************************************************************/
@@ -159,10 +195,20 @@ sl_status_t sl_si91x_pcm_transmit_data(sl_i2s_handle_t pcm_handle, const void *d
     status                        = sl_si91x_i2s_config_transmit_receive(pcm_handle, &pcm_xfer_config);
     if (status != SL_STATUS_OK) {
       status = SL_STATUS_INVALID_CONFIGURATION;
+      SL_PRINT_STRING_ERROR("sl_si91x_pcm_transmit_data: config_transmit_receive st=0x%04lX,line no : %d\r\n",
+                            (unsigned long)status,
+                            (int)__LINE__);
     }
 
     //Configure I2S transmit DMA channel
-    status = sl_si91x_i2s_transmit_data(pcm_handle, data, size);
+    if (status == SL_STATUS_OK) {
+      status = sl_si91x_i2s_transmit_data(pcm_handle, data, size);
+      if (status != SL_STATUS_OK) {
+        SL_PRINT_STRING_ERROR("sl_si91x_pcm_transmit_data: i2s_transmit_data st=0x%04lX,line no : %d\r\n",
+                              (unsigned long)status,
+                              (int)__LINE__);
+      }
+    }
   } while (false);
 
   return status;
@@ -181,15 +227,40 @@ sl_status_t sl_si91x_pcm_receive_data(sl_i2s_handle_t pcm_handle, const void *da
     status                        = sl_si91x_i2s_config_transmit_receive(pcm_handle, &pcm_xfer_config);
     if (status != SL_STATUS_OK) {
       status = SL_STATUS_INVALID_CONFIGURATION;
+      SL_PRINT_STRING_ERROR("sl_si91x_pcm_receive_data: config_transmit_receive st=0x%04lX,line no : %d\r\n",
+                            (unsigned long)status,
+                            (int)__LINE__);
       break;
     }
     //Configure I2S receive DMA channel
     status = sl_si91x_i2s_receive_data(pcm_handle, data, size);
+    if (status != SL_STATUS_OK) {
+      SL_PRINT_STRING_ERROR("sl_si91x_pcm_receive_data: i2s_receive_data st=0x%04lX,line no : %d\r\n",
+                            (unsigned long)status,
+                            (int)__LINE__);
+    }
   } while (false);
 
   return status;
 }
 
+/*******************************************************************************
+ * @brief Transfers PCM data using the I2S peripheral.
+ * This function initiates a PCM data transfer operation using the underlying I2S
+ * interface. It can perform transmit, receive, or simultaneous transmit-receive
+ * operations based on the provided parameters.
+ ******************************************************************************/
+sl_status_t sl_si91x_pcm_transfer(sl_i2s_handle_t pcm_handle,
+                                  void *data_in,
+                                  const void *data_out,
+                                  uint32_t data_in_size,
+                                  uint32_t data_out_size)
+{
+  sl_status_t status = SL_STATUS_OK;
+  status             = sl_si91x_i2s_transfer(pcm_handle, data_in, data_out, data_in_size, data_out_size);
+
+  return status;
+}
 /*******************************************************************************
  * To register the user event callback
  ******************************************************************************/
@@ -200,11 +271,19 @@ sl_status_t sl_si91x_pcm_register_event_callback(sl_i2s_handle_t pcm_handle, sl_
   // Validates the null pointer, if true returns error code
   if (callback_event == NULL) {
     status = SL_STATUS_NULL_POINTER;
+    SL_PRINT_STRING_ERROR("sl_si91x_pcm_register_event_callback: NULL callback st=0x%04lX,line no : %d\r\n",
+                          (unsigned long)status,
+                          (int)__LINE__);
     return status;
   }
 
   user_callback = callback_event;
   status        = sl_si91x_i2s_register_event_callback(pcm_handle, callback_event_handler);
+  if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si91x_pcm_register_event_callback: i2s_register failed st=0x%04lX,line no : %d\r\n",
+                          (unsigned long)status,
+                          (int)__LINE__);
+  }
 
   return status;
 }
@@ -217,6 +296,11 @@ sl_status_t sl_si91x_pcm_unregister_event_callback(sl_i2s_handle_t pcm_handle)
   sl_status_t status = SL_STATUS_OK;
 
   status = sl_si91x_i2s_unregister_event_callback(pcm_handle);
+  if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si91x_pcm_unregister_event_callback: failed st=0x%04lX,line no : %d\r\n",
+                          (unsigned long)status,
+                          (int)__LINE__);
+  }
   return status;
 }
 
@@ -228,6 +312,11 @@ sl_status_t sl_si91x_pcm_end_transfer(sl_i2s_handle_t pcm_handle, sl_i2s_xfer_ty
   sl_status_t status = SL_STATUS_OK;
 
   status = sl_si91x_i2s_end_transfer(pcm_handle, abort_type);
+  if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si91x_pcm_end_transfer: failed st=0x%04lX,line no : %d\r\n",
+                          (unsigned long)status,
+                          (int)__LINE__);
+  }
   return status;
 }
 

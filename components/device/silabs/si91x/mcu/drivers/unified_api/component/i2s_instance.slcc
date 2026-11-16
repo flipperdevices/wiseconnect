@@ -36,6 +36,3 @@ template_contribution:
   value: i2s_{{instance}}
 requires:
 - name: sl_i2s
-documentation:
-  docset: wiseconnect
-  document: wiseconnect-api-reference-guide-si91x-peripherals/i2s

@@ -1,8 +1,8 @@
-# Crypto - Attestation
+# SiWx91x Platform Secure Attestation
 
 ## Table of Contents
 
-- [Crypto - Attestation](#crypto---attestation)
+- [SiWx91x Platform Secure Attestation](#platform-siwx91x-secure-attestation)
   - [Table of Contents](#table-of-contents)
   - [Purpose/Scope](#purposescope)
   - [Prerequisites/Setup Requirements](#prerequisitessetup-requirements)
@@ -14,6 +14,9 @@
   - [Application Build Environment](#application-build-environment)
   - [Test the Application](#test-the-application)
   - [Application Output](#application-output)
+  - [Troubleshooting](#troubleshooting)
+  - [Resources](#resources)
+  - [Report Bugs/Support](#report-bugssupport)
 
 ## Purpose/Scope
 
@@ -30,8 +33,8 @@
 ### Hardware Requirements
 
 - Windows PC
-- Silicon Labs Si917 Evaluation Kit [WPK(BRD4002) + BRD4338A / BRD4342A / BRD4343A ]
-- SiWx917 AC1 Module Explorer Kit (BRD2708A)
+- Silicon Labs SiWx91x Evaluation Kit [[BRD4002](https://www.silabs.com/development-tools/wireless/wireless-pro-kit-mainboard?tab=overview) + [BRD4338A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-rb4338a-wifi-6-bluetooth-le-soc-radio-board?tab=overview) / [BRD4342A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx91x-rb4342a-wifi-6-bluetooth-le-soc-radio-board?tab=overview) / [BRD4343A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4343a-wi-fi-6-bluetooth-le-8mb-flash-radio-board-for-module?tab=overview) / [BRD4343C](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4343c-wi-fi-6-bluetooth-le-8mb-flash-radio-board-for-module?tab=overview)]
+- SiWx917 AC1 Module Explorer Kit [BRD2708A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-ek2708a-explorer-kit)
  
 ### Software Requirements
 
@@ -87,3 +90,16 @@ Follow the steps as mentioned for the successful execution of the application:
       a. openssl dgst -sha256 -verify <Attestation_pubkey.pem> -signature <signature_file> <payload_file>
 
 5. If out put is "Vefified OK", program is working fine. If  verification is failed, could be payload and Signature is copied wrongly.
+
+## Troubleshooting
+
+For troubleshooting information, see [WiSeConnect Troubleshooting](https://docs.silabs.com/wiseconnect/latest/wiseconnect-developers-guide-troubleshooting/).
+
+## Resources
+
+- [WiSeConnect Documentation](https://docs.silabs.com/wiseconnect/latest/)
+- [WiSeConnect Examples](https://docs.silabs.com/wiseconnect/latest/wiseconnect-examples/)
+
+## Report Bugs/Support
+
+To report bugs or get support, visit [Silicon Labs Community](https://community.silabs.com/).

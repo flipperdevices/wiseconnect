@@ -148,7 +148,7 @@ sl_status_t sl_memlcd_refresh(const struct sl_memlcd_t *device)
 void sl_memlcd_display_enable(void)
 {
   // Enabling LCD display
-  //enable the display pin in reciever mode
+  //enable the display pin in receiver mode
   sl_si91x_gpio_select_uulp_npss_receiver(SL_BOARD_ENABLE_DISPLAY_PIN, GPIO_RECEIVER_EN);
 
   //set the pin mux mode
@@ -164,7 +164,7 @@ void sl_memlcd_display_enable(void)
 void sl_memlcd_display_disable(void)
 {
   // Disabling LCD display
-  //enable the display pin in reciever mode
+  //enable the display pin in receiver mode
   sl_si91x_gpio_select_uulp_npss_receiver(SL_BOARD_ENABLE_DISPLAY_PIN, GPIO_RECEIVER_EN);
 
   //set the pin mux mode
@@ -323,6 +323,7 @@ sl_status_t sl_memlcd_post_wakeup_init(void)
   /* Initialize the SPI bus. */
   status = sli_memlcd_spi_init(memlcd_post_wakeup_handle->spi_freq);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("memlcd: post-wakeup SPI init failed");
     return SL_STATUS_FAIL;
   }
 
@@ -351,8 +352,10 @@ sl_status_t sl_memlcd_post_wakeup_init(void)
 
   status = sl_memlcd_power_on(memlcd_post_wakeup_handle, true);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("memlcd: post-wakeup power_on failed, status=0x%04lX", (unsigned long)status);
     return SL_STATUS_FAIL;
   }
+
   return SL_STATUS_OK;
 }
 

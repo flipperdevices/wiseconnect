@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <!-- File naming: <vendor>_<part/series name>.svd -->
 <!--
   Copyright (C) 2012 ARM Limited. All rights reserved.
@@ -84045,7 +84045,7 @@ This is done by firmware after coming out of sleep. It is used for ULP Mode Stat
           <dimIncrement>0x4</dimIncrement>
           <name>MCU_STORAGE_REGn</name>
           <description>MCU storage registers (0-7)</description>
-          <addressOffset>0x0</addressOffset>
+          <addressOffset>0x80</addressOffset>
           <register>
             <name>MCU_STORAGE_REG_n_</name>
             <description>MCU STorage register _n_</description>

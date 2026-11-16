@@ -1,7 +1,7 @@
 project_name: wireless_test_ncp
 package: multi_protocol_siwx91x_app
 quality: production
-label: wireless_test_ncp
+label: Wi-Fi Coex - Wireless Test (NCP)
 category: Example|Wi-Fi_BLE
 description: 'Demonstrates to run all commands individually
 
@@ -37,8 +37,6 @@ include:
 define:
 - name: SL_SI91X_CLI_CONSOLE_MAX_ARG_COUNT
   value: 30
-- name: SLI_SI91X_OFFLOAD_NETWORK_STACK
-  value: 1
 - name: SL_SI91X_PRINT_DBG_LOG
 - name: SLI_SI91X_DBG_MIDDLEWARE_EN
 - name: SLI_SI91X_MCU_INTR_BASED_RX_ON_UART
@@ -52,6 +50,27 @@ component:
   - exp
 - id: iostream_retarget_stdio
 - id: iostream_recommended_stream
+- id: iostream_rtt
+- id: iostream_eusart
+  instance:
+  - vcom
+  condition:
+  - brd4186c
+- id: iostream_usart
+  instance:
+  - vcom
+  condition:
+  - brd4180a
+- id: iostream_usart
+  instance:
+  - vcom
+  condition:
+  - brd4180b
+- id: iostream_usart
+  instance:
+  - vcom
+  condition:
+  - brd4120a
 - id: iostream_stdlib_config
 - id: wiseconnect_common
 - id: wifi
@@ -64,10 +83,14 @@ component:
 - id: console
 - id: console_variables
 - id: iot_socket
-- id: sl_si91x_basic_buffers
+- id: log
+- id: log_backend_iostream_formatted
+- id: log_platform_specific
 toolchain_settings:
 - option: gcc_compiler_option
-  value: -Wall -Werror
+  value: -Wall -Werror -Wno-error=deprecated-declarations
+- option: llvm_compiler_option
+  value: -Wall -Werror -Wno-error=deprecated-declarations
 configuration:
 - name: SL_BOARD_ENABLE_VCOM
   value: '1'
@@ -79,6 +102,8 @@ configuration:
   value: '55'
 - name: NVM3_DEFAULT_MAX_OBJECT_SIZE
   value: '280'
+- name: SL_LOG_CONFIG_LEVEL_COMPILE_TIME
+  value: SL_LOG_CONFIG_LEVEL_INFO
 readme:
 - path: readme.md
 other_file:
@@ -158,8 +183,8 @@ ui_hints:
 sdk_extension:
 - id: wiseconnect3_sdk
   vendor: silabs
-  version: 4.0.1
+  version: 4.1.2
 sdk:
   id: simplicity_sdk
   vendor: silabs
-  version: 2025.12.2
+  version: 2026.6.2

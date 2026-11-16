@@ -1,16 +1,18 @@
 project(sli_routing_utility)
 
-include_directories(../../../../tests/unit_tests/inc
+include_directories(../../../tests/unit_tests/inc
                     ../inc
                     inc
                     ../../gsdk/common/inc
                     ../../gsdk/cmsis/RTOS2/Include
                     ../../gsdk/service/mem_pool/inc
                     ../../common/inc
-                    ../../../extensions/wiseconnect_internal_everest/components/device/silabs/si3xx/wireless/inc
+                    ../../../extensions/wiseconnect_internal_everest/components/device/silabs/siwx3xx/wireless/inc
                     ../../sli_queue_manager/inc
                     ../../protocol/wifi/inc
                     ../../sli_buffer_manager/inc
+                    ../../device/silabs/si91x/mcu/drivers/service/sl_log/inc
+                    ../../device/silabs/si91x/wireless/unit_tests/inc
 )
 
 # Add unit test cpp here

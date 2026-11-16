@@ -40,7 +40,7 @@ extern "C" {
 #include "rsi_timers.h"
 #include "base_types.h"
 #include "rsi_pll.h"
-
+#include "sl_log_helper.h"
 /***************************************************************************/
 /**
  * @addtogroup ULP-TIMER ULP Timers

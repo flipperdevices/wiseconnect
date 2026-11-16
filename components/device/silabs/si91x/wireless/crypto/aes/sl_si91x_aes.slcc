@@ -13,9 +13,9 @@ provides:
 - name: sl_si91x_aes
 source:
 - path: src/sl_si91x_aes.c
+- path: src/sl_si91x_mp_aes.c
 include:
-- path: inc
 - path: inc
   file_list:
     - path: sl_si91x_aes.h
-
+    - path: sl_si91x_mp_aes.h

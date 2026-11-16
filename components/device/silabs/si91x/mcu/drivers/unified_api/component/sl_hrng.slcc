@@ -21,3 +21,4 @@ provides:
   - name: sl_hrng
 requires:
   - name: romdriver_rng
+  - name: log_none

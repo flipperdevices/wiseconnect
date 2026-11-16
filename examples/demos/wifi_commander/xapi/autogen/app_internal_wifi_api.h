@@ -419,11 +419,11 @@ typedef struct app_wifi_cmd_scan_start_s app_wifi_cmd_scan_start_t;
 
 PACKSTRUCT(struct app_wifi_cmd_scan_start_with_ssid_s {
   uint8_t wifi_interface;
-  uint8array ssid;
   uint8_t mode;
   uint32_t flags;
   uint16_t channel_bitmap_2_4ghz;
   uint8_t lp_mode;
+  uint8array ssid;
 });
 
 typedef struct app_wifi_cmd_scan_start_with_ssid_s app_wifi_cmd_scan_start_with_ssid_t;

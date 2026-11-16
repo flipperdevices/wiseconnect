@@ -38,7 +38,7 @@ extern "C" {
 #include "sl_status.h"
 #include "rsi_wwdt.h"
 #include "sl_si91x_watchdog_timer.h"
-
+#include "sl_log_helper.h"
 /***************************************************************************/
 /**
  * @addtogroup  WDT-MANAGER Watchdog Manager

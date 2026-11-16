@@ -150,6 +150,7 @@ static u32_t tcpip_tcp_timer_next_timeout = TCP_TMR_INTERVAL;
  *
  * @param arg unused argument
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 static void
 tcpip_tcp_timer(void *arg)
 {
@@ -191,6 +192,7 @@ tcpip_tcp_timer(void *arg)
  *
  * @param timeout_ms Next timeout in milliseconds
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 void
 tcp_tmr_set_next_timeout(u32_t timeout_ms)
 {
@@ -204,6 +206,7 @@ tcp_tmr_set_next_timeout(u32_t timeout_ms)
  * an immediate (1ms) callback. Used by tcp_rx_packet_event() to
  * wake the timer when packets arrive during deep sleep.
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 void
 tcp_timer_force_wakeup(void)
 {
@@ -224,6 +227,7 @@ tcp_timer_force_wakeup(void)
  * 
  * @return Next timeout in milliseconds
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 u32_t
 tcp_get_next_timeout(void)
 {
@@ -237,6 +241,7 @@ tcp_get_next_timeout(void)
  * the reason is to have the TCP timer only running when
  * there are active (or time-wait) PCBs.
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 void
 tcp_timer_needed(void)
 {
@@ -254,6 +259,7 @@ tcp_timer_needed(void)
 }
 #endif /* LWIP_TCP */
 
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 static void
 #if LWIP_DEBUG_TIMERNAMES
 sys_timeout_abs(u32_t abs_time, sys_timeout_handler handler, void *arg, const char *handler_name)
@@ -360,6 +366,7 @@ void sys_timeouts_init(void)
  * @param handler callback function to call when msecs have elapsed
  * @param arg argument to pass to the callback function
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 #if LWIP_DEBUG_TIMERNAMES
 void
 sys_timeout_debug(u32_t msecs, sys_timeout_handler handler, void *arg, const char *handler_name)
@@ -525,6 +532,7 @@ sys_timeouts_sleeptime(void)
  * Check if TCP timer is currently active
  * @return 1 if active, 0 if not active
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 int
 tcpip_tcp_timer_is_active(void)
 {
@@ -534,6 +542,7 @@ tcpip_tcp_timer_is_active(void)
 
 #else /* LWIP_TIMERS && !LWIP_TIMERS_CUSTOM */
 /* Satisfy the TCP code which calls this function */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 void
 tcp_timer_needed(void)
 {

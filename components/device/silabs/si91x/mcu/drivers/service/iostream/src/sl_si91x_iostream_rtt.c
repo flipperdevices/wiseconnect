@@ -1,6 +1,6 @@
 /***************************************************************************/ /**
  * @file
- * @brief SI91x IO Stream RTT Component.
+ * @brief SiWx91x IO Stream RTT component.
  *******************************************************************************
  * # License
  * <b>Copyright 2019 Silicon Laboratories Inc. www.silabs.com</b>
@@ -34,7 +34,6 @@
 /*******************************************************************************
  ******************************  MACROS   **********************************
  ******************************************************************************/
-#define SL_SI91X_IOSTREAM_TYPE_RTT_OUTPUT 11
 
 #if !defined(IOSTREAM_RTT_UP_MODE)
 #define IOSTREAM_RTT_UP_MODE SEGGER_RTT_MODE_NO_BLOCK_TRIM

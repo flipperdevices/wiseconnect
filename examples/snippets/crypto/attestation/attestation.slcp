@@ -1,5 +1,5 @@
 project_name: attestation
-label: SI91x - SoC Secure Attestation
+label: SiWx91x Platform - Secure Attestation
 description: 'Demonstates how to request and get attestation token.
 
   '
@@ -14,7 +14,9 @@ include:
   - path: app.h
 toolchain_settings:
 - option: gcc_compiler_option
-  value: -Wall -Werror
+  value: -Wall -Werror -Wno-error=deprecated-declarations
+- option: llvm_compiler_option
+  value: -Wall -Werror -Wno-error=deprecated-declarations
 component:
 - id: rsilib_userconfig
 - id: romdriver_egpio
@@ -35,7 +37,6 @@ component:
 - id: basic_network_config_manager
 - id: wifi_resources
 - id: sl_si91x_internal_stack
-- id: sl_si91x_basic_buffers
 - id: sl_si91x_trng
 - id: si91x_debug
 - id: syscalls
@@ -53,13 +54,29 @@ ui_hints:
   highlight:
   - path: readme.md
     focus: true
+filter:
+- name: Device Type
+  value:
+  - SoC
+- name: MCU
+  value:
+  - 32-bit MCU
+- name: Level
+  value:
+  - Beginner
+- name: Wireless Technology
+  value:
+  - Wi-Fi
+- name: Project Difficulty
+  value:
+  - Beginner
 post_build:
   profile: wiseconnect_soc
 sdk_extension:
 - id: wiseconnect3_sdk
   vendor: silabs
-  version: 4.0.1
+  version: 4.1.2
 sdk:
   id: simplicity_sdk
   vendor: silabs
-  version: 2025.12.2
+  version: 2026.6.2

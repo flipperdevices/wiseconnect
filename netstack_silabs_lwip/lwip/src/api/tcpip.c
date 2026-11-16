@@ -70,6 +70,7 @@ static void tcpip_thread_handle_msg(struct tcpip_msg *msg);
 #if !LWIP_TIMERS
 
 /** Wait for a message with timers disabled (e.g. pass a timer-check trigger into tcpip_thread) */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 static void
 tcpip_mbox_fetch(sys_mbox_t* mbox, void** msg)
 {
@@ -89,6 +90,7 @@ tcpip_mbox_fetch(sys_mbox_t* mbox, void** msg)
  * @param mbox the mbox to fetch the message from
  * @param msg the place to store the message
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 static void
 tcpip_mbox_fetch(sys_mbox_t *mbox, void **msg)
 {
@@ -132,6 +134,7 @@ again:
  *
  * @param arg unused argument
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 static void
 tcpip_thread(void *arg)
 {
@@ -161,6 +164,7 @@ tcpip_thread(void *arg)
 /* Handle a single tcpip_msg
  * This is in its own function for access by tests only.
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 static void
 tcpip_thread_handle_msg(struct tcpip_msg *msg)
 {
@@ -250,6 +254,7 @@ tcpip_thread_poll_one(void)
  * @param inp the network interface on which the packet was received
  * @param input_fn input function to call
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 err_t
 tcpip_inpkt(struct pbuf *p, struct netif *inp, netif_input_fn input_fn)
 {
@@ -293,6 +298,7 @@ tcpip_inpkt(struct pbuf *p, struct netif *inp, netif_input_fn input_fn)
  *          NETIF_FLAG_ETHERNET flags)
  * @param inp the network interface on which the packet was received
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 err_t
 tcpip_input(struct pbuf *p, struct netif *inp)
 {
@@ -447,6 +453,7 @@ tcpip_untimeout(sys_timeout_handler h, void *arg)
  * @param sem semaphore to wait on
  * @return ERR_OK if the function was called, another err_t if not
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 err_t
 tcpip_send_msg_wait_sem(tcpip_callback_fn fn, void *apimsg, sys_sem_t *sem)
 {

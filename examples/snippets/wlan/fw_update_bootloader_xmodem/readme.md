@@ -1,13 +1,17 @@
 # Wi-Fi - Firmware Flashing from Host UART
 
+## High-Level Overview
+
+SiWx91x firmware update example: Flash NWP firmware from a host MCU over UART using the XMODEM bootloader protocol on NCP mode.
+
 ## Table of Contents
 
+- [High-Level Overview](#high-level-overview)
 - [Purpose/Scope](#purposescope)
 - [Prerequisites/Setup Requirements](#prerequisitessetup-requirements)
   - [Hardware Requirements](#hardware-requirements)
-    - [Standalone](#standalone)
-    - [Kits](#kits)
-    - [Interface and Host MCU Supported](#interface-and-host-mcu-supported)
+    - [SoC Mode](#soc-mode)
+    - [NCP Mode](#ncp-mode)
   - [Software Requirements](#software-requirements)
   - [Setup Diagram](#setup-diagram)
 - [Getting Started](#getting-started)
@@ -18,38 +22,64 @@
 - [Console Prints](#console-prints)
 - [Timings Observed](#timings-observed)
 - [Appendix](#appendix)
+- [Troubleshooting](#troubleshooting)
+- [Resources](#resources)
+- [Report Bugs and Get Support](#report-bugs-and-get-support)
 
 ## Purpose/Scope
 
-This application demonstrates how to flash the firmware on the Si91x device from the Host MCU using XMODEM protocol. The system consists of three main components:
+This application demonstrates how to flash the firmware on the SiWx91x device from the Host MCU using XMODEM protocol. The system consists of three main components:
 
   - Host PC: Contains the firmware file and the Tera Term (Xmodem protcol) for updating firmware
-  - Host MCU: Acts as an intermediary between the PC and the Si91x device. It receives firmware data from the PC over UART and transfers it to the Si91x device via SPI.
-  - Si91x Device: The target embedded system that needs a firmware update. It receives firmware data from the Host MCU and updates its firmware.
+  - Host MCU: Acts as an intermediary between the PC and the SiWx91x device. It receives firmware data from the PC over UART and transfers it to the SiWx91x device via SPI.
+  - SiWx91x Device: The target embedded system that needs a firmware update. It receives firmware data from the Host MCU and updates its firmware.
   
 ## Prerequisites/Setup Requirements
 
-### Hardware Requirements  
-  - Windows PC or Mac
-  - Standalone
-    - BRD4002A Wireless Pro Kit Mainboard [SI-MB4002A]
-    - EFR32xG24 Wireless 2.4 GHz +10 dBm Radio Board [xG24-RB4186C](https://www.silabs.com/development-tools/wireless/xg24-rb4186c-efr32xg24-wireless-gecko-radio-board?tab=overview)
-    - NCP Expansion Kit with NCP Radio Boards
-      - (BRD4346A + BRD8045A) [SiWx917-EB4346A]
-      - (BRD4357A + BRD8045A) [SiWx917-EB4357A]
-    - SoC
-      - BRD4338A [SiWx917-RB4338A]
-      - EFM32/EFR32cGPIO Header board
-      > **Note:** Two BRD4002A mainboards are required—one to attach the BRD4338A and another for the EFR32xG24. To connect both BRD4002A boards, an EFM32/EFR32cGPIO Header board is needed.
+### Hardware Requirements
 
-  - Kits
-  	- EFR32xG24 Pro Kit +10 dBm [xG24-PK6009A](https://www.silabs.com/development-tools/wireless/efr32xg24-pro-kit-10-dbm?tab=overview)
-  - Interface and Host MCU Supported
-    - SPI - EFR32 
+- Windows PC or Mac
+
+- **SoC Mode**:
+  - Standalone
+    - BRD4002B Wireless Pro Kit Mainboard [SI-MB4002B](https://www.silabs.com/development-tools/wireless/wireless-pro-kit-mainboard?tab=overview)
+    - BRD4338A [SiWx917-RB4338A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-rb4338a-wifi-6-bluetooth-le-soc-radio-board?tab=overview)
+    - BRD4342A [SiWx917-RB4342A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx91x-rb4342a-wifi-6-bluetooth-le-soc-radio-board?tab=overview)
+    - BRD4339B [SiWx917-RB4339B](https://docs.silabs.com/wiseconnect/latest/wiseconnect-getting-started/getting-started-with-at)
+    - BRD4340A [SiWx917-RB4340A](https://docs.silabs.com/wiseconnect/latest/wiseconnect-getting-started/getting-started-with-at)
+    - BRD4343A [SiWx917-RB4343A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4343a-wi-fi-6-bluetooth-le-8mb-flash-radio-board-for-module?tab=overview)
+    - BRD4343C [SiWx917-RB4343C](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4343c-wi-fi-6-bluetooth-le-8mb-flash-radio-board-for-module?tab=overview)
+    - EFR32xG24 Wireless 2.4 GHz +10 dBm Radio Board [xG24-RB4186C](https://www.silabs.com/development-tools/wireless/xg24-rb4186c-efr32xg24-wireless-gecko-radio-board?tab=overview)
+    - EFM32/EFR32 GPIO Header board
+    > **Note:** Two BRD4002B mainboards are required—one to attach the BRD4338A and another for the EFR32xG24. To connect both BRD4002B boards, an EFM32/EFR32 GPIO Header board is needed.
+
+- **NCP Mode** (select either the EFR32 or STM32 host MCU platform; a single platform is sufficient to run the application):
+  - **Option 1: EFR32 host**
+    - Standalone
+      - BRD4002B Wireless Pro Kit Mainboard [SI-MB4002B](https://www.silabs.com/development-tools/wireless/wireless-pro-kit-mainboard?tab=overview)
+      - EFR32xG24 Wireless 2.4 GHz +10 dBm Radio Board [xG24-RB4186C](https://www.silabs.com/development-tools/wireless/xg24-rb4186c-efr32xg24-wireless-gecko-radio-board?tab=overview)
+      - NCP Expansion Kit with NCP Radio Boards
+        - [BRD4346A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-rb4346a-wifi-6-bluetooth-le-soc-4mb-flash-radio-board?tab=overview) + [BRD8045A](https://www.silabs.com/development-tools/wireless/wi-fi/expansion-adapter-board-for-co-processor-radio-boards?tab=overview)
+        - [BRD4357A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4357a-wi-fi-6-bluetooth-le-4mb-flash-radio-board-for-rcp-and-ncp-modules?tab=overview) + [BRD8045A](https://www.silabs.com/development-tools/wireless/wi-fi/expansion-adapter-board-for-co-processor-radio-boards?tab=overview)
+        - [BRD4357C](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4357c-wi-fi-6-bluetooth-le-4mb-flash-radio-board-for-rcp-and-ncp-modules?tab=overview) + [BRD8045A](https://www.silabs.com/development-tools/wireless/wi-fi/expansion-adapter-board-for-co-processor-radio-boards?tab=overview)
+    - Kits
+      - EFR32xG24 Pro Kit +10 dBm [xG24-PK6009A](https://www.silabs.com/development-tools/wireless/efr32xg24-pro-kit-10-dbm?tab=overview)
+
+  - **Option 2: STM32F411RE host**
+    - [STM32F411RE](https://www.st.com/en/microcontrollers-microprocessors/stm32f411re.html) MCU
+    - NCP Expansion Kit with NCP Radio Boards
+      - [BRD4346A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-rb4346a-wifi-6-bluetooth-le-soc-4mb-flash-radio-board?tab=overview) + [BRD8045C](https://www.silabs.com/development-tools/wireless/wi-fi/shield-adapter-board-for-co-processor-radio-boards?tab=overview)
+      - [BRD4357A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4357a-wi-fi-6-bluetooth-le-4mb-flash-radio-board-for-rcp-and-ncp-modules?tab=overview) + [BRD8045C](https://www.silabs.com/development-tools/wireless/wi-fi/shield-adapter-board-for-co-processor-radio-boards?tab=overview)
+      - [BRD4357C](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4357c-wi-fi-6-bluetooth-le-4mb-flash-radio-board-for-rcp-and-ncp-modules?tab=overview) + [BRD8045C](https://www.silabs.com/development-tools/wireless/wi-fi/shield-adapter-board-for-co-processor-radio-boards?tab=overview)
+
+  - Interface and host MCU supported
+    - SPI : EFR32 and STM32
+    - UART : EFR32
 
 ### Software Requirements
 
 - Simplicity Studio IDE
+- [Keil IDE](https://www.keil.com/) (to be used with STM32F411RE MCU)
 - [Teraterm application](https://ttssh2.osdn.jp/index.html.en)
 
 ### Setup Diagram
@@ -63,7 +93,7 @@ Refer to the instructions on the [WiSeConnect Getting Started](https://docs.sila
 - [Install Simplicity Studio](https://docs.silabs.com/wiseconnect/latest/wiseconnect-developers-guide-developing-for-silabs-hosts/#install-simplicity-studio).
 - [Install WiSeConnect extension](https://docs.silabs.com/wiseconnect/latest/wiseconnect-developers-guide-developing-for-silabs-hosts/#install-the-wi-se-connect-extension).
 - [Connect your device to the computer](https://docs.silabs.com/wiseconnect/latest/wiseconnect-developers-guide-developing-for-silabs-hosts/#connect-si-wx91x-to-computer).
-- [Upgrade your connectivity firmware](https://docs.silabs.com/wiseconnect/latest/wiseconnect-developers-guide-developing-for-silabs-hosts/#update-si-wx91x-connectivity-firmware).
+- [Upgrade your connectivity firmware](https://docs.silabs.com/wiseconnect/latest/wiseconnect-developers-guide-developing-for-silabs-hosts/using-the-simplicity-studio-ide#update-siwx91x-connectivity-firmware).
 - [Create a Studio project](https://docs.silabs.com/wiseconnect/latest/wiseconnect-developers-guide-developing-for-silabs-hosts/#create-a-project).
 
 For details on the project folder structure, see the [WiSeConnect Examples](https://docs.silabs.com/wiseconnect/latest/wiseconnect-examples/#example-folder-structure) page.
@@ -214,3 +244,25 @@ sl_net_init: 0x4
 
 - [Secure Zone](https://www.silabs.com/documents/public/data-sheets/siwg917-datasheet.pdf)
 - [Secure Zone bit](https://www.silabs.com/documents/public/user-guides/ug574-siwx917-soc-manufacturing-utility-user-guide.pdf)
+
+## Troubleshooting
+
+If you encounter issues while running this example, check the following:
+
+- Verify the correct COM port and baud rate for the UART connection to the host MCU.
+- Ensure the device is in bootloader mode before you start the XMODEM transfer.
+- Use a compatible `.rps` firmware image from the same release package as the connectivity SDK.
+- If the transfer fails or times out, review [Appendix](#appendix) and the console output.
+
+## Resources
+
+- [WiSeConnect Getting Started Guide](https://docs.silabs.com/wiseconnect/latest/wiseconnect-getting-started/)
+- [WiSeConnect Examples](https://docs.silabs.com/wiseconnect/latest/wiseconnect-examples/#example-folder-structure)
+- [WiSeConnect Recommended Settings Guide](https://docs.silabs.com/wiseconnect/latest/wiseconnect-developers-guide-prog-recommended-settings/)
+- [SiWx91x Connectivity Firmware](https://docs.silabs.com/wiseconnect/latest/wiseconnect-developers-guide-developing-for-silabs-hosts/using-the-simplicity-studio-ide#update-siwx91x-connectivity-firmware)
+
+## Report Bugs and Get Support
+
+Report issues and get help from the Silicon Labs community:
+
+- [Silicon Labs Community](https://www.silabs.com/community)

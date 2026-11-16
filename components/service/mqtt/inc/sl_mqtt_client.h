@@ -118,6 +118,7 @@ sl_status_t sl_mqtt_client_deinit(sl_mqtt_client_t *client);
  *   The topic length of the last_will_message must be less than SI91X_MQTT_CLIENT_WILL_TOPIC_MAXIMUM_LENGTH.
  *   The client ID length should be less than SI91X_MQTT_CLIENT_CLIENT_ID_MAXIMUM_LENGTH.
  *   The username and password length must be less than SI91X_MQTT_CLIENT_USERNAME_MAXIMUM_LENGTH and SI91X_MQTT_CLIENT_PASSWORD_MAXIMUM_LENGTH, respectively.
+ *   MQTT 3.1.1 version is supported.
  *
  * @note
  *   This function uses a user-configurable timeout parameter that is not affected
@@ -175,6 +176,7 @@ sl_status_t sl_mqtt_client_connect(sl_mqtt_client_t *client,
  *   The topic length of the last_will message must be less than SI91X_MQTT_CLIENT_WILL_TOPIC_MAXIMUM_LENGTH.
  *   The client ID length should be less than SI91X_MQTT_CLIENT_CLIENT_ID_MAXIMUM_LENGTH.
  *   The username and password length must be less than SI91X_MQTT_CLIENT_USERNAME_MAXIMUM_LENGTH and SI91X_MQTT_CLIENT_PASSWORD_MAXIMUM_LENGTH, respectively.
+ *   MQTT 3.1.1 version is supported.
  *
  * @note
  *   This function uses a user-configurable timeout parameter that is not affected
@@ -384,5 +386,32 @@ sl_status_t sl_mqtt_client_unsubscribe(sl_mqtt_client_t *client,
                                        uint16_t topic_length,
                                        uint32_t timeout,
                                        void *context);
+
+/***************************************************************************/
+/**
+ * @brief
+ *   Configures advanced TCP/TLS options for an MQTT client.
+ *
+ * @details
+ *   This function stores the provided advanced TCP and TLS configuration options in the MQTT client handle.
+ *   The options are applied automatically when the client connects to the broker via @ref sl_mqtt_client_connect
+ *   or @ref sl_mqtt_client_connect_v2. Call this function after @ref sl_mqtt_client_init and before connecting.
+ *
+ * @pre
+ *   @ref sl_mqtt_client_init should be called before this function.
+ *
+ * @param[in] client
+ *   Pointer to the MQTT client structure of type @ref sl_mqtt_client_t. Must not be NULL.
+ *
+ * @param[in] options
+ *   Pointer to an @ref sl_mqtt_client_tcp_tls_advanced_options_t structure containing the TCP/TLS options. Must not be NULL.
+ *
+ * @return
+ *   sl_status_t - Status of the operation. For more details, see https://docs.silabs.com/gecko-platform/latest/platform-common/status.
+ *   - SL_STATUS_OK: Operation successful.
+ *   - SL_STATUS_WIFI_NULL_PTR_ARG: One or more input parameters are NULL.
+ ******************************************************************************/
+sl_status_t sl_mqtt_client_set_tcp_tls_advanced_configuration(sl_mqtt_client_t *client,
+                                                              const sl_mqtt_client_tcp_tls_advanced_options_t *options);
 
 /** @} */

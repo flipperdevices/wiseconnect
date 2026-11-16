@@ -91,7 +91,7 @@ sl_wifi_performance_profile_v2_t wifi_profile = { .profile = ASSOCIATED_POWER_SA
 //! Application global parameters.
 static rsi_bt_resp_get_local_name_t rsi_app_resp_get_local_name = { 0 };
 static uint8_t rsi_app_resp_get_dev_addr[RSI_DEV_ADDR_LEN]      = { 0 };
-static uint32_t rsi_app_async_event_map                         = 0;
+static volatile uint32_t rsi_app_async_event_map                = 0;
 static rsi_ble_event_conn_status_t rsi_app_connected_device     = { 0 };
 static rsi_ble_event_disconnect_t rsi_app_disconnected_device   = { 0 };
 static rsi_ble_adv_set_terminated_t adv_set_terminated          = { 0 };
@@ -101,6 +101,19 @@ osSemaphoreId_t ble_main_task_sem;
 int8_t rsi_app_resp_tx_power                  = 0;
 uint32_t rsi_app_resp_max_no_of_supp_adv_sets = 0;
 static uint16_t rsi_app_resp_max_adv_data_len = 0;
+
+#if (defined(SLI_SI91X_MCU_INTERFACE) || defined(SLI_SI91X_NCP_INTERFACE))
+/*
+ * FreeRTOS idle hook: drains the logger ring buffer via sl_log_flush().
+ * Active only for backends that emit the proprietary stream (IOStream
+ * Compact over UART/VCOM and the proprietary UART backend); a no-op for
+ * IOStream Compact over RTT, IOStream Formatted, SystemView, and Log None.
+ */
+void vApplicationIdleHook(void)
+{
+  sl_log_flush();
+}
+#endif
 
 static const sl_wifi_device_configuration_t config = {
   .boot_option = LOAD_NWP_FW,
@@ -131,9 +144,9 @@ static const sl_wifi_device_configuration_t config = {
                       | SL_SI91X_EXT_FEAT_BT_CUSTOM_FEAT_ENABLE),
 #ifdef RSI_PROCESS_MAX_RX_DATA
                    .ext_tcp_ip_feature_bit_map =
-                     (SL_SI91X_CONFIG_FEAT_EXTENTION_VALID | SL_SI91X_EXT_TCP_MAX_RECV_LENGTH),
+                     (SL_SI91X_CONFIG_FEAT_EXTENSION_VALID | SL_SI91X_EXT_TCP_MAX_RECV_LENGTH),
 #else
-                   .ext_tcp_ip_feature_bit_map = SL_SI91X_CONFIG_FEAT_EXTENTION_VALID,
+                   .ext_tcp_ip_feature_bit_map = SL_SI91X_CONFIG_FEAT_EXTENSION_VALID,
 #endif
                    .bt_feature_bit_map = ((SL_SI91X_BT_RF_TYPE | SL_SI91X_ENABLE_BLE_PROTOCOL)),
                    /*Enable BLE custom feature bitmap*/
@@ -142,7 +155,7 @@ static const sl_wifi_device_configuration_t config = {
                       | SL_SI91X_BLE_MAX_NBR_CENTRALS(RSI_BLE_MAX_NBR_CENTRALS)
                       | SL_SI91X_BLE_MAX_NBR_ATT_SERV(RSI_BLE_MAX_NBR_ATT_SERV)
                       | SL_SI91X_BLE_MAX_NBR_ATT_REC(RSI_BLE_MAX_NBR_ATT_REC)
-                      | SL_SI91X_FEAT_BLE_CUSTOM_FEAT_EXTENTION_VALID | SL_SI91X_BLE_PWR_INX(RSI_BLE_PWR_INX)
+                      | SL_SI91X_FEAT_BLE_CUSTOM_FEAT_EXTENSION_VALID | SL_SI91X_BLE_PWR_INX(RSI_BLE_PWR_INX)
                       | SL_SI91X_BLE_PWR_SAVE_OPTIONS(RSI_BLE_PWR_SAVE_OPTIONS)
                       | SL_SI91X_916_BLE_COMPATIBLE_FEAT_ENABLE
 #if RSI_BLE_GATT_ASYNC_ENABLE
@@ -174,7 +187,10 @@ static const sl_wifi_device_configuration_t config = {
                       | SL_SI91X_BLE_AE_MAX_ADV_SETS(RSI_BLE_AE_MAX_ADV_SETS)
 #endif
                         ),
-                   .config_feature_bit_map = (SL_SI91X_FEAT_SLEEP_GPIO_SEL_BITMAP | SL_WIFI_ENABLE_ENHANCED_MAX_PSP) }
+                   .config_feature_bit_map = (SL_SI91X_FEAT_SLEEP_GPIO_SEL_BITMAP | SL_WIFI_ENABLE_ENHANCED_MAX_PSP) },
+  .ta_pool         = { .tx_ratio_in_buffer_pool = 0, .rx_ratio_in_buffer_pool = 0, .global_ratio_in_buffer_pool = 0 },
+  .efuse_data_type = SL_SI91X_EFUSE_MFG_SW_VERSION,
+  .nwp_fw_image_number = SL_SI91X_NWP_FW_IMAGE_NUMBER_0
 };
 
 const osThreadAttr_t thread_attributes = {
@@ -186,7 +202,6 @@ const osThreadAttr_t thread_attributes = {
   .stack_size = 3072,
   .priority   = 0,
   .tz_module  = 0,
-  .reserved   = 0,
 };
 
 /*==============================================*/
@@ -285,7 +300,7 @@ void rsi_ble_simple_peripheral_on_conn_status_event(rsi_ble_event_conn_status_t 
  */
 void rsi_ble_simple_peripheral_on_disconnect_event(rsi_ble_event_disconnect_t *resp_disconnect, uint16_t reason)
 {
-  LOG_PRINT("\n Disconnect callback received with status 0x%X \n", reason);
+  SL_DEBUG_LOG_V2(INFO, "Disconnect callback received with status 0x%X \r\n", reason);
   memcpy(&rsi_app_disconnected_device, resp_disconnect, sizeof(rsi_ble_event_disconnect_t));
   rsi_ble_app_set_event(RSI_APP_EVENT_DISCONNECTED);
 }
@@ -318,7 +333,7 @@ void rsi_ble_simple_peripheral_on_enhance_conn_status_event(rsi_ble_event_enhanc
  */
 void ble_extended_advertise_terminated_callback(uint16_t status, rsi_ble_adv_set_terminated_t *resp_terminated)
 {
-  LOG_PRINT("\n Terminated callback received with status 0x%X \n", status);
+  SL_DEBUG_LOG_V2(INFO, "Terminated callback received with status 0x%X \r\n", status);
   adv_set_terminated.adv_handle              = resp_terminated->adv_handle;
   adv_set_terminated.status                  = resp_terminated->status;
   adv_set_terminated.num_completed_ae_events = resp_terminated->num_completed_ae_events;
@@ -337,7 +352,7 @@ void ble_extended_advertise_terminated_callback(uint16_t status, rsi_ble_adv_set
  */
 void ble_extended_scan_request_received_callback(uint16_t status, rsi_ble_scan_req_recvd_t *resp_scan_received)
 {
-  LOG_PRINT("\n Scan request callback received with status 0x%X \n", status);
+  SL_DEBUG_LOG_V2(INFO, "Scan request callback received with status 0x%X \r\n", status);
   scan_req_recvd.adv_handle        = resp_scan_received->adv_handle;
   scan_req_recvd.scanner_addr_type = resp_scan_received->scanner_addr_type;
   memcpy(scan_req_recvd.scanner_addr, resp_scan_received->scanner_addr, RSI_DEV_ADDR_LEN);
@@ -365,10 +380,10 @@ void rsi_ble_peripheral(void)
   strncpy((char *)data, BLE_AE_ADV_DATA, BLE_AE_ADV_DATA_LEN);
   status = sl_wifi_init(&config, NULL, sl_wifi_default_event_handler);
   if (status != SL_STATUS_OK) {
-    LOG_PRINT("\r\nWi-Fi Initialization Failed, Error Code : 0x%lX\r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "Wi-Fi Initialization Failed, Error Code : 0x%lX\r\n", status);
     return;
   } else {
-    LOG_PRINT("\r\n Wi-Fi Initialization Success\n");
+    SL_DEBUG_LOG_V2(INFO, "Wi-Fi Initialization Success\r\n");
   }
   //! BLE register GAP callbacks
   rsi_ble_gap_register_callbacks(NULL,
@@ -386,16 +401,16 @@ void rsi_ble_peripheral(void)
                                                      (void *)ble_extended_advertise_terminated_callback);
 
   if (status != RSI_SUCCESS) {
-    LOG_PRINT("\n RSI_BLE_ON_ADV_EXT_ADVERTISE_SET_TERMINATED_EVENT callback registering failed \n");
+    SL_DEBUG_LOG_V2(ERROR, "RSI_BLE_ON_ADV_EXT_ADVERTISE_SET_TERMINATED_EVENT callback registering failed \r\n");
   } else {
-    LOG_PRINT("\n RSI_BLE_ON_ADV_EXT_ADVERTISE_SET_TERMINATED_EVENT callback registering success \n");
+    SL_DEBUG_LOG_V2(INFO, "RSI_BLE_ON_ADV_EXT_ADVERTISE_SET_TERMINATED_EVENT callback registering success \r\n");
   }
   status = rsi_ble_adv_ext_events_register_callbacks(RSI_BLE_ON_ADV_EXT_SCAN_REQUEST_RECEIVED_EVENT,
                                                      (void *)ble_extended_scan_request_received_callback);
   if (status != RSI_SUCCESS) {
-    LOG_PRINT("\n RSI_BLE_ON_ADV_EXT_SCAN_REQUEST_RECEIVED_EVENT callback registering failed \n");
+    SL_DEBUG_LOG_V2(ERROR, "RSI_BLE_ON_ADV_EXT_SCAN_REQUEST_RECEIVED_EVENT callback registering failed \r\n");
   } else {
-    LOG_PRINT("\n RSI_BLE_ON_ADV_EXT_SCAN_REQUEST_RECEIVED_EVENT callback registering success \n");
+    SL_DEBUG_LOG_V2(INFO, "RSI_BLE_ON_ADV_EXT_SCAN_REQUEST_RECEIVED_EVENT callback registering success \r\n");
   }
   //! initialize the event map
   //ble_main_task_sem = osSemaphoreNew(1, 0, NULL);
@@ -410,25 +425,25 @@ void rsi_ble_peripheral(void)
   //! get the local device MAC address.
   status = rsi_bt_get_local_device_address(rsi_app_resp_get_dev_addr);
   if (status != RSI_SUCCESS) {
-    LOG_PRINT("\r\n rsi_bt_get_local_device_address failed with 0x%lX \r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "rsi_bt_get_local_device_address failed with 0x%lX \r\n", status);
     return;
   } else {
     rsi_6byte_dev_address_to_ascii(local_dev_addr, rsi_app_resp_get_dev_addr);
-    LOG_PRINT("\r\n Local device address %s \r\n", local_dev_addr);
+    SL_DEBUG_LOG_V2(INFO, "Local device address %s \r\n", (uintptr_t)(local_dev_addr));
   }
 
   //! set the local device name
   status = rsi_bt_set_local_name((uint8_t *)RSI_BLE_LOCAL_NAME);
   if (status != RSI_SUCCESS) {
-    LOG_PRINT("\n rsi_bt_set_local_name failed with 0x%lX \n", status);
+    SL_DEBUG_LOG_V2(ERROR, "rsi_bt_set_local_name failed with 0x%lX \r\n", status);
   }
 
   //! get the local device name
   status = rsi_bt_get_local_name(&rsi_app_resp_get_local_name);
   if (status != RSI_SUCCESS) {
-    LOG_PRINT("\n rsi_bt_get_local_name failed with 0x%lX \n", status);
+    SL_DEBUG_LOG_V2(ERROR, "rsi_bt_get_local_name failed with 0x%lX \r\n", status);
   } else {
-    LOG_PRINT(" \n get_local_name done \n");
+    SL_DEBUG_LOG_V2(INFO, "\n get_local_name done \r\n");
   }
 
   adv[3] = strlen(RSI_BLE_LOCAL_NAME) + 1;
@@ -439,19 +454,21 @@ void rsi_ble_peripheral(void)
   status = rsi_ble_get_max_adv_data_len((uint8_t *)&rsi_app_resp_max_adv_data_len);
 
   if (status != RSI_SUCCESS) {
-    LOG_PRINT("get max adv data length failed with 0x%lX \n", status);
+    SL_DEBUG_LOG_V2(ERROR, "get max adv data length failed with 0x%lX \r\n", status);
     return;
   } else {
-    LOG_PRINT("Max supported Adv Data length is %d \n", (uint8_t)rsi_app_resp_max_adv_data_len);
+    SL_DEBUG_LOG_V2(INFO, "Max supported Adv Data length is %d \r\n", (uint8_t)rsi_app_resp_max_adv_data_len);
   }
 
   //! get the Max no.of supported adv sets
   status = rsi_ble_get_max_no_of_supp_adv_sets((uint8_t *)&rsi_app_resp_max_no_of_supp_adv_sets);
   if (status != RSI_SUCCESS) {
-    LOG_PRINT("get max supported adv sets failed with 0x%lX\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "get max supported adv sets failed with 0x%lX\r\n", status);
     return;
   } else {
-    LOG_PRINT("Max number of supported Adv sets are %d  \n", (uint8_t)rsi_app_resp_max_no_of_supp_adv_sets);
+    SL_DEBUG_LOG_V2(INFO,
+                    "Max number of supported Adv sets are %d  \r\n",
+                    (uint8_t)rsi_app_resp_max_no_of_supp_adv_sets);
   }
 
   //! set ae adv params
@@ -475,14 +492,14 @@ void rsi_ble_peripheral(void)
   ble_ae_params.adv_sid                = BLE_AE_ADV_SID;
   ble_ae_params.scan_req_notify_enable = SCAN_REQ_NOTIF_EN;
 
-  LOG_PRINT("\nBLE_AE_ADV_EVNT_PROP = %x \n", BLE_AE_ADV_EVNT_PROP);
+  SL_DEBUG_LOG_V2(INFO, "BLE_AE_ADV_EVNT_PROP = %x \r\n", BLE_AE_ADV_EVNT_PROP);
 
   status = rsi_ble_set_ae_params(&ble_ae_params, &rsi_app_resp_tx_power);
   if (status != RSI_SUCCESS) {
-    LOG_PRINT("set ae params failed with 0x%lX \n", status);
+    SL_DEBUG_LOG_V2(ERROR, "set ae params failed with 0x%lX \r\n", status);
     return;
   } else {
-    LOG_PRINT("Setting AE params successful and selected TX Power is %d dbm \n", rsi_app_resp_tx_power);
+    SL_DEBUG_LOG_V2(INFO, "Setting AE params successful and selected TX Power is %d dbm \r\n", rsi_app_resp_tx_power);
   }
 
 #if PERIODIC_ADV_EN
@@ -494,10 +511,10 @@ void rsi_ble_peripheral(void)
   status                                             = rsi_ble_app_set_periodic_ae_params(&ae_periodic_param);
 
   if (status != RSI_SUCCESS) {
-    LOG_PRINT("set ae Periodic adv params failed with 0x%lX\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "set ae Periodic adv params failed with 0x%lX\r\n", status);
     return status;
   } else {
-    LOG_PRINT("set ae periodic adv params success \n");
+    SL_DEBUG_LOG_V2(INFO, "set ae periodic adv params success \r\n");
   }
 #endif
 
@@ -519,24 +536,26 @@ void rsi_ble_peripheral(void)
   ble_ae_params.adv_sid                = 0x01;
   ble_ae_params.scan_req_notify_enable = SCAN_REQ_NOTIF_EN;
 
-  LOG_PRINT("\nBLE_AE_ADV_EVNT_PROP = %x \n", BLE_AE_ADV_EVNT_PROP);
+  SL_DEBUG_LOG_V2(INFO, "BLE_AE_ADV_EVNT_PROP = %x \r\n", BLE_AE_ADV_EVNT_PROP);
 
   status = rsi_ble_set_ae_params(&ble_ae_params, &rsi_app_resp_tx_power);
   if (status != RSI_SUCCESS) {
-    LOG_PRINT("set ae params failed with 0x%lX \n", status);
+    SL_DEBUG_LOG_V2(ERROR, "set ae params failed with 0x%lX \r\n", status);
     return;
   } else {
-    LOG_PRINT("Setting AE params of set 2 successful and selected TX Power is %d dbm \n", rsi_app_resp_tx_power);
+    SL_DEBUG_LOG_V2(INFO,
+                    "Setting AE params of set 2 successful and selected TX Power is %d dbm ",
+                    rsi_app_resp_tx_power);
   }
 #endif
 
   //! set AE set random address
   status = rsi_ble_set_ae_set_random_address(BLE_ADV_HNDL1, rand_addr);
   if (status != RSI_SUCCESS) {
-    LOG_PRINT("set ae set random address failed with 0x%lX \n", status);
+    SL_DEBUG_LOG_V2(ERROR, "set ae set random address failed with 0x%lX ", status);
     return;
   } else {
-    LOG_PRINT("set ae set random address successful \n");
+    SL_DEBUG_LOG_V2(INFO, "set ae set random address successful ");
   }
 
 #if PERIODIC_ADV_EN
@@ -552,10 +571,10 @@ void rsi_ble_peripheral(void)
   status = rsi_ble_set_ae_data(&ble_ae_data);
 
   if (status != RSI_SUCCESS) {
-    LOG_PRINT("set periodic adv data failed with 0x%lX\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "set periodic adv data failed with 0x%lX\r\n", status);
     return status;
   } else {
-    LOG_PRINT("set periodic adv data success \n");
+    SL_DEBUG_LOG_V2(INFO, "set periodic adv data success \r\n");
   }
 #else
   //setting extended advertising data for set 1
@@ -571,10 +590,10 @@ void rsi_ble_peripheral(void)
   status = rsi_ble_set_ae_data(&ble_ae_data);
 
   if (status != RSI_SUCCESS) {
-    LOG_PRINT("set ae data failed with 0x%lX\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "set ae data failed with 0x%lX\r\n", status);
     return;
   } else {
-    LOG_PRINT("set ae data success \n");
+    SL_DEBUG_LOG_V2(INFO, "set ae data success \r\n");
   }
 
   //setting ae scan response data for set 1
@@ -588,10 +607,10 @@ void rsi_ble_peripheral(void)
   status = rsi_ble_set_ae_data(&ble_ae_data);
 
   if (status != RSI_SUCCESS) {
-    LOG_PRINT("set ae data failed with 0x%lX\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "set ae data failed with 0x%lX\r\n", status);
     return;
   } else {
-    LOG_PRINT("set ae data success \n");
+    SL_DEBUG_LOG_V2(INFO, "set ae data success \r\n");
   }
 #endif
   // Setting ae advertising enable for set 1
@@ -605,18 +624,18 @@ void rsi_ble_peripheral(void)
 
   status = rsi_ble_start_ae_advertising(&ble_ae_adv);
   if (status != RSI_SUCCESS) {
-    LOG_PRINT("set ae adv enable failed with status 0x%lX\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "set ae adv enable failed with status 0x%lX\r\n", status);
     return;
   } else {
-    LOG_PRINT("set ae adv enable success \n");
+    SL_DEBUG_LOG_V2(INFO, "set ae adv enable success \r\n");
   }
 #if PERIODIC_ADV_EN
   status = rsi_ble_app_set_periodic_ae_enable(1, 0);
   if (status != RSI_SUCCESS) {
-    LOG_PRINT("set ae Periodic adv enable failed with 0x%lX\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "set ae Periodic adv enable failed with 0x%lX\r\n", status);
     return status;
   } else {
-    LOG_PRINT("set ae periodic adv enable success \n");
+    SL_DEBUG_LOG_V2(INFO, "set ae periodic adv enable success \r\n");
   }
 #endif
 #if ADV_SET2
@@ -632,10 +651,10 @@ void rsi_ble_peripheral(void)
   status = rsi_ble_set_ae_data(&ble_ae_data);
 
   if (status != RSI_SUCCESS) {
-    LOG_PRINT("set ae data failed with 0x%lX\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "set ae data failed with 0x%lX\r\n", status);
     return;
   } else {
-    LOG_PRINT("set ae data success \n");
+    SL_DEBUG_LOG_V2(INFO, "set ae data success \r\n");
   }
 
   //setting ae scan response data
@@ -649,10 +668,10 @@ void rsi_ble_peripheral(void)
   status = rsi_ble_set_ae_data(&ble_ae_data);
 
   if (status != RSI_SUCCESS) {
-    LOG_PRINT("set ae data failed with 0x%lX\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "set ae data failed with 0x%lX\r\n", status);
     return;
   } else {
-    LOG_PRINT("set ae data success \n");
+    SL_DEBUG_LOG_V2(INFO, "set ae data success \r\n");
   }
   // ae advertising enable for set 2
   ble_ae_adv.enable        = RSI_BLE_START_ADV;
@@ -663,29 +682,29 @@ void rsi_ble_peripheral(void)
 
   status = rsi_ble_start_ae_advertising(&ble_ae_adv);
   if (status != RSI_SUCCESS) {
-    LOG_PRINT("set ae adv enable failed with status 0x%lX\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "set ae adv enable failed with status 0x%lX\r\n", status);
     return;
   } else {
-    LOG_PRINT("set ae adv enable success \n");
+    SL_DEBUG_LOG_V2(INFO, "set ae adv enable success \r\n");
   }
 #endif
 #if ENABLE_NWP_POWER_SAVE
-  LOG_PRINT("\r\n keep module in to power save \r\n");
+  SL_DEBUG_LOG_V2(INFO, "keep module in to power save \r\n");
   //! initiating power save in BLE mode
   status = rsi_bt_power_save_profile(PSP_MODE, PSP_TYPE);
   if (status != RSI_SUCCESS) {
-    LOG_PRINT("\r\n Failed to initiate power save in BLE mode \r\n");
+    SL_DEBUG_LOG_V2(ERROR, "Failed to initiate power save in BLE mode \r\n");
     return;
   }
 
   //! initiating power save in wlan mode
   status = sl_wifi_set_performance_profile_v2(&wifi_profile);
   if (status != SL_STATUS_OK) {
-    LOG_PRINT("\r\n Failed to initiate power save in Wi-Fi mode :%ld\r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "Failed to initiate power save in Wi-Fi mode :%ld\r\n", status);
     return;
   }
 
-  LOG_PRINT("\r\n Module is in power save \r\n");
+  SL_DEBUG_LOG_V2(INFO, "Module is in power save \r\n");
 #endif
   while (1) {
     //! Application main loop
@@ -709,7 +728,7 @@ void rsi_ble_peripheral(void)
         //! converts the 6 byte MAC address to string format
         rsi_6byte_dev_address_to_ascii((uint8_t *)remote_dev_addr, rsi_app_connected_device.dev_addr);
 
-        LOG_PRINT("\n Remote device with %s address connected \n", remote_dev_addr);
+        SL_DEBUG_LOG_V2(INFO, "Remote device with %s address connected \r\n", (uintptr_t)(remote_dev_addr));
 
       } break;
 
@@ -721,7 +740,7 @@ void rsi_ble_peripheral(void)
 
         rsi_6byte_dev_address_to_ascii((uint8_t *)remote_dev_addr, rsi_app_disconnected_device.dev_addr);
 
-        LOG_PRINT("\n Remote device with %s address disconnected \n", remote_dev_addr);
+        SL_DEBUG_LOG_V2(INFO, "Remote device with %s address disconnected \r\n", (uintptr_t)(remote_dev_addr));
 
         //retriggering ae advertiser enable for set 1
         rsi_ble_ae_adv_enable_t ble_ae_adv = { 0 };
@@ -734,17 +753,18 @@ void rsi_ble_peripheral(void)
 
         status = rsi_ble_start_ae_advertising(&ble_ae_adv);
         if (status != RSI_SUCCESS) {
-          LOG_PRINT("set ae adv enable failed with 0x%lX \n", status);
+          SL_DEBUG_LOG_V2(ERROR, "set ae adv enable failed with 0x%lX \r\n", status);
         } else {
-          LOG_PRINT("set ae adv enable success \n");
+          SL_DEBUG_LOG_V2(INFO, "set ae adv enable success \r\n");
         }
 
       } break;
       case RSI_APP_EVENT_EXT_ADV_TERMINATED: {
         rsi_ble_app_clear_event(RSI_APP_EVENT_EXT_ADV_TERMINATED);
-        LOG_PRINT("\n Extended Advertsing terminated event received for adv handle %d , conn handle %d \n",
-                  adv_set_terminated.adv_handle,
-                  adv_set_terminated.conn_handle);
+        SL_DEBUG_LOG_V2(INFO,
+                        "Extended Advertsing terminated event received for adv handle %d",
+                        adv_set_terminated.adv_handle);
+        SL_DEBUG_LOG_V2(INFO, ", conn handle %d ", adv_set_terminated.conn_handle);
 
         //retriggering ae advertiser enable for set 1
         rsi_ble_ae_adv_enable_t ble_ae_adv = { 0 };
@@ -757,15 +777,16 @@ void rsi_ble_peripheral(void)
 
         status = rsi_ble_start_ae_advertising(&ble_ae_adv);
         if (status != RSI_SUCCESS) {
-          LOG_PRINT("set ae adv enable failed with 0x%lX \n", status);
+          SL_DEBUG_LOG_V2(ERROR, "set ae adv enable failed with 0x%lX \r\n", status);
         } else {
-          LOG_PRINT("set ae adv enable success \n");
+          SL_DEBUG_LOG_V2(INFO, "set ae adv enable success \r\n");
         }
       } break;
       case RSI_APP_EVENT_SCAN_REQ_RECEIVED: {
         rsi_ble_app_clear_event(RSI_APP_EVENT_SCAN_REQ_RECEIVED);
         rsi_6byte_dev_address_to_ascii((uint8_t *)remote_dev_addr, scan_req_recvd.scanner_addr);
-        LOG_PRINT("\n Scan request received for handle %d with addr %s \n", scan_req_recvd.adv_handle, remote_dev_addr);
+        SL_DEBUG_LOG_V2(INFO, "Scan request received for handle %d", scan_req_recvd.adv_handle);
+        SL_DEBUG_LOG_V2(INFO, "with addr %s ", (uintptr_t)(remote_dev_addr));
       } break;
     }
   }

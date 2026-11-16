@@ -34,7 +34,7 @@
 #include "rsi_crc.h"
 #include "sl_status.h"
 #include "data_types.h"
-
+#include "sl_log_helper.h"
 /***************************************************************************/
 /**
  * @addtogroup CRC CRC Accelerator

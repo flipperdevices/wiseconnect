@@ -86,7 +86,7 @@ void sl_strcat_s(char *dst, size_t dst_size, const char *src)
 /***************************************************************************//**
  * Get the string length
  ******************************************************************************/
-size_t sl_strlen(char *str)
+size_t sl_strlen(const char *str)
 {
   return sl_strnlen(str, SIZE_MAX);
 }
@@ -94,7 +94,7 @@ size_t sl_strlen(char *str)
 /***************************************************************************//**
  * Get the string length, limited to a given length
  ******************************************************************************/
-size_t sl_strnlen(char *str, size_t max_len)
+size_t sl_strnlen(const char *str, size_t max_len)
 {
   size_t len = 0;
 

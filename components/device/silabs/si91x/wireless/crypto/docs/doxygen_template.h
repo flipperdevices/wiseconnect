@@ -296,6 +296,26 @@
  */
 
 /* ------------------------------------------------------------------------
+ * SHA3
+ * ------------------------------------------------------------------------
+ */
+
+/*!
+ * @defgroup CRYPTO_SHA3 SHA3
+ * @ingroup CRYPTO
+ *
+ * SHA3 (Keccak) is a secure hashing algorithm family.
+ * This section provides a reference to the SHA3 Crypto API which includes functions, data types, and constants.
+ */
+
+/*!
+ * @defgroup CRYPTO_SHA3_CONSTANTS Constants
+ * @ingroup CRYPTO_SHA3
+ *
+ * This section provides a reference to the SHA3 Crypto API constants.
+ */
+
+/* ------------------------------------------------------------------------
  * TRNG  
  * ------------------------------------------------------------------------
  */

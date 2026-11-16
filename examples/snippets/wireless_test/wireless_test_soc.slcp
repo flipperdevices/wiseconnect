@@ -1,7 +1,7 @@
 project_name: wireless_test_soc
 package: multi_protocol_siwx91x_app
 quality: production
-label: wireless_test_soc
+label: Wi-Fi Coex - Wireless Test (SOC)
 category: Example|Wi-Fi_BLE
 description: 'Demonstrates to run all commands individually
 
@@ -37,8 +37,6 @@ include:
 define:
 - name: SL_SI91X_CLI_CONSOLE_MAX_ARG_COUNT
   value: 30
-- name: SLI_SI91X_OFFLOAD_NETWORK_STACK
-  value: 1
 - name: SL_SI91X_PRINT_DBG_LOG
 - name: SLI_SI91X_DBG_MIDDLEWARE_EN
 - name: SLI_SI91X_MCU_INTR_BASED_RX_ON_UART
@@ -59,11 +57,16 @@ component:
 - id: console
 - id: console_variables
 - id: iot_socket
-- id: sl_si91x_basic_buffers
 - id: sl_si91x_soc_soft_reset
+- id: log_none
+- id: si91x_log
+- id: si91x_log_iostream_formatted
+- id: iostream_rtt_si91x
 toolchain_settings:
 - option: gcc_compiler_option
-  value: -Wall -Werror
+  value: -Wall -Werror -Wno-error=deprecated-declarations
+- option: llvm_compiler_option
+  value: -Wall -Werror -Wno-error=deprecated-declarations
 configuration:
 - name: SL_BOARD_ENABLE_VCOM
   value: '1'
@@ -141,6 +144,7 @@ other_file:
 - path: resources/readme/sta_ncp.png
 - path: resources/readme/cli_ble_ncp.png
 - path: resources/readme/configure_static_ip_address.png
+- path: resources/readme/RTT_logs.png
 ui_hints:
   highlight:
   - path: readme.md
@@ -150,8 +154,8 @@ post_build:
 sdk_extension:
 - id: wiseconnect3_sdk
   vendor: silabs
-  version: 4.0.1
+  version: 4.1.2
 sdk:
   id: simplicity_sdk
   vendor: silabs
-  version: 2025.12.2
+  version: 2026.6.2

@@ -100,7 +100,13 @@ static sl_status_t convert_rsi_to_sl_error_code(uint32_t error)
 sl_status_t sl_si91x_hrng_init(void)
 {
   int32_t error_code = RSI_CLK_PeripheralClkEnable1(M4CLK, HWRNG_PCLK_ENABLE);
-  return convert_rsi_to_sl_error_code(error_code);
+  sl_status_t status = convert_rsi_to_sl_error_code(error_code);
+  if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si91x_hrng_init: failed st=0x%04lX,line no : %d\r\n",
+                          (unsigned long)status,
+                          (int)__LINE__);
+  }
+  return status;
 }
 
 /***************************************************************************/
@@ -122,7 +128,13 @@ sl_status_t sl_si91x_hrng_deinit(void)
 sl_status_t sl_si91x_hrng_start(sl_si91x_hrng_mode_t hrng_mode)
 {
   int32_t error_code = rng_start(pHRNG, hrng_mode);
-  return convert_rsi_to_sl_error_code(error_code);
+  sl_status_t status = convert_rsi_to_sl_error_code(error_code);
+  if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si91x_hrng_start: failed st=0x%04lX,line no : %d\r\n",
+                          (unsigned long)status,
+                          (int)__LINE__);
+  }
+  return status;
 }
 /***************************************************************************/
 /**
@@ -161,6 +173,7 @@ sl_status_t sl_si91x_hrng_read_lfsr_input(uint8_t number_of_bytes, uint32_t *ran
 {
   sl_status_t status = validate_parameters(number_of_bytes, random_bytes);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si91x_hrng_read_lfsr_input: invalid parameters,line no : %d\r\n", (int)__LINE__);
     return status;
   }
 
@@ -170,6 +183,9 @@ sl_status_t sl_si91x_hrng_read_lfsr_input(uint8_t number_of_bytes, uint32_t *ran
   int32_t error_code = rng_read_lfsr_input(pHRNG, random_bytes, number_of_bytes);
   status             = convert_rsi_to_sl_error_code(error_code);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si91x_hrng_read_lfsr_input: read failed st=0x%04lX,line no : %d\r\n",
+                          (unsigned long)status,
+                          (int)__LINE__);
     return status;
   }
 
@@ -200,6 +216,7 @@ sl_status_t sl_si91x_hrng_get_bytes(uint32_t *random_bytes, uint8_t number_of_by
 {
   sl_status_t status = validate_parameters(number_of_bytes, random_bytes);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si91x_hrng_get_bytes: invalid parameters,line no : %d\r\n", (int)__LINE__);
     return status;
   }
 

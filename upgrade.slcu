@@ -116,7 +116,7 @@ upgrade:
                           
   - sdk:
       id: wiseconnect3_sdk
-      version: "4.0.1"
+      version: "4.0.0"
     component:
       - trigger: wiseconnect3_common
         description: >
@@ -143,3 +143,32 @@ upgrade:
       - script: upgrade_component_nvm3_network_manager.lua
         description: >
                           
+  - sdk:
+      id: wiseconnect3_sdk
+      vendor: silabs
+      version: "4.1.2"
+    component:
+      - trigger: psram_aps6404l_sqh
+        description: >
+                                
+        status: automatic  
+        remove:
+           - psram_aps6404l_sqh
+      - trigger: sl_si91x_basic_buffers
+        description: >
+          The 'Basic Buffer Manager' component is deprecated with a deprecation period of 18 months. 
+          Its replacement, 'Buffer Manager', is pulled in automatically 
+          when you select the 'Wi-Fi' component.
+        status: automatic
+      - trigger: sl_si91x_mem_pool_buffers
+        description: >
+          The 'Memory Pool Buffer' component is deprecated with a deprecation period of 18 months. 
+          Its replacement, 'Buffer Manager', is pulled in automatically 
+          when you select the 'Wi-Fi' component.
+        status: automatic
+      - trigger: sl_si91x_mem_pool_buffers_with_quota
+        description: >
+          The 'Memory Pool Buffer With Quota' component is deprecated with a deprecation period of 18 months. 
+          Its replacement, 'Buffer Manager', is pulled in automatically 
+          when you select the 'Wi-Fi' component.
+        status: automatic

@@ -1,6 +1,6 @@
 /***************************************************************************/ /**
  * @file
- * @brief IO Stream SWO Component.
+ * @brief IO Stream SWO component for SiWx91x.
  *******************************************************************************
  * # License
  * <b>Copyright 2019 Silicon Laboratories Inc. www.silabs.com</b>
@@ -43,8 +43,8 @@ extern "C" {
  ******************************************************************************/
 
 /***************************************************************************/ /**
- * @addtogroup iostream_swo_si91x I/O Stream SWO SI91X
- * @brief I/O Stream SWO SI91X
+ * @addtogroup iostream_swo_si91x I/O Stream SWO SiWx91x
+ * @brief I/O Stream SWO for SiWx91x
  * @details
  * ## Overview
  *
@@ -83,7 +83,7 @@ extern sl_iostream_instance_info_t sl_si91x_iostream_instance_swo_info; ///< sl_
 ****************************  DEFINES / MACROS   ********************************
 *******************************************************************************/
 
-#define SL_SI91X_IOSTREAM_TYPE_SWO 8 ///< IOSTREAM Type Si91x SWO.
+#define SL_SI91X_IOSTREAM_TYPE_SWO 8 ///< IOSTREAM type: SiWx91x SWO.
 
 /*******************************************************************************
 ****************************  FUNCTION PROTOTYPES  ********************************

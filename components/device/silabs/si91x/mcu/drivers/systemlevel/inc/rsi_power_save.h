@@ -478,7 +478,7 @@ typedef enum NPSS_COMPARATOR {
 * @{
 */
 /**
- * @fn            STATIC INLINE rsi_error_t ps_power_state_change_ps4tops2( ULP_MODE_T enCtxSel          ,
+ * @fn            STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE rsi_error_t ps_power_state_change_ps4tops2( ULP_MODE_T enCtxSel          ,
  *                                                          uint8_t PwrMuxSelUlpssRam    ,
  *                                                          uint8_t pwrMuxSelM4UlpRam    ,
  *                                                          uint8_t pwrMuxSelM4UlpRam16K ,
@@ -529,16 +529,16 @@ typedef enum NPSS_COMPARATOR {
  *                                  \n 1 :Enale 
  * @return        returns 0 \ref RSI_OK on success,return error code on error
  */
-STATIC INLINE rsi_error_t ps_power_state_change_ps4tops2(ULP_MODE_T enCtxSel,
-                                                         uint8_t PwrMuxSelUlpssRam,
-                                                         uint8_t pwrMuxSelM4UlpRam,
-                                                         uint8_t pwrMuxSelM4UlpRam16K,
-                                                         uint8_t pwrMuxSelM4Ulp,
-                                                         uint8_t pwrMuxSelUlpss,
-                                                         uint8_t bgSampleEnable,
-                                                         uint8_t dcDcEnable,
-                                                         uint8_t socLdoEnable,
-                                                         uint8_t standByDc)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE rsi_error_t ps_power_state_change_ps4tops2(ULP_MODE_T enCtxSel,
+                                                                                          uint8_t PwrMuxSelUlpssRam,
+                                                                                          uint8_t pwrMuxSelM4UlpRam,
+                                                                                          uint8_t pwrMuxSelM4UlpRam16K,
+                                                                                          uint8_t pwrMuxSelM4Ulp,
+                                                                                          uint8_t pwrMuxSelUlpss,
+                                                                                          uint8_t bgSampleEnable,
+                                                                                          uint8_t dcDcEnable,
+                                                                                          uint8_t socLdoEnable,
+                                                                                          uint8_t standByDc)
 {
   volatile int x = 0;
 
@@ -633,14 +633,14 @@ STATIC INLINE rsi_error_t ps_power_state_change_ps4tops2(ULP_MODE_T enCtxSel,
 }
 
 /**
- * @fn          STATIC INLINE rsi_error_t ps_power_state_change_ps2_to_Ps4(uint32_t PmuBuckTurnOnWaitTime , uint32_t SocLdoTurnOnWaitTime)
+ * @fn          STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE rsi_error_t ps_power_state_change_ps2_to_Ps4(uint32_t PmuBuckTurnOnWaitTime , uint32_t SocLdoTurnOnWaitTime)
  * @brief       This API is used to change the power state from PS2 to PS4
  * @param[in]   PmuBuckTurnOnWaitTime :  PMU buck time
  * @param[in]   SocLdoTurnOnWaitTime : soc ldo turn on time
  * @return       returns 0 \ref RSI_OK on success,return error code on error
  */
-STATIC INLINE rsi_error_t ps_power_state_change_ps2_to_Ps4(uint32_t PmuBuckTurnOnWaitTime,
-                                                           uint32_t SocLdoTurnOnWaitTime)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE rsi_error_t
+ps_power_state_change_ps2_to_Ps4(uint32_t PmuBuckTurnOnWaitTime, uint32_t SocLdoTurnOnWaitTime)
 {
   uint8_t x;
   /*Return if this is issues in PS4 state */
@@ -717,79 +717,79 @@ STATIC INLINE rsi_error_t ps_power_state_change_ps2_to_Ps4(uint32_t PmuBuckTurnO
  *
  */
 /**
- * @fn            STATIC INLINE void RSI_PS_PowerStateChangePs4toPs3(void)
+ * @fn            STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_PS_PowerStateChangePs4toPs3(void)
  * @brief         This API is used to Change the power state from PS4 to PS3
  *                \n
  *                \ref MCU_PMU_LDO_CTRL_CLEAR
  */
-STATIC INLINE void RSI_PS_PowerStateChangePs4toPs3(void)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_PS_PowerStateChangePs4toPs3(void)
 {
   /*Clear the MCU_SOC_LDO_LVL */
   BATT_FF->MCU_PMU_LDO_CTRL_CLEAR = MCU_SOC_LDO_LVL;
 }
 
 /**
- * @fn            STATIC INLINE void RSI_PS_SetDcDcToHigerVoltage(void)
+ * @fn            STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_PS_SetDcDcToHigerVoltage(void)
  * @brief         This API is used configure DCDC to give higher output voltage.
  *                \n
  *                \ref MCU_PMU_LDO_CTRL_SET
  */
-STATIC INLINE void RSI_PS_SetDcDcToHigerVoltage(void)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_PS_SetDcDcToHigerVoltage(void)
 {
   BATT_FF->MCU_PMU_LDO_CTRL_SET = MCU_DCDC_LVL;
 }
 
 /**
- * @fn            STATIC INLINE void RSI_PS_SetDcDcToLowerVoltage(void)
+ * @fn            STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_PS_SetDcDcToLowerVoltage(void)
  * @brief         This API is used configure DCDC to give lower output voltage.
  *                \n
  *                \ref MCU_PMU_LDO_CTRL_CLEAR
  */
-STATIC INLINE void RSI_PS_SetDcDcToLowerVoltage(void)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_PS_SetDcDcToLowerVoltage(void)
 {
   BATT_FF->MCU_PMU_LDO_CTRL_CLEAR = MCU_DCDC_LVL;
 }
 
 /**
- * @fn            STATIC INLINE void RSI_PS_PowerStateChangePs3toPs4(void)
+ * @fn            STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_PS_PowerStateChangePs3toPs4(void)
  * @brief         This API is used to Change the power state from PS3 to PS4
  *                \n
  *                \ref MCU_PMU_LDO_CTRL_SET
  */
-STATIC INLINE void RSI_PS_PowerStateChangePs3toPs4(void)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_PS_PowerStateChangePs3toPs4(void)
 {
   BATT_FF->MCU_PMU_LDO_CTRL_SET = MCU_SOC_LDO_LVL;
   return;
 }
 
 /**
- * @fn            STATIC INLINE void RSI_PS_M4ssPeriPowerDown(uint32_t mask)
+ * @fn            STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_PS_M4ssPeriPowerDown(uint32_t mask)
  * @brief         This API is used to power gate the M4SS peripherals
  * @param[in]     mask  OR'ed value of the power gates
  *                \n
  *                \ref M4SS_PWRCTRL_CLEAR_REG
  * @return    none
  */
-STATIC INLINE void RSI_PS_M4ssPeriPowerDown(uint32_t mask)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_PS_M4ssPeriPowerDown(uint32_t mask)
 {
   BATT_FF->M4SS_PWRCTRL_CLEAR_REG = mask;
 }
 
 /**
- * @fn            STATIC INLINE void RSI_PS_M4ssPeriPowerUp(uint32_t mask)
+ * @fn            STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_PS_M4ssPeriPowerUp(uint32_t mask)
  * @brief         This API is used to un power gate the M4SS peripherals
  * @param[in]     mask  OR'ed value of the power gates
  *                \n
  *                \ref M4SS_PWRCTRL_SET_REG
  * @return    none
  */
-STATIC INLINE void RSI_PS_M4ssPeriPowerUp(uint32_t mask)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_PS_M4ssPeriPowerUp(uint32_t mask)
 {
   BATT_FF->M4SS_PWRCTRL_SET_REG = mask;
 }
 
 /**
- * @fn            STATIC INLINE void sl_si91x_peri_efuse_power_control(bool power_up)
+ * @fn            STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void sl_si91x_peri_efuse_power_control(bool power_up)
  * @brief         This API is used to power gate the PERI_EFUSE power domain, This power domain contains the different M4SS peripherals those are
  *                SPI/SSI Master, I2C, USART, Micro-DMA Controller,  UART, SPI/SSI Slave, Generic-SPI Master, Config Timer, Random-Number Generator,
  *                CRC Accelerator, SIO, I2C, I2S Master/Slave, QEI, MCPWM ,EFUSE and MVP
@@ -797,7 +797,8 @@ STATIC INLINE void RSI_PS_M4ssPeriPowerUp(uint32_t mask)
  *                           0 - Power Down the EFUSE Peri power domain
  * @return    none
  */
-STATIC INLINE void sl_si91x_peri_efuse_power_state_control(peri_efuse_power_state_t power_up)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void sl_si91x_peri_efuse_power_state_control(
+  peri_efuse_power_state_t power_up)
 {
   if (power_up) {
     RSI_PS_M4ssPeriPowerUp(M4SS_PWRGATE_ULP_EFUSE_PERI);
@@ -807,300 +808,300 @@ STATIC INLINE void sl_si91x_peri_efuse_power_state_control(peri_efuse_power_stat
 }
 
 /**
- * @fn            STATIC INLINE void RSI_PS_M4ss_Tass_Ctrl_Clear(uint32_t mask)
+ * @fn            STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_PS_M4ss_Tass_Ctrl_Clear(uint32_t mask)
  * @brief        This API is used to clear the M4SS TASS controls
  * @param[in]     mask  OR'ed value of the power gates
  *                \n
  *                \ref M4SS_TASS_CTRL_CLEAR_REG
  * @return    none
  */
-STATIC INLINE void RSI_PS_M4ss_Tass_Ctrl_Clear(uint32_t mask)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_PS_M4ss_Tass_Ctrl_Clear(uint32_t mask)
 {
   BATT_FF->M4SS_TASS_CTRL_CLEAR_REG = mask;
 }
 
 /**
- * @fn            STATIC INLINE void RSI_PS_UlpssPeriPowerDown(uint32_t mask)
+ * @fn            STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_PS_UlpssPeriPowerDown(uint32_t mask)
  * @brief         This API is used to  power gate the ULPSS peripherals
  * @param[in]     mask  OR'ed value of the power gates
  *                \n
  *                \ref  ULPSS_PWRCTRL_CLEAR_REG
  * @return    none
  */
-STATIC INLINE void RSI_PS_UlpssPeriPowerDown(uint32_t mask)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_PS_UlpssPeriPowerDown(uint32_t mask)
 {
   BATT_FF->ULPSS_PWRCTRL_CLEAR_REG = mask;
 }
 
 /**
- * @fn            STATIC INLINE void RSI_PS_UlpssPeriPowerUp(uint32_t mask)
+ * @fn            STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_PS_UlpssPeriPowerUp(uint32_t mask)
  * @brief         This API is used to un power gate the ULPSS peripherals
  * @param[in]     mask  OR'ed value of the power domains
  *                \n
  *                \ref ULPSS_PWRCTRL_SET_REG
  * @return    none
  */
-STATIC INLINE void RSI_PS_UlpssPeriPowerUp(uint32_t mask)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_PS_UlpssPeriPowerUp(uint32_t mask)
 {
   BATT_FF->ULPSS_PWRCTRL_SET_REG = mask;
 }
 
 /**
- * @fn            STATIC INLINE void RSI_PS_NpssPeriPowerUp(uint32_t mask) 
+ * @fn            STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_PS_NpssPeriPowerUp(uint32_t mask) 
  * @brief         This API is used to un power gate the NPSS peripherals
  * @param[in]     mask  OR'ed value of the power domains
  *                \n
  *                \ref MCUAON_NPSS_PWRCTRL_SET_REG
  * @return    none
  */
-STATIC INLINE void RSI_PS_NpssPeriPowerUp(uint32_t mask)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_PS_NpssPeriPowerUp(uint32_t mask)
 {
   MCU_AON->MCUAON_NPSS_PWRCTRL_SET_REG = mask;
 }
 
 /**
- * @fn            STATIC INLINE void RSI_PS_NpssPeriPowerDown(uint32_t mask) 
+ * @fn            STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_PS_NpssPeriPowerDown(uint32_t mask) 
  * @brief          This API is used to power gate the NPSS peripherals
  * @param[in]     mask  OR'ed value of the power domains
  *                \n
  *                \ref MCUAON_NPSS_PWRCTRL_CLEAR_REG
  * @return    none
  */
-STATIC INLINE void RSI_PS_NpssPeriPowerDown(uint32_t mask)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_PS_NpssPeriPowerDown(uint32_t mask)
 {
   MCU_AON->MCUAON_NPSS_PWRCTRL_CLEAR_REG = mask;
 }
 
 /**
- * @fn            STATIC INLINE void RSI_PS_M4ssRamBanksPowerDown(uint32_t mask)
+ * @fn            STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_PS_M4ssRamBanksPowerDown(uint32_t mask)
  * @brief        This API is used to power gate the M4SS RAM Banks
  * @param[in]     mask  OR'ed value of the RAM power gates
  *                \n
  *                \ref M4_SRAM_PWRCTRL_CLEAR_REG1 
  * @return    none
  */
-STATIC INLINE void RSI_PS_M4ssRamBanksPowerDown(uint32_t mask)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_PS_M4ssRamBanksPowerDown(uint32_t mask)
 {
   BATT_FF->M4_SRAM_PWRCTRL_CLEAR_REG1 = mask;
 }
 
 /**
- * @fn            STATIC INLINE void RSI_PS_M4ssRamBanksPowerUp(uint32_t mask)
+ * @fn            STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_PS_M4ssRamBanksPowerUp(uint32_t mask)
  * @brief        This API is used to un power gate the M4SS RAM Banks
  * @param[in]     mask  OR'ed value of the RAM power gates
  *                \n
  *                \ref M4_SRAM_PWRCTRL_SET_REG1
  * @return        none
  */
-STATIC INLINE void RSI_PS_M4ssRamBanksPowerUp(uint32_t mask)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_PS_M4ssRamBanksPowerUp(uint32_t mask)
 {
   BATT_FF->M4_SRAM_PWRCTRL_SET_REG1 = mask;
 }
 
 /**
- * @fn            STATIC INLINE uint32_t RSI_PS_M4ssRamBanksGetPowerSts(void)
+ * @fn            STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE uint32_t RSI_PS_M4ssRamBanksGetPowerSts(void)
  * @brief         This API is used to get the power gate status of M4SS RAM Banks
  *                \ref M4_SRAM_PWRCTRL_SET_REG1
  * @return        Ored bits of M4_SRAM_PWRCTRL_SET_REG1 reg
  */
-STATIC INLINE uint32_t RSI_PS_M4ssRamBanksGetPowerSts(void)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE uint32_t RSI_PS_M4ssRamBanksGetPowerSts(void)
 {
   return BATT_FF->M4_SRAM_PWRCTRL_SET_REG1;
 }
 
 /**
- * @fn            STATIC INLINE void RSI_PS_M4ssRamBanksPeriPowerDown(uint32_t mask)
+ * @fn            STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_PS_M4ssRamBanksPeriPowerDown(uint32_t mask)
  * @brief         This API is used to power gate the M4SS RAM Banks periphery domain
  * @param[in]     mask  OR'ed value of the RAM power gates
  *                \n
  *                \ref M4_SRAM_PWRCTRL_CLEAR_REG1
  * @return    none
  */
-STATIC INLINE void RSI_PS_M4ssRamBanksPeriPowerDown(uint32_t mask)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_PS_M4ssRamBanksPeriPowerDown(uint32_t mask)
 {
   BATT_FF->M4_SRAM_PWRCTRL_CLEAR_REG2 = mask;
 }
 
 /**
- * @fn           STATIC INLINE void RSI_PS_M4ssRamBanksPeriPowerUp(uint32_t mask)
+ * @fn           STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_PS_M4ssRamBanksPeriPowerUp(uint32_t mask)
  * @brief         This API is used to un-power gate the M4SS RAM Banks periphery domain
  * @param[in]     mask  OR'ed value of the RAM power gates
  *                \n
  *                \ref M4_SRAM_PWRCTRL_SET_REG1
  * @return        none
  */
-STATIC INLINE void RSI_PS_M4ssRamBanksPeriPowerUp(uint32_t mask)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_PS_M4ssRamBanksPeriPowerUp(uint32_t mask)
 {
   BATT_FF->M4_SRAM_PWRCTRL_SET_REG2 = mask;
 }
 
 /**
- * @fn           STATIC INLINE uint32_t RSI_PS_M4ssRamBanksGetPeriPowerSts(void)
+ * @fn           STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE uint32_t RSI_PS_M4ssRamBanksGetPeriPowerSts(void)
  * @brief        This API is used to get the power gate status of M4SS RAM Banks periphery domain
  *                \ref M4_SRAM_PWRCTRL_SET_REG1
  * @return        Ored bits of M4_SRAM_PWRCTRL_SET_REG2 register.
  */
-STATIC INLINE uint32_t RSI_PS_M4ssRamBanksGetPeriPowerSts(void)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE uint32_t RSI_PS_M4ssRamBanksGetPeriPowerSts(void)
 {
   return BATT_FF->M4_SRAM_PWRCTRL_SET_REG2;
 }
 /**
- * @fn            STATIC INLINE void RSI_PS_UlpssRamBanksPeriPowerDown(uint32_t mask)
+ * @fn            STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_PS_UlpssRamBanksPeriPowerDown(uint32_t mask)
  * @brief         This API is used to power gate the ULPSS RAM Banks periphery domain
  * @param[in]     mask  OR'ed value of the RAM power gates
  *                \n
  *                \ref M4_SRAM_PWRCTRL_CLEAR_REG1
  * @return    none
  */
-STATIC INLINE void RSI_PS_UlpssRamBanksPeriPowerDown(uint32_t mask)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_PS_UlpssRamBanksPeriPowerDown(uint32_t mask)
 {
   BATT_FF->ULPSS_RAM_PWRCTRL_CLEAR_REG3 = mask;
 }
 
 /**
- * @fn           STATIC INLINE void RSI_PS_UlpssRamBanksPeriPowerUp(uint32_t mask)
+ * @fn           STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_PS_UlpssRamBanksPeriPowerUp(uint32_t mask)
  * @brief        This API is used to un-power gate the ULPSS RAM Banks periphery domain
  * @param[in]     mask  OR'ed value of the RAM power gates
  *                \n
  *                \ref M4_SRAM_PWRCTRL_SET_REG1
  * @return        none
  */
-STATIC INLINE void RSI_PS_UlpssRamBanksPeriPowerUp(uint32_t mask)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_PS_UlpssRamBanksPeriPowerUp(uint32_t mask)
 {
   BATT_FF->ULPSS_RAM_PWRCTRL_SET_REG3 = mask;
 }
 
 /**
- * @fn            STATIC INLINE void RSI_PS_SetRamRetention(uint32_t ramRetention)
+ * @fn            STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_PS_SetRamRetention(uint32_t ramRetention)
  * @brief         This API is used to set the RAM retention enable for the RAM during sleep
  * @param[in]     ramRetention OR'ed value of the RAM retention bits
  *                \n
  *                \ref MCU_FSM_SLEEP_CTRLS_AND_WAKEUP_MODE
  * @return    none
  */
-STATIC INLINE void RSI_PS_SetRamRetention(uint32_t ramRetention)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_PS_SetRamRetention(uint32_t ramRetention)
 {
   MCU_FSM->MCU_FSM_SLEEP_CTRLS_AND_WAKEUP_MODE |= ramRetention;
 }
 
 /**
- * @fn            STATIC INLINE void RSI_PS_ClrRamRetention(uint32_t ramRetention)
+ * @fn            STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_PS_ClrRamRetention(uint32_t ramRetention)
  * @brief         This API is used to clear the RAM retention enable for the RAM during sleep
  * @param[in]     ramRetention  OR'ed value of the RAM retention bits
  *                \n
  *                \ref MCU_FSM_SLEEP_CTRLS_AND_WAKEUP_MODE
  * @return    none
  */
-STATIC INLINE void RSI_PS_ClrRamRetention(uint32_t ramRetention)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_PS_ClrRamRetention(uint32_t ramRetention)
 {
   MCU_FSM->MCU_FSM_SLEEP_CTRLS_AND_WAKEUP_MODE &= ~ramRetention;
 }
 
 /**
- * @fn            STATIC INLINE void RSI_PS_UlpssRamBanksPowerDown(uint32_t mask)
+ * @fn            STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_PS_UlpssRamBanksPowerDown(uint32_t mask)
  * @brief         This API is used to  power gate the ULPSS RAM Banks
  * @param[in]     mask  OR'ed value of the RAM power gates
  *                \n
  *                \ref ULPSS_RAM_PWRCTRL_CLEAR_REG1
  * @return    none
  */
-STATIC INLINE void RSI_PS_UlpssRamBanksPowerDown(uint32_t mask)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_PS_UlpssRamBanksPowerDown(uint32_t mask)
 {
   BATT_FF->ULPSS_RAM_PWRCTRL_CLEAR_REG1 = mask;
 }
 
 /**
- * @fn            STATIC INLINE void RSI_PS_UlpssRamBanksPowerUp(uint32_t mask)
+ * @fn            STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_PS_UlpssRamBanksPowerUp(uint32_t mask)
  * @brief         This API is used to  un power gate the ULPSS RAM Banks
  * @param[in]     mask  OR'ed value of the RAM power gates
  *                \n
  *                \ref ULPSS_RAM_PWRCTRL_SET_REG1
  * @return    none
  */
-STATIC INLINE void RSI_PS_UlpssRamBanksPowerUp(uint32_t mask)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_PS_UlpssRamBanksPowerUp(uint32_t mask)
 {
   BATT_FF->ULPSS_RAM_PWRCTRL_SET_REG1 = mask;
 }
 
 /**
- * @fn            STATIC INLINE void RSI_PS_SetWkpSources(uint32_t wakeUpsrcMask)
+ * @fn            STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_PS_SetWkpSources(uint32_t wakeUpsrcMask)
  * @brief        This API is used to set the wake up source to wake up from deep sleep
  * @param[in]     wakeUpsrcMask OR'ed value of the wake up sources
  *                \n
  *                \ref MCU_FSM_SLEEP_CTRLS_AND_WAKEUP_MODE
  * @return    none
  */
-STATIC INLINE void RSI_PS_SetWkpSources(uint32_t wakeUpsrcMask)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_PS_SetWkpSources(uint32_t wakeUpsrcMask)
 {
   MCU_FSM->MCU_FSM_SLEEP_CTRLS_AND_WAKEUP_MODE |= wakeUpsrcMask;
 }
 
 /**
- * @fn            STATIC INLINE void RSI_PS_ClrWkpSources(uint32_t wakeUpsrcMask)
+ * @fn            STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_PS_ClrWkpSources(uint32_t wakeUpsrcMask)
  * @brief         This API is used to clear the wake up source
  * @param[in]     wakeUpsrcMask OR'ed value of the wake up sources
  *                \ref MCU_FSM_SLEEP_CTRLS_AND_WAKEUP_MODE
  * @return    none
  */
-STATIC INLINE void RSI_PS_ClrWkpSources(uint32_t wakeUpsrcMask)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_PS_ClrWkpSources(uint32_t wakeUpsrcMask)
 {
   MCU_FSM->MCU_FSM_SLEEP_CTRLS_AND_WAKEUP_MODE &= ~wakeUpsrcMask;
 }
 
 /**
- * @fn            STATIC INLINE uint32_t RSI_PS_GetWkpSources(void)
+ * @fn            STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE uint32_t RSI_PS_GetWkpSources(void)
  * @brief   This API is used to get the wake up source
  * @return    register bits of wake up sources
  */
-STATIC INLINE uint32_t RSI_PS_GetWkpSources(void)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE uint32_t RSI_PS_GetWkpSources(void)
 {
   return MCU_FSM->MCU_FSM_SLEEP_CTRLS_AND_WAKEUP_MODE;
 }
 
 /**
- * @fn            STATIC INLINE void RSI_PS_EnableFirstBootUp(boolean_t enable)
+ * @fn            STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_PS_EnableFirstBootUp(boolean_t enable)
  * @brief   This API is used to SET and CLEAR the First boot up bit
  * @param[in]     enable : 
  *                \ref MCU_FSM_CLK_ENS_AND_FIRST_BOOTUP_b  0: disable the first boot , 
  *                \ref MCU_FSM_CLK_ENS_AND_FIRST_BOOTUP_b  1: enable the first boot up
  * @return    none
  */
-STATIC INLINE void RSI_PS_EnableFirstBootUp(boolean_t enable)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_PS_EnableFirstBootUp(boolean_t enable)
 {
   MCU_FSM->MCU_FSM_CLK_ENS_AND_FIRST_BOOTUP_b.FIRST_BOOTUP_MCU_N_b = (unsigned int)(enable & 0x01);
 }
 
 /**
- * @fn            STATIC INLINE void RSI_PS_PowerSupplyEnable(uint32_t mask)
+ * @fn            STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_PS_PowerSupplyEnable(uint32_t mask)
  * @brief   This API is used to enable the supply to some NPSS peripherals
  * @param[in]     mask 0: disable the first boot ,  1: enable the first boot up
  * @return    none
  */
-STATIC INLINE void RSI_PS_PowerSupplyEnable(uint32_t mask)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_PS_PowerSupplyEnable(uint32_t mask)
 {
   MCU_FSM->MCU_FSM_CRTL_PDM_AND_ENABLES |= mask;
 }
 
 /**
- * @fn            STATIC INLINE void RSI_PS_PowerSupplyDisable(uint32_t mask)
+ * @fn            STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_PS_PowerSupplyDisable(uint32_t mask)
  * @brief   This API is used to disable the supply to some NPSS peripherals
  * @param[in]     mask  0: disable the first boot ,  1: enable the first boot up
  *                \ref MCU_FSM_CRTL_PDM_AND_ENABLES
  * @return    none
  */
-STATIC INLINE void RSI_PS_PowerSupplyDisable(uint32_t mask)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_PS_PowerSupplyDisable(uint32_t mask)
 {
   MCU_FSM->MCU_FSM_CRTL_PDM_AND_ENABLES &= ~mask;
 }
 
 /**
- * @fn            STATIC INLINE void RSI_PS_FsmHfClkSel(FSM_CLK_T fsmHfClk)
+ * @fn            STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_PS_FsmHfClkSel(FSM_CLK_T fsmHfClk)
  * @brief   This API is used to  configure the FSM high frequency clock
  * @param[in]     fsmHfClk : enum value of the high frequency clock sources
  *                \ref MCU_FSM_CLKS_REG_b
  * @return    none
  */
-STATIC INLINE void RSI_PS_FsmHfClkSel(FSM_CLK_T fsmHfClk)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_PS_FsmHfClkSel(FSM_CLK_T fsmHfClk)
 {
   MCU_FSM->MCU_FSM_CLKS_REG_b.HF_FSM_CLK_SELECT = fsmHfClk;
   while (MCU_FSM->MCU_FSM_CLKS_REG_b.HF_FSM_CLK_SWITCHED_SYNC != 1)
@@ -1108,24 +1109,24 @@ STATIC INLINE void RSI_PS_FsmHfClkSel(FSM_CLK_T fsmHfClk)
 }
 
 /**
- * @fn            STATIC INLINE void RSI_PS_FsmHfFreqConfig(uint32_t freq)
+ * @fn            STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_PS_FsmHfFreqConfig(uint32_t freq)
  * @brief   This API is used to  configure the FSM high frequency clock range
  * @param[in]     freq : frequency in MHz pass 2 if it is 2MHz
  * @return    none
  */
-STATIC INLINE void RSI_PS_FsmHfFreqConfig(uint32_t freq)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_PS_FsmHfFreqConfig(uint32_t freq)
 {
   MCU_FSM->MCU_FSM_CLKS_REG_b.HF_FSM_CLK_FREQ = (unsigned int)(freq & 0x3F);
 }
 
 /**
- * @fn            STATIC INLINE void RSI_PS_FsmLfClkSel(AON_CLK_T fsmLfClk)
+ * @fn            STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_PS_FsmLfClkSel(AON_CLK_T fsmLfClk)
  * @brief   This API is used to configure the FSM low frequency clock
  * @param[in]     fsmLfClk enum value of the low frequency clock sources
  *                \ref MCUAON_KHZ_CLK_SEL_POR_RESET_STATUS_b
  * @return    none
  */
-STATIC INLINE void RSI_PS_FsmLfClkSel(AON_CLK_T fsmLfClk)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_PS_FsmLfClkSel(AON_CLK_T fsmLfClk)
 {
   MCU_AON->MCUAON_KHZ_CLK_SEL_POR_RESET_STATUS_b.AON_KHZ_CLK_SEL = fsmLfClk;
   while (MCU_AON->MCUAON_KHZ_CLK_SEL_POR_RESET_STATUS_b.AON_KHZ_CLK_SEL_CLOCK_SWITCHED != 1)
@@ -1133,12 +1134,12 @@ STATIC INLINE void RSI_PS_FsmLfClkSel(AON_CLK_T fsmLfClk)
 }
 
 /**
- * @fn            STATIC INLINE void RSI_PS_PmuGoodTimeDurationConfig(uint8_t pmuDuration) 
+ * @fn            STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_PS_PmuGoodTimeDurationConfig(uint8_t pmuDuration) 
  * @brief   This API is used to  configure the PMU good time.
  * @param[in]     pmuDuration  (0 to 31) are possible value is applied in power of 2.
  * @return    none
  */
-STATIC INLINE void RSI_PS_PmuGoodTimeDurationConfig(uint8_t pmuDuration)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_PS_PmuGoodTimeDurationConfig(uint8_t pmuDuration)
 {
 #ifdef CHIP_9118
   MCU_FSM->MCU_FSM_XTAL_AND_PMU_GOOD_COUNT_REG_b.MCUFSM_PMU_POWERGOOD_DURATION_COUNT =
@@ -1151,13 +1152,13 @@ STATIC INLINE void RSI_PS_PmuGoodTimeDurationConfig(uint8_t pmuDuration)
 }
 
 /**
- * @fn            STATIC INLINE void  RSI_PS_XtalGoodTimeDurationConfig(uint8_t xtalDuration)
+ * @fn            STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void  RSI_PS_XtalGoodTimeDurationConfig(uint8_t xtalDuration)
  * @brief   This API is used to  configure the XTAL good time.
  * @param[in]     xtalDuration  (0 to 31) are possible value is applied in power of 2.
  *                \ref MCU_FSM_XTAL_AND_PMU_GOOD_COUNT_REG_b
  * @return    none
  */
-STATIC INLINE void RSI_PS_XtalGoodTimeDurationConfig(uint8_t xtalDuration)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_PS_XtalGoodTimeDurationConfig(uint8_t xtalDuration)
 {
 #ifdef CHIP_9118
   MCU_FSM->MCU_FSM_XTAL_AND_PMU_GOOD_COUNT_REG_b.MCUFSM_XTAL_GOODTIME_DURATION_COUNT =
@@ -1170,109 +1171,109 @@ STATIC INLINE void RSI_PS_XtalGoodTimeDurationConfig(uint8_t xtalDuration)
 }
 
 /**
- * @fn            STATIC INLINE void RSI_PS_Ps2PmuLdoOffDelayConfig(uint8_t ldoOffDelay)
+ * @fn            STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_PS_Ps2PmuLdoOffDelayConfig(uint8_t ldoOffDelay)
  * @brief   This API is used to  configure LDO off delay
  * @param[in]     ldoOffDelay  (0 to 31) are possible value is applied in power of 2.
  * @return    none
  */
-STATIC INLINE void RSI_PS_Ps2PmuLdoOffDelayConfig(uint8_t ldoOffDelay)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_PS_Ps2PmuLdoOffDelayConfig(uint8_t ldoOffDelay)
 {
   MCU_FSM->MCU_FSM_POWER_CTRL_AND_DELAY_b.PS2_PMU_LDO_OFF_DELAY = (unsigned int)(ldoOffDelay & 0x1F);
 }
 
 /**
- * @fn            STATIC INLINE void RSI_PS_Ps4PmuLdoOnDelayConfig(uint8_t ldoOnDelay)
+ * @fn            STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_PS_Ps4PmuLdoOnDelayConfig(uint8_t ldoOnDelay)
  * @brief   This API is used to  configure LDO on delay
  * @param[in]     ldoOnDelay  (0 to 31) are possible value is applied in power of 2.
  *                \ref MCU_FSM_POWER_CTRL_AND_DELAY_b
  * @return    none
  */
-STATIC INLINE void RSI_PS_Ps4PmuLdoOnDelayConfig(uint8_t ldoOnDelay)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_PS_Ps4PmuLdoOnDelayConfig(uint8_t ldoOnDelay)
 {
   MCU_FSM->MCU_FSM_POWER_CTRL_AND_DELAY_b.PS4_SOCLDO_ON_DELAY = (unsigned int)(ldoOnDelay & 0xF);
 }
 
 /**
- * @fn            STATIC INLINE void RSI_PS_Ps4PmuBuckOnDelayConfig(uint8_t pmuBuckOnDelay)
+ * @fn            STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_PS_Ps4PmuBuckOnDelayConfig(uint8_t pmuBuckOnDelay)
  * @brief   This API is used to  configure buck on delay
  * @param[in]     pmuBuckOnDelay  (0 to 31) are possible value is applied in power of 2.
  *                \ref MCU_FSM_POWER_CTRL_AND_DELAY_b
  * @return    none
  */
-STATIC INLINE void RSI_PS_Ps4PmuBuckOnDelayConfig(uint8_t pmuBuckOnDelay)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_PS_Ps4PmuBuckOnDelayConfig(uint8_t pmuBuckOnDelay)
 {
   MCU_FSM->MCU_FSM_POWER_CTRL_AND_DELAY_b.PG4_BUCK_ON_DELAY = (unsigned int)(pmuBuckOnDelay & 0xF);
 }
 
 /**
- * @fn            STATIC INLINE uint32_t RSI_PS_GetWkpUpStatus(void)
+ * @fn            STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE uint32_t RSI_PS_GetWkpUpStatus(void)
  * @brief   This API is used to  get the wake up/ NPSS interrupt status
  *                \ref NPSS_INTR_STATUS_REG
  * @return        register bits of NPSS interrupt status register
  * @return      wakeup/NPSS intr status
  */
-STATIC INLINE uint32_t RSI_PS_GetWkpUpStatus(void)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE uint32_t RSI_PS_GetWkpUpStatus(void)
 {
   return NPSS_INTR_STATUS_REG;
 }
 
 /**
- * @fn            STATIC INLINE uint32_t RSI_PS_GetComnIntrSts(void)
+ * @fn            STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE uint32_t RSI_PS_GetComnIntrSts(void)
  * @brief   This API is used to  get the wake up/ NPSS common interrupt status
  * @return    register bits of NPSS interrupt status register
  *                \ref MCU_FSM_WAKEUP_STATUS_REG
  * @return    wake up/NPSS common inrerrupt status
  */
-STATIC INLINE uint32_t RSI_PS_GetComnIntrSts(void)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE uint32_t RSI_PS_GetComnIntrSts(void)
 {
   return MCU_FSM->MCU_FSM_WAKEUP_STATUS_REG;
 }
 
 /**
- * @fn            STATIC INLINE void RSI_PS_NpssIntrUnMask(uint32_t mask)
+ * @fn            STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_PS_NpssIntrUnMask(uint32_t mask)
  * @brief   This API is used to  un mask the NPSS interrupts
  * @param[in]     mask  is OR'ed value of the NPSS interrupt bits
  *                \ref NPSS_INTR_MASK_CLR_REG
  * @return    none
  */
-STATIC INLINE void RSI_PS_NpssIntrUnMask(uint32_t mask)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_PS_NpssIntrUnMask(uint32_t mask)
 {
   NPSS_INTR_MASK_CLR_REG = mask;
 }
 
 /**
- * @fn            STATIC INLINE void RSI_PS_NpssIntrMask(uint32_t mask)
+ * @fn            STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_PS_NpssIntrMask(uint32_t mask)
  * @brief   This API is used to  mask the NPSS interrupts
  * @param[in]     mask  is OR'ed value of the NPSS interrupt bits
  *                \ref NPSS_INTR_MASK_SET_REG
  * @return    none
  */
-STATIC INLINE void RSI_PS_NpssIntrMask(uint32_t mask)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_PS_NpssIntrMask(uint32_t mask)
 {
   NPSS_INTR_MASK_SET_REG = mask;
 }
 
 /**
- * @fn            STATIC INLINE void RSI_PS_EnableLpSleep(boolean_t lpSleep)
+ * @fn            STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_PS_EnableLpSleep(boolean_t lpSleep)
  * @brief   This API is used to  enable/disable the lp sleep mode
  * @param[in]     lpSleep  1:enable lp sleep , 0 : disable lp sleep
  *                \ref MCU_FSM_SLEEP_CTRLS_AND_WAKEUP_MODE_b
  * @return    none
  */
-STATIC INLINE void RSI_PS_EnableLpSleep(boolean_t lpSleep)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_PS_EnableLpSleep(boolean_t lpSleep)
 {
   MCU_FSM->MCU_FSM_SLEEP_CTRLS_AND_WAKEUP_MODE_b.LP_SLEEP_MODE_b = (unsigned int)(lpSleep & 0x1);
 }
 
 /**
- *@fn              STATIC INLINE void RSI_PS_SkipXtalWaitTime(boolean_t val)
+ *@fn              STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_PS_SkipXtalWaitTime(boolean_t val)
  *@brief           This API is used to  skip the XTAL wait time
  *@param[in]       val 1: skip XTAL wait time
  *                 0 Do not skip XTAL wait time
  *                 \ref MCU_FSM_SLEEP_CTRLS_AND_WAKEUP_MODE_b
  * @return    none
  */
-STATIC INLINE void RSI_PS_SkipXtalWaitTime(boolean_t val)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_PS_SkipXtalWaitTime(boolean_t val)
 {
   /*if package_type value is 5(M7DB) then don't skip xtal wait time   */
   if (package_type != 0x5) {
@@ -1280,112 +1281,112 @@ STATIC INLINE void RSI_PS_SkipXtalWaitTime(boolean_t val)
   }
 }
 /**
- *@fn              STATIC INLINE void RSI_PS_UlpToDcDcMode(void)
+ *@fn              STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_PS_UlpToDcDcMode(void)
  *@brief           This API is configures SC-DCDC from LDO to DCDC Mode
  * @return    none
  */
-STATIC INLINE void RSI_PS_UlpToDcDcMode(void)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_PS_UlpToDcDcMode(void)
 {
   ULP_SPI_MEM_MAP(0x126) = 0x3E002F;
   ULP_SPI_MEM_MAP(0x128) = 0x200020;
 }
 
 /**
- *@fn              STATIC INLINE void RSI_PS_LatchCntrlSet(uint32_t val)
+ *@fn              STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_PS_LatchCntrlSet(uint32_t val)
  *@brief           This API is used to set the latch configurations
  * @return    none
  */
-STATIC INLINE void RSI_PS_LatchCntrlSet(uint32_t val)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_PS_LatchCntrlSet(uint32_t val)
 {
   ULP_SPI_MEM_MAP(SELECT_BG_CLK) |= val;
 }
 
 /**
- *@fn              STATIC INLINE void RSI_PS_LatchCntrlClr(uint32_t val)
+ *@fn              STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_PS_LatchCntrlClr(uint32_t val)
  *@brief           This API is used to clear the latch configurations
  * @return    none
  */
-STATIC INLINE void RSI_PS_LatchCntrlClr(uint32_t val)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_PS_LatchCntrlClr(uint32_t val)
 {
   ULP_SPI_MEM_MAP(SELECT_BG_CLK) &= ~val;
 }
 
 /**
- *@fn              STATIC INLINE void RSI_PS_BodPwrGateButtonCalibEnable(void)
+ *@fn              STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_PS_BodPwrGateButtonCalibEnable(void)
  *@brief           This API is used to enable the power-gate enable signal for button calib and vbatt status checking block
  * @return    none
  */
-STATIC INLINE void RSI_PS_BodPwrGateButtonCalibEnable(void)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_PS_BodPwrGateButtonCalibEnable(void)
 {
   ULP_SPI_MEM_MAP(0x1E3) |= (BIT(15));
 }
 
 /**
- *@fn              STATIC INLINE void RSI_PS_BodPwrGateButtonCalibDisable(void)
+ *@fn              STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_PS_BodPwrGateButtonCalibDisable(void)
  *@brief           This API is used to disable the power-gate enable signal for button calib and vbatt status checking block
  * @return    none
  */
-STATIC INLINE void RSI_PS_BodPwrGateButtonCalibDisable(void)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_PS_BodPwrGateButtonCalibDisable(void)
 {
   ULP_SPI_MEM_MAP(0x1E3) &= ~(BIT(15));
 }
 
 /**
- *@fn              STATIC INLINE void RSI_PS_XtalEnable(void)
+ *@fn              STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_PS_XtalEnable(void)
  *@brief           This API is used to enable the XTAL
  *@return     none
  */
-STATIC INLINE void RSI_PS_XtalEnable(void)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_PS_XtalEnable(void)
 {
   *(volatile uint32_t *)0x41300480 |= (BIT(10));
 }
 
 /**
- *@fn              STATIC INLINE void RSI_PS_XtalDisable(void)
+ *@fn              STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_PS_XtalDisable(void)
  *@brief           This API is used to disable the XTAL
  *@return     none
  */
-STATIC INLINE void RSI_PS_XtalDisable(void)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_PS_XtalDisable(void)
 {
   *(volatile uint32_t *)0x41300480 &= ~(BIT(10));
 }
 
 /**
- *@fn              STATIC INLINE void RSI_PS_QspiDllDomainEnable(void)
+ *@fn              STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_PS_QspiDllDomainEnable(void)
  *@brief           This API is used to enable the power to the QSPI-DLL module
  *@return     none
  */
-STATIC INLINE void RSI_PS_QspiDllDomainEnable(void)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_PS_QspiDllDomainEnable(void)
 {
   *(volatile uint32_t *)0x24048484 |= (BIT(2) | BIT(6));
 }
 
 /**
- *@fn              STATIC INLINE void RSI_PS_QspiDllDomainDisable(void)
+ *@fn              STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_PS_QspiDllDomainDisable(void)
  *@brief           This API is used to disable the power to the QSPI-DLL module
  *@return     none
  */
-STATIC INLINE void RSI_PS_QspiDllDomainDisable(void)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_PS_QspiDllDomainDisable(void)
 {
   *(volatile uint32_t *)0x24048484 &= ~(BIT(2) | BIT(6));
 }
 
 /**
- *@fn              STATIC INLINE void RSI_PS_LdoSocDefaultModeEnable(void)
+ *@fn              STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_PS_LdoSocDefaultModeEnable(void)
  *@brief           This API is used to enable the SOC LDO default mode (Set high for 1.1 V (default mode))
  *@return     none
  */
-STATIC INLINE void RSI_PS_LdoSocDefaultModeEnable(void)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_PS_LdoSocDefaultModeEnable(void)
 {
   PMU_SPI_MEM_MAP(0x1D6) |= (BIT(5));
 }
 
 /**
- *@fn              STATIC INLINE void RSI_PS_LdoSocDefaultModeDisable(void)
+ *@fn              STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_PS_LdoSocDefaultModeDisable(void)
  *@brief           This API is used to disable the SOC LDO default mode
  *@return     none
  */
-STATIC INLINE void RSI_PS_LdoSocDefaultModeDisable(void)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_PS_LdoSocDefaultModeDisable(void)
 {
   PMU_SPI_MEM_MAP(0x1D6) &= ~(BIT(5));
 }
@@ -1395,27 +1396,27 @@ STATIC INLINE void RSI_PS_LdoSocDefaultModeDisable(void)
  *@brief           This API is used to enable bypass of LDO-RF enable and control bits to control from outside
  *@return     none
  */
-STATIC INLINE void RSI_PS_BypassLdoRfEnable(void)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_PS_BypassLdoRfEnable(void)
 {
   PMU_SPI_MEM_MAP(0x1D8) |= BIT(2);
 }
 
 /**
- *@fn              STATIC INLINE void RSI_PS_FlashLdoEnable(void)
+ *@fn              STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_PS_FlashLdoEnable(void)
  *@brief           This API is used to flash LDO enable.
  *@return     none
  */
-STATIC INLINE void RSI_PS_FlashLdoEnable(void)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_PS_FlashLdoEnable(void)
 {
   BATT_FF->MCU_PMU_LDO_CTRL_SET = BIT(0);
 }
 
 /**
- *@fn              STATIC INLINE void RSI_PS_FlashLdoDisable(void)
+ *@fn              STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_PS_FlashLdoDisable(void)
  *@brief           This API is used to disable flash LDO.
  *@return     none
  */
-STATIC INLINE void RSI_PS_FlashLdoDisable(void)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_PS_FlashLdoDisable(void)
 {
   BATT_FF->MCU_PMU_LDO_CTRL_CLEAR = BIT(0);
 }
@@ -1425,125 +1426,125 @@ STATIC INLINE void RSI_PS_FlashLdoDisable(void)
  *@brief           This API is used to disable bypass of LDO-RF enable and control bits to control from outside(i.e internal logic)
  *@return     none
  */
-STATIC INLINE void RSI_PS_BypassLdoRfDisable(void)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_PS_BypassLdoRfDisable(void)
 {
   PMU_SPI_MEM_MAP(0x1D8) &= ~BIT(2);
 }
 
 /**
- *@fn              STATIC INLINE void RSI_PS_SocPllSpiDisable(void)
+ *@fn              STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_PS_SocPllSpiDisable(void)
  *@brief           This API is used to disable the Soc-PLL SPI PG
  *@return     none
  */
-STATIC INLINE void RSI_PS_SocPllSpiDisable(void)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_PS_SocPllSpiDisable(void)
 {
   BATT_FF->PLLCCI_PWRCTRL_REG_b.SOCPLL_SPI_PG_EN = 0U;
 }
 
 /**
- *@fn              STATIC INLINE void RSI_PS_SocPllVddIsoEnable(void)
+ *@fn              STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_PS_SocPllVddIsoEnable(void)
  *@brief           This API is used to enable the Soc-PLL ISO VDD
  *@return     none
  */
-STATIC INLINE void RSI_PS_SocPllVddIsoEnable(void)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_PS_SocPllVddIsoEnable(void)
 {
   BATT_FF->PLLCCI_PWRCTRL_REG_b.SOCPLL_ISO_ENABLE = 1U;
 }
 
 /**
- *@fn              STATIC INLINE void RSI_PS_SocPllVddIsoDiable(void)
+ *@fn              STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_PS_SocPllVddIsoDiable(void)
  *@brief           This API is used to disable the Soc-PLL ISO VDD
  *@return     none
  */
-STATIC INLINE void RSI_PS_SocPllVddIsoDiable(void)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_PS_SocPllVddIsoDiable(void)
 {
   BATT_FF->PLLCCI_PWRCTRL_REG_b.SOCPLL_ISO_ENABLE = 0U;
 }
 
 /**
- *@fn              STATIC INLINE void RSI_PS_SocPllSpiEnable(void)
+ *@fn              STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_PS_SocPllSpiEnable(void)
  *@brief           This API is used to enable the Soc-PLL SPI PG
  *@return     none
  */
-STATIC INLINE void RSI_PS_SocPllSpiEnable(void)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_PS_SocPllSpiEnable(void)
 {
   BATT_FF->PLLCCI_PWRCTRL_REG_b.SOCPLL_SPI_PG_EN = 1U;
 }
 
 /**
- *@fn              STATIC INLINE void RSI_ConfigBuckBoost(uint8_t cntrl , uint8_t enable)
+ *@fn              STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_ConfigBuckBoost(uint8_t cntrl , uint8_t enable)
  *@brief           This API is used to control the buck boost
  *@param[in]       cntrl 0: Software controlled 1: Hardware controlled.
  *@param[in]       enable 0: Disabled if controlled by software(cntrl = 0) 1: Enabled if controlled by software(cntrl = 1)
  *@return     none
  */
-STATIC INLINE void RSI_ConfigBuckBoost(uint8_t cntrl, uint8_t enable)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_ConfigBuckBoost(uint8_t cntrl, uint8_t enable)
 {
   BATT_FF->MCU_FSM_CTRL_BYPASS_b.MCU_BUCK_BOOST_ENABLE_BYPASS      = (unsigned int)((enable & 0x1) & 0x01);
   BATT_FF->MCU_FSM_CTRL_BYPASS_b.MCU_BUCK_BOOST_ENABLE_BYPASS_CTRL = (unsigned int)((cntrl & 0x1) & 0x01);
 }
 
 /**
- *@fn              STATIC INLINE void RSI_ConfigPmuShutDown(uint8_t cntrl , uint8_t enable)
+ *@fn              STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_ConfigPmuShutDown(uint8_t cntrl , uint8_t enable)
  *@brief           This API is used to control the pmu shut down mode
  *@param[in]       cntrl 0: Software controlled 1: Hardware controlled.
  *@param[in]       enable 0: Disabled if controlled by software(cntrl = 0) 1: Enabled if controlled by software(cntrl = 1)
  *@return     none
  */
-STATIC INLINE void RSI_ConfigPmuShutDown(uint8_t cntrl, uint8_t enable)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_ConfigPmuShutDown(uint8_t cntrl, uint8_t enable)
 {
   BATT_FF->MCU_FSM_CTRL_BYPASS_b.MCU_PMU_SHUT_DOWN_BYPASS      = (unsigned int)((enable & 0x1) & 0x01);
   BATT_FF->MCU_FSM_CTRL_BYPASS_b.MCU_PMU_SHUT_DOWN_BYPASS_CTRL = (unsigned int)((cntrl & 0x1) & 0x01);
 }
 
 /**
- *@fn              STATIC INLINE void RSI_ChangeTassRefClock(void)
+ *@fn              STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_ChangeTassRefClock(void)
  *@brief           This API is used to change the TASS reference clock to MHz RC , This API is used only in MCU mode , should not be used in WiSeMCU mode.
  *@return     none
  */
-STATIC INLINE void RSI_ChangeTassRefClock(void)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_ChangeTassRefClock(void)
 {
   *(volatile uint32_t *)0x41300110 = (1 << 23) | (1 << 16) | (1 << 4) | 1;
 }
 
 /**
- *@fn              STATIC INLINE void RSI_SetRegSpiDivision(uint8_t div)
+ *@fn              STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_SetRegSpiDivision(uint8_t div)
  *@brief           This API is used to change the reg access SPI clock division factor.
  *@return     none
  */
-STATIC INLINE void RSI_SetRegSpiDivision(uint8_t div)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_SetRegSpiDivision(uint8_t div)
 {
   *(volatile uint32_t *)(REG_SPI_BASE_ADDR_ULP + 0x00) &= ~0xF;
   *(volatile uint32_t *)(REG_SPI_BASE_ADDR_ULP + 0x00) |= div;
 }
 
 /**
- *@fn              STATIC INLINE void RSI_ConfigXtal(uint8_t cntrl , uint8_t enable)
+ *@fn              STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_ConfigXtal(uint8_t cntrl , uint8_t enable)
  *@brief           This API is used to control the Xtal
  *@param[in]       cntrl 0: Software controlled 1: Hardware controlled.
  *@param[in]       enable 0: Disabled if controlled by software(cntrl = 0) 1: Enabled if controlled by software(cntrl = 1)
  *@return     none
  */
-STATIC INLINE void RSI_ConfigXtal(uint8_t cntrl, uint8_t enable)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_ConfigXtal(uint8_t cntrl, uint8_t enable)
 {
   BATT_FF->MCU_FSM_CTRL_BYPASS_b.MCU_XTAL_EN_40MHZ_BYPASS      = (unsigned int)((enable & 0x1) & 0x01);
   BATT_FF->MCU_FSM_CTRL_BYPASS_b.MCU_XTAL_EN_40MHZ_BYPASS_CTRL = (unsigned int)((cntrl & 0x1) & 0x01);
 }
 
 /**
- *@fn              STATIC INLINE void RSI_PS_PmuUltraSleepConfig(boolean_t en)
+ *@fn              STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_PS_PmuUltraSleepConfig(boolean_t en)
  *@brief           This API is used to enable the 'NPSS_PMU_STANDBY' 
  *@param[in]       en 1: enable the 'NPSS_PMU_STANDBY'
  *                 en 0: disable the 'NPSS_PMU_STANDBY'
  *@return     none
  */
-STATIC INLINE void RSI_PS_PmuUltraSleepConfig(boolean_t en)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_PS_PmuUltraSleepConfig(boolean_t en)
 {
   MCU_FSM->MCU_FSM_PMU_STATUS_REG_b.STANDBY_DC1P3_R = (unsigned int)(en & 0x01);
 }
 
 /**
- *@fn              STATIC INLINE void RSI_PS_PmuSetConfig(uint32_t  mask)
+ *@fn              STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_PS_PmuSetConfig(uint32_t  mask)
  *@brief           This API is used to enable/set the PMU status
  *@param[in]       mask : Ored values of PMU status bits 
  *                 \n Following are the possible parameters for this parameter    
@@ -1552,13 +1553,13 @@ STATIC INLINE void RSI_PS_PmuUltraSleepConfig(boolean_t en)
  *                 \n PMU_STS_SOC_LDO_ON
  *@return     none
  */
-STATIC INLINE void RSI_PS_PmuSetConfig(uint32_t mask)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_PS_PmuSetConfig(uint32_t mask)
 {
   MCU_FSM->MCU_FSM_SLEEP_CTRLS_AND_WAKEUP_MODE |= mask;
 }
 
 /**
- *@fn              STATIC INLINE void RSI_PS_PmuClrConfig(uint32_t  mask)
+ *@fn              STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_PS_PmuClrConfig(uint32_t  mask)
  *@brief           This API is used to disable/clear the PMU status 
  *@param[in]       mask : Ored values of PMU status bits 
  *                 \n Following are the possible parameters for this parameter    
@@ -1567,7 +1568,7 @@ STATIC INLINE void RSI_PS_PmuSetConfig(uint32_t mask)
  *                 \n PMU_STS_SOC_LDO_ON
  *@return     none
  */
-STATIC INLINE void RSI_PS_PmuClrConfig(uint32_t mask)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_PS_PmuClrConfig(uint32_t mask)
 {
   MCU_FSM->MCU_FSM_SLEEP_CTRLS_AND_WAKEUP_MODE &= ~mask;
 }
@@ -1577,7 +1578,7 @@ STATIC INLINE void RSI_PS_PmuClrConfig(uint32_t mask)
  *@brief      This API is used to enable the ptat currents to analog peripherals
  * @return    execution status
  */
-STATIC INLINE uint32_t RSI_PS_AnalogPeriPtatEnable(void)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE uint32_t RSI_PS_AnalogPeriPtatEnable(void)
 {
   return RSI_IPMU_ProgramConfigData(ana_perif_ptat_common_config1);
 }
@@ -1587,7 +1588,7 @@ STATIC INLINE uint32_t RSI_PS_AnalogPeriPtatEnable(void)
  *@brief      This API is used to disable the ptat currents to analog peripherals
  *@return     execution status
  */
-STATIC INLINE uint32_t RSI_PS_AnalogPeriPtatDisable(void)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE uint32_t RSI_PS_AnalogPeriPtatDisable(void)
 {
   return RSI_IPMU_ProgramConfigData(ana_perif_ptat_common_config2);
 }
@@ -1597,7 +1598,7 @@ STATIC INLINE uint32_t RSI_PS_AnalogPeriPtatDisable(void)
  *@brief      This API is used to enable the ptat currents to clocks and bod(cmp_npss)
  *@return     execution status
  */
-STATIC INLINE uint32_t RSI_PS_BodClksPtatEnable(void)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE uint32_t RSI_PS_BodClksPtatEnable(void)
 {
   return RSI_IPMU_ProgramConfigData(ipmu_bod_clks_common_config1);
 }
@@ -1607,7 +1608,7 @@ STATIC INLINE uint32_t RSI_PS_BodClksPtatEnable(void)
  *@brief      This API is used to disable the ptat currents to clocks and bod(cmp_npss)
  *@return     execution status
  */
-STATIC INLINE uint32_t RSI_PS_BodClksPtatDisable(void)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE uint32_t RSI_PS_BodClksPtatDisable(void)
 {
   return RSI_IPMU_ProgramConfigData(ipmu_bod_clks_common_config2);
 }
@@ -1617,7 +1618,7 @@ STATIC INLINE uint32_t RSI_PS_BodClksPtatDisable(void)
  *@brief      This API is used configure the registers for clock more than 120 MHz in PS4
  *@return     none
  */
-STATIC INLINE void RSI_PS_PS4SetRegisters(void)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_PS_PS4SetRegisters(void)
 {
   // Configure the prefetch and registering when SOC clock is more than 120 MHz
   ICACHE2_ADDR_TRANSLATE_1_REG = BIT(21); // Icache registering when clock frequency is more than 120 MHz
@@ -1631,7 +1632,7 @@ STATIC INLINE void RSI_PS_PS4SetRegisters(void)
  *@brief      This API is used to clear the MISC registers for clock less than 120 MHz for core
  *@return     none
  */
-STATIC INLINE void RSI_PS_PS4ClearRegisters(void)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_PS_PS4ClearRegisters(void)
 {
   // Clears the prefetch and registering when SOC clock is less than 120 MHz
   ICACHE2_ADDR_TRANSLATE_1_REG &= ~BIT(21); // Clearing Icache registering when clock frequency is less than 120 MHz
@@ -1645,7 +1646,7 @@ STATIC INLINE void RSI_PS_PS4ClearRegisters(void)
  *@brief      This API is used update the global clock variable after clock setting in PS2
  *@return     none
  */
-STATIC INLINE void RSI_PS_PS2UpdateClockVariable(void)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_PS_PS2UpdateClockVariable(void)
 {
   // Updates the system clock.
   system_clocks.rc_mhz_clock = 20000000;
@@ -1658,7 +1659,7 @@ STATIC INLINE void RSI_PS_PS2UpdateClockVariable(void)
  *@brief      This API is used wakeup the NWP and program the flash
  *@return     none
  */
-STATIC INLINE void RSI_PS_WakeupTAandProgramFlash(void)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_PS_WakeupTAandProgramFlash(void)
 {
   if (!(P2P_STATUS_REGISTER & BIT(3))) {
     //!wakeup NWP
@@ -1681,7 +1682,7 @@ STATIC INLINE void RSI_PS_WakeupTAandProgramFlash(void)
  *@brief      This API is used set the active status of mcu after wakeup
  *@return     none
  */
-STATIC INLINE void RSI_PS_SetMCUActiveStatus(void)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_PS_SetMCUActiveStatus(void)
 {
   P2P_STATUS_REGISTER = BIT(1);
 }
@@ -1691,7 +1692,7 @@ STATIC INLINE void RSI_PS_SetMCUActiveStatus(void)
  *@brief      This API is used to check is current state is PS2 or not
  *@return     true if PS2 state false if not
  */
-STATIC INLINE boolean_t RSI_PS_IsPS2State(void)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE boolean_t RSI_PS_IsPS2State(void)
 {
   return (M4_ULP_SLP_STATUS_REG & ULP_MODE_SWITCHED_NPSS);
 }

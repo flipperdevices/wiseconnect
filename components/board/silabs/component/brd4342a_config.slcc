@@ -237,7 +237,7 @@ config_file:
     file_id: ssi_config
     instance: secondary
     vendor: silabs
-  path: common_config/sl_si91x_ssi_secondary_config.h
+  path: brd4342a/sl_si91x_ssi_secondary_config.h
 - override:
     component: sl_ssi_instance
     file_id: ssi_config

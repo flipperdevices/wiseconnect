@@ -81,6 +81,8 @@
 #define USERNAME "username"
 #define PASSWORD "password"
 
+#define PRINT_CHAR_BUFFER_CHUNK_SIZE 128
+
 /******************************************************
  *               Variable Definitions
  ******************************************************/
@@ -94,7 +96,6 @@ const osThreadAttr_t thread_attributes = {
   .stack_size = 3072,
   .priority   = osPriorityLow,
   .tz_module  = 0,
-  .reserved   = 0,
 };
 
 static const sl_wifi_device_configuration_t wifi_mqtt_client_configuration = {
@@ -124,7 +125,10 @@ static const sl_wifi_device_configuration_t wifi_mqtt_client_configuration = {
                       | SL_SI91X_EXT_EMB_MQTT_ENABLE),
                    .ble_feature_bit_map     = 0,
                    .ble_ext_feature_bit_map = 0,
-                   .config_feature_bit_map  = 0 }
+                   .config_feature_bit_map  = 0 },
+  .ta_pool         = { .tx_ratio_in_buffer_pool = 0, .rx_ratio_in_buffer_pool = 0, .global_ratio_in_buffer_pool = 0 },
+  .efuse_data_type = SL_SI91X_EFUSE_MFG_SW_VERSION,
+  .nwp_fw_image_number = SL_SI91X_NWP_FW_IMAGE_NUMBER_0
 };
 
 sl_mqtt_client_t client = { 0 };
@@ -184,7 +188,7 @@ sl_mqtt_client_last_will_message_t last_will_message = {
 static void application_start(void *argument);
 void mqtt_client_message_handler(void *client, sl_mqtt_client_message_t *message, void *context);
 void mqtt_client_event_handler(void *client, sl_mqtt_client_event_t event, void *event_data, void *context);
-void mqtt_client_error_event_handler(void *client, sl_mqtt_client_error_status_t *error);
+void mqtt_client_error_event_handler(void *client, sl_mqtt_client_error_info_t *error);
 void mqtt_client_cleanup();
 void print_char_buffer(char *buffer, uint32_t buffer_length);
 sl_status_t mqtt_example();
@@ -205,18 +209,18 @@ static void application_start(void *argument)
 
   status = sl_net_init(SL_NET_WIFI_CLIENT_INTERFACE, &wifi_mqtt_client_configuration, NULL, NULL);
   if (status != SL_STATUS_OK && status != SL_STATUS_ALREADY_INITIALIZED) {
-    printf("Failed to start Wi-Fi client interface: 0x%lx\r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "Failed to start Wi-Fi client interface: 0x%lx\r\n", status);
     return;
   }
-  printf("\r\nWi-Fi client interface up Success\r\n");
+  SL_DEBUG_LOG_V2(INFO, "Wi-Fi client interface up Success\r\n");
 
   status = sl_net_up(SL_NET_WIFI_CLIENT_INTERFACE, SL_NET_DEFAULT_WIFI_CLIENT_PROFILE_ID);
   if (status != SL_STATUS_OK) {
-    printf("Failed to bring Wi-Fi client interface up: 0x%lx\r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "Failed to bring Wi-Fi client interface up: 0x%lx\r\n", status);
     return;
   }
 
-  printf("Wi-Fi client connected\r\n");
+  SL_DEBUG_LOG_V2(INFO, "Wi-Fi client connected\r\n");
 
   mqtt_example();
 
@@ -240,7 +244,7 @@ void mqtt_client_message_handler(void *client, sl_mqtt_client_message_t *message
 {
   UNUSED_PARAMETER(context);
   sl_status_t status;
-  printf("Message Received on Topic: ");
+  SL_DEBUG_LOG_V2(INFO, "Message Received on Topic:\r\n");
 
   print_char_buffer((char *)message->topic, message->topic_length);
   print_char_buffer((char *)message->content, message->content_length);
@@ -252,7 +256,7 @@ void mqtt_client_message_handler(void *client, sl_mqtt_client_message_t *message
                                       0,
                                       TOPIC_TO_BE_SUBSCRIBED);
   if (status != SL_STATUS_IN_PROGRESS) {
-    printf("Failed to unsubscribe : 0x%lx\r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "Failed to unsubscribe : 0x%lx\r\n", status);
 
     mqtt_client_cleanup();
     return;
@@ -261,18 +265,81 @@ void mqtt_client_message_handler(void *client, sl_mqtt_client_message_t *message
 
 void print_char_buffer(char *buffer, uint32_t buffer_length)
 {
-  for (uint32_t index = 0; index < buffer_length; index++) {
-    printf("%c", buffer[index]);
+  if (buffer == NULL) {
+    SL_DEBUG_LOG_V2(ERROR, "Buffer is NULL\r\n");
+    return;
   }
 
-  printf("\r\n");
+  /* Zero-length MQTT payloads are valid; mark them explicitly in the log. */
+  if (buffer_length == 0) {
+    SL_DEBUG_LOG_V2(INFO, "(empty)\r\n");
+    return;
+  }
+
+  if (buffer_length > SL_MQTT_CLIENT_MAX_RX_PAYLOAD_SIZE) {
+    buffer_length = SL_MQTT_CLIENT_MAX_RX_PAYLOAD_SIZE;
+  }
+
+  char chunk[PRINT_CHAR_BUFFER_CHUNK_SIZE + 1];
+  uint32_t offset = 0;
+
+  while (offset < buffer_length) {
+    uint32_t remaining  = buffer_length - offset;
+    uint32_t this_chunk = (remaining > PRINT_CHAR_BUFFER_CHUNK_SIZE) ? PRINT_CHAR_BUFFER_CHUNK_SIZE : remaining;
+
+    memcpy(chunk, &buffer[offset], this_chunk);
+    chunk[this_chunk] = '\0';
+    offset += this_chunk;
+    if (offset >= buffer_length) {
+      SL_DEBUG_LOG_V2(INFO, "%s\r\n", (uintptr_t)chunk);
+    } else {
+      SL_DEBUG_LOG_V2(INFO, "%s", (uintptr_t)chunk);
+    }
+  }
 }
 
-void mqtt_client_error_event_handler(void *client, sl_mqtt_client_error_status_t *error)
+void mqtt_client_error_event_handler(void *client, sl_mqtt_client_error_info_t *error)
 {
   UNUSED_PARAMETER(client);
-  printf("Terminating program, Error: %d\r\n", *error);
-  mqtt_client_cleanup();
+
+  if (error == NULL) {
+    SL_DEBUG_LOG_V2(ERROR, "MQTT Error: event data is NULL\r\n");
+    return;
+  }
+
+  switch (error->error_status) {
+    case SL_MQTT_CLIENT_RECEIVE_FAILED:
+      SL_DEBUG_LOG_V2(ERROR, "MQTT Error: Message receive failed with status: 0x%lx\r\n", error->status_code);
+      break;
+
+    case SL_MQTT_CLIENT_RECEIVE_PAYLOAD_TOO_LARGE:
+      SL_DEBUG_LOG_V2(ERROR,
+                      "MQTT Error: Received payload exceeds max size (%u bytes). "
+                      "Increase SL_MQTT_CLIENT_MAX_RX_PAYLOAD_SIZE. Failed with status: 0x%lx",
+                      SL_MQTT_CLIENT_MAX_RX_PAYLOAD_SIZE,
+                      error->status_code);
+      break;
+
+    case SL_MQTT_CLIENT_RECEIVE_MEMORY_ALLOCATION_FAILED:
+      SL_DEBUG_LOG_V2(ERROR,
+                      "MQTT Error: Failed to allocate memory for message reassembly with status: 0x%lx",
+                      error->status_code);
+      break;
+
+    case SL_MQTT_CLIENT_RECEIVE_DATA_CORRUPTED:
+      SL_DEBUG_LOG_V2(ERROR,
+                      "MQTT Error: Data corruption detected during message reassembly with status: 0x%lx",
+                      error->status_code);
+      break;
+
+    default:
+      SL_DEBUG_LOG_V2(ERROR,
+                      "Terminating program due to error: %d, status: 0x%lx\r\n",
+                      error->error_status,
+                      error->status_code);
+      mqtt_client_cleanup();
+      break;
+  }
 }
 
 void mqtt_client_event_handler(void *client, sl_mqtt_client_event_t event, void *event_data, void *context)
@@ -289,7 +356,7 @@ void mqtt_client_event_handler(void *client, sl_mqtt_client_event_t event, void 
                                         mqtt_client_message_handler,
                                         TOPIC_TO_BE_SUBSCRIBED);
       if (status != SL_STATUS_IN_PROGRESS) {
-        printf("Failed to subscribe : 0x%lx\r\n", status);
+        SL_DEBUG_LOG_V2(ERROR, "Failed to subscribe : 0x%lx\r\n", status);
 
         mqtt_client_cleanup();
         return;
@@ -297,7 +364,7 @@ void mqtt_client_event_handler(void *client, sl_mqtt_client_event_t event, void 
 
       status = sl_mqtt_client_publish(client, &message_to_be_published, 0, &message_to_be_published);
       if (status != SL_STATUS_IN_PROGRESS) {
-        printf("Failed to publish message: 0x%lx\r\n", status);
+        SL_DEBUG_LOG_V2(ERROR, "Failed to publish message: 0x%lx\r\n", status);
 
         mqtt_client_cleanup();
         return;
@@ -309,7 +376,7 @@ void mqtt_client_event_handler(void *client, sl_mqtt_client_event_t event, void 
     case SL_MQTT_CLIENT_MESSAGE_PUBLISHED_EVENT: {
       sl_mqtt_client_message_t *published_message = (sl_mqtt_client_message_t *)context;
 
-      printf("Published message successfully on topic: ");
+      SL_DEBUG_LOG_V2(INFO, "Published message successfully on topic:\r\n");
       print_char_buffer((char *)published_message->topic, published_message->topic_length);
       break;
     }
@@ -317,28 +384,28 @@ void mqtt_client_event_handler(void *client, sl_mqtt_client_event_t event, void 
     case SL_MQTT_CLIENT_SUBSCRIBED_EVENT: {
       char *subscribed_topic = (char *)context;
 
-      printf("Subscribed to Topic: %s\r\n", subscribed_topic);
+      SL_DEBUG_LOG_V2(INFO, "Subscribed to Topic: %s\r\n", (uintptr_t)subscribed_topic);
       break;
     }
 
     case SL_MQTT_CLIENT_UNSUBSCRIBED_EVENT: {
       char *unsubscribed_topic = (char *)context;
 
-      printf("Unsubscribed from topic: %s\r\n", unsubscribed_topic);
+      SL_DEBUG_LOG_V2(INFO, "Unsubscribed from topic: %s\r\n", (uintptr_t)unsubscribed_topic);
 
       sl_mqtt_client_disconnect(client, 0);
       break;
     }
 
     case SL_MQTT_CLIENT_DISCONNECTED_EVENT: {
-      printf("Disconnected from MQTT broker\r\n");
+      SL_DEBUG_LOG_V2(INFO, "Disconnected from MQTT broker\r\n");
 
       mqtt_client_cleanup();
       break;
     }
 
     case SL_MQTT_CLIENT_ERROR_EVENT: {
-      mqtt_client_error_event_handler(client, (sl_mqtt_client_error_status_t *)event_data);
+      mqtt_client_error_event_handler(client, (sl_mqtt_client_error_info_t *)event_data);
       break;
     }
     default:
@@ -357,10 +424,10 @@ sl_status_t mqtt_example()
                                    cacert,
                                    sizeof(cacert) - 1);
     if (status != SL_STATUS_OK) {
-      printf("\r\nLoading TLS CA certificate in to FLASH Failed, Error Code : 0x%lX\r\n", status);
+      SL_DEBUG_LOG_V2(ERROR, "Loading TLS CA certificate in to FLASH Failed, Error Code : 0x%lX\r\n", status);
       return status;
     }
-    printf("\r\nLoad TLS CA certificate at index %d Success\r\n", CERTIFICATE_INDEX);
+    SL_DEBUG_LOG_V2(INFO, "Load TLS CA certificate at index %d Success\r\n", CERTIFICATE_INDEX);
   }
 
   if (SEND_CREDENTIALS) {
@@ -388,11 +455,11 @@ sl_status_t mqtt_example()
 
     if (status != SL_STATUS_OK) {
       mqtt_client_cleanup();
-      printf("Failed to set credentials: 0x%lx\r\n ", status);
+      SL_DEBUG_LOG_V2(ERROR, "Failed to set credentials: 0x%lx ", status);
 
       return status;
     }
-    printf("Set credentials Success \r\n ");
+    SL_DEBUG_LOG_V2(INFO, "Set credentials Success  ");
 
     free(client_credentails);
     mqtt_client_configuration.credential_id = SL_NET_MQTT_CLIENT_CREDENTIAL_ID(0);
@@ -400,12 +467,27 @@ sl_status_t mqtt_example()
 
   status = sl_mqtt_client_init(&client, mqtt_client_event_handler);
   if (status != SL_STATUS_OK) {
-    printf("Failed to init mqtt client: 0x%lx\r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "Failed to init mqtt client: 0x%lx\r\n", status);
 
     mqtt_client_cleanup();
     return status;
   }
-  printf("Init mqtt client Success \r\n");
+  SL_DEBUG_LOG_V2(INFO, "Init mqtt client Success \r\n");
+
+  sl_mqtt_client_tcp_tls_advanced_options_t mqtt_tcp_tls_opts = {
+    .tcp_keepalive_initial_time_sec   = 180,
+    .tcp_max_retry_count              = 10,
+    .max_retransmission_timeout_value = 3,
+    .ssl_ciphers_bitmap               = 0,
+    .ssl_ext_ciphers_bitmap           = 0,
+  };
+  status = sl_mqtt_client_set_tcp_tls_advanced_configuration(&client, &mqtt_tcp_tls_opts);
+  if (status != SL_STATUS_OK) {
+    SL_DEBUG_LOG_V2(ERROR, "Failed to set MQTT TCP/TLS advanced configuration: 0x%lx", status);
+    mqtt_client_cleanup();
+    return status;
+  }
+  SL_DEBUG_LOG_V2(INFO, "MQTT TCP/TLS advanced configuration set ");
 
 #ifdef SLI_SI91X_ENABLE_IPV6
   unsigned char hex_addr[SL_IPV6_ADDRESS_LENGTH] = { 0 };
@@ -414,7 +496,7 @@ sl_status_t mqtt_example()
                          hex_addr,
                          (unsigned int *)mqtt_broker_configuration.ip.ip.v6.value);
   if (status != 0x1) {
-    printf("\r\nIPv6 conversion failed.\r\n");
+    SL_DEBUG_LOG_V2(ERROR, "IPv6 conversion failed.\r\n");
     mqtt_client_cleanup();
     return status;
   }
@@ -422,7 +504,7 @@ sl_status_t mqtt_example()
 #else
   status = sl_net_inet_addr(MQTT_BROKER_IP, &mqtt_broker_configuration.ip.ip.v4.value);
   if (status != SL_STATUS_OK) {
-    printf("Failed to convert IP address \r\n");
+    SL_DEBUG_LOG_V2(ERROR, "Failed to convert IP address \r\n");
 
     mqtt_client_cleanup();
     return status;
@@ -433,18 +515,18 @@ sl_status_t mqtt_example()
   status =
     sl_mqtt_client_connect_v2(&client, &mqtt_broker_configuration, &last_will_message, &mqtt_client_configuration, 0);
   if (status != SL_STATUS_IN_PROGRESS) {
-    printf("Failed to connect to mqtt broker: 0x%lx\r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "Failed to connect to mqtt broker: 0x%lx\r\n", status);
 
     mqtt_client_cleanup();
     return status;
   }
-  printf("Connect to mqtt broker Success \r\n");
+  SL_DEBUG_LOG_V2(INFO, "Connect to mqtt broker Success \r\n");
 
   while (!is_execution_completed) {
     osThreadYield();
   }
 
-  printf("Example execution completed \r\n");
+  SL_DEBUG_LOG_V2(INFO, "Example execution completed \r\n");
 
   return SL_STATUS_OK;
 }

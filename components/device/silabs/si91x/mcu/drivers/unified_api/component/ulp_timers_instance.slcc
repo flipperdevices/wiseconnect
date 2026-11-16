@@ -46,6 +46,3 @@ template_contribution:
       include: "sl_ulp_timer_instances.h"
 requires:
   - name: sl_ulp_timer
-documentation:
-    docset: wiseconnect
-    document: wiseconnect-api-reference-guide-si91x-peripherals/ulp-timer

@@ -13,13 +13,22 @@ include_directories(
     ../../socket/inc
     ../../sl_net/inc
     ../../../../../../service/bsd_socket/inc
-    ../../../../../../tests/unit_tests/inc
+    ../../../../../../../tests/unit_tests/inc
     ../inc
     ../../inc
+    ../../sli_si91x_wifi_command_engine/inc
     ../../../../../../protocol/wifi/inc
     ../../../../../service/bsd_socket/inc
     ../../../../../../sli_wifi/inc
     ../../../../../service/mdns/inc/
+    ../../../../../../sli_queue_manager/inc/
+    ../../../../../../sli_buffer_manager/inc/
+    ../../../../../../sli_routing_utility/inc/
+    ../../../../../../gsdk/service/mem_pool/inc
+    ../../../../../../sli_command_engine/inc
+    ../../../../../../sli_event_engine/inc
+    ../../../../../../device/silabs/si91x/mcu/drivers/service/sl_log/inc
+    ../../unit_tests/inc
 )
 # Add source files for the test executable
 add_executable(${PROJECT_NAME}

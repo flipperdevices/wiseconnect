@@ -3,7 +3,7 @@
 * @brief
 *******************************************************************************
 * # License
-* <b>Copyright 2020 Silicon Laboratories Inc. www.silabs.com</b>
+* <b>Copyright 2026 Silicon Laboratories Inc. www.silabs.com</b>
 *******************************************************************************
 *
 * The licensor of this software is Silicon Laboratories Inc. Your use of this
@@ -208,7 +208,7 @@
 
 #define RSI_TX_EVENT_WAIT_TIME (30000 + TX_WAIT_TIME)
 #define DEFAULT_TIMEOUT        RSI_TX_EVENT_WAIT_TIME
-#define WAIT_TIMEOOUT          5000
+#define WAIT_TIMEOUT           5000
 
 /********NWP GPIO defines ******************************/
 //! GPIO address
@@ -315,7 +315,7 @@ typedef enum rsi_common_cmd_request_e {
   RSI_COMMON_REQ_GET_CONFIG    = 0x0C,
 
   // FW Fall back request from host
-  SLI_SI91X_FW_FALLBACK_REQ_FROM_HOST = 0x2C
+  SLI_COMMON_REQ_FW_FALLBACK_FROM_HOST = 0x2C
 #ifdef CONFIGURE_GPIO_FROM_HOST
   ,
   RSI_COMMON_REQ_GPIO_CONFIG = 0x28
@@ -333,16 +333,17 @@ typedef enum ta_m4_commands_e {
 #ifdef SLI_SI917
   SL_SI91X_WRITE_TO_COMMON_FLASH = 6, ///< //Writes data to the common flash memory
 #endif
+  SL_SI91X_MCU_SECURE_STORAGE_ENABLE_PROTECTION  = 12, ///< Enables MCU secure storage write protection
+  SL_SI91X_MCU_SECURE_STORAGE_DISABLE_PROTECTION = 13, ///< Disables MCU secure storage write protection
 } sl_si91x_ta_m4_commands_t;
 
 ///  M4 and NWP secure handshake request structure.
 typedef struct ta_m4_handshake_param {
-  sl_si91x_ta_m4_commands_t
-    sub_cmd; ///< sub_cmd form the  enum ta_m4_commands_e(Main command type is RSI_COMMON_REQ_TA_M4_COMMANDS)
+  uint8_t sub_cmd; ///< sub_cmd from @ref sl_si91x_ta_m4_commands_t (main command is SLI_COMMON_REQ_TA_M4_COMMANDS)
   uint8_t input_data_size; ///< length of input_data
   uint8_t *
     input_data; ///< Input data. In this input data first byte is reserved for enable(1) or Disable(0) sub_cmd of this structure.
-} sli_si91x_ta_m4_handshake_parameters_t;
+} SL_ATTRIBUTE_PACKED sli_si91x_ta_m4_handshake_parameters_t;
 
 #ifdef SLI_SI917
 #define RSI_MAX_CHUNK_SIZE 1400
@@ -600,7 +601,6 @@ typedef struct rsi_set_config_s {
  * *               Function Declarations
  * ******************************************************/
 int32_t rsi_driver_process_common_recv_cmd(rsi_pkt_t *pkt);
-int32_t rsi_driver_common_send_cmd(rsi_common_cmd_request_t cmd, rsi_pkt_t *pkt);
 int8_t rsi_common_cb_init(rsi_common_cb_t *common_cb);
 void rsi_common_set_status(int32_t status);
 void rsi_handle_slp_wkp(uint8_t frame_type);

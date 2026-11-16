@@ -73,12 +73,19 @@ sl_status_t sl_si91x_veml6035_init(sl_i2c_instance_t i2c_instance, uint8_t addr,
   // Reset the sensor
   status = sl_si91x_veml6035_reset(i2c_instance, addr);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si91x_veml6035_init: reset failed, status=0x%04lX,line no : %d \r\n",
+                          (unsigned long)status,
+                          __LINE__);
     return status;
   }
 
   // Configure to lowest sensitivity (highest range)
   status = sl_si91x_veml6035_configure_sensitivity(i2c_instance, addr, SENSITIVITY_LOW, GAIN_NORMAL);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si91x_veml6035_init: configure_sensitivity "
+                          "failed, status=0x%04lX,line no : %d \r\n",
+                          (unsigned long)status,
+                          __LINE__);
     return status;
   }
 
@@ -93,14 +100,23 @@ sl_status_t sl_si91x_veml6035_init(sl_i2c_instance_t i2c_instance, uint8_t addr,
                                            SL_VEML6035_CHANNEL_EN_ALS_WHITE,
                                            SL_VEML6035_CHANNEL_EN_MASK);
     if (status != SL_STATUS_OK) {
+      SL_PRINT_STRING_ERROR("sl_si91x_veml6035_init: white channel config "
+                            "failed, status=0x%04lX,line no : %d \r\n",
+                            (unsigned long)status,
+                            __LINE__);
       return status;
     }
   }
 
   // Enable sensor
   status = sl_si91x_veml6035_enable_sensor(i2c_instance, addr, true);
-
-  return status;
+  if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si91x_veml6035_init: enable sensor failed, status=0x%04lX,line no : %d \r\n",
+                          (unsigned long)status,
+                          __LINE__);
+    return status;
+  }
+  return SL_STATUS_OK;
 }
 
 /***************************************************************************/ /**
@@ -114,6 +130,10 @@ sl_status_t sl_si91x_veml6035_reset(sl_i2c_instance_t i2c_instance, uint8_t addr
   // Reset ALS_CONF register
   status = veml6035_read_register(i2c_instance, addr, SL_VEML6035_ALS_CONF, &regdata);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si91x_veml6035_reset: read register failed, "
+                          "status=0x%04lX,line no : %d \r\n",
+                          (unsigned long)status,
+                          __LINE__);
     return status;
   }
 
@@ -123,6 +143,10 @@ sl_status_t sl_si91x_veml6035_reset(sl_i2c_instance_t i2c_instance, uint8_t addr
 
   status = veml6035_write_register(i2c_instance, addr, SL_VEML6035_ALS_CONF, regdata);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si91x_veml6035_reset: write register failed, "
+                          "status=0x%04lX,line no : %d \r\n",
+                          (unsigned long)status,
+                          __LINE__);
     return status;
   }
 
@@ -180,6 +204,10 @@ sl_status_t sl_si91x_veml6035_configure_sensitivity(sl_i2c_instance_t i2c_instan
     data |= SL_VEML6035_DG_DOUBLE;
   } else if (gain != 1) {
     // Invalid gain val
+    SL_PRINT_STRING_ERROR("sl_si91x_veml6035_configure_sensitivity: invalid gain value (gain=%lu), "
+                          "line %d \r\n",
+                          (unsigned long)gain,
+                          __LINE__);
     return SL_STATUS_INVALID_PARAMETER;
   }
 
@@ -213,11 +241,19 @@ sl_status_t sl_si91x_veml6035_get_als_lux(sl_i2c_instance_t i2c_instance, uint8_
 
   status = veml6035_read_als_raw(i2c_instance, addr, false, &als_counts);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si91x_veml6035_get_als_lux: read als raw failed, "
+                          "status=0x%04lX,line no : %d \r\n",
+                          (unsigned long)status,
+                          __LINE__);
     return status;
   }
 
   status = veml6035_get_resolution(i2c_instance, addr, &resolution);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si91x_veml6035_get_als_lux: get resolution "
+                          "failed, status=0x%04lX,line no : %d \r\n",
+                          (unsigned long)status,
+                          __LINE__);
     return status;
   }
 
@@ -239,21 +275,37 @@ sl_status_t sl_si91x_veml6035_get_white_lux(sl_i2c_instance_t i2c_instance, uint
 
   status = veml6035_read_register(i2c_instance, addr, SL_VEML6035_ALS_CONF, &regdata);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si91x_veml6035_get_white_lux: read register "
+                          "failed, status=0x%04lX,line no : %d \r\n",
+                          (unsigned long)status,
+                          __LINE__);
     return status;
   }
 
   if ((regdata & SL_VEML6035_CHANNEL_EN_MASK) != SL_VEML6035_CHANNEL_EN_ALS_WHITE) {
     // White channel not enabled
+    SL_PRINT_STRING_ERROR("sl_si91x_veml6035_get_white_lux: white channel not "
+                          "enabled, status=0x%04lX,line no : %d \r\n",
+                          (unsigned long)status,
+                          __LINE__);
     return SL_STATUS_INVALID_CONFIGURATION;
   }
 
   status = veml6035_read_als_raw(i2c_instance, addr, true, &als_counts);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si91x_veml6035_get_white_lux: read als raw "
+                          "failed, status=0x%04lX,line no : %d \r\n",
+                          (unsigned long)status,
+                          __LINE__);
     return status;
   }
 
   status = veml6035_get_resolution(i2c_instance, addr, &resolution);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si91x_veml6035_get_white_lux: get resolution "
+                          "failed, status=0x%04lX,line no : %d \r\n",
+                          (unsigned long)status,
+                          __LINE__);
     return status;
   }
 
@@ -279,11 +331,19 @@ sl_status_t sl_si91x_veml6035_configure_interrupt_mode(sl_i2c_instance_t i2c_ins
   // Set thresholds
   status = veml6035_write_register(i2c_instance, addr, SL_VEML6035_WH, high_threshold);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si91x_veml6035_configure_interrupt_mode: write "
+                          "register failed, status=0x%04lX,line no : %d \r\n",
+                          (unsigned long)status,
+                          __LINE__);
     return status;
   }
 
   status = veml6035_write_register(i2c_instance, addr, SL_VEML6035_WL, low_threshold);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si91x_veml6035_configure_interrupt_mode: write "
+                          "register failed, status=0x%04lX,line no : %d \r\n",
+                          (unsigned long)status,
+                          __LINE__);
     return status;
   }
 
@@ -295,6 +355,10 @@ sl_status_t sl_si91x_veml6035_configure_interrupt_mode(sl_i2c_instance_t i2c_ins
 
   status = veml6035_write_register_field(i2c_instance, addr, SL_VEML6035_ALS_CONF, data, SL_VEML6035_INT_CHANNEL_MASK);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si91x_veml6035_configure_interrupt_mode: write "
+                          "register field failed, status=0x%04lX,line no : %d \r\n",
+                          (unsigned long)status,
+                          __LINE__);
     return status;
   }
 
@@ -302,6 +366,10 @@ sl_status_t sl_si91x_veml6035_configure_interrupt_mode(sl_i2c_instance_t i2c_ins
   status =
     veml6035_write_register_field(i2c_instance, addr, SL_VEML6035_ALS_CONF, persistence, SL_VEML6035_ALS_PERS_MASK);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si91x_veml6035_configure_interrupt_mode: write "
+                          "register field failed, status=0x%04lX,line no : %d \r\n",
+                          (unsigned long)status,
+                          __LINE__);
     return status;
   }
 
@@ -343,6 +411,10 @@ sl_status_t sl_si91x_veml6035_read_interrupt_status(sl_i2c_instance_t i2c_instan
 
   status = veml6035_read_register(i2c_instance, addr, SL_VEML6035_ALS_CONF, &regdata);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si91x_veml6035_read_interrupt_status: read "
+                          "register failed, status=0x%04lX,line no : %d \r\n",
+                          (unsigned long)status,
+                          __LINE__);
     return status;
   }
 
@@ -370,6 +442,10 @@ sl_status_t sl_si91x_veml6035_configure_psm(sl_i2c_instance_t i2c_instance,
 
   status = veml6035_write_register_field(i2c_instance, addr, SL_VEML6035_PSM, psm_wait, SL_VEML6035_PSM_WAIT_MASK);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si91x_veml6035_configure_psm: write register "
+                          "field failed, status=0x%04lX,line no : %d \r\n",
+                          (unsigned long)status,
+                          __LINE__);
     return status;
   }
 
@@ -408,6 +484,10 @@ static sl_status_t veml6035_get_resolution(sl_i2c_instance_t i2c_instance, uint8
 
   status = veml6035_read_register(i2c_instance, addr, SL_VEML6035_ALS_CONF, &conf_register);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("veml6035_get_resolution: read register failed, "
+                          "status=0x%04lX,line no : %d \r\n",
+                          (unsigned long)status,
+                          __LINE__);
     return status;
   }
 
@@ -455,6 +535,9 @@ static sl_status_t veml6035_get_resolution(sl_i2c_instance_t i2c_instance, uint8
 
     default:
       // Invalid integration time configuration
+      SL_PRINT_STRING_ERROR("veml6035_get_resolution: invalid integration time configuration, "
+                            "line no : %d \r\n",
+                            __LINE__);
       return SL_STATUS_INVALID_CONFIGURATION;
   }
 
@@ -519,10 +602,18 @@ static sl_status_t veml6035_read_register(sl_i2c_instance_t i2c_instance, uint8_
 
   // Validate invalid parameters
   if ((i2c_instance >= SL_I2C_LAST) || (reg >= SL_VEML6035_IF)) {
+    SL_PRINT_STRING_ERROR("sl_si91x_veml6035_read_register: invalid parameter, "
+                          "status=0x%04lX,line no : %d \r\n",
+                          (unsigned long)status,
+                          __LINE__);
     return SL_STATUS_INVALID_PARAMETER;
   }
   // Validate NULL parameters
   if (data == NULL) {
+    SL_PRINT_STRING_ERROR("sl_si91x_veml6035_read_register: null pointer, "
+                          "status=0x%04lX,line no : %d \r\n",
+                          (unsigned long)status,
+                          __LINE__);
     return SL_STATUS_NULL_POINTER;
   }
 
@@ -530,6 +621,10 @@ static sl_status_t veml6035_read_register(sl_i2c_instance_t i2c_instance, uint8_
   // Send user register 1/ heater control register command to sensor
   status = sl_i2c_driver_send_data_blocking(i2c_instance, addr, i2c_write_data, write_buffer_size);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si91x_veml6035_read_register: send data blocking "
+                          "failed, status=0x%04lX,line no : %d \r\n",
+                          (unsigned long)status,
+                          __LINE__);
     return status;
   }
 
@@ -539,6 +634,10 @@ static sl_status_t veml6035_read_register(sl_i2c_instance_t i2c_instance, uint8_
   // Receive response for user register 1/ heater control register command from sensor
   status = sl_i2c_driver_receive_data_blocking(i2c_instance, addr, i2c_read_data, read_buffer_size);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si91x_veml6035_read_register: receive data "
+                          "blocking failed, status=0x%04lX,line no : %d \r\n",
+                          (unsigned long)status,
+                          __LINE__);
     return status;
   }
   wait_till_i2c_gets_idle(i2c_instance);
@@ -573,6 +672,10 @@ static sl_status_t veml6035_write_register_field(sl_i2c_instance_t i2c_instance,
 
   status = veml6035_read_register(i2c_instance, addr, reg, &temp);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si91x_veml6035_write_register_field: read "
+                          "register failed, status=0x%04lX,line no : %d \r\n",
+                          (unsigned long)status,
+                          __LINE__);
     return status;
   }
 
@@ -602,6 +705,10 @@ static sl_status_t veml6035_write_register(sl_i2c_instance_t i2c_instance, uint8
 
   // Validate invalid parameters
   if ((i2c_instance >= SL_I2C_LAST) || (reg >= SL_VEML6035_IF)) {
+    SL_PRINT_STRING_ERROR("sl_si91x_veml6035_write_register: invalid "
+                          "parameter, status=0x%04lX,line no : %d \r\n",
+                          (unsigned long)status,
+                          __LINE__);
     return SL_STATUS_INVALID_PARAMETER;
   }
 
@@ -612,6 +719,10 @@ static sl_status_t veml6035_write_register(sl_i2c_instance_t i2c_instance, uint8
   // Send user register 1/ heater control register command to sensor
   status = sl_i2c_driver_send_data_blocking(i2c_instance, addr, i2c_write_data, write_buffer_size);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si91x_veml6035_write_register: send data "
+                          "blocking failed, status=0x%04lX,line no : %d \r\n",
+                          (unsigned long)status,
+                          __LINE__);
     return status;
   }
   wait_till_i2c_gets_idle(i2c_instance);

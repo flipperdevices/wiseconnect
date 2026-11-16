@@ -1,9 +1,9 @@
 id: iostream_swo_si91x
+label: IO Stream SWO
 package: platform_siwx91x
-label: "IO Stream:SI91X SWO"
 description: >
-  Instantiate the driver for using IO Stream over the Single
-  Wire Output (SWO) peripheral for SI91X.
+  This component instantiates the driver for using IO Stream over the Single
+  Wire Output (SWO) peripheral on SiWx91x.
 category: Device|Si91x|MCU|Service
 quality: production
 metadata:

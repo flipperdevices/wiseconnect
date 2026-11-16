@@ -7,8 +7,6 @@ ui_hints:
 quality: production
 define:
 - name: SIWG917Y110LGABA
-  unless:
-  - device_content_override
 - name: SLI_SI917
   value: '1'
 - name: SLI_SI917B0
@@ -36,8 +34,6 @@ define:
 source:
 - path: components/device/silabs/si91x/mcu/core/chip/src/system_si91x.c
 - path: components/device/silabs/si91x/mcu/core/chip/src/startup_si91x.c
-  unless:
-  - siwx917_soc_custom_startup
 include:
 - file_list:
   - path: system_si91x.h
@@ -59,6 +55,7 @@ provides:
 - name: device_is_module
 - name: device_supports_external_psram
 requires:
+- name: sl_si91x_agents_md
 - name: rsilib_chip
 - name: cmsis_common
   condition:

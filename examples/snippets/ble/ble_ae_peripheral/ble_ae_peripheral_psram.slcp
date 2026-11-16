@@ -1,18 +1,24 @@
 project_name: ble_ae_peripheral_psram
 package: bluetooth_le_siwx91x_app
 quality: production
-label: BLE - AE Peripheral (PSRAM)
+label: BLE - PSRAM AE Peripheral FreeRTOS
 category: Example|BLE
-description: 'Start a BLE device in Extended Advertising Peripheral mode.
+description: 'Demonstrates how to use BLE Extended Advertising in peripheral role with dual adv sets and periodic advertising on SiWx91x with PSRAM in SoC FreeRTOS. This is demonstrated by two adv sets.
 
   '
 filter:
 - name: Wireless Technology
   value:
   - BLE
+- name: Device Type
+  value:
+  - SoC
 - name: Project Difficulty
   value:
   - Advanced
+- name: Quality
+  value:
+  - Production
 source:
 - path: app.c
 include:
@@ -22,6 +28,7 @@ include:
   - path: ble_config.h
 define:
 - name: SL_SI91X_PRINT_DBG_LOG
+- name: SLI_SI91X_MCU_ENABLE_PSRAM_FEATURE
 component:
 - id: sl_main
 - id: freertos
@@ -36,17 +43,24 @@ component:
 - id: basic_network_config_manager
 - id: ble
 - id: psram_core
-- id: psram_aps6404l_sqh
 - id: text_segment_in_psram
 - id: data_segment_in_psram
-- id: sl_si91x_basic_buffers
+- id: log_none
+- id: si91x_log
+- id: si91x_log_iostream_formatted
+- id: iostream_si91x
+- id: iostream_uart_si91x
+  instance:
+  - vcom
 requires:
 - name: device_needs_ram_execution
   condition:
   - si91x_common_flash
 toolchain_settings:
 - option: gcc_compiler_option
-  value: -Wall -Werror
+  value: -Wall -Werror -Wno-error=deprecated-declarations
+- option: llvm_compiler_option
+  value: -Wall -Werror -Wno-error=deprecated-declarations
 configuration:
 - name: SL_BOARD_ENABLE_VCOM
   value: '1'
@@ -67,8 +81,8 @@ post_build:
 sdk_extension:
 - id: wiseconnect3_sdk
   vendor: silabs
-  version: 4.0.1
+  version: 4.1.2
 sdk:
   id: simplicity_sdk
   vendor: silabs
-  version: 2025.12.2
+  version: 2026.6.2

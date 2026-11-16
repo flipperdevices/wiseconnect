@@ -50,7 +50,8 @@ sl_status_t sl_net_set_profile(sl_net_interface_t interface,
 
   switch (interface) {
 #ifdef SL_WIFI_COMPONENT_INCLUDED
-    case SL_NET_WIFI_CLIENT_INTERFACE: {
+    case SL_NET_WIFI_CLIENT_INTERFACE:
+    case SL_NET_WIFI_CLIENT_2_INTERFACE: {
       if (
         (((const sl_net_wifi_client_profile_t *)profile)->config.ssid.length == 0)
         || (((const sl_net_wifi_client_profile_t *)profile)->config.ssid.length
@@ -64,7 +65,8 @@ sl_status_t sl_net_set_profile(sl_net_interface_t interface,
                               sizeof(sl_net_wifi_client_profile_t));
       break;
     }
-    case SL_NET_WIFI_AP_INTERFACE: {
+    case SL_NET_WIFI_AP_INTERFACE:
+    case SL_NET_WIFI_AP_2_INTERFACE: {
       if ((((const sl_net_wifi_ap_profile_t *)profile)->config.ssid.length == 0)
           || (((const sl_net_wifi_ap_profile_t *)profile)->config.ssid.length > SL_WIFI_MAX_SSID_LENGTH - 2)) {
         return SL_STATUS_INVALID_PARAMETER;
@@ -96,6 +98,7 @@ sl_status_t sl_net_get_profile(sl_net_interface_t interface, sl_net_profile_id_t
   switch (interface) {
 #ifdef SL_WIFI_COMPONENT_INCLUDED
     case SL_NET_WIFI_CLIENT_INTERFACE:
+    case SL_NET_WIFI_CLIENT_2_INTERFACE:
       status = nvm3_readData(nvm3_defaultHandle,
                              SL_NET_WIFI_CLIENT_NVM3_KEY + profile_id,
                              (void *)profile,
@@ -103,6 +106,7 @@ sl_status_t sl_net_get_profile(sl_net_interface_t interface, sl_net_profile_id_t
       break;
 
     case SL_NET_WIFI_AP_INTERFACE:
+    case SL_NET_WIFI_AP_2_INTERFACE:
       status = nvm3_readData(nvm3_defaultHandle,
                              SL_NET_WIFI_AP_NVM3_KEY + profile_id,
                              (void *)profile,
@@ -129,10 +133,12 @@ sl_status_t sl_net_delete_profile(sl_net_interface_t interface, sl_net_profile_i
   switch (interface) {
 #ifdef SL_WIFI_COMPONENT_INCLUDED
     case SL_NET_WIFI_CLIENT_INTERFACE:
+    case SL_NET_WIFI_CLIENT_2_INTERFACE:
       nvm3_deleteObject(nvm3_defaultHandle, SL_NET_WIFI_CLIENT_NVM3_KEY + profile_id);
       break;
 
     case SL_NET_WIFI_AP_INTERFACE:
+    case SL_NET_WIFI_AP_2_INTERFACE:
       nvm3_deleteObject(nvm3_defaultHandle, SL_NET_WIFI_AP_NVM3_KEY + profile_id);
       break;
 #endif

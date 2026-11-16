@@ -12,6 +12,8 @@ metadata:
     license: Zlib
 provides:
   - name: device_needs_ram_execution
+requires:
+  - name: code_classification
 define:
   - name: SLI_SI91X_MCU_ENABLE_RAM_BASED_EXECUTION 
 template_contribution:

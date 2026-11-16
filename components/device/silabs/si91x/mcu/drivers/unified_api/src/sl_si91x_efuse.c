@@ -89,6 +89,11 @@ sl_status_t sl_si91x_efuse_enable_clock(void)
   rsi_error_t error_status;
   error_status = RSI_CLK_PeripheralClkEnable3(M4CLK, (EFUSE_CLK_ENABLE | EFUSE_PCLK_ENABLE));
   status       = convert_rsi_to_sl_error_code(error_status);
+  if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si91x_efuse_enable_clock: failed st=0x%04lX,line no : %d\r\n",
+                          (unsigned long)status,
+                          (int)__LINE__);
+  }
   return status;
 }
 
@@ -101,6 +106,11 @@ sl_status_t sl_si91x_efuse_disable_clock(void)
   rsi_error_t error_status;
   error_status = RSI_CLK_PeripheralClkDisable3(M4CLK, (EFUSE_CLK_DISABLE | EFUSE_PCLK_DISABLE));
   status       = convert_rsi_to_sl_error_code(error_status);
+  if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si91x_efuse_disable_clock: failed st=0x%04lX,line no : %d\r\n",
+                          (unsigned long)status,
+                          (int)__LINE__);
+  }
   return status;
 }
 
@@ -158,6 +168,9 @@ sl_status_t sl_si91x_efuse_set_address(uint16_t address)
   if (address > MAX_ADDRESS) {
     // Returns invalid parameter status code if address > MAX_ADDRESS
     status = SL_STATUS_INVALID_PARAMETER;
+    SL_PRINT_STRING_ERROR("sl_si91x_efuse_set_address: invalid address %u,line no : %d\r\n",
+                          (unsigned)address,
+                          (int)__LINE__);
   } else {
     efuse_write_address(EFUSE, address);
     status = SL_STATUS_OK;
@@ -181,9 +194,15 @@ sl_status_t sl_si91x_efuse_get_address(uint16_t *read_address)
     // To validate the read_byte pointer, if the parameters is NULL,
     // it returns an error code
     status = SL_STATUS_NULL_POINTER;
+    SL_PRINT_STRING_ERROR("sl_si91x_efuse_get_address: read_address is NULL,line no : %d\r\n", (int)__LINE__);
   } else {
     error_status = efuse_get_addr(EFUSE, read_address);
     status       = convert_rsi_to_sl_error_code(error_status);
+    if (status != SL_STATUS_OK) {
+      SL_PRINT_STRING_ERROR("sl_si91x_efuse_get_address: failed st=0x%04lX,line no : %d\r\n",
+                            (unsigned long)status,
+                            (int)__LINE__);
+    }
   }
   return status;
 }
@@ -204,15 +223,22 @@ sl_status_t sl_si91x_efuse_write_bit(uint16_t address, uint8_t bit_pos, uint32_t
     if (address > MAX_ADDRESS) {
       // Returns invalid parameter status code if address > MAX_ADDRESS
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR("sl_si91x_efuse_write_bit: invalid address,line no : %d\r\n", (int)__LINE__);
       break;
     }
     if (bit_pos > MAX_BIT_POS) {
       // Returns invalid parameter status code if u8bitpos > BIT_POS_MAX
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR("sl_si91x_efuse_write_bit: invalid bit_pos,line no : %d\r\n", (int)__LINE__);
       break;
     }
     error_status = RSI_EFUSE_WriteBit(EFUSE, address, bit_pos, hold_time);
     status       = convert_rsi_to_sl_error_code(error_status);
+    if (status != SL_STATUS_OK) {
+      SL_PRINT_STRING_ERROR("sl_si91x_efuse_write_bit: failed st=0x%04lX,line no : %d\r\n",
+                            (unsigned long)status,
+                            (int)__LINE__);
+    }
   } while (false);
   return status;
 }
@@ -235,11 +261,13 @@ sl_status_t sl_si91x_efuse_write_bit_v2(uint16_t address, uint8_t bit_pos)
     if (address > MAX_ADDRESS) {
       // Returns invalid parameter status code if address > MAX_ADDRESS
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR("sl_si91x_efuse_write_bit_v2: invalid address,line no : %d\r\n", (int)__LINE__);
       break;
     }
     if (bit_pos > MAX_BIT_POS) {
       // Returns invalid parameter status code if u8bitpos > BIT_POS_MAX
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR("sl_si91x_efuse_write_bit_v2: invalid bit_pos,line no : %d\r\n", (int)__LINE__);
       break;
     }
     // Get the clock frequency of the M4 core
@@ -253,6 +281,11 @@ sl_status_t sl_si91x_efuse_write_bit_v2(uint16_t address, uint8_t bit_pos)
 
     error_status = RSI_EFUSE_WriteBit(EFUSE, address, bit_pos, sli_si91x_hold_time);
     status       = convert_rsi_to_sl_error_code(error_status);
+    if (status != SL_STATUS_OK) {
+      SL_PRINT_STRING_ERROR("sl_si91x_efuse_write_bit_v2: failed st=0x%04lX,line no : %d\r\n",
+                            (unsigned long)status,
+                            (int)__LINE__);
+    }
   } while (false);
   return status;
 }
@@ -276,16 +309,24 @@ sl_status_t sl_si91x_efuse_memory_mapped_read_word(uint16_t address, uint16_t *r
     if (address > MAX_ADDRESS) {
       // Returns invalid parameter status code if address > MAX_ADDRESS
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR("sl_si91x_efuse_memory_mapped_read_word: invalid address,line no : %d\r\n", (int)__LINE__);
       break;
     }
     if (read_word == NULL) {
       // To validate the read_word pointer, if the parameters is NULL,
       // it returns an error code
       status = SL_STATUS_NULL_POINTER;
+      SL_PRINT_STRING_ERROR("sl_si91x_efuse_memory_mapped_read_word: read_word is NULL,line no : %d\r\n",
+                            (int)__LINE__);
       break;
     }
     error_status = RSI_EFUSE_MemMapReadWord(EFUSE, address, read_word, soc_clk);
     status       = convert_rsi_to_sl_error_code(error_status);
+    if (status != SL_STATUS_OK) {
+      SL_PRINT_STRING_ERROR("sl_si91x_efuse_memory_mapped_read_word: failed st=0x%04lX,line no : %d\r\n",
+                            (unsigned long)status,
+                            (int)__LINE__);
+    }
   } while (false);
   return status;
 }
@@ -310,16 +351,24 @@ sl_status_t sl_si91x_efuse_memory_mapped_read_byte(uint16_t address, uint8_t *re
     if (address > MAX_ADDRESS) {
       // Returns invalid parameter status code if address > MAX_ADDRESS
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR("sl_si91x_efuse_memory_mapped_read_byte: invalid address,line no : %d\r\n", (int)__LINE__);
       break;
     }
     if (read_byte == NULL) {
       // To validate the read_byte pointer, if the parameters is NULL,
       // it returns an error code
       status = SL_STATUS_NULL_POINTER;
+      SL_PRINT_STRING_ERROR("sl_si91x_efuse_memory_mapped_read_byte: read_byte is NULL,line no : %d\r\n",
+                            (int)__LINE__);
       break;
     }
     error_status = RSI_EFUSE_MemMapReadByte(EFUSE, address, read_byte, soc_clk);
     status       = convert_rsi_to_sl_error_code(error_status);
+    if (status != SL_STATUS_OK) {
+      SL_PRINT_STRING_ERROR("sl_si91x_efuse_memory_mapped_read_byte: failed st=0x%04lX,line no : %d\r\n",
+                            (unsigned long)status,
+                            (int)__LINE__);
+    }
   } while (false);
   return status;
 }
@@ -344,16 +393,23 @@ sl_status_t sl_si91x_efuse_fsm_read_byte(uint16_t address, uint8_t *read_byte, u
     if (address > MAX_ADDRESS) {
       // Returns invalid parameter status code if address > MAX_ADDRESS
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR("sl_si91x_efuse_fsm_read_byte: invalid address,line no : %d\r\n", (int)__LINE__);
       break;
     }
     if (read_byte == NULL) {
       // To validate the read_byte pointer, if the parameters is NULL,
       // it returns an error code
       status = SL_STATUS_NULL_POINTER;
+      SL_PRINT_STRING_ERROR("sl_si91x_efuse_fsm_read_byte: read_byte is NULL,line no : %d\r\n", (int)__LINE__);
       break;
     }
     error_status = RSI_EFUSE_FsmReadByte(EFUSE, address, read_byte, soc_clk);
     status       = convert_rsi_to_sl_error_code(error_status);
+    if (status != SL_STATUS_OK) {
+      SL_PRINT_STRING_ERROR("sl_si91x_efuse_fsm_read_byte: failed st=0x%04lX,line no : %d\r\n",
+                            (unsigned long)status,
+                            (int)__LINE__);
+    }
   } while (false);
   return status;
 }

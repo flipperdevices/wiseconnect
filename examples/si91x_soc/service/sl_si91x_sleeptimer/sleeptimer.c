@@ -21,6 +21,7 @@
 #include "sl_si91x_led.h"
 #include "rsi_debug.h"
 #include "sleeptimer.h"
+#include "sl_log_helper.h"
 
 #define TOOGLE_DELAY_MS1_ONESHOT  160000 //sleeptimer1 oneshot timeout in ticks
 #define TOOGLE_DELAY_MS1_PERIODIC 400    //sleeptimer1 periodic timeout in ms
@@ -99,9 +100,15 @@ static void on_timeout_timer1(sl_sleeptimer_timer_handle_t *handle, void *data)
   (void)&handle;
   (void)&data;
   if (oneshot_timeout) {
-    DEBUGOUT("\r\n *******Timer1 oneshot timeout******* \r\n");
+    /* Note: All status messages in this example — both success and failure — are
+ * intentionally emitted via SL_PRINT_STRING_ERROR so that they remain visible
+ * on the console at the default log level. This is a demonstration choice, not
+ * a recommendation: in production code, ERROR severity should be reserved for
+ * actual failures, with successful operations logged via SL_PRINT_STRING_INFO
+ * (or SL_PRINT_STRING_DEBUG for verbose trace). */
+    SL_PRINT_STRING_ERROR("\r\n *******Timer1 oneshot timeout******* \r\n");
   } else {
-    DEBUGOUT("\r\n Timer1 periodic timeout \r\n");
+    SL_PRINT_STRING_ERROR("\r\n Timer1 periodic timeout \r\n");
   }
   //Toggle LED
   toggle_timeout = true;

@@ -40,6 +40,7 @@
 #include <string.h>
 #include <stdint.h>
 #include "sl_mdns.h"
+#include "sl_net_default_values.h"
 
 /******************************************************
  *                    Constants
@@ -77,7 +78,6 @@ const osThreadAttr_t thread_attributes = {
   .stack_size = 3072,
   .priority   = osPriorityLow,
   .tz_module  = 0,
-  .reserved   = 0,
 };
 
 sl_ip_address_t ip_address           = { 0 };
@@ -97,7 +97,7 @@ static sl_status_t mdns_event_handler(sl_net_event_t event, sl_status_t status, 
   UNUSED_PARAMETER(data_length);
 
   if (event == SL_NET_MDNS_STOP_EVENT) {
-    printf("\r\nDiscovery operation timed out.\r\n");
+    SL_DEBUG_LOG_V2(WARN, "Discovery operation timed out.\r\n");
     mdns_discovery_done = true;
     return SL_STATUS_OK;
   }
@@ -106,9 +106,9 @@ static sl_status_t mdns_event_handler(sl_net_event_t event, sl_status_t status, 
     return SL_STATUS_OK;
   }
 
-  printf("\r\nReceived mDNS Discovery Event with status: 0x%lX\r\n", status);
+  SL_DEBUG_LOG_V2(INFO, "Received mDNS Discovery Event with status: 0x%lX\r\n", status);
   if (status != SL_STATUS_OK) {
-    printf("mDNS Discovery failed!\r\n");
+    SL_DEBUG_LOG_V2(ERROR, "mDNS Discovery failed!\r\n");
     return status;
   }
 
@@ -116,79 +116,79 @@ static sl_status_t mdns_event_handler(sl_net_event_t event, sl_status_t status, 
 
   switch ((sl_mdns_query_type_t)result->query_type) {
     case SL_MDNS_QUERY_TYPE_PTR:
-      printf("\r\n=== PTR Record ===\r\n");
-      if (result->instance_name)
-        printf("Instance Name : %s\r\n", result->instance_name);
-      if (result->service_type)
-        printf("Service Type  : %s\r\n", result->service_type);
-      if (result->proto)
-        printf("Protocol      : %s\r\n", result->proto);
-      printf("TTL           : %lu\r\n", result->ttl);
+      SL_DEBUG_LOG_V2(INFO, "=== PTR Record ===\r\n");
+      if (result->instance_name) {
+        SL_DEBUG_LOG_V2(INFO, "Instance Name : %s\r\n", (uintptr_t)result->instance_name);
+      }
+      if (result->service_type) {
+        SL_DEBUG_LOG_V2(INFO, "Service Type  : %s\r\n", (uintptr_t)result->service_type);
+      }
+      if (result->proto) {
+        SL_DEBUG_LOG_V2(INFO, "Protocol      : %s\r\n", (uintptr_t)result->proto);
+      }
+      SL_DEBUG_LOG_V2(INFO, "TTL           : %lu\r\n", result->ttl);
       break;
 
     case SL_MDNS_QUERY_TYPE_SRV:
-      printf("\r\n=== SRV Record ===\r\n");
-      if (result->instance_name)
-        printf("Service Name  : %s\r\n", result->instance_name);
-      if (result->hostname)
-        printf("Target Host   : %s\r\n", result->hostname);
-      printf("Port          : %u\r\n", result->port);
-      printf("TTL           : %lu\r\n", result->ttl);
+      SL_DEBUG_LOG_V2(INFO, "=== SRV Record ===\r\n");
+      if (result->instance_name) {
+        SL_DEBUG_LOG_V2(INFO, "Service Name  : %s\r\n", (uintptr_t)result->instance_name);
+      }
+      if (result->hostname) {
+        SL_DEBUG_LOG_V2(INFO, "Target Host   : %s\r\n", (uintptr_t)result->hostname);
+      }
+      SL_DEBUG_LOG_V2(INFO, "Port          : %u\r\n", result->port);
+      SL_DEBUG_LOG_V2(INFO, "TTL           : %lu\r\n", result->ttl);
       break;
 
     case SL_MDNS_QUERY_TYPE_A:
-      printf("\r\n=== A Record ===\r\n");
-      if (result->hostname)
-        printf("Hostname      : %s\r\n", result->hostname);
+      SL_DEBUG_LOG_V2(INFO, "=== A Record ===\r\n");
+      if (result->hostname) {
+        SL_DEBUG_LOG_V2(INFO, "Hostname      : %s\r\n", (uintptr_t)result->hostname);
+      }
       for (size_t i = 0; i < result->addr.addr_count; i++) {
         sl_ip_address_t *ip = &result->addr.addr[i];
         if (ip->type == SL_IPV4) {
-          printf("IPv4 Address  : ");
+          SL_DEBUG_LOG_V2(INFO, "IPv4 Address  : ");
           print_sl_ip_address(ip);
         }
       }
-      printf("TTL           : %lu\r\n", result->ttl);
+      SL_DEBUG_LOG_V2(INFO, "TTL           : %lu\r\n", result->ttl);
       break;
 
     case SL_MDNS_QUERY_TYPE_AAAA:
-      printf("\r\n=== AAAA Record ===\r\n");
-      if (result->hostname)
-        printf("Hostname      : %s\r\n", result->hostname);
+      SL_DEBUG_LOG_V2(INFO, "=== AAAA Record ===\r\n");
+      if (result->hostname) {
+        SL_DEBUG_LOG_V2(INFO, "Hostname      : %s\r\n", (uintptr_t)result->hostname);
+      }
       for (size_t i = 0; i < result->addr.addr_count; i++) {
         sl_ip_address_t *ip = &result->addr.addr[i];
         if (ip->type == SL_IPV6) {
-          printf("IPv6 Address  : ");
+          SL_DEBUG_LOG_V2(INFO, "IPv6 Address  : ");
           print_sl_ip_address(ip);
         }
       }
-      printf("TTL           : %lu\r\n", result->ttl);
+      SL_DEBUG_LOG_V2(INFO, "TTL           : %lu\r\n", result->ttl);
       break;
 
     case SL_MDNS_QUERY_TYPE_TXT:
-      printf("\r\n=== TXT Record ===\r\n");
-      if (result->instance_name)
-        printf("Service Name  : %s\r\n", result->instance_name);
+      SL_DEBUG_LOG_V2(INFO, "=== TXT Record ===\r\n");
+      if (result->instance_name) {
+        SL_DEBUG_LOG_V2(INFO, "Service Name  : %s\r\n", (uintptr_t)result->instance_name);
+      }
       for (size_t i = 0; i < result->txt.txt_count; i++) {
         if (result->txt.txt[i]) {
-          printf("TXT Record    : %s\r\n", result->txt.txt[i]);
+          SL_DEBUG_LOG_V2(INFO, "TXT Record    : %s\r\n", (uintptr_t)result->txt.txt[i]);
         }
       }
-      printf("TTL           : %lu\r\n", result->ttl);
+      SL_DEBUG_LOG_V2(INFO, "TTL           : %lu\r\n", result->ttl);
       break;
 
     default:
-      printf("Unknown query type: %u\r\n", result->query_type);
+      SL_DEBUG_LOG_V2(WARN, "Unknown query type: %u\r\n", result->query_type);
       break;
   }
 
-  // Clean up
-  if (result->txt.txt) {
-    free(result->txt.txt);
-  }
-
-  if (result->addr.addr) {
-    free(result->addr.addr);
-  }
   return SL_STATUS_OK;
 }
 
@@ -212,24 +212,36 @@ static void application_start(void *argument)
 
   status = sl_net_init(SL_NET_WIFI_CLIENT_INTERFACE, &sl_wifi_default_client_configuration, NULL, mdns_event_handler);
   if (status != SL_STATUS_OK) {
-    printf("\r\nFailed to start Wi-Fi Client interface: 0x%lx\r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "Failed to start Wi-Fi Client interface: 0x%lx\r\n", status);
     return;
   }
-  printf("\r\nWi-Fi Init Success \r\n");
+  SL_DEBUG_LOG_V2(INFO, "Wi-Fi Init Success \r\n");
+
+  profile = DEFAULT_WIFI_CLIENT_PROFILE;
+#if MDNSV6_ENABLE
+  profile.ip.type = SL_IPV6;
+#else
+  profile.ip.type = SL_IPV4;
+#endif
+  status = sl_net_set_profile(SL_NET_WIFI_CLIENT_INTERFACE, SL_NET_DEFAULT_WIFI_CLIENT_PROFILE_ID, &profile);
+  if (status != SL_STATUS_OK) {
+    SL_DEBUG_LOG_V2(ERROR, "Failed to set client profile: 0x%lx", status);
+    return;
+  }
 
   status = sl_net_up(SL_NET_WIFI_CLIENT_INTERFACE, SL_NET_DEFAULT_WIFI_CLIENT_PROFILE_ID);
   if (status != SL_STATUS_OK) {
-    printf("\r\nFailed to bring Wi-Fi client interface up: 0x%lx\r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "Failed to bring Wi-Fi client interface up: 0x%lx", status);
     return;
   }
-  printf("\r\nWi-Fi client connected\r\n");
+  SL_DEBUG_LOG_V2(INFO, "Wi-Fi client connected");
 
   status = sl_net_get_profile(SL_NET_WIFI_CLIENT_INTERFACE, SL_NET_DEFAULT_WIFI_CLIENT_PROFILE_ID, &profile);
   if (status != SL_STATUS_OK) {
-    printf("\r\nFailed to get client profile: 0x%lx\r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "Failed to get client profile: 0x%lx", status);
     return;
   }
-  printf("\r\nClient profile is fetched successfully.\r\n");
+  SL_DEBUG_LOG_V2(INFO, "Client profile is fetched successfully.");
 
   if (profile.ip.type == SL_IPV4) {
     ip_address.type = SL_IPV4;
@@ -239,45 +251,45 @@ static void application_start(void *argument)
     sl_ip_address_t link_local_address = { 0 };
     memcpy(&link_local_address.ip.v6, &profile.ip.ip.v6.link_local_address, SL_IPV6_ADDRESS_LENGTH);
     link_local_address.type = SL_IPV6;
-    printf("Link Local Address: ");
+    SL_DEBUG_LOG_V2(INFO, "Link Local Address: ");
     print_sl_ip_address(&link_local_address);
 
     sl_ip_address_t global_address = { 0 };
     memcpy(&global_address.ip.v6, &profile.ip.ip.v6.global_address, SL_IPV6_ADDRESS_LENGTH);
     global_address.type = SL_IPV6;
-    printf("Global Address: ");
+    SL_DEBUG_LOG_V2(INFO, "Global Address: ");
     print_sl_ip_address(&global_address);
 
     sl_ip_address_t gateway = { 0 };
     memcpy(&gateway.ip.v6, &profile.ip.ip.v6.gateway, SL_IPV6_ADDRESS_LENGTH);
     gateway.type = SL_IPV6;
-    printf("Gateway Address: ");
+    SL_DEBUG_LOG_V2(INFO, "Gateway Address: ");
     print_sl_ip_address(&gateway);
   }
 
   // Initialize MDNS service
   status = sl_mdns_init(&mdns, (const sl_mdns_configuration_t *)&config, NULL);
   if (status != SL_STATUS_OK) {
-    printf("\r\nFailed to initialize MDNS : 0x%lx\r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "Failed to initialize MDNS : 0x%lx\r\n", status);
     return;
   }
-  printf("\r\nMDNS initialized\r\n");
+  SL_DEBUG_LOG_V2(INFO, "MDNS initialized\r\n");
 
   // Add an interface to MDNS Instance
   status = sl_mdns_add_interface(&mdns, SL_NET_WIFI_CLIENT_INTERFACE);
   if (status != SL_STATUS_OK) {
-    printf("\r\nFailed to add interface to MDNS : 0x%lx\r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "Failed to add interface to MDNS : 0x%lx\r\n", status);
     return;
   }
-  printf("\r\nInterface Added to MDNS\r\n");
+  SL_DEBUG_LOG_V2(INFO, "Interface Added to MDNS\r\n");
 
   // Add a service to MDNS Instance
   status = sl_mdns_register_service(&mdns, SL_NET_WIFI_CLIENT_INTERFACE, &service);
   if (status != SL_STATUS_OK) {
-    printf("\r\nFailed to register service to MDNS: 0x%lx\r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "Failed to register service to MDNS: 0x%lx\r\n", status);
     return;
   }
-  printf("\r\nService Added to MDNS\r\n");
+  SL_DEBUG_LOG_V2(INFO, "Service Added to MDNS\r\n");
 
   sl_mdns_service_query_t service_query = { .service_type = "_http._tcp.local.", // Query for HTTP services
                                             .query_type   = SL_MDNS_QUERY_TYPE_PTR,
@@ -285,10 +297,10 @@ static void application_start(void *argument)
 
   status = sl_mdns_service_discovery_start(&mdns, SL_NET_WIFI_CLIENT_INTERFACE, &service_query);
   if (status != SL_STATUS_IN_PROGRESS) {
-    printf("\r\nFailed to send mDNS service discovery request: 0x%lx\r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "Failed to send mDNS service discovery request: 0x%lx\r\n", status);
     return;
   }
-  printf("\r\nmDNS Service Discovery request sent successfully\r\n");
+  SL_DEBUG_LOG_V2(INFO, "mDNS Service Discovery request sent successfully\r\n");
 
   while (!mdns_discovery_done) {
     osDelay(100); // Wait in 100ms intervals
@@ -296,8 +308,8 @@ static void application_start(void *argument)
   // Deinitialize MDNS service
   status = sl_mdns_deinit(&mdns);
   if (status != SL_STATUS_OK) {
-    printf("\r\nFailed to deinitialize MDNS : 0x%lx\r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "Failed to deinitialize MDNS : 0x%lx\r\n", status);
     return;
   }
-  printf("\r\nDeinitialize MDNS successfully\r\n");
+  SL_DEBUG_LOG_V2(INFO, "Deinitialize MDNS successfully\r\n");
 }

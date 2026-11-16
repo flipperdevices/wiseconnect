@@ -1,9 +1,9 @@
 project_name: wifi_net_dual_stack_nwp_m4
 package: wifi_app
 quality: production
-label: Wi-Fi - Network Dual Stack NWP M4
+label: Wi-Fi - Network Dual Stack NWP M4 (SoC)
 category: Example|Wi-Fi
-description: 'Wi-Fi Network Dual Stack Example
+description: 'Demonstrates IPv4/IPv6 on NWP Wi-Fi offload and on M4 lwIP, with TCP/UDP traffic on both stacks.
 
   '
 filter:
@@ -21,6 +21,9 @@ include:
   - path: app.h
 define:
 - name: SL_SI91X_PRINT_DBG_LOG
+- name: SLI_SI91X_ENABLE_IPV6
+- name: LWIP_IPV6
+  value: '1'
 component:
 - id: sl_main
 - id: freertos
@@ -34,7 +37,13 @@ component:
 - id: network_manager
 - id: basic_network_config_manager
 - id: sl_si91x_asynchronous_socket
-- id: sl_si91x_mem_pool_buffers_with_quota
+- id: log_none
+- id: si91x_log
+- id: si91x_log_iostream_formatted
+- id: iostream_si91x
+- id: iostream_uart_si91x
+  instance:
+  - vcom
 requires:
 - name: device_needs_ram_execution
   condition:
@@ -43,7 +52,9 @@ toolchain_settings:
 - option: gcc_linker_option
   value: -u _printf_float
 - option: gcc_compiler_option
-  value: -Wall -Werror
+  value: -Wall -Werror -Wno-error=deprecated-declarations
+- option: llvm_compiler_option
+  value: -Wall -Werror -Wno-error=deprecated-declarations
 configuration:
 - name: SL_BOARD_ENABLE_VCOM
   value: '1'
@@ -64,8 +75,8 @@ post_build:
 sdk_extension:
 - id: wiseconnect3_sdk
   vendor: silabs
-  version: 4.0.1
+  version: 4.1.2
 sdk:
   id: simplicity_sdk
   vendor: silabs
-  version: 2025.12.2
+  version: 2026.6.2

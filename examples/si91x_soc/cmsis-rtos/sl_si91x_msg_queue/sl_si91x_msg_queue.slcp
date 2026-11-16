@@ -3,7 +3,7 @@ package: platform_siwx91x_app
 description: "This application demonstrates how to use RTOS concept Message Queue \nin an application.\n"
 category: example|cmsis-rtos
 quality: production
-label: Si91x - SL_RTOS_MSG_QUEUE
+label: SiWx91x Platform - RTOS Message Queue
 component:
 - id: sl_main
 - id: status
@@ -18,6 +18,12 @@ component:
 - id: sl_usart
 - id: sl_dma
 - id: sl_gpio
+- id: si91x_log
+- id: si91x_log_iostream_formatted
+- id: iostream_si91x
+- id: iostream_uart_si91x
+  instance:
+  - vcom
 source:
 - path: app.c
 - path: src/i2c_follower_app.c
@@ -36,7 +42,9 @@ define:
 - name: SL_SI91X_USART_DMA
 toolchain_settings:
 - option: gcc_compiler_option
-  value: -Wall -Werror
+  value: -Wall -Werror -Wno-error=deprecated-declarations
+- option: llvm_compiler_option
+  value: -Wall -Werror -Wno-error=deprecated-declarations
 other_file:
 - path: resources/readme/msg_queue_example_overview.png
 - path: resources/uc_screen/usart_uc_screen.png
@@ -60,13 +68,26 @@ ui_hints:
     focus: true
 readme:
 - path: readme.md
+filter:
+- name: Device Type
+  value:
+  - SoC
+- name: MCU
+  value:
+  - 32-bit MCU
+- name: Level
+  value:
+  - Beginner
+- name: Wireless Technology
+  value:
+  - Wi-Fi
 post_build:
   profile: wiseconnect_soc
 sdk_extension:
 - id: wiseconnect3_sdk
   vendor: silabs
-  version: 4.0.1
+  version: 4.1.2
 sdk:
   id: simplicity_sdk
   vendor: silabs
-  version: 2025.12.2
+  version: 2026.6.2

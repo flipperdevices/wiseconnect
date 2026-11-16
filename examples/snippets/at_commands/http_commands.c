@@ -377,12 +377,12 @@ sl_status_t http_client_req_conncfg_command_handler(console_args_t *arguments)
   uint16_t port             = GET_OPTIONAL_COMMAND_ARG(arguments, 6, HTTP_PORT, uint16_t);
   const char *resource      = GET_OPTIONAL_COMMAND_ARG(arguments, 7, NULL, const char *);
 
+  http_client_request_t *request = &http_request;
+
   if ((ip_address == NULL) || (resource == NULL)) {
     status = SL_STATUS_INVALID_PARAMETER;
     goto error;
   }
-
-  http_client_request_t *request = &http_request;
 
   is_first_init_then_clean_up_request(request);
 

@@ -33,7 +33,7 @@
 
 #include "rsi_rng.h"
 #include "sl_status.h"
-
+#include "sl_log_helper.h"
 /***************************************************************************/ /**
 * @addtogroup HRNG Hardware Random Number Generator
 * @ingroup SI91X_PERIPHERAL_APIS

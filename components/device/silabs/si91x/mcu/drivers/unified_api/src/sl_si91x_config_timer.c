@@ -32,6 +32,7 @@
 #include "rsi_rom_ct.h"
 #include "rsi_rom_clks.h"
 #include "clock_update.h"
+
 /*******************************************************************************
  ***************************  DEFINES / MACROS   ********************************
  ******************************************************************************/
@@ -107,6 +108,8 @@ sl_status_t sl_si91x_config_timer_set_dma_configuration(uint32_t *compare_values
   // Initialize DMA
   status = sl_si91x_dma_init(&ct_dma_init);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si91x_config_timer_set_dma_configuration: config timer dma init failed,line no : %d\r\n",
+                          (int)__LINE__);
     return status;
   }
 
@@ -141,16 +144,26 @@ sl_status_t sl_si91x_config_timer_set_dma_configuration(uint32_t *compare_values
   // Allocate DMA channel
   status = sl_si91x_dma_allocate_channel(CT_DMA_NUMBER, &channel, CT_CHANNEL_PRIORITY);
   if (status != SL_STATUS_OK && status != SL_STATUS_DMA_CHANNEL_ALLOCATED) {
+    SL_PRINT_STRING_ERROR(
+      "sl_si91x_config_timer_set_dma_configuration: config timer dma ch st=0x%04lX,line no : %d\r\n",
+      (unsigned long)status,
+      (int)__LINE__);
     return status;
   }
   // Register callbacks
   status = sl_si91x_dma_register_callbacks(CT_DMA_NUMBER, channel, &ct_dma_callback);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR(
+      "sl_si91x_config_timer_set_dma_configuration: config timer dma register call back failed,line no : %d\r\n",
+      (int)__LINE__);
     return status;
   }
   // Enable DMA controller
   status = sl_si91x_dma_enable(CT_DMA_NUMBER);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR(
+      "sl_si91x_config_timer_set_dma_configuration: config timer dma enable failed,line no : %d\r\n",
+      (int)__LINE__);
     return status;
   }
   return status;
@@ -178,6 +191,8 @@ sl_status_t sl_si91x_config_timer_dma_transfer(uint32_t *compare_values, uint32_
   // Start DMA transfer
   status = sl_si91x_dma_transfer(CT_DMA_NUMBER, channel, dma_transfer);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si91x_config_timer_dma_transfer: config timer dma transfer failed,line no : %d\r\n",
+                          (int)__LINE__);
     return status;
   }
   return status;
@@ -213,22 +228,30 @@ sl_status_t sl_si91x_config_timer_set_configuration(sl_config_timer_config_t *ti
     // Validates the null pointer, if true returns error code
     if (timer_config_ptr == NULL) {
       status = SL_STATUS_NULL_POINTER;
+      SL_PRINT_STRING_ERROR("sl_si91x_config_timer_set_configuration: config timer cfg null,line no : %d\r\n",
+                            (int)__LINE__);
       break;
     }
     // Validating counter-0 direction value
     if (timer_config_ptr->counter0_direction >= SL_COUNTER0_DIRECTION_LAST) {
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR("sl_si91x_config_timer_set_configuration: config timer c0 dir invalid,line no : %d\r\n",
+                            (int)__LINE__);
       break;
     }
     // Validating counter-1 direction value
     if (timer_config_ptr->counter1_direction >= SL_COUNTER1_DIRECTION_LAST) {
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR("sl_si91x_config_timer_set_configuration: config timer c1 dir invalid,line no : %d\r\n",
+                            (int)__LINE__);
       break;
     }
 
     // Evaluating timer-config parameters ORed value
     status = evaluate_config_params(timer_config_ptr, &config_value);
     if (status != SL_STATUS_OK) {
+      SL_PRINT_STRING_ERROR("sl_si91x_config_timer_set_configuration: config timer eval cfg failed,line no : %d\r\n",
+                            (int)__LINE__);
       break;
     }
     RSI_CT_SetControl(CT, config_value);
@@ -270,11 +293,16 @@ sl_status_t sl_si91x_config_timer_set_ocu_configuration(sl_config_timer_ocu_conf
     // Validates the null pointer, if true returns error code
     if (ocu_config_ptr == NULL) {
       status = SL_STATUS_NULL_POINTER;
+      SL_PRINT_STRING_ERROR("sl_si91x_config_timer_set_ocu_configuration: config timer ocu null,line no : %d\r\n",
+                            (int)__LINE__);
       break;
     }
     // Evaluating ocu-config parameters ORed value
     status = evaluate_ocu_params(ocu_config_ptr, &ocu_config_value);
     if (status != SL_STATUS_OK) {
+      SL_PRINT_STRING_ERROR(
+        "sl_si91x_config_timer_set_ocu_configuration: config timer eval ocu failed,line no : %d\r\n",
+        (int)__LINE__);
       break;
     }
     RSI_CT_OCUConfigSet(CT, ocu_config_value);
@@ -299,11 +327,15 @@ sl_status_t sl_si91x_config_timer_set_ocu_control(sl_config_timer_ocu_control_t 
     // Validates the null pointer, if true returns error code
     if (ocu_params == NULL) {
       status = SL_STATUS_NULL_POINTER;
+      SL_PRINT_STRING_ERROR("sl_si91x_config_timer_set_ocu_control: config timer ocu ctl null,line no : %d\r\n",
+                            (int)__LINE__);
       break;
     }
     // Validates the null pointer, if true returns error code
     if (ocu_params->params == NULL) {
       status = SL_STATUS_NULL_POINTER;
+      SL_PRINT_STRING_ERROR("sl_si91x_config_timer_set_ocu_control: config timer ocu prm null,line no : %d\r\n",
+                            (int)__LINE__);
       break;
     }
     // Configuring threshold values for counter0 and counter1 outputs
@@ -315,6 +347,8 @@ sl_status_t sl_si91x_config_timer_set_ocu_control(sl_config_timer_ocu_control_t 
     // Validating RSI API return status
     if (error_status != RSI_OK) {
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR("sl_si91x_config_timer_set_ocu_control: config timer ocu rsi failed,line no : %d\r\n",
+                            (int)__LINE__);
     }
   } while (false);
   return status;
@@ -352,11 +386,16 @@ sl_status_t sl_si91x_config_timer_set_wfg_configuration(sl_config_timer_wfg_conf
     // Validates the null pointer, if true returns error code
     if (wfg_config_ptr == NULL) {
       status = SL_STATUS_NULL_POINTER;
+      SL_PRINT_STRING_ERROR("sl_si91x_config_timer_set_wfg_configuration: config timer wfg null,line no : %d\r\n",
+                            (int)__LINE__);
       break;
     }
     error_status = RSI_CT_WFGControlConfig(CT, *wfg_config_ptr);
     if (error_status == ERROR_CT_INVALID_ARG) {
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR(
+        "sl_si91x_config_timer_set_wfg_configuration: config timer wfg arg invalid,line no : %d\r\n",
+        (int)__LINE__);
       break;
     }
   } while (false);
@@ -381,15 +420,21 @@ sl_status_t sl_si91x_config_timer_set_match_count(sl_config_timer_mode_t mode,
     // Validating counter number
     if (counter_number >= SL_COUNTER_NUMBER_LAST) {
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR("sl_si91x_config_timer_set_match_count: config timer match num invalid,line no : %d\r\n",
+                            (int)__LINE__);
       break;
     }
     // Validating counter mode
     if (mode >= SL_COUNTER_MODE_LAST) {
       status = SL_STATUS_INVALID_MODE;
+      SL_PRINT_STRING_ERROR("sl_si91x_config_timer_set_match_count: config timer match mode invalid,line no : %d\r\n",
+                            (int)__LINE__);
       break;
     }
     if ((mode == SL_COUNTER_16BIT) && (match_value > MAX_COUNT_VALUE_16BIT)) {
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR("sl_si91x_config_timer_set_match_count: config timer match val invalid,line no : %d\r\n",
+                            (int)__LINE__);
       break;
     }
     RSI_CT_SetMatchCount(CT, match_value, (boolean_t)mode, (boolean_t)counter_number);
@@ -411,6 +456,8 @@ sl_status_t sl_si91x_config_timer_get_match_value(uint32_t time_period_in_us, ui
   // For a CT base clock of 180MHz, the maximum time period achieved is 364us.
   // The counter can be loaded multiple times if requires a higher time period.
   if (time_period_in_us > (MAX_COUNT_VALUE_16BIT / ct_base_clock)) {
+    SL_PRINT_STRING_ERROR("sl_si91x_config_timer_get_match_value: config timer match us invalid,line no : %d\r\n",
+                          (int)__LINE__);
     return SL_STATUS_INVALID_COUNT;
   }
   // Calculate match value
@@ -434,11 +481,15 @@ sl_status_t sl_si91x_config_timer_set_initial_count(sl_config_timer_mode_t mode,
     // Validating counter mode
     if (mode >= SL_COUNTER_MODE_LAST) {
       status = SL_STATUS_INVALID_MODE;
+      SL_PRINT_STRING_ERROR("sl_si91x_config_timer_set_initial_count: config timer init mode invalid,line no : %d\r\n",
+                            (int)__LINE__);
       break;
     }
     // Validating count value for 16-bit counter0
     if ((mode == SL_COUNTER_16BIT) && (counter0_initial_value > MAX_COUNT_VALUE_16BIT)) {
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR("sl_si91x_config_timer_set_initial_count: config timer init val invalid,line no : %d\r\n",
+                            (int)__LINE__);
       break;
     }
     // for clearing previous counter values
@@ -469,11 +520,16 @@ sl_status_t sl_si91x_config_timer_set_wfg_compare_values(sl_counter_number_t cou
     // Validates the null pointer, if true returns error code
     if (ocu_params == NULL) {
       status = SL_STATUS_NULL_POINTER;
+      SL_PRINT_STRING_ERROR("sl_si91x_config_timer_set_wfg_compare_values: config timer wfg cmp null,line no : %d\r\n",
+                            (int)__LINE__);
       break;
     }
     // Validating counter number
     if (counter_number >= SL_COUNTER_NUMBER_LAST) {
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR(
+        "sl_si91x_config_timer_set_wfg_compare_values: config timer wfg cmp num invalid,line no : %d\r\n",
+        (int)__LINE__);
       break;
     }
     RSI_CT_WFGComapreValueSet(CT, (boolean_t)counter_number, ocu_params);
@@ -493,6 +549,8 @@ sl_status_t sl_si91x_config_timer_set_mode(sl_config_timer_mode_t mode)
   // Validating timer mode
   if (mode >= SL_COUNTER_MODE_LAST) {
     status = SL_STATUS_INVALID_MODE;
+    SL_PRINT_STRING_ERROR("sl_si91x_config_timer_set_mode: config timer set mode invalid,line no : %d\r\n",
+                          (int)__LINE__);
   } else {
     // Setting ct mode
     RSI_CT_Config(CT, (boolean_t)mode);
@@ -513,10 +571,16 @@ sl_status_t sl_si91x_config_timer_start_on_software_trigger(sl_counter_number_t 
   // Validating counter number
   if (counter_number >= SL_COUNTER_NUMBER_LAST) {
     status = SL_STATUS_INVALID_PARAMETER;
+    SL_PRINT_STRING_ERROR(
+      "sl_si91x_config_timer_start_on_software_trigger: config timer sw trig num invalid,line no : %d\r\n",
+      (int)__LINE__);
   } else {
     // validate the counter configuration
     status = validate_counter_configuration(counter_number);
     if (status != SL_STATUS_OK) {
+      SL_PRINT_STRING_ERROR(
+        "sl_si91x_config_timer_start_on_software_trigger: config timer sw trig vld failed,line no : %d\r\n",
+        (int)__LINE__);
       return status;
     }
     RSI_CT_StartSoftwareTrig(CT, counter_number);
@@ -548,14 +612,23 @@ static sl_status_t validate_counter_configuration(sl_counter_number_t counter_nu
       if (counter0_direction == COUNTER0_UP) {
         if (counter0_match_value < counter0_initial_value) {
           status = SL_STATUS_INVALID_PARAMETER;
+          SL_PRINT_STRING_ERROR(
+            "sl_si91x_config_timer_validate_counter_configuration: config timer vld c0 up failed,line no : %d\r\n",
+            (int)__LINE__);
         }
       } else if (counter0_direction == COUNTER0_DOWN) {
         if (counter0_match_value > counter0_initial_value) {
           status = SL_STATUS_INVALID_PARAMETER;
+          SL_PRINT_STRING_ERROR(
+            "sl_si91x_config_timer_validate_counter_configuration: config timer vld c0 dn failed,line no : %d\r\n",
+            (int)__LINE__);
         }
       } else if (counter0_direction == COUNTER0_UP_DOWN) {
         if (counter0_match_value == counter0_initial_value) {
           status = SL_STATUS_INVALID_PARAMETER;
+          SL_PRINT_STRING_ERROR(
+            "sl_si91x_config_timer_validate_counter_configuration: config timer vld c0 ud failed,line no : %d\r\n",
+            (int)__LINE__);
         }
       }
     }
@@ -571,14 +644,23 @@ static sl_status_t validate_counter_configuration(sl_counter_number_t counter_nu
       if (counter1_direction == COUNTER1_UP) {
         if (counter1_match_value < counter1_initial_value) {
           status = SL_STATUS_INVALID_PARAMETER;
+          SL_PRINT_STRING_ERROR(
+            "sl_si91x_config_timer_validate_counter_configuration: config timer vld c1 up failed,line no : %d\r\n",
+            (int)__LINE__);
         }
       } else if (counter1_direction == COUNTER1_DOWN) {
         if (counter1_match_value > counter1_initial_value) {
           status = SL_STATUS_INVALID_PARAMETER;
+          SL_PRINT_STRING_ERROR(
+            "sl_si91x_config_timer_validate_counter_configuration: config timer vld c1 dn failed,line no : %d\r\n",
+            (int)__LINE__);
         }
       } else if (counter1_direction == COUNTER1_UP_DOWN) {
         if (counter1_match_value == counter1_initial_value) {
           status = SL_STATUS_INVALID_PARAMETER;
+          SL_PRINT_STRING_ERROR(
+            "sl_si91x_config_timer_validate_counter_configuration: config timer vld c1 ud failed,line no : %d\r\n",
+            (int)__LINE__);
         }
       }
     }
@@ -596,6 +678,8 @@ sl_status_t sl_si91x_config_timer_reset_counter(sl_counter_number_t counter_numb
   // Validating counter number
   if (counter_number >= SL_COUNTER_NUMBER_LAST) {
     status = SL_STATUS_INVALID_PARAMETER;
+    SL_PRINT_STRING_ERROR("sl_si91x_config_timer_reset_counter: config timer rst cnt num invalid,line no : %d\r\n",
+                          (int)__LINE__);
   } else {
     RSI_CT_PeripheralReset(CT, (boolean_t)counter_number);
     status = SL_STATUS_OK;
@@ -619,16 +703,22 @@ sl_status_t sl_si91x_config_timer_get_count(sl_config_timer_mode_t mode,
     // Validates the null pointer, if true returns error code
     if (count_value == NULL) {
       status = SL_STATUS_NULL_POINTER;
+      SL_PRINT_STRING_ERROR("sl_si91x_config_timer_get_count: config timer get cnt null,line no : %d\r\n",
+                            (int)__LINE__);
       break;
     }
     // Validating counter number
     if (counter_number >= SL_COUNTER_NUMBER_LAST) {
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR("sl_si91x_config_timer_get_count: config timer get cnt num invalid,line no : %d\r\n",
+                            (int)__LINE__);
       break;
     }
     // Validating counter mode
     if (mode >= SL_COUNTER_MODE_LAST) {
       status = SL_STATUS_INVALID_MODE;
+      SL_PRINT_STRING_ERROR("sl_si91x_config_timer_get_count: config timer get cnt mode invalid,line no : %d\r\n",
+                            (int)__LINE__);
       break;
     }
     *count_value = RSI_CT_GetCounter(CT, (boolean_t)counter_number, (boolean_t)mode);
@@ -655,6 +745,8 @@ sl_status_t sl_si91x_config_timer_configure_action_event(sl_config_action_event_
     // Validating the null pointer
     if (event_config_handle == NULL) {
       status = SL_STATUS_NULL_POINTER;
+      SL_PRINT_STRING_ERROR("sl_si91x_config_timer_configure_action_event: config timer act ev null,line no : %d\r\n",
+                            (int)__LINE__);
       break;
     }
     // Validating event value
@@ -663,17 +755,26 @@ sl_status_t sl_si91x_config_timer_configure_action_event(sl_config_action_event_
         || (event_config_handle->and_event_counter1 >= SL_CT_EVENT_LAST)
         || (event_config_handle->or_event_counter1 >= SL_CT_EVENT_LAST)) {
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR(
+        "sl_si91x_config_timer_configure_action_event: config timer act ev evt invalid,line no : %d\r\n",
+        (int)__LINE__);
       break;
     }
     // Validating valid bits value
     if ((event_config_handle->and_event_valid_bits_counter0 > MAX_VALID_BITS)
         || (event_config_handle->and_event_valid_bits_counter1 > MAX_VALID_BITS)) {
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR(
+        "sl_si91x_config_timer_configure_action_event: config timer act ev bits invalid,line no : %d\r\n",
+        (int)__LINE__);
       break;
     }
     // Validating counter action
     if (event_config_handle->action >= ACTION_LAST) {
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR(
+        "sl_si91x_config_timer_configure_action_event: config timer act ev act invalid,line no : %d\r\n",
+        (int)__LINE__);
       break;
     }
     // Evaluating and_value & or_value
@@ -686,35 +787,35 @@ sl_status_t sl_si91x_config_timer_configure_action_event(sl_config_action_event_
     or_value |= ((event_config_handle->or_event_valid_bits_counter0) << 8);
     or_value |= ((event_config_handle->or_event_counter1) << 16);
     or_value |= ((event_config_handle->or_event_valid_bits_counter1) << 24);
-    if ((event_config_handle->action == START)) {
+    if (event_config_handle->action == START) {
       RSI_CT_StartEventConfig(CT, and_value, or_value);
       break;
     }
-    if ((event_config_handle->action == STOP)) {
+    if (event_config_handle->action == STOP) {
       RSI_CT_StopEventConfig(CT, and_value, or_value);
       break;
     }
-    if ((event_config_handle->action == CONTINUE)) {
+    if (event_config_handle->action == CONTINUE) {
       RSI_CT_ContinueEventConfig(CT, and_value, or_value);
       break;
     }
-    if ((event_config_handle->action == HALT)) {
+    if (event_config_handle->action == HALT) {
       RSI_CT_HaltEventConfig(CT, and_value, or_value);
       break;
     }
-    if ((event_config_handle->action == INCREMENT)) {
+    if (event_config_handle->action == INCREMENT) {
       RSI_CT_IncrementEventConfig(CT, and_value, or_value);
       break;
     }
-    if ((event_config_handle->action == CAPTURE)) {
+    if (event_config_handle->action == CAPTURE) {
       RSI_CT_CaptureEventConfig(CT, and_value, or_value);
       break;
     }
-    if ((event_config_handle->action == INTERRUPT)) {
+    if (event_config_handle->action == INTERRUPT) {
       RSI_CT_InterruptEventConfig(CT, and_value, or_value);
       break;
     }
-    if ((event_config_handle->action == OUTPUT)) {
+    if (event_config_handle->action == OUTPUT) {
       RSI_CT_OutputEventConfig(CT, and_value, or_value);
       break;
     }
@@ -743,11 +844,15 @@ sl_status_t sl_si91x_config_timer_select_action_event(sl_config_timer_action_t a
     // Validating counter action
     if (action >= ACTION_LAST) {
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR("sl_si91x_config_timer_select_action_event: config timer sel act invalid,line no : %d\r\n",
+                            (int)__LINE__);
       break;
     }
     // Validating select-event value
     if ((select_event_counter0 >= SL_CT_EVENT_LAST) || (select_event_counter1 >= SL_CT_EVENT_LAST)) {
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR("sl_si91x_config_timer_select_action_event: config timer sel evt invalid,line no : %d\r\n",
+                            (int)__LINE__);
       break;
     }
     if (action == START) {
@@ -808,12 +913,16 @@ sl_status_t sl_si91x_config_timer_register_callback(sl_config_timer_callback_t o
     // if they are NULL will return an error code
     if ((on_config_timer_callback == NULL) || (interrupt_flags == NULL)) {
       status = SL_STATUS_NULL_POINTER;
+      SL_PRINT_STRING_ERROR("sl_si91x_config_timer_register_callback: config timer reg cb null,line no : %d\r\n",
+                            (int)__LINE__);
       break;
     }
     // To validate the function pointer, if the parameters is not NULL then it
     // will return an busy error code
     if (callback_function_ptr != NULL) {
       status = SL_STATUS_BUSY;
+      SL_PRINT_STRING_ERROR("sl_si91x_config_timer_register_callback: config timer reg cb busy,line no : %d\r\n",
+                            (int)__LINE__);
       break;
     }
     if (interrupt_flags->is_counter0_event_interrupt_enabled) {
@@ -865,6 +974,8 @@ sl_status_t sl_si91x_config_timer_resume_halt_event(sl_counter_number_t counter_
   // Validating counter number
   if (counter_number >= SL_COUNTER_NUMBER_LAST) {
     status = SL_STATUS_INVALID_PARAMETER;
+    SL_PRINT_STRING_ERROR("sl_si91x_config_timer_resume_halt_event: config timer resume num invalid,line no : %d\r\n",
+                          (int)__LINE__);
   } else {
     RSI_CT_ResumeHaltEvent(CT, (boolean_t)counter_number);
     status = SL_STATUS_OK;
@@ -885,11 +996,14 @@ sl_status_t sl_si91x_config_timer_read_capture(sl_counter_number_t counter_numbe
   // if they are NULL will return an error code
   if (capture_value == NULL) {
     status = SL_STATUS_NULL_POINTER;
+    SL_PRINT_STRING_ERROR("sl_si91x_config_timer_read_capture: config timer cap null,line no : %d\r\n", (int)__LINE__);
     return status;
   }
   // Validating counter number
   if (counter_number >= SL_COUNTER_NUMBER_LAST) {
     status = SL_STATUS_INVALID_PARAMETER;
+    SL_PRINT_STRING_ERROR("sl_si91x_config_timer_read_capture: config timer cap num invalid,line no : %d\r\n",
+                          (int)__LINE__);
     return status;
   }
   *capture_value = RSI_CT_CaptureRead(CT, counter_number);
@@ -910,6 +1024,8 @@ sl_status_t sl_si91x_config_timer_set_counter_sync(sl_counter_number_t counter_n
   // Validating counter number
   if (counter_number >= SL_COUNTER_NUMBER_LAST) {
     status = SL_STATUS_INVALID_PARAMETER;
+    SL_PRINT_STRING_ERROR("sl_si91x_config_timer_set_counter_sync: config timer sync num invalid,line no : %d\r\n",
+                          (int)__LINE__);
   } else {
     RSI_CT_SetCounerSync(CT, sync_counter_value, (boolean_t)counter_number);
     status = SL_STATUS_OK;
@@ -937,6 +1053,8 @@ sl_status_t sl_si91x_config_timer_set_output_adc_pin(uint8_t pin1, uint8_t pin2)
   // Validating pin numbers
   if ((pin1 > MAX_ADC_PIN_NUMBER) || (pin2 > MAX_ADC_PIN_NUMBER)) {
     status = SL_STATUS_INVALID_PARAMETER;
+    SL_PRINT_STRING_ERROR("sl_si91x_config_timer_set_output_adc_pin: config timer adc pin invalid,line no : %d\r\n",
+                          (int)__LINE__);
   } else {
     RSI_CT_OutputEventADCTrigger(CT_MUX_REG, pin1, pin2);
     status = SL_STATUS_OK;
@@ -964,6 +1082,8 @@ sl_status_t sl_si91x_config_timer_unregister_callback(sl_config_timer_interrupt_
     // if they are NULL will return an error code
     if (interrupt_flags == NULL) {
       status = SL_STATUS_NULL_POINTER;
+      SL_PRINT_STRING_ERROR("sl_si91x_config_timer_unregister_callback: config timer unreg null,line no : %d\r\n",
+                            (int)__LINE__);
       break;
     }
     if (interrupt_flags->is_counter0_event_interrupt_enabled) {
@@ -1055,18 +1175,24 @@ sl_status_t sl_si91x_config_timer_dma_deinit(uint32_t channel)
   // Stop DMA transfer
   status = sl_si91x_dma_stop_transfer(CT_DMA_NUMBER, channel);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si91x_config_timer_dma_deinit: config timer dma stop failed,line no : %d\r\n",
+                          (int)__LINE__);
     return status;
   }
 
   // Disables DMA
   status = sl_si91x_dma_channel_disable(CT_DMA_NUMBER, channel);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si91x_config_timer_dma_deinit: config timer dma dis ch failed,line no : %d\r\n",
+                          (int)__LINE__);
     return status;
   }
 
   // De-init DMA
   status = sl_si91x_dma_deinit(CT_DMA_NUMBER);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si91x_config_timer_dma_deinit: config timer dma deinit failed,line no : %d\r\n",
+                          (int)__LINE__);
     return status;
   }
   return status;
@@ -1142,11 +1268,15 @@ static sl_status_t evaluate_config_params(sl_config_timer_config_t *config_handl
     // Validates the null pointer, if true returns error code
     if (config_handle_ptr == NULL) {
       status = SL_STATUS_NULL_POINTER;
+      SL_PRINT_STRING_ERROR("sl_si91x_config_timer_evaluate_config_params: config timer eval cfg null,line no : %d\r\n",
+                            (int)__LINE__);
       break;
     }
     // Validates the null pointer, if true returns error code
     if (config_value == NULL) {
       status = SL_STATUS_NULL_POINTER;
+      SL_PRINT_STRING_ERROR("sl_si91x_config_timer_evaluate_config_params: config timer eval out null,line no : %d\r\n",
+                            (int)__LINE__);
       break;
     }
     // Evaluating ORed value of timer parameters
@@ -1215,11 +1345,17 @@ static sl_status_t evaluate_ocu_params(sl_config_timer_ocu_config_t *ocu_config_
     // Validates the null pointer, if true returns error code
     if (ocu_config_handle_ptr == NULL) {
       status = SL_STATUS_NULL_POINTER;
+      SL_PRINT_STRING_ERROR(
+        "sl_si91x_config_timer_evaluate_ocu_params: config timer eval ocu ptr null,line no : %d\r\n",
+        (int)__LINE__);
       break;
     }
     // Validates the null pointer, if true returns error code
     if (ocu_config_value == NULL) {
       status = SL_STATUS_NULL_POINTER;
+      SL_PRINT_STRING_ERROR(
+        "sl_si91x_config_timer_evaluate_ocu_params: config timer eval ocu out null,line no : %d\r\n",
+        (int)__LINE__);
       break;
     }
     if (ocu_config_handle_ptr->is_counter0_ocu_output_enabled) {

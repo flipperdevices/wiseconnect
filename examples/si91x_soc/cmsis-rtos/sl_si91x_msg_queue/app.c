@@ -27,27 +27,18 @@
 osThreadId_t tid_thread_i2c;   // thread id for i2c thread
 osThreadId_t tid_thread_usart; // thread id for usart thread
 
-const osThreadAttr_t i2c_follower_thread_attributes = {
-  .name       = "i2c_follower",
-  .attr_bits  = 0,
-  .cb_mem     = 0,
-  .cb_size    = 0,
-  .stack_mem  = 0,
-  .stack_size = 500, // using 500 for all the threads, may use as low as possible based on the need of respective thread
-  .priority   = osPriorityLow,
-  .tz_module  = 0,
-  .reserved   = 0,
+static const osThreadAttr_t i2c_follower_thread_attributes = {
+  .name = "i2c_follower",
+  .stack_size =
+    1024, // using 1024 for all the threads, may use as low as possible based on the need of respective thread
+  .priority = osPriorityLow,
 };
-const osThreadAttr_t usart_thread_attributes = {
-  .name       = "usart",
-  .attr_bits  = 0,
-  .cb_mem     = 0,
-  .cb_size    = 0,
-  .stack_mem  = 0,
-  .stack_size = 500, // using 500 for all the threads, may use as low as possible based on the need of respective thread
-  .priority   = osPriorityLow1,
-  .tz_module  = 0,
-  .reserved   = 0,
+
+static const osThreadAttr_t usart_thread_attributes = {
+  .name = "usart",
+  .stack_size =
+    1024, // using 1024 for all the threads, may use as low as possible based on the need of respective thread
+  .priority = osPriorityLow1,
 };
 /*******************************************************************************
  * Initialize application.

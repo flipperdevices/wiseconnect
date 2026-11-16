@@ -1,8 +1,8 @@
-# SL UART
+# SiWx91x Platform UART
 
 ## Table of Contents
 
-- [SL UART](#sl-uart)
+- [SiWx91x Platform UART](#platform-siwx91x-uart)
   - [Purpose/Scope](#purposescope)
   - [Overview](#overview)
   - [About Example Code](#about-example-code)
@@ -15,6 +15,9 @@
   - [Pin Configuration](#pin-configuration)
   - [Flow Control Configuration](#flow-control-configuration)
   - [Test the Application](#test-the-application)
+  - [Troubleshooting](#troubleshooting)
+  - [Resources](#resources)
+  - [Report Bugs/Support](#report-bugssupport)
   - [Configuring higher clock](#configuring-higher-clock)
 
 ## Purpose/Scope
@@ -35,8 +38,8 @@
 
 ## About Example Code
 
-- [`uart_example.c`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.1-content-for-docs/examples/si91x_soc/peripheral/sl_si91x_uart/uart_example.c) - This example code demonstrates how to configure the UART to send and receive data.
-- In this example, first UART gets initialized if it is not initialized already with clock and DMA configurations if DMA is enabled using [sl_si91x_usart_init](https://docs.silabs.com/wiseconnect/latest/wiseconnect-api-reference-guide-si91x-peripherals/usart#sl-si91x-usart-init).  
+- [`uart_example.c`](uart_example.c) - This example code demonstrates how to configure the UART to send and receive data.
+- In this example, first UART gets initialized if it is not initialized already with clock and DMA configurations if DMA is enabled using [sl_si91x_usart_init](https://docs.silabs.com/wiseconnect/latest/wiseconnect-api-reference-guide-si91x-peripherals/usart#sl-si91x-usart-init).
 **Note:** If the UART/USART instance is already selected for debug output logs, initialization will return `SL_STATUS_NOT_AVAILABLE`.
 - After UART initialization, the UART is configured with the default configurations from UC along with the UART transmit and receive lines using [sl_si91x_usart_set_configuration](https://docs.silabs.com/wiseconnect/latest/wiseconnect-api-reference-guide-si91x-peripherals/usart#sl-si91x-usart-set-configuration).
 - The register user event callback for send and receive complete notification is set using [sl_si91x_usart_multiple_instance_register_event_callback](https://docs.silabs.com/wiseconnect/latest/wiseconnect-api-reference-guide-si91x-peripherals/usart#sl-si91x-usart-multiple-instance-register-event-callback).
@@ -48,7 +51,7 @@
 ### Hardware Requirements
 
 - Windows PC
-- Silicon Labs Si917 Evaluation Kit [WPK(4002A) + BRD4338A]
+- Silicon Labs SiWx91x Evaluation Kit [[BRD4002](https://www.silabs.com/development-tools/wireless/wireless-pro-kit-mainboard?tab=overview) + [BRD4338A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-rb4338a-wifi-6-bluetooth-le-soc-radio-board?tab=overview) / [BRD4342A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx91x-rb4342a-wifi-6-bluetooth-le-soc-radio-board?tab=overview) / [BRD4343A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4343a-wi-fi-6-bluetooth-le-8mb-flash-radio-board-for-module?tab=overview) / [BRD4343C](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4343c-wi-fi-6-bluetooth-le-8mb-flash-radio-board-for-module?tab=overview)]
 - SiWx917 AC1 Module Explorer Kit [BRD2708A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-ek2708a-explorer-kit)
 
 ### Software Requirements
@@ -83,6 +86,26 @@ Configuration of UART at UC (Universal Configuration):
 
   > ![Figure: Selecting UC](resources/uc_screen/uart_uc.png)
 
+- Configure the following macros in [`uart_example.c`](uart_example.c) if required:
+
+- `UART_BUFFER_SIZE`: Defines the length (in bytes) of the buffer used to send and receive UART data. By default, it is set to 1024.
+
+  ```c
+  #define UART_BUFFER_SIZE      1024   // Data send and receive length
+  ```
+
+- `UART_BAUDRATE`: Specifies the UART baud rate used for transmission and reception. Supported range is 9600-7372800. By default, it is set to 115200.
+
+  ```c
+  #define UART_BAUDRATE         115200 // Baud rate <9600-7372800>
+  ```
+
+- `NON_UC_DEFAULT_CONFIG`: When enabled (set to 1), applies the default UART configurations in the non-UC (non Universal Configuration) case. By default, it is set to 0.
+
+  ```c
+  #define NON_UC_DEFAULT_CONFIG 0      // Enable this macro to set the default configurations in non_uc case
+  ```
+
 ## Pin Configuration
 
   | UART PINS     |  GPIO   |  917 Breakout pin |  Explorer kit Breakout pin |  UART-TTL cable |
@@ -95,7 +118,7 @@ Configuration of UART at UC (Universal Configuration):
 - Set the SL_USART_FLOW_CONTROL_TYPE parameter to SL_USART_FLOW_CONTROL_RTS_CTS to enable UART flow control.
 - Make sure the following two macros in `RTE_Device_917.h(path: /$project/config/RTE_Device_917.h)` are set to '1' to map RTS and CTS pins to WSTK/WPK Main Board EXP header or breakout pins.
 
-  ```C
+  ```c
   #define RTE_UART1_CTS_PORT_ID    1
   #define RTE_UART1_RTS_PORT_ID    1
   ```
@@ -128,3 +151,19 @@ Configuration of UART at UC (Universal Configuration):
 >
 > - Interrupt handlers are implemented in the driver layer, and user callbacks are provided for custom code. If you want to write your own interrupt handler instead of using the default one, make the driver interrupt handler a weak handler. Then, copy the necessary code from the driver handler to your custom interrupt handler.
 > - By default, Request to Send (RTS) and Clear to Send (CTS) flow control signals are disabled in the UART driver UC, and their corresponding GPIO pins are not assigned in the Pintool. If you enable RTS/CTS in the Driver UC, you must manually configure and assign the appropriate GPIO pins in the Pintool to ensure proper hardware flow control functionality.
+
+## Troubleshooting
+
+- If the project does not build, ensure Simplicity Studio and the WiSeConnect extension are installed and the board is connected.
+- If the device is not detected, reinstall the connectivity firmware and check USB drivers.
+
+## Resources
+
+- [WiSeConnect Getting Started](https://docs.silabs.com/wiseconnect/latest/wiseconnect-getting-started/)
+- [WiSeConnect Examples](https://docs.silabs.com/wiseconnect/latest/wiseconnect-examples/)
+- [SiWx91x SoC Documentation](https://docs.silabs.com/wiseconnect/latest/)
+
+## Report Bugs/Support
+
+For issues and support, use the Silicon Labs Community or your normal support channel.
+

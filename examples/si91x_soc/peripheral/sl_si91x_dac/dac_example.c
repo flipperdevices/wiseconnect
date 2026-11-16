@@ -17,7 +17,7 @@
 #include "sl_si91x_dac.h"
 #include "dac_example.h"
 #include "rsi_debug.h"
-
+#include "sl_log_helper.h"
 #include "sl_si91x_dac_config.h"
 
 #include "rsi_rom_clks.h"
@@ -132,44 +132,53 @@ void dac_example_init(void)
   do {
     // Version information of DAC driver
     dac_version = sl_si91x_dac_get_version();
-    DEBUGOUT("DAC version is fetched successfully \n");
-    DEBUGOUT("SL_DAC API version is %d.%d.%d \n", dac_version.release, dac_version.major, dac_version.minor);
+    /* Note: All status messages in this example — both success and failure — are
+ * intentionally emitted via SL_PRINT_STRING_ERROR so that they remain visible
+ * on the console at the default log level. This is a demonstration choice, not
+ * a recommendation: in production code, ERROR severity should be reserved for
+ * actual failures, with successful operations logged via SL_PRINT_STRING_INFO
+ * (or SL_PRINT_STRING_DEBUG for verbose trace). */
+    SL_PRINT_STRING_ERROR("DAC version is fetched successfully \r\n");
+    SL_PRINT_STRING_ERROR("SL_DAC API version is %d.%d.%d \r\n",
+                          dac_version.release,
+                          dac_version.major,
+                          dac_version.minor);
     //Initializing DAC peripheral
     status = sl_si91x_dac_init(&dac_clock_config);
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("sl_si91x_dac_init: Error Code : %lu \n", status);
+      SL_PRINT_STRING_ERROR("DAC initialization failed with error code : %lu \r\n", status);
       break;
     }
-    DEBUGOUT("SL_DAC initialization is successful \n");
+    SL_PRINT_STRING_ERROR("SL_DAC initialization is successful \r\n");
     // DAC configuration
     status = sl_si91x_dac_set_configuration(sl_dac_config, vref_value);
     /* Due to calling trim_efuse API on DAC configuration in driver it will change the clock frequency,
       if we are not initialize the debug again it will print the garbage data in console output. */
     DEBUGINIT();
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("sl_si91x_dac_set_configuration: Error Code : %lu \n", status);
+      SL_PRINT_STRING_ERROR("DAC configuration failed with error code : %lu \r\n", status);
       break;
     }
-    DEBUGOUT("SL_DAC set configuration is successful \n");
+    SL_PRINT_STRING_ERROR("SL_DAC set configuration is successful \r\n");
     // Register user callback function
     status = sl_si91x_dac_register_event_callback(dac_callback_event);
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("sl_si91x_dac_register_event_callback: Error Code : %lu \n", status);
+      SL_PRINT_STRING_ERROR("DAC callback registration failed with error code : %lu \r\n", status);
       break;
     }
-    DEBUGOUT("SL_DAC register event callback is successful \n");
+    SL_PRINT_STRING_ERROR("SL_DAC register event callback is successful \r\n");
     // DAC input sample data writing
     status = sl_si91x_dac_write_data((int16_t *)dac_input_sample_data, BUFFER_SIZE);
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("sl_si91x_dac_write_data: Error Code : %lu \n", status);
+      SL_PRINT_STRING_ERROR("DAC data writing failed with error code : %lu \r\n", status);
       break;
     }
-    DEBUGOUT("SL_DAC data write is successful \n");
-    DEBUGOUT("SL_DAC start \n");
+    SL_PRINT_STRING_ERROR("SL_DAC data write is successful \r\n");
+    SL_PRINT_STRING_ERROR("SL_DAC start \r\n");
     // Start DAC peripheral
     status = sl_si91x_dac_start();
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("sl_si91x_dac_start: Error Code : %lu \n", status);
+      SL_PRINT_STRING_ERROR("DAC start failed with error code : %lu \r\n", status);
       break;
     }
   } while (false);
@@ -183,14 +192,14 @@ void dac_example_process_action(void)
   sl_status_t status;
   if (dac_static_intr_flag == true) {
     dac_static_intr_flag = false;
-    DEBUGOUT("Data successfully sampled \n");
+    SL_PRINT_STRING_ERROR("Data successfully sampled \r\n");
   }
   if (dac_fifo_intr_flag == true) {
     dac_fifo_intr_flag = false;
     // DAC input sample data re-writing
     status = sl_si91x_dac_rewrite_data((int16_t *)dac_input_sample_data, BUFFER_SIZE);
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("sl_si91x_dac_rewrite_data: Error Code : %lu \n", status);
+      SL_PRINT_STRING_ERROR("DAC data rewriting failed with error code : %lu \r\n", status);
     }
   }
 }

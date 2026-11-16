@@ -1,8 +1,8 @@
-# SL CALENDAR
+# SiWx91x Platform CALENDAR
 
 ## Table of Contents
 
-- [SL CALENDAR](#sl-calendar)
+- [SiWx91x Platform CALENDAR](#platform-siwx91x-calendar)
   - [Table of Contents](#table-of-contents)
   - [Purpose/Scope](#purposescope)
   - [Overview](#overview)
@@ -15,6 +15,9 @@
   - [Application Build Environment](#application-build-environment)
     - [Application Configuration Parameters](#application-configuration-parameters)
   - [Test the Application](#test-the-application)
+  - [Troubleshooting](#troubleshooting)
+  - [Resources](#resources)
+  - [Report Bugs/Support](#report-bugssupport)
 
 ## Purpose/Scope
 
@@ -73,7 +76,7 @@ This example demonstrates the clock configuration, one millisecond trigger, one 
 ### Hardware Requirements
 
 - Windows PC
-- Silicon Labs Si917 Evaluation Kit [[BRD4002](https://www.silabs.com/development-tools/wireless/wireless-pro-kit-mainboard?tab=overview) + [BRD4338A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-rb4338a-wifi-6-bluetooth-le-soc-radio-board?tab=overview) / [BRD4342A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx91x-rb4342a-wifi-6-bluetooth-le-soc-radio-board?tab=overview) / [BRD4343A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4343a-wi-fi-6-bluetooth-le-8mb-flash-radio-board-for-module?tab=overview)]
+- Silicon Labs SiWx91x Evaluation Kit [[BRD4002](https://www.silabs.com/development-tools/wireless/wireless-pro-kit-mainboard?tab=overview) + [BRD4338A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-rb4338a-wifi-6-bluetooth-le-soc-radio-board?tab=overview) / [BRD4342A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx91x-rb4342a-wifi-6-bluetooth-le-soc-radio-board?tab=overview) / [BRD4343A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4343a-wi-fi-6-bluetooth-le-8mb-flash-radio-board-for-module?tab=overview) / [BRD4343C](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4343c-wi-fi-6-bluetooth-le-8mb-flash-radio-board-for-module?tab=overview)]
 - SiWx917 AC1 Module Explorer Kit [BRD2708A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-ek2708a-explorer-kit)
 
 ### Software Requirements
@@ -102,30 +105,122 @@ For details on the project folder structure, see the [WiSeConnect Examples](http
 
 ### Application Configuration Parameters
 
-Configure the following macros in the [`calendar_example.h`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.1-content-for-docs/examples/si91x_soc/peripheral/sl_si91x_calendar/calendar_example.h) file and update/modify following macros, if required.
+Configure the following macros in the [`calendar_example.h`](calendar_example.h) file and update/modify following macros, if required.
 
 - `ALARM_EXAMPLE`: If ALARM_EXAMPLE is enabled, it prints "Alarm Callback is Triggered" on console when the alarm is triggered. By default, it is set to 0.
 
-  ```C
+  ```c
     #define ALARM_EXAMPLE     0 // To enable alarm trigger 
   ```
 
 - `SEC_INTR`: If SEC_INTR is enabled, every one second "One Sec Callback is Triggered" print is displayed on the serial console. By default, it is set to 0.
 
-  ```C
+  ```c
     #define SEC_INTR          0 // To enable one second trigger 
   ```
 
 - `MILLI_SEC_INTR`: If MILLI_SEC_INTR is enabled, every one second "One Milli-Sec Callback triggered 1000 times" print is displayed on the serial console. By default, it is set to 0.
 
-  ```C
+  ```c
     #define MILLI_SEC_INTR    0 // To enable one millisecond trigger 
   ```
 
 - `TIME_CONVERSION`: If TIME_CONVERSION is enabled, time conversion between Unix and NTP is printed on serial console. By default, it is set to 0.
 
-  ```C
+  ```c
     #define TIME_CONVERSION   0 // To enable time conversion 
+  ```
+
+- Configure the following macros in the [`calendar_example.c`](calendar_example.c) file and update/modify following macros, if required.
+
+- `MAX_SECOND`: Total number of seconds in one minute, used as an upper bound for calendar-time arithmetic. By default, it is set to 60.
+
+  ```c
+    #define MAX_SECOND          60u        // Total seconds in one minute
+  ```
+
+- `MAX_MINUTE`: Total number of minutes in one hour, used as an upper bound for calendar-time arithmetic. By default, it is set to 60.
+
+  ```c
+    #define MAX_MINUTE          60u        // Total minutes in one hour
+  ```
+
+- `MAX_HOUR`: Total number of hours in one day, used as an upper bound for calendar-time arithmetic. By default, it is set to 24.
+
+  ```c
+    #define MAX_HOUR            24u        // Total hours in one day
+  ```
+
+- `SECONDS_IN_HOUR`: Total number of seconds in one hour, used when computing time differences. By default, it is set to 3600.
+
+  ```c
+    #define SECONDS_IN_HOUR     3600u      // Total seconds in one hour
+  ```
+
+- `UNIX_TEST_TIMESTAMP`: Sample Unix timestamp used by the time-conversion demo to convert between Unix and NTP time (corresponds to 2001-02-02 18:10:00 GMT). By default, it is set to 981117600.
+
+  ```c
+    #define UNIX_TEST_TIMESTAMP 981117600u // Unix Time Stamp for 2001-02-02 18:10:00
+  ```
+
+- `MS_DEBUG_DELAY`: Number of millisecond-trigger callbacks to accumulate before printing the debug message once (effectively once per second). By default, it is set to 1000.
+
+  ```c
+    #define MS_DEBUG_DELAY      1000u      // Debug prints after every 1000 counts (callback trigger)
+  ```
+
+- `ALARM_CENTURY`: Century value used when configuring the alarm date-time (1-4 represents 20th-23rd century). By default, it is set to 2 (21st century).
+
+  ```c
+    #define ALARM_CENTURY      2u
+  ```
+
+- `ALARM_YEAR`: Year within the century (0-99) used when configuring the alarm date-time. By default, it is set to 1.
+
+  ```c
+    #define ALARM_YEAR         1u
+  ```
+
+- `ALARM_MONTH`: Month of the year used when configuring the alarm date-time. By default, it is set to `February`.
+
+  ```c
+    #define ALARM_MONTH        February
+  ```
+
+- `ALARM_DAY_OF_WEEK`: Day of the week used when configuring the alarm date-time. By default, it is set to `Friday`.
+
+  ```c
+    #define ALARM_DAY_OF_WEEK  Friday
+  ```
+
+- `ALARM_DAY`: Day of the month (1-31) used when configuring the alarm date-time. By default, it is set to 2.
+
+  ```c
+    #define ALARM_DAY          2u
+  ```
+
+- `ALARM_HOUR`: Hour of the day (0-23) used when configuring the alarm date-time. By default, it is set to 18.
+
+  ```c
+    #define ALARM_HOUR         18u
+  ```
+
+- `ALARM_MINUTE`: Minute of the hour (0-59) used when configuring the alarm date-time. By default, it is set to 10.
+
+  ```c
+    #define ALARM_MINUTE       10u
+  ```
+
+- `ALARM_SECONDS`: Seconds of the minute (0-59) used when configuring the alarm date-time. By default, it is set to 15.
+
+  ```c
+    #define ALARM_SECONDS      15u
+  ```
+
+- `ALARM_MILLISECONDS`: Milliseconds of the second (0-999) used when configuring the alarm date-time. By default, it is set to 100.
+
+  ```c
+    #define ALARM_MILLISECONDS 100u
   ```
 
 > **Note**: For recommended settings, please refer the [recommendations guide](https://docs.silabs.com/wiseconnect/latest/wiseconnect-developers-guide-prog-recommended-settings/).
@@ -144,3 +239,19 @@ Refer to the instructions [here](https://docs.silabs.com/wiseconnect/latest/wise
 > **Note:**
 >
 > - Interrupt handlers are implemented in the driver layer, and user callbacks are provided for custom code. If you want to write your own interrupt handler instead of using the default one, make the driver interrupt handler a weak handler. Then, copy the necessary code from the driver handler to your custom interrupt handler.
+
+## Troubleshooting
+
+- If the project does not build, ensure Simplicity Studio and the WiSeConnect extension are installed and the board is connected.
+- If the device is not detected, reinstall the connectivity firmware and check USB drivers.
+
+## Resources
+
+- [WiSeConnect Getting Started](https://docs.silabs.com/wiseconnect/latest/wiseconnect-getting-started/)
+- [WiSeConnect Examples](https://docs.silabs.com/wiseconnect/latest/wiseconnect-examples/)
+- [SiWx91x SoC Documentation](https://docs.silabs.com/wiseconnect/latest/)
+
+## Report Bugs/Support
+
+For issues and support, use the Silicon Labs Community or your normal support channel.
+

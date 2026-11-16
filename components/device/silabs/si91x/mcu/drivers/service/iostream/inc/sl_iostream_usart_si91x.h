@@ -1,6 +1,6 @@
 /***************************************************************************/ /**
  * @file sl_iostream_usart_si91x.h
- * @brief IO Stream USART Component.
+ * @brief IO Stream USART component for SiWx91x.
  *******************************************************************************
  * # License
  * <b>Copyright 2023 Silicon Laboratories Inc. www.silabs.com</b>

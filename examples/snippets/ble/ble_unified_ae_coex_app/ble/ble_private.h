@@ -93,11 +93,6 @@ typedef struct more_data_state_beta_s {
 
 } more_data_state_beta_t;
 
-typedef struct profile_dummy_data_s {
-  uint8_t ble_con_id;
-  uint8_t swtch_cnt;
-} profile_dummy_data_t;
-
 typedef struct rsi_ble_conn_info_s {
   uint8_t conn_id;
   uint8_t conn_status;

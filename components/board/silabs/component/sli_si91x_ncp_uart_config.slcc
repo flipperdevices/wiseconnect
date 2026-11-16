@@ -1,9 +1,9 @@
 id: sli_si91x_ncp_uart_config
 package: platform_siwx91x
 description: >
-  This component implements NCP configuration for host MCU.
+  This component configures the NCP communication interface over USART between the host MCU and the SiWx91x wireless module.
 
-label: Si91x NCP bus USART configuration
+label: NCP Bus USART Configuration
 category: Device|Si91x|Wireless|Network Stack
 quality: production
 metadata:
@@ -31,5 +31,9 @@ include:
       - path: si91x_ncp_uart_config.h
   - path: "brd4270a"
     condition: [brd4270a]
+    file_list:
+      - path: si91x_ncp_uart_config.h
+  - path: "brd4120a"
+    condition: [brd4120a]
     file_list:
       - path: si91x_ncp_uart_config.h

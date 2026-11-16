@@ -2,7 +2,7 @@ id: rsilib_qei
 label: QEI
 package: platform_siwx91x
 description: >
-  Quadrature Encoder Interface Peripheral API's
+  This component provides Quadrature Encoder Interface peripheral APIs for the SiWx91x.
 category: Device|Si91x|MCU|Internal|RSI Peripheral Drivers
 quality: production
 metadata:

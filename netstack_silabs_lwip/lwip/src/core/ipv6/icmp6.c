@@ -79,6 +79,7 @@ static void icmp6_send_response_with_addrs_and_netif(struct pbuf *p, u8_t code, 
  * @param p the mld packet, p->payload pointing to the icmpv6 header
  * @param inp the netif on which this packet was received
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 void
 icmp6_input(struct pbuf *p, struct netif *inp)
 {

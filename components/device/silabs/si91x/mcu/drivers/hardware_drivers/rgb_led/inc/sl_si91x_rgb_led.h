@@ -23,6 +23,7 @@ extern "C" {
 #endif
 
 #include "sl_si91x_rgb_led_config.h"
+#include "sl_log_helper.h"
 #include <stdint.h>
 
 /** @addtogroup RGB_LED RGB LED

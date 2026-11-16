@@ -26,9 +26,13 @@
 /**
  * Include files
  **/
+#include "app_config.h"
+
 //! SL Wi-Fi SDK includes
 #include "sl_board_configuration.h"
 #include "sl_wifi.h"
+#include "sl_status.h"
+#include "sl_si91x_driver.h"
 #include "sl_wifi_callback_framework.h"
 #include "cmsis_os2.h"
 
@@ -44,6 +48,30 @@
 #endif
 #include "wifi_app.h"
 #include "sl_utility.h"
+#include "sl_net.h"
+#include "cacert.pem.h"
+#include <inttypes.h>
+
+#if SSL_CLIENT
+static sl_status_t clear_and_load_certificates_in_flash(void)
+{
+  sl_status_t status;
+
+  status = sl_net_set_credential(SL_NET_TLS_SERVER_CREDENTIAL_ID(CERTIFICATE_INDEX),
+                                 SL_NET_SIGNING_CERTIFICATE,
+                                 cacert,
+                                 sizeof(cacert) - 1);
+  if (status != SL_STATUS_OK) {
+    SL_DEBUG_LOG_V2(ERROR,
+                    "Loading TLS CA certificate in to FLASH Failed, Error Code : 0x%" PRIx32 "\r\n",
+                    (uint32_t)status);
+  } else {
+    SL_DEBUG_LOG_V2(INFO, "Load SSL CA certificate at index %" PRIu32 " Success\r\n", (uint32_t)CERTIFICATE_INDEX);
+  }
+
+  return status;
+}
+#endif
 
 static const sl_wifi_device_configuration_t config = {
   .boot_option = LOAD_NWP_FW,
@@ -65,7 +93,7 @@ static const sl_wifi_device_configuration_t config = {
                       | SL_SI91X_EXT_FEAT_BT_CUSTOM_FEAT_ENABLE // Enable BT feature
                       ),
                    .ext_tcp_ip_feature_bit_map =
-                     (SL_SI91X_CONFIG_FEAT_EXTENTION_VALID | SL_SI91X_EXT_TCP_IP_TOTAL_SELECTS(10)),
+                     (SL_SI91X_CONFIG_FEAT_EXTENSION_VALID | SL_SI91X_EXT_TCP_IP_TOTAL_SELECTS(10)),
                    .bt_feature_bit_map = (SL_SI91X_BT_RF_TYPE | SL_SI91X_ENABLE_BLE_PROTOCOL),
                    /*Enable BLE custom feature bitmap*/
                    .ble_feature_bit_map =
@@ -73,7 +101,7 @@ static const sl_wifi_device_configuration_t config = {
                       | SL_SI91X_BLE_MAX_NBR_CENTRALS(RSI_BLE_MAX_NBR_CENTRALS)
                       | SL_SI91X_BLE_MAX_NBR_ATT_SERV(RSI_BLE_MAX_NBR_ATT_SERV)
                       | SL_SI91X_BLE_MAX_NBR_ATT_REC(RSI_BLE_MAX_NBR_ATT_REC)
-                      | SL_SI91X_FEAT_BLE_CUSTOM_FEAT_EXTENTION_VALID | SL_SI91X_BLE_PWR_INX(RSI_BLE_PWR_INX)
+                      | SL_SI91X_FEAT_BLE_CUSTOM_FEAT_EXTENSION_VALID | SL_SI91X_BLE_PWR_INX(RSI_BLE_PWR_INX)
                       | SL_SI91X_BLE_PWR_SAVE_OPTIONS(RSI_BLE_PWR_SAVE_OPTIONS)
                       | SL_SI91X_916_BLE_COMPATIBLE_FEAT_ENABLE
 #if RSI_BLE_GATT_ASYNC_ENABLE
@@ -99,7 +127,10 @@ static const sl_wifi_device_configuration_t config = {
                       | SL_SI91X_BLE_GATT_INIT
 #endif
                       ),
-                   .config_feature_bit_map = (SL_SI91X_FEAT_SLEEP_GPIO_SEL_BITMAP | SL_WIFI_ENABLE_ENHANCED_MAX_PSP) }
+                   .config_feature_bit_map = (SL_SI91X_FEAT_SLEEP_GPIO_SEL_BITMAP | SL_WIFI_ENABLE_ENHANCED_MAX_PSP) },
+  .ta_pool         = { .tx_ratio_in_buffer_pool = 0, .rx_ratio_in_buffer_pool = 0, .global_ratio_in_buffer_pool = 0 },
+  .efuse_data_type = SL_SI91X_EFUSE_MFG_SW_VERSION,
+  .nwp_fw_image_number = SL_SI91X_NWP_FW_IMAGE_NUMBER_0
 };
 
 const osThreadAttr_t thread_attributes = {
@@ -111,7 +142,6 @@ const osThreadAttr_t thread_attributes = {
   .stack_size = 3072,
   .priority   = 0,
   .tz_module  = 0,
-  .reserved   = 0,
 };
 
 uint8_t volatile ble_connection_done = 0, wlan_socket_connection_done = 0;
@@ -133,8 +163,8 @@ extern int32_t rsi_ble_app_get_event(void);
 void rsi_wlan_ble_app(void *argument)
 {
   UNUSED_PARAMETER(argument);
-  int32_t status                     = SL_STATUS_OK;
-  sl_wifi_firmware_version_t version = { 0 };
+  sl_status_t status                  = SL_STATUS_OK;
+  sl_si91x_firmware_version_t version = { 0 };
 #if SL_SI91X_TICKLESS_MODE
   data_received_semaphore = osSemaphoreNew(1, 0, NULL);
   osStatus_t rc           = 0;
@@ -143,18 +173,35 @@ void rsi_wlan_ble_app(void *argument)
   //! Wi-Fi initialization
   status = sl_wifi_init(&config, NULL, sl_wifi_default_event_handler);
   if (status != SL_STATUS_OK) {
-    LOG_PRINT("\r\nWi-Fi Initialization Failed, Error Code : 0x%lX\r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "Wi-Fi Initialization Failed, Error Code : 0x%" PRIx32 "\r\n", (uint32_t)status);
     return;
   }
-  LOG_PRINT("\r\n Wi-Fi initialization is successful\n");
+  SL_DEBUG_LOG_V2(INFO, "Wi-Fi initialization is successful\r\n");
 
   //! Firmware version Prints
-  status = sl_wifi_get_firmware_version(&version);
+  status = sl_si91x_get_firmware_version(&version);
   if (status != SL_STATUS_OK) {
-    LOG_PRINT("\r\nFailed to fetch firmware version: 0x%lx\r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "Failed to fetch firmware version: 0x%" PRIx32 "\r\n", (uint32_t)status);
   } else {
-    print_firmware_version(&version);
+    printf("\r\nFirmware version is: %x%x.%d.%d.%d.%d.%d.%d\r\n",
+           version.chip_id,
+           version.rom_id,
+           version.major,
+           version.minor,
+           version.security_version,
+           version.patch_num,
+           version.customer_id,
+           version.build_num);
   }
+
+#if SSL_CLIENT
+  //! Load certificates
+  status = clear_and_load_certificates_in_flash();
+  if (status != SL_STATUS_OK) {
+    SL_DEBUG_LOG_V2(ERROR, "Unexpected error while loading certificate: 0x%" PRIx32 "\r\n", (uint32_t)status);
+    return;
+  }
+#endif
 
   //! BLE initialization
   rsi_ble_app_init();
@@ -175,20 +222,9 @@ void rsi_wlan_ble_app(void *argument)
 #endif
       no_ble_events = rsi_ble_app_get_event();
       if (!(wifi_app_cb.event_map & RSI_SEND_EVENT) && (no_ble_events == -1)) {
-#if (SL_SI91X_TICKLESS_MODE == 0)
-        if ((!(P2P_STATUS_REG & TA_wakeup_M4))) {
-          P2P_STATUS_REG &= ~M4_wakeup_TA;
-          LOG_PRINT("M4 in Sleep\r\n");
-          sl_si91x_power_manager_sleep();
-          LOG_PRINT("M4 wake up\r\n");
-#if (ENABLE_ALARM || ENABLE_NPSS_GPIO_2)
-          wifi_ble_send_data();
-#endif
-        }
-#else
-        LOG_PRINT("M4 in Sleep\r\n");
+        SL_DEBUG_LOG_V2(INFO, "M4 in Sleep\r\n");
         rc = osSemaphoreAcquire(data_received_semaphore, osWaitForever);
-        LOG_PRINT("M4 wake up\r\n");
+        SL_DEBUG_LOG_V2(INFO, "M4 wake up\r\n");
         if (button_is_pressed == true) {
           wifi_ble_send_data();
           button_is_pressed = 0;
@@ -196,7 +232,6 @@ void rsi_wlan_ble_app(void *argument)
         if (rc == osErrorTimeout) {
           wifi_ble_send_data();
         }
-#endif
       }
     }
 #endif

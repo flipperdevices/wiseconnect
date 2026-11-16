@@ -94,7 +94,7 @@ static const sl_light_sensor_impl_t *find_implementation(int id)
   const sl_light_sensor_impl_t *active_driver = NULL;
   int count                                   = sizeof(light_sensor_implementations) / sizeof(sl_light_sensor_impl_t);
   for (int i = 0; i < count; i++) {
-    if (light_sensor_implementations[i].id == id) {
+    if ((int)light_sensor_implementations[i].id == id) {
       active_driver = &light_sensor_implementations[i];
       break;
     }

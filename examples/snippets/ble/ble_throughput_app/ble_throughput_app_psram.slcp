@@ -1,18 +1,24 @@
 project_name: ble_throughput_app_psram
 package: bluetooth_le_siwx91x_app
 quality: production
-label: BLE - Throughput (PSRAM)
+label: BLE - PSRAM Throughput FreeRTOS
 category: Example|BLE
-description: 'This application demonstrates how to exchange continuous data to the remote  device to measure the On-Air Throughput using a BLE Sniffer.
+description: 'Demonstrates BLE on-air throughput by exchanging continuous data on SiWx91x with PSRAM in SoC FreeRTOS. Demonstrated by sustained transfers measurable with a sniffer.
 
   '
 filter:
 - name: Wireless Technology
   value:
   - BLE
+- name: Device Type
+  value:
+  - SoC
 - name: Project Difficulty
   value:
   - Beginner
+- name: Quality
+  value:
+  - Production
 source:
 - path: app.c
 include:
@@ -23,6 +29,7 @@ include:
 define:
 - name: SL_SI91X_PRINT_DBG_LOG
 - name: SLI_SI91X_MCU_INTERFACE
+- name: SLI_SI91X_MCU_ENABLE_PSRAM_FEATURE
 component:
 - id: sl_main
 - id: freertos
@@ -37,10 +44,15 @@ component:
 - id: basic_network_config_manager
 - id: ble
 - id: psram_core
-- id: psram_aps6404l_sqh
 - id: text_segment_in_psram
 - id: data_segment_in_psram
-- id: sl_si91x_basic_buffers
+- id: log_none
+- id: si91x_log
+- id: si91x_log_iostream_formatted
+- id: iostream_si91x
+- id: iostream_uart_si91x
+  instance:
+  - vcom
 requires:
 - name: device_needs_ram_execution
   condition:
@@ -49,7 +61,9 @@ toolchain_settings:
 - option: gcc_linker_option
   value: -u _printf_float
 - option: gcc_compiler_option
-  value: -Wall -Werror
+  value: -Wall -Werror -Wno-error=deprecated-declarations
+- option: llvm_compiler_option
+  value: -Wall -Werror -Wno-error=deprecated-declarations
 configuration:
 - name: SL_BOARD_ENABLE_VCOM
   value: '1'
@@ -74,8 +88,8 @@ post_build:
 sdk_extension:
 - id: wiseconnect3_sdk
   vendor: silabs
-  version: 4.0.1
+  version: 4.1.2
 sdk:
   id: simplicity_sdk
   vendor: silabs
-  version: 2025.12.2
+  version: 2026.6.2

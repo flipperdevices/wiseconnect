@@ -1,7 +1,7 @@
-project_name: wlan_ble_unified_ae_coex_app
+project_name: wlan_ble_unified_ae_coex_app_soc
 package: multi_protocol_siwx91x_app
 quality: production
-label: Unified AE app for Bluetooth and Wifi
+label: Wi-Fi Coex - Unified AE Coex App with Wifi (SoC)
 category: Example|BLE
 description: 'Bluetooth Low energy Extended Advertising features(Central/Peripheral) with Coex.
 
@@ -65,7 +65,6 @@ component:
 - id: ble
 - id: sl_si91x_asynchronous_socket
 - id: bsd_socket
-- id: sl_si91x_mem_pool_buffers_with_quota
 - id: sl_power_manager
 requires:
 - name: device_needs_ram_execution
@@ -73,7 +72,9 @@ requires:
   - si91x_common_flash
 toolchain_settings:
 - option: gcc_compiler_option
-  value: -Wall -Werror
+  value: -Wall -Werror -Wno-error=deprecated-declarations
+- option: llvm_compiler_option
+  value: -Wall -Werror -Wno-error=deprecated-declarations
 configuration:
 - name: SL_BOARD_ENABLE_VCOM
   value: '1'
@@ -110,8 +111,8 @@ post_build:
 sdk_extension:
 - id: wiseconnect3_sdk
   vendor: silabs
-  version: 4.0.1
+  version: 4.1.2
 sdk:
   id: simplicity_sdk
   vendor: silabs
-  version: 2025.12.2
+  version: 2026.6.2

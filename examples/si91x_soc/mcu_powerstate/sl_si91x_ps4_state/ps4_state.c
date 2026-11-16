@@ -40,24 +40,32 @@ void ps4_state_init(void)
   // Shutdown Wireless NWP.
   ps_wireless_shutdown();
   // PS4 state requirement is added, it transits to PS4 state.
+  sl_log_post_sleep_process(NULL);
   status = sl_si91x_power_manager_add_ps_requirement(SL_SI91X_POWER_MANAGER_PS4);
+
+  /* Note: All status messages in this example — both success and failure — are
+ * intentionally emitted via SL_PRINT_STRING_ERROR so that they remain visible
+ * on the console at the default log level. This is a demonstration choice, not
+ * a recommendation: in production code, ERROR severity should be reserved for
+ * actual failures, with successful operations logged via SL_PRINT_STRING_INFO
+ * (or SL_PRINT_STRING_DEBUG for verbose trace). */
   if (status != SL_STATUS_OK) {
     // If status is not OK, return with the error code.
-    DEBUGOUT("Error Code: 0x%lX, Power State Transition Failed \n", status);
+    SL_PRINT_STRING_ERROR("Error Code: 0x%lX, Power State Transition Failed \n", (unsigned long)status);
   }
-  DEBUGOUT("Current State: PS%d \n", sl_si91x_power_manager_get_current_state());
+  SL_PRINT_STRING_ERROR("Current State: PS%d \n", sl_si91x_power_manager_get_current_state());
   // Change the clock mode to performace mode(In ps4 clk frequency is 180MHz).
   sl_si91x_power_manager_set_clock_scaling(SL_SI91X_POWER_MANAGER_PERFORMANCE);
 
 #if ACTIVE_STATE
-  DEBUGOUT("PS%d Active State \n", sl_si91x_power_manager_get_current_state());
+  SL_PRINT_STRING_ERROR("PS%d Active State \n", sl_si91x_power_manager_get_current_state());
   while (1) {
     // Idle loop to measure active current consumption
   }
 #endif
-  DEBUGOUT("PS%d Sleep State\n", sl_si91x_power_manager_get_current_state());
+  SL_PRINT_STRING_ERROR("PS%d Sleep State\n", sl_si91x_power_manager_get_current_state());
   // Call the sleep function, it goes to PS4 sleep as current state is PS4.
-  sl_si91x_power_manager_sleep();
+  sli_si91x_power_manager_sleep();
 }
 
 /******************************************************************************

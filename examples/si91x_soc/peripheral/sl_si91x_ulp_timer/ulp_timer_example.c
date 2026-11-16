@@ -113,21 +113,27 @@ void ulp_timer_example_init(void)
     // ulp-timer instances
     status = sl_si91x_ulp_timer_init(&sl_timer_clk_handle);
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("sl_si91x_ulp_timer_init : Invalid Parameters, Error Code : %lu \n", status);
+      /* Note: All status messages in this example — both success and failure — are
+ * intentionally emitted via SL_PRINT_STRING_ERROR so that they remain visible
+ * on the console at the default log level. This is a demonstration choice, not
+ * a recommendation: in production code, ERROR severity should be reserved for
+ * actual failures, with successful operations logged via SL_PRINT_STRING_INFO
+ * (or SL_PRINT_STRING_DEBUG for verbose trace). */
+      SL_PRINT_STRING_ERROR("sl_si91x_ulp_timer_init : Invalid Parameters, Error Code : %lu \n", status);
       break;
     }
-    DEBUGOUT("Successfully Configured ULP-timer clock input source \n");
+    SL_PRINT_STRING_ERROR("Successfully Configured ULP-timer clock input source \n");
     if (current_power_state == SL_SI91X_POWER_MANAGER_PS4) {
-      DEBUGOUT("Timer executing at PS4 state \n");
+      SL_PRINT_STRING_ERROR("Timer executing at PS4 state \n");
       // Get match value
       status = sl_si91x_ulp_timer_get_match_value(SL_ULP_TIMER_HANDLE.timer_type, TIME_IN_MICROSECONDS, &match_value);
       if (status != SL_STATUS_OK) {
-        DEBUGOUT("sl_si91x_ulp_timer_get_match_value : Invalid Parameters Error "
-                 "Code : %lu \n",
-                 status);
+        SL_PRINT_STRING_ERROR("sl_si91x_ulp_timer_get_match_value : Invalid Parameters Error "
+                              "Code : %lu \n",
+                              status);
         break;
       } else {
-        DEBUGOUT("Successfully match value is fetched\n");
+        SL_PRINT_STRING_ERROR("Successfully match value is fetched\n");
       }
       // Updating timer match-value
       SL_ULP_TIMER_HANDLE.timer_match_value = match_value;
@@ -135,22 +141,22 @@ void ulp_timer_example_init(void)
       // match-value: 1second
       status = sl_si91x_ulp_timer_set_configuration(&(SL_ULP_TIMER_HANDLE));
       if (status != SL_STATUS_OK) {
-        DEBUGOUT("sl_si91x_ulp_timer_set_configuration : Invalid Parameters "
-                 "Error Code : %lu \n",
-                 status);
+        SL_PRINT_STRING_ERROR("sl_si91x_ulp_timer_set_configuration : Invalid Parameters "
+                              "Error Code : %lu \n",
+                              status);
         break;
       }
-      DEBUGOUT("Successfully Configured ULP-timer parameters with mhz "
-               "parameters \n");
+      SL_PRINT_STRING_ERROR("Successfully Configured ULP-timer parameters with mhz "
+                            "parameters \n");
     } else if (current_power_state == SL_SI91X_POWER_MANAGER_PS2) {
       status = sl_si91x_ulp_timer_get_match_value(SL_ULP_TIMER_HANDLE.timer_type, TIME_IN_MICROSECONDS, &match_value);
       if (status != SL_STATUS_OK) {
-        DEBUGOUT("sl_si91x_ulp_timer_get_match_value : Invalid Parameters Error "
-                 "Code : %lu \n",
-                 status);
+        SL_PRINT_STRING_ERROR("sl_si91x_ulp_timer_get_match_value : Invalid Parameters Error "
+                              "Code : %lu \n",
+                              status);
         break;
       } else {
-        DEBUGOUT("Successfully match value is fetched\n");
+        SL_PRINT_STRING_ERROR("Successfully match value is fetched\n");
       }
       // Updating timer match-value
       SL_ULP_TIMER_HANDLE.timer_match_value = match_value;
@@ -158,31 +164,31 @@ void ulp_timer_example_init(void)
       // match-value: 1second
       status = sl_si91x_ulp_timer_set_configuration(&(SL_ULP_TIMER_HANDLE));
       if (status != SL_STATUS_OK) {
-        DEBUGOUT("sl_si91x_ulp_timer_set_configuration : Invalid Parameters "
-                 "Error Code : %lu \n",
-                 status);
+        SL_PRINT_STRING_ERROR("sl_si91x_ulp_timer_set_configuration : Invalid Parameters "
+                              "Error Code : %lu \n",
+                              status);
         break;
       }
-      DEBUGOUT("Successfully Configured ULP-timer parameters with 20mhz "
-               "parameters \n");
+      SL_PRINT_STRING_ERROR("Successfully Configured ULP-timer parameters with 20mhz "
+                            "parameters \n");
     }
     // Registering timeout callback for the selected timer instance, which will
     // also enable its interrupt
     status = sl_si91x_ulp_timer_register_timeout_callback(ULP_TIMER_INSTANCE, &(SL_ULP_TIMER_CALLBACK));
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("sl_si91x_ulp_timer_timeout_callback_register : Invalid "
-               "Parameters Error Code : %lu \n",
-               status);
+      SL_PRINT_STRING_ERROR("sl_si91x_ulp_timer_timeout_callback_register : Invalid "
+                            "Parameters Error Code : %lu \n",
+                            status);
       break;
     }
-    DEBUGOUT("Successfully Registered timer instance timeout callback \n");
+    SL_PRINT_STRING_ERROR("Successfully Registered timer instance timeout callback \n");
     // Starting Timer instance with default parameters
     status = sl_si91x_ulp_timer_start(ULP_TIMER_INSTANCE);
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("sl_si91x_ulp_timer_start : Invalid Parameters Error Code : %lu \n", status);
+      SL_PRINT_STRING_ERROR("sl_si91x_ulp_timer_start : Invalid Parameters Error Code : %lu \n", status);
       break;
     }
-    DEBUGOUT("Successfully started ulp-timer instance with default parameters \n");
+    SL_PRINT_STRING_ERROR("Successfully started ulp-timer instance with default parameters \n");
   } while (false);
 }
 
@@ -216,107 +222,107 @@ void ulp_timer_example_process_action(void)
           // Changing timer-type to 256US mode
           status = sl_si91x_ulp_timer_set_type(ULP_TIMER_INSTANCE, ULP_TIMER_TYP_256US);
           if (status != SL_STATUS_OK) {
-            DEBUGOUT("sl_si91x_ulp_timer_set_type : Invalid Parameters Error "
-                     "Code : %lu \n",
-                     status);
+            SL_PRINT_STRING_ERROR("sl_si91x_ulp_timer_set_type : Invalid Parameters Error "
+                                  "Code : %lu \n",
+                                  status);
           } else {
-            DEBUGOUT("Successfully changed timer-type to 256US mode \n");
+            SL_PRINT_STRING_ERROR("Successfully changed timer-type to 256US mode \n");
           }
           // Resetting timer direction
           status = sl_si91x_ulp_timer_set_direction(ULP_TIMER_INSTANCE, DOWN_COUNTER);
           if (status != SL_STATUS_OK) {
-            DEBUGOUT("sl_si91x_ulp_timer_set_direction : Invalid Parameters "
-                     "Error Code : %lu \n",
-                     status);
+            SL_PRINT_STRING_ERROR("sl_si91x_ulp_timer_set_direction : Invalid Parameters "
+                                  "Error Code : %lu \n",
+                                  status);
           } else {
-            DEBUGOUT("Successfully changed timer-direction to up-counter \n");
+            SL_PRINT_STRING_ERROR("Successfully changed timer-direction to up-counter \n");
           }
           // Get match value
           status = sl_si91x_ulp_timer_get_match_value(ULP_TIMER_TYP_256US, TIME_IN_MICROSECONDS, &match_value);
           if (status != SL_STATUS_OK) {
-            DEBUGOUT("sl_si91x_ulp_timer_get_match_value : Invalid Parameters Error "
-                     "Code : %lu \n",
-                     status);
+            SL_PRINT_STRING_ERROR("sl_si91x_ulp_timer_get_match_value : Invalid Parameters Error "
+                                  "Code : %lu \n",
+                                  status);
           } else {
-            DEBUGOUT("Successfully match value is fetched\n");
+            SL_PRINT_STRING_ERROR("Successfully match value is fetched\n");
           }
           // Changing timer-instance match value to number of ticks required for
           // 1sec time-out, in 256us mode ( 1000000/256)
           status = sl_si91x_ulp_timer_set_count(ULP_TIMER_INSTANCE, match_value);
           if (status != SL_STATUS_OK) {
-            DEBUGOUT("sl_si91x_ulp_timer_set_count : Invalid Parameters Error "
-                     "Code : %lu \n",
-                     status);
+            SL_PRINT_STRING_ERROR("sl_si91x_ulp_timer_set_count : Invalid Parameters Error "
+                                  "Code : %lu \n",
+                                  status);
           } else {
-            DEBUGOUT("Successfully changed the timer match value\n");
+            SL_PRINT_STRING_ERROR("Successfully changed the timer match value\n");
           }
         } else if (current_power_state == SL_SI91X_POWER_MANAGER_PS2) {
           // Changing timer-type to 256US mode
           status = sl_si91x_ulp_timer_set_type(ULP_TIMER_INSTANCE, ULP_TIMER_TYP_256US);
           if (status != SL_STATUS_OK) {
-            DEBUGOUT("sl_si91x_ulp_timer_set_type : Invalid Parameters Error "
-                     "Code : %lu \n",
-                     status);
+            SL_PRINT_STRING_ERROR("sl_si91x_ulp_timer_set_type : Invalid Parameters Error "
+                                  "Code : %lu \n",
+                                  status);
           } else {
-            DEBUGOUT("Successfully changed timer-type to 256US mode \n");
+            SL_PRINT_STRING_ERROR("Successfully changed timer-type to 256US mode \n");
           }
           // Resetting timer direction
           status = sl_si91x_ulp_timer_set_direction(ULP_TIMER_INSTANCE, DOWN_COUNTER);
           if (status != SL_STATUS_OK) {
-            DEBUGOUT("sl_si91x_ulp_timer_set_direction : Invalid Parameters "
-                     "Error Code : %lu \n",
-                     status);
+            SL_PRINT_STRING_ERROR("sl_si91x_ulp_timer_set_direction : Invalid Parameters "
+                                  "Error Code : %lu \n",
+                                  status);
           } else {
-            DEBUGOUT("Successfully changed timer-direction to up-counter \n");
+            SL_PRINT_STRING_ERROR("Successfully changed timer-direction to up-counter \n");
           }
           // Get match value
           status = sl_si91x_ulp_timer_get_match_value(ULP_TIMER_TYP_256US, TIME_IN_MICROSECONDS, &match_value);
           if (status != SL_STATUS_OK) {
-            DEBUGOUT("sl_si91x_ulp_timer_get_match_value : Invalid Parameters Error "
-                     "Code : %lu \n",
-                     status);
+            SL_PRINT_STRING_ERROR("sl_si91x_ulp_timer_get_match_value : Invalid Parameters Error "
+                                  "Code : %lu \n",
+                                  status);
           } else {
-            DEBUGOUT("Successfully match value is fetched\n");
+            SL_PRINT_STRING_ERROR("Successfully match value is fetched\n");
           }
           // Changing timer-instance match value to number of ticks required for
           // 1sec time-out, in 256us mode ( 1000000/256)
           status = sl_si91x_ulp_timer_set_count(ULP_TIMER_INSTANCE, match_value);
           if (status != SL_STATUS_OK) {
-            DEBUGOUT("sl_si91x_ulp_timer_set_count : Invalid Parameters Error "
-                     "Code : %lu \n",
-                     status);
+            SL_PRINT_STRING_ERROR("sl_si91x_ulp_timer_set_count : Invalid Parameters Error "
+                                  "Code : %lu \n",
+                                  status);
           } else {
-            DEBUGOUT("Successfully changed the timer match value\n");
+            SL_PRINT_STRING_ERROR("Successfully changed the timer match value\n");
           }
         }
         // Starting the timer instance in one-shot mode with 256us type and
         // 1-second time-out value
         status = sl_si91x_ulp_timer_start(ULP_TIMER_INSTANCE);
         if (status != SL_STATUS_OK) {
-          DEBUGOUT("sl_si91x_ulp_timer_start : Invalid Parameters Error Code : %lu \n", status);
+          SL_PRINT_STRING_ERROR("sl_si91x_ulp_timer_start : Invalid Parameters Error Code : %lu \n", status);
         } else {
-          DEBUGOUT("Successfully started timer instance with new parameters \n");
+          SL_PRINT_STRING_ERROR("Successfully started timer instance with new parameters \n");
         }
         // Reading timer count after starting timer instance
         status = sl_si91x_ulp_timer_get_count(ULP_TIMER_INSTANCE, &timer_count_value);
         if (status != SL_STATUS_OK) {
-          DEBUGOUT("sl_si91x_ulp_timer_get_count : Invalid Parameters Error Code "
-                   ": %lu \n",
-                   status);
+          SL_PRINT_STRING_ERROR("sl_si91x_ulp_timer_get_count : Invalid Parameters Error Code "
+                                ": %lu \n",
+                                status);
         } else {
-          DEBUGOUT("Timer count value = %lu, after starting timer\n", timer_count_value);
+          SL_PRINT_STRING_ERROR("Timer count value = %lu, after starting timer\n", timer_count_value);
         }
         // Checking counter direction
         status = sl_si91x_ulp_timer_get_direction(ULP_TIMER_INSTANCE, &timer_direction);
         if (status != SL_STATUS_OK) {
-          DEBUGOUT("sl_si91x_ulp_timer_get_direction : Invalid Parameters Error Code "
-                   ": %lu \n",
-                   status);
+          SL_PRINT_STRING_ERROR("sl_si91x_ulp_timer_get_direction : Invalid Parameters Error Code "
+                                ": %lu \n",
+                                status);
         } else {
           if (timer_direction) {
-            DEBUGOUT("Timer running as up-counter\n");
+            SL_PRINT_STRING_ERROR("Timer running as up-counter\n");
           } else {
-            DEBUGOUT("Timer running as down-counter\n");
+            SL_PRINT_STRING_ERROR("Timer running as down-counter\n");
           }
         }
       }
@@ -330,14 +336,14 @@ void ulp_timer_example_process_action(void)
         timer_parameter_change_flag = true;
         if ((ps4_to_ps2_transition_done && ps2_to_ps4_transition_done)) {
           sl_si91x_ulp_timer_deinit();
-          DEBUGOUT("De Initialization is successful\n");
+          SL_PRINT_STRING_ERROR("De Initialization is successful\n");
           ps2_to_ps4_transition_done = false;
           ps4_to_ps2_transition_done = false;
           ulp_timer_current_mode     = SL_ULP_TIMER_TRANSMISSION_COMPLETED;
         }
         // Switching power state from PS4 to PS2 or vice versa
         else if (current_power_state == SL_SI91X_POWER_MANAGER_PS4) {
-          DEBUGOUT("Switching power state from PS4 to PS2\n");
+          SL_PRINT_STRING_ERROR("Switching power state from PS4 to PS2\n");
           // Control power management by adjusting clock references and shutting down
           // the power supply
           // This function is for demonstration purpose only. For more details, refer to the README file.
@@ -347,9 +353,9 @@ void ulp_timer_example_process_action(void)
           /* Due to calling trim_efuse API om power manager it will change the
            clock frequency, if we are not initialize the debug again it will
            print the garbage data or no data in console output. */
-          DEBUGINIT();
+          SL_PRINT_STRING_ERROR("DEBUGINIT();");
           if (status != SL_STATUS_OK) {
-            DEBUGOUT("sl_si91x_power_manager_add_ps_requirement: Error Code : %lu \n", status);
+            SL_PRINT_STRING_ERROR("sl_si91x_power_manager_add_ps_requirement: Error Code : %lu \n", status);
             break;
           }
           // Configuring the ps2 power state by configuring
@@ -361,11 +367,11 @@ void ulp_timer_example_process_action(void)
           current_power_state    = SL_SI91X_POWER_MANAGER_PS2;
           ulp_timer_current_mode = SL_ULP_TIMER_PROCESS_ACTION;
         } else if (current_power_state == SL_SI91X_POWER_MANAGER_PS2) {
-          DEBUGOUT("Switching power state from PS2 to PS4\n");
+          SL_PRINT_STRING_ERROR("Switching power state from PS2 to PS4\n");
           // switching the power state from PS2 to PS4 mode
           status = sl_si91x_power_manager_add_ps_requirement(SL_SI91X_POWER_MANAGER_PS4);
           if (status != SL_STATUS_OK) {
-            DEBUGOUT("sl_si91x_power_manager_add_ps_requirement: Error Code : %lu \n", status);
+            SL_PRINT_STRING_ERROR("sl_si91x_power_manager_add_ps_requirement: Error Code : %lu \n", status);
             break;
           }
           /* Due to calling trim_efuse API om power manager it will change the
@@ -397,7 +403,7 @@ void ulp_timer_example_process_action(void)
 // Note : Remove all debugouts for exact delays
 static void SL_ULP_TIMER_CALLBACK(void)
 {
-  DEBUGOUT("On timer%d callback \n", ULP_TIMER_INSTANCE);
+  SL_PRINT_STRING_ERROR("On timer%d callback \n", ULP_TIMER_INSTANCE);
   // Incrementing interrupt count
   interrupt_count++;
   // To toggle LED0
@@ -457,18 +463,18 @@ static void configuring_ps2_power_state(void)
     status = sl_si91x_power_manager_remove_peripheral_requirement(&peri);
     if (status != SL_STATUS_OK) {
       // If status is not OK, return with the error code.
-      DEBUGOUT("sl_si91x_power_manager_remove_peripheral_requirement failed, "
-               "Error Code: 0x%lX",
-               status);
+      SL_PRINT_STRING_ERROR("sl_si91x_power_manager_remove_peripheral_requirement failed, "
+                            "Error Code: 0x%lX",
+                            status);
       break;
     }
     // RAM retention modes are configured and passed into this API.
     status = sl_si91x_power_manager_configure_ram_retention(&config);
     if (status != SL_STATUS_OK) {
       // If status is not OK, return with the error code.
-      DEBUGOUT("sl_si91x_power_manager_configure_ram_retention failed, Error "
-               "Code: 0x%lX",
-               status);
+      SL_PRINT_STRING_ERROR("sl_si91x_power_manager_configure_ram_retention failed, Error "
+                            "Code: 0x%lX",
+                            status);
       break;
     }
   } while (false);

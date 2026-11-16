@@ -39,6 +39,7 @@ extern "C" {
 #include "rsi_qei.h"
 #include "sl_status.h"
 #include "sl_qei_board.h"
+#include "sl_log_helper.h"
 /***************************************************************************/ /**
  * @addtogroup QEI Quadrature Encoder
  * @ingroup SI91X_PERIPHERAL_APIS

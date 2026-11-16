@@ -662,3 +662,38 @@ ARM_DRIVER_SAI Driver_SAI1 = {
 };
 #endif
 
+/**
+ * \brief Get UDMA resources and I2S resources for an SAI instance.
+ * \param[in] instance  SAI instance index (0 for I2S0, 1 for I2S1).
+ * \return  SAI_UDMA_I2S_Resources_t with:
+ *          - udma_resources    : UDMA controller resources
+ *          - i2s_resources     : I2S resources (peripheral, DMA config, pins)
+ *          - udma_channel_info : UDMA channel info array
+ *          - udma_handle       : UDMA handle
+ *          All fields NULL/0 if instance invalid or not enabled (RTE_I2S0/RTE_I2S1).
+ */
+SAI_UDMA_I2S_Resources_t SAI_GetUDMAI2SResources(uint8_t instance)
+{
+	SAI_UDMA_I2S_Resources_t res = { NULL, NULL, NULL, NULL };
+
+#if RTE_I2S0 
+	if (instance == 0U) {
+		res.udma_resources     = &UDMA0_Resources;
+		res.i2s_resources      = &I2S0_Resources;
+		res.udma_channel_info  = udma0_chnl_info;
+		res.udma_handle        = udmaHandle0;
+		return res;
+	}
+#endif 
+#if RTE_I2S1
+	if (instance == 1U) {
+		res.udma_resources     = &UDMA1_Resources;
+		res.i2s_resources      = &I2S1_Resources;
+		res.udma_channel_info  = udma1_chnl_info;
+		res.udma_handle        = udmaHandle1;
+		return res;
+	}
+#endif
+
+	return res;
+}

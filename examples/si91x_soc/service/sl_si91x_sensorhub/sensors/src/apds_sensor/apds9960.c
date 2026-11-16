@@ -190,12 +190,12 @@ sl_apds_err_t sl_si91x_apds9960_init(sl_sensor_bus_t i2c_bus)
   status = sl_si91x_apds9960_sensor_init();
 
   if (status) {
-    DEBUGOUT("\r\n APDS Sensor Init Failed = %d \r \n", status);
+    DEBUGOUT("\r\n APDS Sensor Init Failed = %d \r\n", status);
     return SL_STATUS_FAIL;
   }
 
   if (NULL == apds9960) {
-    DEBUGOUT("\r\n Sensor APDS Creation Failed \r \n");
+    DEBUGOUT("\r\n Sensor APDS Creation Failed \r\n");
     return SL_STATUS_FAIL;
   }
   is_gpr_init = true;
@@ -792,7 +792,7 @@ uint8_t sl_si91x_apds9960_get_mode(void)
 
   /* Read current ENABLE register */
   if (sl_si91x_read_buffer(0x80, &enable_value, 1)) {
-    DEBUGOUT("Err= %d\n", SL_ERROR);
+    DEBUGOUT("Err= %d\r\n", SL_ERROR);
     return SL_ERROR;
   }
   return enable_value;
@@ -1242,7 +1242,7 @@ bool sl_si91x_apds9960_sensor_init(void)
     return RSI_FAIL;
   }
   if (!(id == SL_ID_1_9960 || id == SL_ID_2_9960 || id == SL_ID_3_9960)) {
-    DEBUGOUT("APDS9960 ID mismatch: 0x%02X\n", id);
+    DEBUGOUT("APDS9960 ID mismatch: 0x%02X\r\n", id);
     return RSI_FAIL;
   }
 

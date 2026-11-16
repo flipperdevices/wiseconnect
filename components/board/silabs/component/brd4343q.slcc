@@ -1,7 +1,7 @@
 id: brd4343q
 label: BRD4343Q
 package: platform_siwx91x
-description: Board support for BRD4343Q.
+description: Board support for BRD4343Q(SoC Module).
 category: Board|Radio Board
 quality: production
 metadata:
@@ -12,8 +12,6 @@ requires:
 - name: siwg917y121mgnb
 - name: brd4343q_config
 - name: hardware_board_mainboard
-- name: external_flash_none
-- name: external_psram_none
 - name: rsilib_board
 - name: si91x_32kHz_external_oscillator
 - name: si91x_common_flash

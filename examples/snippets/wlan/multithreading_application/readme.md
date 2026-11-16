@@ -1,9 +1,14 @@
 # Wi-Fi - Multithreading Application 
 
+## High-Level Overview
+
+SiWx91x multithreading example: Demonstrate multiple Wi-Fi application tasks running concurrently on CMSIS-RTOS after connecting to an access point in SoC and NCP modes.
+
 ## Table of Contents
 
 - [Wi-Fi - Multithreading Application](#wi-fi---multithreading-application)
   - [Table of Contents](#table-of-contents)
+  - [High-Level Overview](#high-level-overview)
   - [Purpose/Scope](#purposescope)
   - [Prerequisites/Setup Requirements](#prerequisitessetup-requirements)
     - [Hardware Requirements](#hardware-requirements)
@@ -23,6 +28,10 @@
     - [Procedure for executing the application when enabled with SSL](#procedure-for-executing-the-application-when-enabled-with-ssl)
   - [Additional Information](#additional-information)
     - [Steps to set up MQTT server](#steps-to-set-up-mqtt-server)
+  - [Troubleshooting](#troubleshooting)
+  - [Resources](#resources)
+  - [Report Bugs and Get Support](#report-bugs-and-get-support)
+
 ## Purpose/Scope
 
 This application demonstrates how to configure the SiWx91x device in concurrent mode using multithreading, i.e., in both Wi-Fi Station mode (STA instance) and Access Point mode (SoftAP instance). The SiWx91x's STA instance is configured as an MQTT client, connects to an MQTT broker, subscribes to a topic, and publishes messages on a particular MQTT topic. And simultaneously, configures the SiWx91x device as a soft Access Point and measures WLAN UDP/TCP throughput by configuring the SiWx91x AP interface in a client/server role.
@@ -35,30 +44,48 @@ This application demonstrates how to configure the SiWx91x device in concurrent 
 - Wireless Access Point
 - **SoC Mode**:
   - Standalone
-    - BRD4002A Wireless Pro Kit Mainboard [SI-MB4002A]
+    - BRD4002B Wireless Pro Kit Mainboard [SI-MB4002B](https://www.silabs.com/development-tools/wireless/wireless-pro-kit-mainboard?tab=overview)
     - Radio Boards 
-  	  - BRD4338A [SiWx917-RB4338A]
-  	  - BRD4343A [SiWx917-RB4343A]
+  	  - BRD4338A [SiWx917-RB4338A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-rb4338a-wifi-6-bluetooth-le-soc-radio-board?tab=overview)
+  	  - BRD4342A [SiWx917-RB4342A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx91x-rb4342a-wifi-6-bluetooth-le-soc-radio-board?tab=overview)
+  	  - BRD4339B [SiWx917-RB4339B](https://docs.silabs.com/wiseconnect/latest/wiseconnect-getting-started/getting-started-with-at)
+  	  - BRD4340A [SiWx917-RB4340A](https://docs.silabs.com/wiseconnect/latest/wiseconnect-getting-started/getting-started-with-at)
+  	  - BRD4343A [SiWx917-RB4343A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4343a-wi-fi-6-bluetooth-le-8mb-flash-radio-board-for-module?tab=overview)
+  	  - BRD4343C [SiWx917-RB4343C](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4343c-wi-fi-6-bluetooth-le-8mb-flash-radio-board-for-module?tab=overview)
   - Kits
+  	- SiWG917 Dev Kit [BRD2605A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-dk2605a-wifi-6-bluetooth-le-soc-dev-kit?tab=overview)
+  	- SiWG917 Dev Kit [BRD2605B]
   	- SiWx917 Pro Kit [Si917-PK6031A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-pro-kit?tab=overview)
   	- SiWx917 Pro Kit [Si917-PK6032A]
-  	- SiWx917 AC1 Module Explorer Kit (BRD2708A)
+  	- SiWx917 AC1 Module Explorer Kit [BRD2708A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-ek2708a-explorer-kit?tab=overview)
   	
-- **NCP Mode**:
-  - Standalone
-    - BRD4002A Wireless Pro Kit Mainboard [SI-MB4002A]
-    - EFR32xG24 Wireless 2.4 GHz +10 dBm Radio Board [xG24-RB4186C](https://www.silabs.com/development-tools/wireless/xg24-rb4186c-efr32xg24-wireless-gecko-radio-board?tab=overview)
+- **NCP Mode** (select either the EFR32 or STM32 host MCU platform; a single platform is sufficient to run the application):
+  - **Option 1: EFR32 host**
+    - Standalone
+      - BRD4002B Wireless Pro Kit Mainboard [SI-MB4002B](https://www.silabs.com/development-tools/wireless/wireless-pro-kit-mainboard?tab=overview)
+      - EFR32xG24 Wireless 2.4 GHz +10 dBm Radio Board [xG24-RB4186C](https://www.silabs.com/development-tools/wireless/xg24-rb4186c-efr32xg24-wireless-gecko-radio-board?tab=overview)
+      - NCP Expansion Kit with NCP Radio Boards
+        - [BRD4346A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-rb4346a-wifi-6-bluetooth-le-soc-4mb-flash-radio-board?tab=overview) + [BRD8045A](https://www.silabs.com/development-tools/wireless/wi-fi/expansion-adapter-board-for-co-processor-radio-boards?tab=overview)
+        - [BRD4357A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4357a-wi-fi-6-bluetooth-le-4mb-flash-radio-board-for-rcp-and-ncp-modules?tab=overview) + [BRD8045A](https://www.silabs.com/development-tools/wireless/wi-fi/expansion-adapter-board-for-co-processor-radio-boards?tab=overview)
+        - [BRD4357C](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4357c-wi-fi-6-bluetooth-le-4mb-flash-radio-board-for-rcp-and-ncp-modules?tab=overview) + [BRD8045A](https://www.silabs.com/development-tools/wireless/wi-fi/expansion-adapter-board-for-co-processor-radio-boards?tab=overview)
+    - Kits
+    	- EFR32xG24 Pro Kit +10 dBm [xG24-PK6009A](https://www.silabs.com/development-tools/wireless/efr32xg24-pro-kit-10-dbm?tab=overview)
+
+  - **Option 2: STM32F411RE host**
+    - [STM32F411RE](https://www.st.com/en/microcontrollers-microprocessors/stm32f411re.html) MCU
     - NCP Expansion Kit with NCP Radio Boards
-      - (BRD4346A + BRD8045A) [SiWx917-EB4346A]
-      - (BRD4357A + BRD8045A) [SiWx917-EB4357A]
-  - Kits
-  	- EFR32xG24 Pro Kit +10 dBm [xG24-PK6009A](https://www.silabs.com/development-tools/wireless/efr32xg24-pro-kit-10-dbm?tab=overview)
-  - Interface and Host MCU Supported
-    - SPI - EFR32 
+      - [BRD4346A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-rb4346a-wifi-6-bluetooth-le-soc-4mb-flash-radio-board?tab=overview) + [BRD8045C](https://www.silabs.com/development-tools/wireless/wi-fi/shield-adapter-board-for-co-processor-radio-boards?tab=overview)
+      - [BRD4357A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4357a-wi-fi-6-bluetooth-le-4mb-flash-radio-board-for-rcp-and-ncp-modules?tab=overview) + [BRD8045C](https://www.silabs.com/development-tools/wireless/wi-fi/shield-adapter-board-for-co-processor-radio-boards?tab=overview)
+      - [BRD4357C](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4357c-wi-fi-6-bluetooth-le-4mb-flash-radio-board-for-rcp-and-ncp-modules?tab=overview) + [BRD8045C](https://www.silabs.com/development-tools/wireless/wi-fi/shield-adapter-board-for-co-processor-radio-boards?tab=overview)
+
+  - Interface and host MCU supported
+    - SPI : EFR32 and STM32
+    - UART : EFR32
 
 ### Software Requirements
 
 - Simplicity Studio
+- [Keil IDE](https://www.keil.com/) (to be used with STM32F411RE MCU)
 - [iPerf Application](https://sourceforge.net/projects/iperf2/files/iperf-2.0.8-win.zip/download). iPerf is a tool for active measurements of the maximum achievable bandwidth on IP networks. It supports tuning of various parameters related to timing, buffers, and protocols (TCP and UDP with IPv4 and IPv6).
 
 ### Setup Diagram
@@ -88,7 +115,7 @@ The application can be configured to suit your requirements and development envi
 
 - STA instance related parameters
 
-  - DEFAULT_WIFI_CLIENT_PROFILE_SSID refers to the name to which the Si91x module gets connected to.
+  - DEFAULT_WIFI_CLIENT_PROFILE_SSID refers to the name to which the SiWx91x module gets connected to.
 
   	```c
   	#define DEFAULT_WIFI_CLIENT_PROFILE_SSID               "YOUR_AP_SSID"
@@ -124,13 +151,13 @@ The application can be configured to suit your requirements and development envi
 > Note:
 >
 > 1. In concurrent mode, STA and AP should be configured on the same channel. The STA instance shall first scan for the specified external AP, wherein the channel number of AP is fetched and passed as an argument during SoftAP creation.
-> 2. Valid values for CHANNEL_NO are 1 to 11 in 2.4 GHz band and 36 to 48 and 149 to 165 in 5 GHz. In this example, default configured band is 2.4 GHz.
+> 2. Valid values for CHANNEL_NO are 1 to 14 in the 2.4 GHz band. The default region code is set to US.
 
 > Note:
 >
 > - In `sl_wifi_default_concurrent_configuration`, `oper_mode` must be `SL_SI91X_CONCURRENT_MODE` for this example.
 
-- Configure the following parameters in `ap_throughput.c` to test throughput app as per requirements
+- Configure the following parameters in `ap_throughtput.c` to test throughput app as per requirements
 
   - Client/Server IP Settings
 
@@ -146,12 +173,12 @@ The application can be configured to suit your requirements and development envi
     - The application may be configured to measure throughput using UDP or TCP packets. Choose the measurement type using the `THROUGHPUT_TYPE` macro.
 
       ```c
-      #define THROUGHPUT_TYPE  TCP_TX     // Selects the throughput option
+      #define THROUGHPUT_TYPE  TCP_RX     // Selects the throughput option
 
-      #define TCP_TX           0   // SiWx91x transmits packets to remote TCP client
-      #define TCP_RX           1   // SiWx91x receives packets from remote TCP server
-      #define UDP_TX           2   // SiWx91x transmits packets to remote UDP client
-      #define UDP_RX           3   // SiWx91x receives packets from remote UDP server
+      #define UDP_TX           0   // SiWx91x transmits packets to remote UDP server
+      #define UDP_RX           1   // SiWx91x receives packets from remote UDP client
+      #define TCP_TX           2   // SiWx91x transmits packets to remote TCP server
+      #define TCP_RX           3   // SiWx91x receives packets from remote TCP client
       ```
 
   - Throughput Test options
@@ -161,7 +188,7 @@ The application can be configured to suit your requirements and development envi
       #define BYTES_TO_RECEIVE  (1 << 20)     // To measure RX throughput with 1 MB data transfer
       #define TEST_TIMEOUT      10000         // Throughput test timeout in ms
       ```
-  - Configure the TCP RX window size and TCP RX window division factor to 44 in the socket configuration in **app.c** to achieve high throughput for TCP_RX and TLS_RX.
+  - Configure the TCP RX window size and TCP RX window division factor to 44 in the socket configuration in **ap_throughtput.c** to achieve high throughput for TCP_RX and TLS_RX.
    
     ```c
     static sl_si91x_socket_config_t socket_config = {
@@ -446,3 +473,23 @@ The iPerf command to start the TCP client is:
 4. Connect to the MQTT broker by providing the IP address and port number of Windows PC1 in the HOST and PORT fields in MQTT Explorer, respectively. Click on **CONNECT** to connect to the MQTT broker. If you are running your MQTT broker on the same PC, then the following configuration is made as shown in the image below.
 
    **![MQTT broker Configuration](resources/readme/connect.png)**
+
+## Troubleshooting
+
+If you encounter issues while running this example, check the following:
+
+- Verify Wi-Fi credentials in `sl_net_default_values.h`.
+- If tasks fail to start, review RTOS thread attributes and stack sizes.
+- Check the console output for Wi-Fi connection status before you expect thread activity.
+
+## Resources
+
+- [WiSeConnect Getting Started Guide](https://docs.silabs.com/wiseconnect/latest/wiseconnect-getting-started/)
+- [WiSeConnect Examples](https://docs.silabs.com/wiseconnect/latest/wiseconnect-examples/#example-folder-structure)
+- [WiSeConnect Recommended Settings Guide](https://docs.silabs.com/wiseconnect/latest/wiseconnect-developers-guide-prog-recommended-settings/)
+
+## Report Bugs and Get Support
+
+Report issues and get help from the Silicon Labs community:
+
+- [Silicon Labs Community](https://www.silabs.com/community)

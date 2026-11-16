@@ -13,9 +13,8 @@ provides:
 - name: wifi
 source:
 - path: src/sl_wifi_callback_framework.c
-  condition: ["sl_si91x_wireless"]
 - path: src/sli_wifi_callback_framework.c
-- path: si91x/sl_wifi.c
+- path: src/si91x/sl_wifi.c
   condition: ["sl_si91x_wireless"]
 include:
 - path: inc
@@ -34,4 +33,5 @@ define:
 requires:
 - name: wifi_driver
 - name: sli_wifi
-- name: si91x_log_none
+- name: log_none
+  condition: ["device_si91x"]

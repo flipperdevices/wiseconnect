@@ -28,7 +28,10 @@
  *
  ******************************************************************************/
 #include "sli_wifi_utility.h"
-#include "sli_wifi_utility.h"
+#include "sl_si91x_driver.h"
+#include "sli_buffer_manager.h"
+#include "sli_queue_manager.h"
+#include "sli_hal_si91x_constants.h"
 #include "sl_si91x_status.h"
 #include "sl_si91x_types.h"
 #include "sl_si91x_constants.h"
@@ -101,9 +104,15 @@
 
 #define FRAME_SIZE 1600
 
-static sl_wifi_buffer_t *resp_buffer = NULL;
-static sl_status_t resp_status       = SL_STATUS_OK;
-sli_wifi_buffer_queue_t sli_uart_bus_rx_queue;
+static sl_wifi_buffer_t *resp_buffer     = NULL;
+static sl_status_t resp_status           = SL_STATUS_OK;
+static sli_queue_t sli_uart_bus_rx_queue = { 0 };
+
+/******************************************************
+ * *               Function Declarations
+ * ******************************************************/
+sl_status_t sli_si91x_req_wakeup(void);
+sl_status_t sli_hal_si91x_notify_events(uint32_t flags);
 
 /************************************************************************************
  ******************************** Static Functions *********************************
@@ -119,10 +128,10 @@ static sl_status_t sli_si91x_uart_command_handler(uint8_t *cmd,
 
   response = (uint8_t *)sli_wifi_host_get_buffer_data(resp_buffer, 0, &temp);
 
-  SL_DEBUG_LOG("Command : { %c }\n", *((char *)(cmd)));
+  SL_DEBUG_LOG_V2(DEBUG, "Command : { %c }\r\n", *((char *)(cmd)));
   sl_si91x_host_uart_transfer((const void *)cmd, NULL, cmd_length);
   sl_si91x_host_uart_transfer(NULL, (void *)response, expected_data_count);
-  SL_DEBUG_LOG("Response(%lu bytes) %s\n", expected_data_count, (char *)response);
+  SL_DEBUG_LOG_V2(DEBUG, "Response(%lu bytes) %s\r\n", expected_data_count, (uintptr_t)response);
   if (NULL == strstr((const char *)response, expected_response)) {
     return SL_STATUS_FAIL;
   }
@@ -141,16 +150,19 @@ sl_status_t sl_si91x_bus_init(void)
   sl_status_t status;
   uint16_t temp;
   static uint32_t i = 0;
-  SL_DEBUG_LOG("Bus Init startup\n");
+  SL_DEBUG_LOG_V2(DEBUG, "Bus Init startup\r\n");
 
   // Initialize the RX queue
-  sli_uart_bus_rx_queue.head = NULL;
-  sli_uart_bus_rx_queue.tail = NULL;
+  status = sli_queue_manager_init(&sli_uart_bus_rx_queue, SLI_BUFFER_MANAGER_QUEUE_NODE_POOL);
+  VERIFY_STATUS_AND_RETURN(status);
 
-  // Allocate a buffer for the frame using sli_si91x_host_allocate_buffer
-  status = sli_si91x_host_allocate_buffer(&resp_buffer, SL_WIFI_RX_FRAME_BUFFER, FRAME_SIZE, 10000);
+  // Allocate packet to receive packet from module
+  status = sli_buffer_manager_allocate_buffer(SLI_BUFFER_MANAGER_CP_CMD_RX_POOL,
+                                              SLI_BUFFER_MANAGER_ALLOCATION_TYPE_DEDICATED,
+                                              10000,
+                                              (sli_buffer_t *)&resp_buffer);
   if (status != SL_STATUS_OK) {
-    SL_DEBUG_LOG("\r\n HEAP EXHAUSTED DURING ALLOCATION \r\n");
+    SL_DEBUG_LOG_V2(ERROR, "HEAP EXHAUSTED DURING ALLOCATION\r\n");
     return SL_STATUS_ALLOCATION_FAILED;
   }
 
@@ -174,7 +186,7 @@ sl_status_t sl_si91x_bus_init(void)
 
   sl_si91x_host_enable_high_speed_bus();
   sl_si91x_host_uart_transfer(NULL, (void *)response, 1);
-  SL_DEBUG_LOG("Response(%u bytes) %s\n", 1, (char *)response);
+  SL_DEBUG_LOG_V2(DEBUG, "Response(%u bytes) %s\r\n", 1, (uintptr_t)response);
   if (NULL == strstr((const char *)response, "U")) {
     return SL_STATUS_FAIL;
   }
@@ -183,7 +195,7 @@ sl_status_t sl_si91x_bus_init(void)
   VERIFY_STATUS_AND_RETURN(status);
 #endif
 
-  SL_DEBUG_LOG("Bus Init Done\n");
+  SL_DEBUG_LOG_V2(DEBUG, "Bus Init Done\r\n");
 
   return SL_STATUS_OK;
 }
@@ -240,9 +252,7 @@ sl_status_t sli_si91x_bus_write_frame(sl_wifi_system_packet_t *packet, const uin
 
 sl_status_t sli_si91x_bus_read_frame(sl_wifi_buffer_t **buffer)
 {
-  sl_status_t status;
-
-  status = sli_si91x_remove_from_queue(&sli_uart_bus_rx_queue, buffer);
+  sl_status_t status = sli_queue_manager_dequeue(&sli_uart_bus_rx_queue, (void **)buffer);
   VERIFY_STATUS_AND_RETURN(status);
 
   return SL_STATUS_OK;
@@ -253,7 +263,7 @@ sl_status_t sli_si91x_bus_read_interrupt_status(uint16_t *interrupt_status)
 {
   sl_status_t status = SL_STATUS_OK;
 
-  if (0 != sli_si91x_host_queue_status(&sli_uart_bus_rx_queue)) {
+  if (!(SLI_QUEUE_MANAGER_IS_QUEUE_EMPTY(&sli_uart_bus_rx_queue))) {
     *interrupt_status = SLI_RX_PKT_PENDING;
   }
 
@@ -278,7 +288,7 @@ sl_status_t sli_si91x_bootup_firmware(const uint8_t select_option, uint8_t image
 
   response = (uint8_t *)sli_wifi_host_get_buffer_data(resp_buffer, 0, &temp);
 #endif
-  SL_DEBUG_LOG("Bootup startup\n");
+  SL_DEBUG_LOG_V2(DEBUG, "Bootup startup\r\n");
 
   status = sli_si91x_uart_command_handler(load_binary, 1, "Enter Next Command", 47);
   VERIFY_STATUS_AND_RETURN(status);
@@ -300,9 +310,9 @@ sl_status_t sli_si91x_bootup_firmware(const uint8_t select_option, uint8_t image
 
   sl_si91x_host_uart_enable_hardware_flow_control();
 #endif
-  sli_wifi_set_event(NCP_HOST_COMMON_RESPONSE_EVENT);
+  sli_wifi_set_event(SL_WIFI_HOST_COMMON_RESPONSE_EVENT);
 
-  SL_DEBUG_LOG("Bootup Done\n");
+  SL_DEBUG_LOG_V2(DEBUG, "Bootup Done\r\n");
   return SL_STATUS_OK;
 }
 
@@ -315,11 +325,14 @@ sl_status_t sli_si91x_bus_rx_irq_handler(void)
 
   response = (uint8_t *)sli_wifi_host_get_buffer_data(resp_buffer, 0, &temp);
 
+  // Wakeup NCP before reading data
+  // May be this is not required for NCP UART since it already initiated the transfer
+  status = sli_si91x_req_wakeup();
+
   // Read the first 4 bytes to determine the frame size
   status = sl_si91x_host_uart_transfer(NULL, (void *)data_desc, 4);
   if (status != SL_STATUS_OK) {
-    SL_DEBUG_LOG("\r\n Data descriptor read failed \r\n");
-    sli_command_engine_status_queue_enqueue_and_set_event(SL_STATUS_BUS_ERROR);
+    SL_DEBUG_LOG_V2(ERROR, "Data descriptor read failed\r\n");
     return SL_STATUS_FAIL;
   }
 
@@ -331,22 +344,29 @@ sl_status_t sli_si91x_bus_rx_irq_handler(void)
     resp_status = SL_STATUS_IN_PROGRESS;
     return status;
   } else if (status != SL_STATUS_OK) {
-    SL_DEBUG_LOG("\r\n Data frame read failed \r\n");
-    sli_command_engine_status_queue_enqueue_and_set_event(SL_STATUS_BUS_ERROR);
+    SL_DEBUG_LOG_V2(ERROR, "Data frame read failed\r\n");
     return SL_STATUS_FAIL;
   }
 
-  status = sli_si91x_add_to_queue(&sli_uart_bus_rx_queue, resp_buffer);
+  // Check if transfer is still ongoing
+  if (SL_STATUS_IN_PROGRESS == status) {
+    // Put module to sleep again in case of power save mode
+    sl_si91x_host_clear_sleep_indicator();
+  }
+
+  status = sli_queue_manager_enqueue(&sli_uart_bus_rx_queue, (void *)resp_buffer);
 
   // Allocate a buffer for the next frame
-  status = sli_si91x_host_allocate_buffer(&resp_buffer, SL_WIFI_RX_FRAME_BUFFER, FRAME_SIZE, 10000);
+  status = sli_buffer_manager_allocate_buffer(SLI_BUFFER_MANAGER_CP_CMD_RX_POOL,
+                                              SLI_BUFFER_MANAGER_ALLOCATION_TYPE_DEDICATED,
+                                              10000,
+                                              (sli_buffer_t *)&resp_buffer);
   if (status != SL_STATUS_OK) {
-    SL_DEBUG_LOG("\r\n HEAP EXHAUSTED DURING ALLOCATION \r\n");
-    sli_command_engine_status_queue_enqueue_and_set_event(SL_STATUS_ALLOCATION_FAILED);
+    SL_DEBUG_LOG_V2(ERROR, "HEAP EXHAUSTED DURING ALLOCATION\r\n");
     return SL_STATUS_ALLOCATION_FAILED;
   }
 
-  sli_wifi_set_event(SL_SI91X_NCP_HOST_BUS_RX_EVENT);
+  sli_hal_si91x_notify_events(SLI_HAL_SI91X_RX_EVENT);
   return SL_STATUS_OK;
 }
 
@@ -355,17 +375,22 @@ void sli_si91x_bus_rx_done_handler(void)
   sl_status_t status;
 
   if (SL_STATUS_IN_PROGRESS == resp_status) {
-    status = sli_si91x_add_to_queue(&sli_uart_bus_rx_queue, resp_buffer);
+    // Put module to sleep again in case of power save mode
+    sl_si91x_host_clear_sleep_indicator();
+
+    status = sli_queue_manager_enqueue(&sli_uart_bus_rx_queue, (void *)resp_buffer);
 
     // Allocate a buffer for the next frame
-    status = sli_si91x_host_allocate_buffer(&resp_buffer, SL_WIFI_RX_FRAME_BUFFER, FRAME_SIZE, 10000);
+    status = sli_buffer_manager_allocate_buffer(SLI_BUFFER_MANAGER_CP_CMD_RX_POOL,
+                                                SLI_BUFFER_MANAGER_ALLOCATION_TYPE_DEDICATED,
+                                                10000,
+                                                (sli_buffer_t *)&resp_buffer);
     if (status != SL_STATUS_OK) {
-      SL_DEBUG_LOG("\r\n HEAP EXHAUSTED DURING ALLOCATION \r\n");
-      sli_command_engine_status_queue_enqueue_and_set_event(SL_STATUS_ALLOCATION_FAILED);
+      SL_DEBUG_LOG_V2(ERROR, "HEAP EXHAUSTED DURING ALLOCATION\r\n");
       return;
     }
 
-    sli_wifi_set_event(SL_SI91X_NCP_HOST_BUS_RX_EVENT);
+    sli_hal_si91x_notify_events(SLI_HAL_SI91X_RX_EVENT);
     sl_si91x_host_enable_bus_interrupt();
   }
   return;
@@ -375,4 +400,16 @@ void sli_si91x_bus_rx_done_handler(void)
 void sli_si91x_ulp_wakeup_init(void)
 {
   return;
+}
+
+sl_status_t sl_si91x_bus_deinit(void)
+{
+  sl_status_t status = SL_STATUS_OK;
+
+  if (resp_buffer != NULL) {
+    status      = sli_buffer_manager_free_buffer(resp_buffer);
+    resp_buffer = NULL;
+  }
+
+  return status;
 }

@@ -14,6 +14,7 @@
  * sections of the MSLA applicable to Source Code.
  *
  ******************************************************************************/
+#include <inttypes.h>
 #include "sl_si91x_calendar.h"
 #include "calendar_example.h"
 #include "rsi_debug.h"
@@ -96,46 +97,55 @@ void calendar_example_init(void)
                                                      TEST_SECONDS,
                                                      TEST_MILLISECONDS);
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("sl_si91x_calendar_build_datetime_struct: Invalid Parameters, Error Code : %lu \n", status);
+      /* Note: All status messages in this example — both success and failure — are
+ * intentionally emitted via SL_PRINT_STRING_ERROR so that they remain visible
+ * on the console at the default log level. This is a demonstration choice, not
+ * a recommendation: in production code, ERROR severity should be reserved for
+ * actual failures, with successful operations logged via SL_PRINT_STRING_INFO
+ * (or SL_PRINT_STRING_DEBUG for verbose trace). */
+      SL_PRINT_STRING_ERROR("sl_si91x_calendar_build_datetime_struct: Invalid "
+                            "Parameters, Error Code : %lu \n",
+                            status);
       break;
     }
-    DEBUGOUT("Successfully built datetime structure\n");
+    SL_PRINT_STRING_ERROR("Successfully built datetime structure\n");
     status = sl_si91x_calendar_set_date_time(&datetime_config);
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("sl_si91x_calendar_set_date_time: Invalid Parameters, Error Code : %lu \n", status);
+      SL_PRINT_STRING_ERROR("sl_si91x_calendar_set_date_time: Invalid "
+                            "Parameters, Error Code : %lu \n",
+                            status);
       break;
     }
-    DEBUGOUT("Successfully set calendar datetime\n");
+    SL_PRINT_STRING_ERROR("Successfully set calendar datetime\n");
     // Printing datetime for Calendar
     status = sl_si91x_calendar_get_date_time(&get_datetime);
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("sl_si91x_calendar_get_date_time: Invalid Parameters, Error Code : %lu \n", status);
+      SL_PRINT_STRING_ERROR("sl_si91x_calendar_get_date_time: Invalid "
+                            "Parameters, Error Code : %lu \n",
+                            status);
       break;
     }
-    DEBUGOUT("Successfully fetched the calendar datetime \n");
+    SL_PRINT_STRING_ERROR("Successfully fetched the calendar datetime \n");
     calendar_print_datetime(get_datetime);
 
     /** Demo APIs related to Unix timestamp conversions */
     datetime_for_unix_demo = get_datetime;
     sl_si91x_calendar_convert_calendar_datetime_to_unix_time(&datetime_for_unix_demo, &unix_timestamp);
-    DEBUGOUT("\nIts equivalent Unix timestamp: %lu\n", unix_timestamp);
+    DEBUGOUT("\nIts equivalent Unix timestamp: %u\n", (unsigned int)unix_timestamp);
 
     unix_timestamp += 300; // increment by 5min (300 in sec), to demo Unix-to-calendar conversion
-    DEBUGOUT("\nUnix Timestamp incremented by 5min");
-    DEBUGOUT("\nIncremented Unix timestamp: %lu\n", unix_timestamp);
+    SL_PRINT_STRING_ERROR("\nUnix Timestamp incremented by 5min");
+    SL_PRINT_STRING_ERROR("\nIncremented Unix timestamp: %lu\n", unix_timestamp);
     sl_si91x_calendar_convert_unix_time_to_calendar_datetime(unix_timestamp, &datetime_for_unix_demo);
-    DEBUGOUT("\nUnix to Calendar datetime conversion:\n");
-    DEBUGOUT("Time Format: hour:%d, min:%d, sec:%d, msec:%d\n",
-             datetime_for_unix_demo.Hour,
-             datetime_for_unix_demo.Minute,
-             datetime_for_unix_demo.Second,
-             datetime_for_unix_demo.MilliSeconds);
-    DEBUGOUT("Date Format: DayOfWeek DD/MM/YY: %.2d %.2d/%.2d/%.2d ",
-             datetime_for_unix_demo.DayOfWeek,
-             datetime_for_unix_demo.Day,
-             datetime_for_unix_demo.Month,
-             datetime_for_unix_demo.Year);
-    DEBUGOUT(" Century: %d in GMT Time Zone\n", datetime_for_unix_demo.Century);
+    SL_PRINT_STRING_ERROR("\nUnix to Calendar datetime conversion:\n");
+    SL_PRINT_STRING_ERROR("Time Format: hour:%d, min:%d, sec:%d",
+                          (int)datetime_for_unix_demo.Hour,
+                          (int)datetime_for_unix_demo.Minute,
+                          (int)datetime_for_unix_demo.Second);
+    SL_PRINT_STRING_ERROR("Date Format: DD/MM/YY: %.2d/%.2d/%.2d\n",
+                          (int)datetime_for_unix_demo.Day,
+                          (int)datetime_for_unix_demo.Month,
+                          (int)datetime_for_unix_demo.Year);
     /*************************************************************/
 
 #if defined(ALARM_EXAMPLE) && (ALARM_EXAMPLE == ENABLE)
@@ -152,51 +162,63 @@ void calendar_example_init(void)
                                                      ALARM_SECONDS,
                                                      ALARM_MILLISECONDS);
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("sl_si91x_calendar_build_datetime_struct: Invalid Parameters, Error Code : %lu \n", status);
+      SL_PRINT_STRING_ERROR("sl_si91x_calendar_build_datetime_struct: Invalid "
+                            "Parameters, Error Code : %lu \n",
+                            status);
       break;
     }
-    DEBUGOUT("Successfully built datetime structure\n");
+    SL_PRINT_STRING_ERROR("Successfully built datetime structure\n");
     //Setting the alarm configuration
     status = sl_si91x_calendar_set_alarm(&alarm_config);
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("sl_si91x_calendar_set_alarm: Invalid Parameters, Error Code : %lu \n", status);
+      SL_PRINT_STRING_ERROR("sl_si91x_calendar_set_alarm: Invalid Parameters, "
+                            "Error Code : %lu \n",
+                            status);
       break;
     }
-    DEBUGOUT("Successfully configured Alarm\n");
+    SL_PRINT_STRING_ERROR("Successfully configured Alarm\n");
     status = sl_si91x_calendar_register_alarm_trigger_callback(on_alarm_callback);
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("sl_si91x_calendar_register_alarm_trigger_callback: Invalid Parameters, Error Code : %lu \n", status);
+      SL_PRINT_STRING_ERROR("sl_si91x_calendar_register_alarm_trigger_callback:"
+                            " Invalid Parameters, Error Code : %lu \n",
+                            status);
       break;
     }
     // Printing datetime for Alarm
     status = sl_si91x_calendar_get_alarm(&get_alarm);
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("sl_si91x_calendar_get_alarm: Invalid Parameters, Error Code : %lu \n", status);
+      SL_PRINT_STRING_ERROR("sl_si91x_calendar_get_alarm: Invalid Parameters, "
+                            "Error Code : %lu \n",
+                            status);
       break;
     }
-    DEBUGOUT("Successfully fetched the alarm datetime \n");
+    SL_PRINT_STRING_ERROR("Successfully fetched the alarm datetime \n");
     calendar_print_datetime(get_alarm);
-    DEBUGOUT("\n");
+    SL_PRINT_STRING_ERROR("\n");
 #endif
 
 #if defined(SEC_INTR) && (SEC_INTR == ENABLE)
     //One second trigger
     status = sl_si91x_calendar_register_sec_trigger_callback(on_sec_callback);
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("sl_si91x_calendar_register_sec_trigger_callback: Invalid Parameters, Error Code : %lu \n", status);
+      SL_PRINT_STRING_ERROR("sl_si91x_calendar_register_sec_trigger_callback: "
+                            "Invalid Parameters, Error Code : %lu \n",
+                            status);
       break;
     }
-    DEBUGOUT("Successfully enabled one second trigger \n");
+    SL_PRINT_STRING_ERROR("Successfully enabled one second trigger \n");
 #endif
 
 #if defined(MILLI_SEC_INTR) && (MILLI_SEC_INTR == ENABLE)
     //One millisecond trigger
     status = sl_si91x_calendar_register_msec_trigger_callback(on_msec_callback);
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("sl_si91x_calendar_register_msec_trigger_callback: Invalid Parameters, Error Code : %lu \n", status);
+      SL_PRINT_STRING_ERROR("sl_si91x_calendar_register_msec_trigger_callback: "
+                            "Invalid Parameters, Error Code : %lu \n",
+                            status);
       break;
     }
-    DEBUGOUT("Successfully enabled one milisecond trigger \n");
+    SL_PRINT_STRING_ERROR("Successfully enabled one milisecond trigger \n");
 #endif
 
 #if defined(TIME_CONVERSION) && (TIME_CONVERSION == ENABLE)
@@ -204,19 +226,23 @@ void calendar_example_init(void)
     uint32_t ntp  = 0;
     status        = sl_si91x_calendar_convert_unix_time_to_ntp_time(unix, &ntp);
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("sl_si91x_calendar_convert_unix_time_to_ntp_time: Invalid Parameters, Error Code : %lu \n", status);
+      SL_PRINT_STRING_ERROR("sl_si91x_calendar_convert_unix_time_to_ntp_time: "
+                            "Invalid Parameters, Error Code : %lu \n",
+                            status);
       break;
     }
-    DEBUGOUT("Unix Time: %lu\n", unix);
-    DEBUGOUT("NTP Time: %lu\n", ntp);
+    SL_PRINT_STRING_ERROR("Unix Time: %lu\n", unix);
+    SL_PRINT_STRING_ERROR("NTP Time: %lu\n", ntp);
     uint32_t unix_new = 0;
     status            = sl_si91x_calendar_convert_ntp_time_to_unix_time(ntp, &unix_new);
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("sl_si91x_calendar_convert_ntp_time_to_unix_time: Invalid Parameters, Error Code : %lu \n", status);
+      SL_PRINT_STRING_ERROR("sl_si91x_calendar_convert_ntp_time_to_unix_time: "
+                            "Invalid Parameters, Error Code : %lu \n",
+                            status);
       break;
     }
-    DEBUGOUT("NTP Time: %lu\n", ntp);
-    DEBUGOUT("Unix Time: %lu\n", unix_new);
+    SL_PRINT_STRING_ERROR("NTP Time: %lu\n", ntp);
+    SL_PRINT_STRING_ERROR("Unix Time: %lu\n", unix_new);
 #endif
   } while (false);
 }
@@ -228,19 +254,19 @@ void calendar_example_process_action(void)
 {
 #if defined(ALARM_EXAMPLE) && (ALARM_EXAMPLE == ENABLE)
   if (is_alarm_callback_triggered) {
-    DEBUGOUT("Alarm Callback is Triggered \n");
+    SL_PRINT_STRING_ERROR("Alarm Callback is Triggered \n");
     is_alarm_callback_triggered = false;
   }
 #endif
 #if defined(SEC_INTR) && (SEC_INTR == ENABLE)
   if (is_sec_callback_triggered) {
-    DEBUGOUT("One Sec Callback is Triggered \n");
+    SL_PRINT_STRING_ERROR("One Sec Callback is Triggered \n");
     is_sec_callback_triggered = false;
   }
 #endif
 #if defined(MILLI_SEC_INTR) && (MILLI_SEC_INTR == ENABLE)
   if (is_msec_callback_triggered) {
-    DEBUGOUT("One Milli-Sec Callback triggered 1000 times\n");
+    SL_PRINT_STRING_ERROR("One Milli-Sec Callback triggered 1000 times\n");
     is_msec_callback_triggered = false;
   }
 #endif
@@ -254,10 +280,9 @@ void calendar_example_process_action(void)
  ******************************************************************************/
 static void calendar_print_datetime(sl_calendar_datetime_config_t data)
 {
-  DEBUGOUT("\n***Calendar time****\n");
-  DEBUGOUT("Time Format: hour:%d, min:%d, sec:%d, msec:%d\n", data.Hour, data.Minute, data.Second, data.MilliSeconds);
-  DEBUGOUT("Date Format: DayOfWeek DD/MM/YY: %.2d %.2d/%.2d/%.2d ", data.DayOfWeek, data.Day, data.Month, data.Year);
-  DEBUGOUT(" Century: %d\n", data.Century);
+  SL_PRINT_STRING_ERROR("\n***Calendar time****\n");
+  SL_PRINT_STRING_ERROR("Time Format: hour:%d, min:%d, sec:%d ", (int)data.Hour, (int)data.Minute, (int)data.Second);
+  SL_PRINT_STRING_ERROR("Date Format: DD/MM/YY: %.2d/%.2d/%.2d", (int)data.Day, (int)data.Month, (int)data.Year);
 }
 
 /*******************************************************************************

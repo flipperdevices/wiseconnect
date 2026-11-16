@@ -31,6 +31,7 @@ config_file:
 - override:
     component: sl_si91x_rgb_led_917
     file_id: rgb_led_config
+    instance: led0
     vendor: silabs
   path: common_config_opn/sl_si91x_rgb_led_init_config.h
   unless:

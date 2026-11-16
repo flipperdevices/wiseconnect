@@ -19,6 +19,7 @@
 
 #include "console.h"
 #include "sl_ip_types.h"
+#include <inttypes.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <string.h>
@@ -192,7 +193,7 @@ static void print_variable(const structure_descriptor_entry_t *entry, const void
           printf("0x%X\n", *(const uint16_t *)(object + entry->offset));
           break;
         case 4:
-          printf("0x%lX\n", *(const uint32_t *)(object + entry->offset));
+          printf("0x%" PRIx32 "\n", *(const uint32_t *)(object + entry->offset));
           break;
         default:
           break;
@@ -208,7 +209,7 @@ static void print_variable(const structure_descriptor_entry_t *entry, const void
           printf("%d\n", *(const int16_t *)(object + entry->offset));
           break;
         case 4:
-          printf("%ld\n", *(const int32_t *)(object + entry->offset));
+          printf("%" PRId32 "\n", *(const int32_t *)(object + entry->offset));
           break;
         default:
           break;

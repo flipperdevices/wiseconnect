@@ -204,6 +204,9 @@ sl_status_t sl_si91x_opamp_init(void)
   // Get battery status
   status = get_battery_status(&battery_status);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si91x_opamp_init: get_battery_status st=0x%04lX,line no : %d\r\n",
+                          (unsigned long)status,
+                          (int)__LINE__);
     return status;
   }
   // Enable Powerup of AUX
@@ -232,6 +235,9 @@ static sl_status_t get_battery_status(float *battery_status)
 {
 
   if (battery_status == NULL) {
+    SL_PRINT_STRING_ERROR("get_battery_status: NULL pointer st=0x%04lX,line no : %d\r\n",
+                          (unsigned long)SL_STATUS_NULL_POINTER,
+                          (int)__LINE__);
     return SL_STATUS_NULL_POINTER; // Return error if pointer is NULL
   }
   // Get the battery voltage value (float) from the RSI function
@@ -242,6 +248,9 @@ static sl_status_t get_battery_status(float *battery_status)
     *battery_status = vbatt; // Store the calculated battery voltage in pointer
     return SL_STATUS_OK;     // Return success status
   } else {
+    SL_PRINT_STRING_ERROR("get_battery_status: vbatt out of range st=0x%04lX,line no : %d\r\n",
+                          (unsigned long)SL_STATUS_INVALID_PARAMETER,
+                          (int)__LINE__);
     return SL_STATUS_INVALID_PARAMETER; // Return invalid parameter status
   }
 }
@@ -271,34 +280,56 @@ static sl_status_t sli_si91x_opamp_configure_opamp_gpio(const sl_si91x_gpio_pin_
 
   status = sl_gpio_set_configuration(*pin_cfg);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sli_si91x_opamp_configure_opamp_gpio: set_configuration st=0x%04lX,line no : %d\r\n",
+                          (unsigned long)status,
+                          (int)__LINE__);
     return SL_STATUS_FAIL;
   }
   if ((gpio.pin == TGPIO_PIN2) || (gpio.pin == TGPIO_PIN4) || (gpio.pin == TGPIO_PIN5)) {
     status = sl_si91x_gpio_driver_select_pad_driver_disable_state(pin_cfg->port_pin.pin,
                                                                   (sl_si91x_gpio_driver_disable_state_t)GPIO_HZ);
     if (status != SL_STATUS_OK) {
+      SL_PRINT_STRING_ERROR("sli_si91x_opamp_configure_opamp_gpio: pad_driver_disable st=0x%04lX,line no : %d\r\n",
+                            (unsigned long)status,
+                            (int)__LINE__);
       return SL_STATUS_FAIL;
     }
     status = sl_si91x_gpio_driver_disable_pad_receiver(pin_cfg->port_pin.pin);
     if (status != SL_STATUS_OK) {
+      SL_PRINT_STRING_ERROR("sli_si91x_opamp_configure_opamp_gpio: disable_pad_receiver st=0x%04lX,line no : %d\r\n",
+                            (unsigned long)status,
+                            (int)__LINE__);
       return SL_STATUS_FAIL;
     }
     status = sl_gpio_driver_set_pin_mode(&gpio, TGPIO_MODE, 0);
     if (status != SL_STATUS_OK) {
+      SL_PRINT_STRING_ERROR("sli_si91x_opamp_configure_opamp_gpio: set_pin_mode TGPIO st=0x%04lX,line no : %d\r\n",
+                            (unsigned long)status,
+                            (int)__LINE__);
       return SL_STATUS_FAIL;
     }
   } else {
     status = sl_si91x_gpio_driver_select_ulp_pad_driver_disable_state(pin_cfg->port_pin.pin,
                                                                       (sl_si91x_gpio_driver_disable_state_t)GPIO_HZ);
     if (status != SL_STATUS_OK) {
+      SL_PRINT_STRING_ERROR("sli_si91x_opamp_configure_opamp_gpio: ulp_pad_driver_disable st=0x%04lX,line no : %d\r\n",
+                            (unsigned long)status,
+                            (int)__LINE__);
       return SL_STATUS_FAIL;
     }
     status = sl_si91x_gpio_driver_disable_ulp_pad_receiver(pin_cfg->port_pin.pin);
     if (status != SL_STATUS_OK) {
+      SL_PRINT_STRING_ERROR(
+        "sli_si91x_opamp_configure_opamp_gpio: disable_ulp_pad_receiver st=0x%04lX,line no : %d\r\n",
+        (unsigned long)status,
+        (int)__LINE__);
       return SL_STATUS_FAIL;
     }
     status = sl_gpio_driver_set_pin_mode(&gpio, AGPIO_MODE, 0);
     if (status != SL_STATUS_OK) {
+      SL_PRINT_STRING_ERROR("sli_si91x_opamp_configure_opamp_gpio: set_pin_mode AGPIO st=0x%04lX,line no : %d\r\n",
+                            (unsigned long)status,
+                            (int)__LINE__);
       return SL_STATUS_FAIL;
     }
   }
@@ -316,6 +347,9 @@ sl_status_t sl_si91x_opamp_pin_init(sl_opamp_pin_config_t *opamp_config_ptr)
   // Validate the structure pointer
   if (opamp_config_ptr == NULL) {
     status = SL_STATUS_NULL_POINTER; // Return error if pointer is NULL
+    SL_PRINT_STRING_ERROR("sl_si91x_opamp_pin_init: NULL config st=0x%04lX,line no : %d\r\n",
+                          (unsigned long)status,
+                          (int)__LINE__);
     return status;
   }
   fill_opamp_gpio_pin_config(&sl_gpio_pin_vinp, opamp_config_ptr->vin_p_input, GPIO_INPUT);
@@ -326,6 +360,9 @@ sl_status_t sl_si91x_opamp_pin_init(sl_opamp_pin_config_t *opamp_config_ptr)
   // Configure GPIO pins for OPAMP Pin config.
   status = sl_gpio_driver_init(); // Initialize the GPIO driver
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si91x_opamp_pin_init: gpio_driver_init st=0x%04lX,line no : %d\r\n",
+                          (unsigned long)status,
+                          (int)__LINE__);
     return SL_STATUS_FAIL;
   }
   sli_si91x_opamp_configure_opamp_gpio(&sl_gpio_pin_vinp);
@@ -366,6 +403,9 @@ sl_status_t sl_si91x_opamp_set_configuration(sl_opamp_config_t *opamp_config)
   // Validate opamp number
   if ((opamp_config->opamp_number >= SL_OPAMP_LAST) || (opamp_config->features >= SL_OPAMP_CONFIGURATION_LAST)) {
     status = SL_STATUS_INVALID_PARAMETER; // Return error if invalid parameter
+    SL_PRINT_STRING_ERROR("sl_si91x_opamp_set_configuration: invalid opamp/features st=0x%04lX,line no : %d\r\n",
+                          (unsigned long)status,
+                          (int)__LINE__);
     return status;
   }
 
@@ -423,6 +463,11 @@ sl_status_t sl_si91x_opamp_set_configuration(sl_opamp_config_t *opamp_config)
     default:
       status = SL_STATUS_INVALID_PARAMETER;
       break;
+  }
+  if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si91x_opamp_set_configuration: feature config st=0x%04lX,line no : %d\r\n",
+                          (unsigned long)status,
+                          (int)__LINE__);
   }
   return status;
 }
@@ -828,6 +873,10 @@ sl_status_t sli_si91x_opamp_configure_cascaded_inverting_pga(uint8_t opamp_confi
   RSI_OPAMP2_OPAMP3_CascInvtPGAmp(&opamp23_config_cas_invt, SL_OPAMP_DYN_MODE_EN, SL_OPAMP_CHANNEL_NO);
   return SL_STATUS_OK;
 #else
+  SL_PRINT_STRING_ERROR(
+    "sli_si91x_opamp_configure_cascaded_inverting_pga: invalid parameters st=0x%04lX,line no : %d\r\n",
+    (unsigned long)SL_STATUS_INVALID_PARAMETER,
+    (int)__LINE__);
   return SL_STATUS_INVALID_PARAMETER;
 #endif
 }
@@ -903,6 +952,10 @@ sl_status_t sli_si91x_opamp_configure_cascaded_non_inverting_pga(uint8_t opamp_c
   RSI_OPAMP2_OPAMP3_CascNonInvtPGAmp(&opamp23_config_cas_noninvt, SL_OPAMP_DYN_MODE_EN, SL_OPAMP_CHANNEL_NO);
   return SL_STATUS_OK;
 #else
+  SL_PRINT_STRING_ERROR(
+    "sli_si91x_opamp_configure_cascaded_non_inverting_pga: invalid parameters st=0x%04lX,line no : %d\r\n",
+    (unsigned long)SL_STATUS_INVALID_PARAMETER,
+    (int)__LINE__);
   return SL_STATUS_INVALID_PARAMETER;
 #endif
 }
@@ -974,6 +1027,10 @@ sl_status_t sli_si91x_opamp_configure_two_opamps_differential_amp(uint8_t opamp_
   RSI_OPAMP2_OPAMP3_TwoOpampsDiffAmp(&opamp23_config_two_opamps, SL_OPAMP_DYN_MODE_EN, SL_OPAMP_CHANNEL_NO);
   return SL_STATUS_OK;
 #else
+  SL_PRINT_STRING_ERROR(
+    "sli_si91x_opamp_configure_two_opamps_differential_amp: invalid parameters st=0x%04lX,line no : %d\r\n",
+    (unsigned long)SL_STATUS_INVALID_PARAMETER,
+    (int)__LINE__);
   return SL_STATUS_INVALID_PARAMETER;
 #endif
 }
@@ -1170,6 +1227,9 @@ sl_status_t sli_si91x_opamp_configure_instrumentation_amp(uint8_t opamp_config_i
   RSI_OPAMP_Instrumentation_Amplifier(SL_OPAMP_CHANNEL_NO, &Config);
   return SL_STATUS_OK;
 #else
+  SL_PRINT_STRING_ERROR("sli_si91x_opamp_configure_instrumentation_amp: invalid parameters st=0x%04lX,line no : %d\r\n",
+                        (unsigned long)SL_STATUS_INVALID_PARAMETER,
+                        (int)__LINE__);
   return SL_STATUS_INVALID_PARAMETER;
 #endif
 }

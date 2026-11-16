@@ -38,9 +38,9 @@
 /*******************************************************************************
  *************************** LOCAL VARIABLES   *******************************
  ******************************************************************************/
-static sl_i2s_handle_t i2s_mic_driver_handle = NULL;
-static uint8_t mic_sample_receive_complete   = false;
-static sl_i2s_xfer_config_t mic_xfer_config  = { 0 };
+static sl_i2s_handle_t i2s_mic_driver_handle     = NULL;
+static volatile bool mic_sample_receive_complete = false;
+static sl_i2s_xfer_config_t mic_xfer_config      = { 0 };
 typedef enum { RECEIVE_DATA, WAIT_STATE, INVALID_STATE } transfer_state_t;
 
 /* Flags to indicate the microphone and I2S states */
@@ -74,30 +74,45 @@ sl_status_t sl_si91x_mic_init(uint16_t mic_sampling_frequency, uint8_t n_channel
         && mic_sampling_frequency != SL_I2S_SAMPLING_RATE_24000 && mic_sampling_frequency != SL_I2S_SAMPLING_RATE_32000
         && mic_sampling_frequency != SL_I2S_SAMPLING_RATE_44100) {
       status = SL_STATUS_INVALID_PARAMETER; // Set error status for invalid frequency
-      break;                                // Exit the loop
+      SL_PRINT_STRING_ERROR("sl_si91x_mic_init: invalid frequency, line no : %d \r\n", __LINE__);
+      break; // Exit the loop
     }
 
     /* Check if the microphone is already initialized */
     if (mic_initialized) {
       status = SL_STATUS_ALREADY_INITIALIZED;
+      SL_PRINT_STRING_ERROR("sl_si91x_mic_init: already initialized, "
+                            "line no : %d \r\n",
+                            __LINE__);
       break;
     }
 
     /* Initialize I2S microphone and store driver handle in i2s_mic_driver_handle */
     status = sl_si91x_i2s_init(I2S_INSTANCE, &i2s_mic_driver_handle);
     if (status != SL_STATUS_OK) {
+      SL_PRINT_STRING_ERROR("sl_si91x_mic_init: i2s init failed, status=0x%04lX,line no : %d \r\n",
+                            (unsigned long)status,
+                            __LINE__);
       break;
     }
 
     /* Configure ARM full power mode for I2S */
     status = sl_si91x_i2s_configure_power_mode(i2s_mic_driver_handle, SL_I2S_FULL_POWER);
     if (status != SL_STATUS_OK) {
+      SL_PRINT_STRING_ERROR("sl_si91x_mic_init: configure power mode failed, "
+                            "status=0x%04lX,line no : %d \r\n",
+                            (unsigned long)status,
+                            __LINE__);
       break;
     }
 
     /* Register the user callback handler for I2S events */
     status = sl_si91x_i2s_register_event_callback(i2s_mic_driver_handle, mic_callback_event);
     if (status != SL_STATUS_OK) {
+      SL_PRINT_STRING_ERROR("sl_si91x_mic_init: register event callback "
+                            "failed, status=0x%04lX,line no : %d \r\n",
+                            (unsigned long)status,
+                            __LINE__);
       break;
     }
 
@@ -122,6 +137,10 @@ sl_status_t sl_si91x_mic_init(uint16_t mic_sampling_frequency, uint8_t n_channel
     status = sl_si91x_i2s_config_transmit_receive(i2s_mic_driver_handle, &mic_xfer_config);
     if (status != SL_STATUS_OK) {
       status = SL_STATUS_INVALID_CONFIGURATION;
+      SL_PRINT_STRING_ERROR("sl_si91x_mic_init: i2s configure transmit receive "
+                            "failed, status=0x%04lX,line no : %d \r\n",
+                            (unsigned long)status,
+                            __LINE__);
       break;
     }
 
@@ -134,6 +153,11 @@ sl_status_t sl_si91x_mic_init(uint16_t mic_sampling_frequency, uint8_t n_channel
 
   } while (false);
 
+  if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si91x_mic_init: init failed, status=0x%04lX,line no : %d \r\n",
+                          (unsigned long)status,
+                          __LINE__);
+  }
   return status;
 }
 
@@ -146,8 +170,12 @@ sl_status_t sl_si91x_mic_deinit(void)
 
   do {
     /* Deinitialize I2S microphone and clear the driver handle */
-    status = sl_si91x_i2s_deinit((sl_i2s_handle_t *)i2s_mic_driver_handle);
+    status = sl_si91x_i2s_deinit_v2(i2s_mic_driver_handle);
     if (status != SL_STATUS_OK) {
+      SL_PRINT_STRING_ERROR("sl_si91x_mic_deinit: deinit failed, "
+                            "status=0x%04lX,line no : %d \r\n",
+                            (unsigned long)status,
+                            __LINE__);
       break;
     }
 
@@ -162,6 +190,11 @@ sl_status_t sl_si91x_mic_deinit(void)
 
   } while (false);
 
+  if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si91x_mic_deinit: deinit failed, status=0x%04lX,line no : %d \r\n",
+                          (unsigned long)status,
+                          __LINE__);
+  }
   return status;
 }
 
@@ -177,12 +210,18 @@ sl_status_t sl_si91x_mic_get_n_samples(void *buffer, uint32_t buffer_size)
     if (!mic_initialized) {
       /* Return an error if the microphone is not initialized */
       status = SL_STATUS_NOT_INITIALIZED;
+      SL_PRINT_STRING_ERROR("sl_si91x_mic_get_n_samples: not initialized, line no : %d \r\n",
+                            (unsigned long)status,
+                            __LINE__);
       break;
     }
 
     if (reading_samples_to_buffer || streaming_in_progress) {
       /* Return an error if the microphone is already reading or streaming */
       status = SL_STATUS_INVALID_STATE;
+      SL_PRINT_STRING_ERROR("sl_si91x_mic_get_n_samples: invalid state, line no : %d \r\n",
+                            (unsigned long)status,
+                            __LINE__);
       break;
     }
 
@@ -191,7 +230,14 @@ sl_status_t sl_si91x_mic_get_n_samples(void *buffer, uint32_t buffer_size)
 
     if (!mic_running) {
       /* Start the microphone if it's not already running */
-      sl_si91x_mic_start(buffer);
+      status = sl_si91x_mic_start(buffer);
+      if (status != SL_STATUS_OK) {
+        SL_PRINT_STRING_ERROR("sl_si91x_mic_get_n_samples: start failed, "
+                              "status=0x%04lX,line no : %d \r\n",
+                              (unsigned long)status,
+                              __LINE__);
+        break;
+      }
     }
 
     /* Update driver parameters to indicate that samples are being read into the buffer */
@@ -214,18 +260,27 @@ sl_status_t sl_si91x_mic_start_streaming(void *buffer)
     if (!mic_initialized) {
       /* Return error if the microphone is not initialized */
       status = SL_STATUS_NOT_INITIALIZED;
+      SL_PRINT_STRING_ERROR("sl_si91x_mic_start_streaming: not initialized, line no : %d \r\n", __LINE__);
       break;
     }
 
     if (reading_samples_to_buffer || streaming_in_progress) {
       /* Return error if the microphone is currently reading samples or already streaming */
       status = SL_STATUS_INVALID_STATE;
+      SL_PRINT_STRING_ERROR("sl_si91x_mic_start_streaming: invalid state, line no : %d \r\n", __LINE__);
       break;
     }
 
     if (!mic_running) {
       /* Start the microphone if it's not already running */
-      sl_si91x_mic_start(buffer);
+      status = sl_si91x_mic_start(buffer);
+      if (status != SL_STATUS_OK) {
+        SL_PRINT_STRING_ERROR("sl_si91x_mic_start_streaming: start failed, "
+                              "status=0x%04lX,line no : %d \r\n",
+                              (unsigned long)status,
+                              __LINE__);
+        break;
+      }
     }
 
     /* Update driver parameters to indicate that streaming is in progress */
@@ -248,12 +303,14 @@ sl_status_t sl_si91x_mic_start(void *buffer)
     if (!mic_initialized) {
       /* Return error if the microphone is not initialized */
       status = SL_STATUS_NOT_INITIALIZED;
+      SL_PRINT_STRING_ERROR("sl_si91x_mic_start: not initialized, line no : %d \r\n", __LINE__);
       break;
     }
 
     if (mic_running) {
       /* Return error if the microphone is already running */
       status = SL_STATUS_INVALID_STATE;
+      SL_PRINT_STRING_ERROR("sl_si91x_mic_start: invalid state, line no : %d \r\n", __LINE__);
       break;
     }
 
@@ -261,6 +318,10 @@ sl_status_t sl_si91x_mic_start(void *buffer)
     status = sl_si91x_i2s_receive_data(i2s_mic_driver_handle, (int32_t *)buffer, mic_sample_buffer_size);
     if (status != SL_STATUS_OK) {
       /* Return the error status if data reception fails */
+      SL_PRINT_STRING_ERROR("sl_si91x_mic_start: receive data failed, "
+                            "status=0x%04lX,line no : %d \r\n",
+                            (unsigned long)status,
+                            __LINE__);
       break;
     }
 
@@ -283,6 +344,7 @@ sl_status_t sl_si91x_mic_stop(void)
     if (!mic_running) {
       /* Set error status if the microphone is not currently running */
       status = SL_STATUS_INVALID_STATE;
+      SL_PRINT_STRING_ERROR("sl_si91x_mic_stop: invalid state, line no : %d \r\n", __LINE__);
       break;
     }
 
@@ -290,6 +352,10 @@ sl_status_t sl_si91x_mic_stop(void)
     status = sl_si91x_i2s_end_transfer(i2s_mic_driver_handle, SL_I2S_RECEIVE_ABORT);
     if (status != SL_STATUS_OK) {
       /* Break the loop if ending the transfer fails */
+      SL_PRINT_STRING_ERROR("sl_si91x_mic_stop: end transfer failed, "
+                            "status=0x%04lX,line no : %d \r\n",
+                            (unsigned long)status,
+                            __LINE__);
       break;
     }
 

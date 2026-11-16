@@ -2,7 +2,7 @@
 - id: brd2605a
 - label: BRD2605A
 - package: platform_siwx91x
-- description: Board support for BRD2605A.
+- description: Board support for BRD2605A(SoC Dev Kit).
 - category: Board|Radio Board
 - quality: production
 - metadata:
@@ -14,6 +14,8 @@
   - name: brd2605a_config
   - name: external_flash_none
   - name: external_psram_8mb
+  - name: psram_aps6404l_sqh
+    condition: [psram_core]
   - name: rsilib_board
   - name: si91x_common_flash
 - provides:

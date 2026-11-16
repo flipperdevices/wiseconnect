@@ -1,6 +1,6 @@
 /***************************************************************************/ /**
  * @file sl_si91x_code_classifier.h
-* @brief Code Classifier for Memory Placement
+* @brief PSRAM Code Classifier for Memory Placement
 *******************************************************************************
 * # License
 * <b>Copyright 2024 Silicon Laboratories Inc. www.silabs.com</b>

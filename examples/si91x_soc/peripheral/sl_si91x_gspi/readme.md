@@ -1,8 +1,8 @@
-# SL GSPI
+# SiWx91x Platform GSPI
 
 ## Table of Contents
 
-- [SL GSPI](#sl-gspi)
+- [SiWx91x Platform GSPI](#platform-siwx91x-gspi)
   - [Table of Contents](#table-of-contents)
   - [Purpose/Scope](#purposescope)
   - [Overview](#overview)
@@ -17,6 +17,9 @@
     - [Pin Configuration](#pin-configuration)
     - [Pin Description](#pin-description)
   - [Test the Application](#test-the-application)
+  - [Troubleshooting](#troubleshooting)
+  - [Resources](#resources)
+  - [Report Bugs/Support](#report-bugssupport)
 
 ## Purpose/Scope
 
@@ -45,15 +48,15 @@ This application demonstrates the GSPI for data transfer in full-duplex as well 
 ## About Example Code
 
 - This example demonstrates GSPI transfer (that is, full-duplex communication) and GSPI send - GSPI receive (that is, half-duplex communication).
-- Various parameters like swap read and write data, data width, mode, and bitrate can be configured using [sl_gspi_control_config_t](https://docs.silabs.com/wiseconnect/latest/wiseconnect-api-reference-guide-si91x-peripherals/gspi#sl-gspi-control-config-t)
+- Various parameters like swap read and write data, data width, mode, and bitrate can be configured using [`sl_gspi_control_config_t`](https://docs.silabs.com/wiseconnect/latest/wiseconnect-api-reference-guide-si91x-peripherals/sl-gspi-control-config-t).
 - DMA and FIFO Threshold can also be configured using the UC.
-- The file [`sl_si91x_gspi_config.h`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.1-content-for-docs/components/device/silabs/si91x/mcu/drivers/unified_api/config/sl_si91x_gspi_config.h) contains the control configurations and [`sl_si91x_gspi_common_config.h`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.1-content-for-docs/components/device/silabs/si91x/mcu/drivers/unified_api/config/sl_si91x_gspi_common_config.h) contains DMA and FIFO Threshold configuration.
+- The file [`sl_si91x_gspi_config.h`](https://github.com/SiliconLabs/wiseconnect/blob/v4.1.2-content-for-docs/components/device/silabs/si91x/mcu/drivers/unified_api/config/sl_si91x_gspi_config.h) contains the control configurations and [`sl_si91x_gspi_common_config.h`](https://github.com/SiliconLabs/wiseconnect/blob/v4.1.2-content-for-docs/components/device/silabs/si91x/mcu/drivers/unified_api/config/sl_si91x_gspi_common_config.h) contains DMA and FIFO Threshold configuration.
 - In the example code, firstly, the output buffer is filled with some data which is transferred to the slave.
 - The firmware version of the API is fetched using [sl_si91x_gspi_get_version](https://docs.silabs.com/wiseconnect/latest/wiseconnect-api-reference-guide-si91x-peripherals/gspi#sl-si91x-gspi-get-version) which includes the release version, major version, and minor version [sl_gspi_version_t](https://docs.silabs.com/wiseconnect/latest/wiseconnect-api-reference-guide-si91x-peripherals/gspi#sl-gspi-version-t).
 - [sl_si91x_gspi_init](https://docs.silabs.com/wiseconnect/latest/wiseconnect-api-reference-guide-si91x-peripherals/gspi#sl-si91x-gspi-init) is used to initialize the peripheral, which includes pin configuration and also enables DMA if configured.
 - The GSPI instance must be passed in the init to get the respective instance handle [sl_gspi_instance_t](https://docs.silabs.com/wiseconnect/latest/wiseconnect-api-reference-guide-si91x-peripherals/gspi#sl-gspi-instance-t), which is used in other APIs
 - After initialization, [sl_si91x_gspi_configure_power_mode](https://docs.silabs.com/wiseconnect/latest/wiseconnect-api-reference-guide-si91x-peripherals/gspi#sl-si91x-gspi-configure-power-mode) is called to set the power mode [sl_gspi_power_state_t](https://docs.silabs.com/wiseconnect/latest/wiseconnect-api-reference-guide-si91x-peripherals/gspi#sl-gspi-power-state-t).
-- All the necessary parameters are configured using [sl_si91x_gspi_set_configuration](https://docs.silabs.com/wiseconnect/latest/wiseconnect-api-reference-guide-si91x-peripherals/gspi#sl-si91x-gspi-set-configuration) API, which expects a structure with required parameters [sl_gspi_control_config_t](https://docs.silabs.com/wiseconnect/latest/wiseconnect-api-reference-guide-si91x-peripherals/gspi#sl-gspi-control-config-t).
+- All the necessary parameters are configured using [sl_si91x_gspi_set_configuration](https://docs.silabs.com/wiseconnect/latest/wiseconnect-api-reference-guide-si91x-peripherals/gspi#sl-si91x-gspi-set-configuration) API, which expects a structure with required parameters [`sl_gspi_control_config_t`](https://docs.silabs.com/wiseconnect/latest/wiseconnect-api-reference-guide-si91x-peripherals/sl-gspi-control-config-t).
 - After configuration, a callback register API is called to register the callback at the time of events [sl_si91x_gspi_register_event_callback](https://docs.silabs.com/wiseconnect/latest/wiseconnect-api-reference-guide-si91x-peripherals/gspi#sl-si91x-gspi-register-event-callback).
 - Current frame length and clock division factor are printed on the console, [sl_si91x_gspi_get_clock_division_factor](https://docs.silabs.com/wiseconnect/latest/wiseconnect-api-reference-guide-si91x-peripherals/gspi#sl-si91x-gspi-get-clock-division-factor) [sl_si91x_gspi_get_frame_length](https://docs.silabs.com/wiseconnect/latest/wiseconnect-api-reference-guide-si91x-peripherals/gspi#sl-si91x-gspi-get-frame-length).
 - State machine code is implemented for transfer, send, and receive. The current mode is determined by gspi_mode_enum_t which is declared in the example file.
@@ -91,12 +94,12 @@ This application demonstrates the GSPI for data transfer in full-duplex as well 
 ### Hardware Requirements
 
 - Windows PC
-- Silicon Labs Si917 Evaluation Kit [[BRD4002](https://www.silabs.com/development-tools/wireless/wireless-pro-kit-mainboard?tab=overview) + [BRD4338A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-rb4338a-wifi-6-bluetooth-le-soc-radio-board?tab=overview) / [BRD4342A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx91x-rb4342a-wifi-6-bluetooth-le-soc-radio-board?tab=overview) / [BRD4343A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4343a-wi-fi-6-bluetooth-le-8mb-flash-radio-board-for-module?tab=overview)]
+- Silicon Labs SiWx91x Evaluation Kit [[BRD4002](https://www.silabs.com/development-tools/wireless/wireless-pro-kit-mainboard?tab=overview) + [BRD4338A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-rb4338a-wifi-6-bluetooth-le-soc-radio-board?tab=overview) / [BRD4342A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx91x-rb4342a-wifi-6-bluetooth-le-soc-radio-board?tab=overview) / [BRD4343A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4343a-wi-fi-6-bluetooth-le-8mb-flash-radio-board-for-module?tab=overview) / [BRD4343C](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4343c-wi-fi-6-bluetooth-le-8mb-flash-radio-board-for-module?tab=overview)]
 - SiWx917 AC1 Module Explorer Kit [BRD2708A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-ek2708a-explorer-kit)
 
 ### Software Requirements
 
-- Si91x
+- SiWx91x
 - Simplicity Studio
 - Serial console Setup
   - For Serial Console setup instructions, refer to [link name](https://docs.silabs.com/wiseconnect/latest/wiseconnect-developers-guide-developing-for-silabs-hosts/using-the-simplicity-studio-ide#console-input-and-output).
@@ -130,7 +133,7 @@ For details on the project folder structure, see the [WiSeConnect Examples](http
 - **GSPI Configuration**
 
   - Mode: SPI mode can be configured: Mode 0 and Mode 3 (motorola). Mode 0: Clock Polarity 0 and Clock Phase 0, Mode 3: Clock Polarity 1 and Clock Phase 1.
-  - Bitrate: The speed of transfer can be configured (that is, bits/second).
+  - Bitrate: The speed of transfer can be configured from **2 kbit/s** to **116 Mbit/s** (bits/second). The minimum and maximum depend on the GSPI peripheral clock source configured for the device
   - Data Width: The size of data packet, it can be configured between 1 to 16.
   - Byte-wise swapping of read and write data, enable will swap the data and disable will not swap the data. (Can be used only if data width is configured as 16).
 
@@ -141,13 +144,75 @@ For details on the project folder structure, see the [WiSeConnect Examples](http
   - It is recommended to have maximum depth for FIFO threshold. Almost Full refers to the RX FIFO and Almost Empty refers to TX FIFO.
   - Configuration files are generated in **config folder**. If not changed, the code will run on default UC values.
 
-- Configure the following macros in the [`gspi_example.h`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.1-content-for-docs/examples/si91x_soc/peripheral/sl_si91x_gspi/gspi_example.h) file and update/modify following macros, if required.
+- Configure the following macros in [`gspi_example.c`](gspi_example.c) if required:
 
-      ```c
-      #define SL_USE_TRANSFER ENABLE    ///< To use the transfer API
-      #define SL_USE_SEND     DISABLE   ///< To use the send API
-      #define SL_USE_RECEIVE  DISABLE   ///< To use the receive API
-      ```
+- `GSPI_BUFFER_SIZE`: Defines the size of the data buffer used for GSPI transfer. By default, it is set to 1024.
+
+  ```c
+  #define GSPI_BUFFER_SIZE             1024      // Size of buffer
+  ```
+
+- `GSPI_SWAP_READ_DATA`: Enables byte-wise swapping of read data (only applicable when data width is 16). By default, it is set to 1 (enabled).
+
+  ```c
+  #define GSPI_SWAP_READ_DATA          1         // To enable swap read set to true and to disable set to false.
+  ```
+
+- `GSPI_SWAP_WRITE_DATA`: Enables byte-wise swapping of write data (only applicable when data width is 16). By default, it is set to 0 (disabled).
+
+  ```c
+  #define GSPI_SWAP_WRITE_DATA         0         // To enable swap write set to true and to disable set to false.
+  ```
+
+- `GSPI_BIT_WIDTH`: Defines the default GSPI data bit width used for each transfer frame. By default, it is set to 8.
+
+  ```c
+  #define GSPI_BIT_WIDTH               8         // Default Bit width
+  ```
+
+- `GSPI_MAX_BIT_WIDTH`: Defines the maximum supported GSPI bit width used for buffer type selection. By default, it is set to 16.
+
+  ```c
+  #define GSPI_MAX_BIT_WIDTH           16        // Maximum Bit width
+  ```
+
+- `INITIAL_COUNT`: Defines the initial count value configured at timer initialization. By default, it is set to 7000.
+
+  ```c
+  #define INITIAL_COUNT                7000      // Count configured at timer init
+  ```
+
+- `SYNC_TIME`: Delay (in milliseconds) passed to `wait_for_sync()` to synchronize master and slave before starting the transfer. By default, it is set to 5000.
+
+  ```c
+  #define SYNC_TIME                    5000      // Delay to sync master and slave
+  ```
+
+- `RECEIVE_SYNC_TIME`: Delay (in milliseconds) passed to `wait_for_sync()` to allow the slave to settle after a send operation completes. By default, it is set to 500.
+
+  ```c
+  #define RECEIVE_SYNC_TIME            500       // Delay to settle the slave after send
+  ```
+
+- Configure the following macros in [`gspi_example.h`](gspi_example.h) to select the operating mode. Only one of these should be enabled at a time for a given phase; by default, only `SL_USE_TRANSFER` is enabled (full-duplex loopback-capable operation).
+
+- `SL_USE_TRANSFER`: When enabled, the application uses the GSPI transfer API to send and receive data simultaneously in full-duplex mode. By default, it is set to `ENABLE`.
+
+  ```c
+  #define SL_USE_TRANSFER ENABLE    ///< To use the transfer API
+  ```
+
+- `SL_USE_SEND`: When enabled, the application uses the GSPI send API to transmit data to a connected SPI slave (half-duplex, cannot be tested in loopback). By default, it is set to `DISABLE`.
+
+  ```c
+  #define SL_USE_SEND     DISABLE   ///< To use the send API
+  ```
+
+- `SL_USE_RECEIVE`: When enabled, the application uses the GSPI receive API to receive data from a connected SPI slave (half-duplex, cannot be tested in loopback). By default, it is set to `DISABLE`.
+
+  ```c
+  #define SL_USE_RECEIVE  DISABLE   ///< To use the receive API
+  ```
 
 - By default, an 8-bit unsigned integer is declared for data buffer. If using data-width more than 8-bit, update the variable to 16-bit unsigned integer. If the data-width is 16, use 8-bit unsigned integer.
 
@@ -195,17 +260,20 @@ Refer to the instructions [here](https://docs.silabs.com/wiseconnect/latest/wise
    ![Figure: output](resources/readme/output_gspi.png)
 
 > **Note:**
->- To achieve 116 MHz for non-power-save applications, you must change the INTF_PLL frequency in `components\device\silabs\si91x\mcu\drivers\service\clock_manager\src\sl_si91x_clock_manager.c` to 116M Hz.
 >
->   ```c 
->   #define INTF_PLL_FREQ  (160000000UL) to (116000000UL) ///< Non Powersave Application      
->   ```
->
->- To achieve 116 MHz for power-save applications, you must change the clock scaling mode to performance and INTF_PLL frequency in `components\device\silabs\si91x\mcu\drivers\service\clock_manager\src\sli_si91x_clock_manager.c` to 116 MHz.
->
->    ```c 
->    #define PS4_PERFORMANCE_MODE_INTF_FREQ     (160000000UL) to (116000000UL)   ///< Powersave Application
->    ```
->   This change affects flash performance, as its operating frequency decreases from 80 MHz to 58 MHz.
->
->- Interrupt handlers are implemented in the driver layer, and user callbacks are provided for custom code. If you want to write your own interrupt handler instead of using the default one, make the driver interrupt handler a weak handler. Then, copy the necessary code from the driver handler to your custom interrupt handler.
+> - Interrupt handlers are implemented in the driver layer, and user callbacks are provided for custom code. If the user wants to write their own interrupt handler instead of using the default one, make the driver interrupt handler a weak handler. Then, copy the necessary code from the driver handler to their custom interrupt handler.
+
+## Troubleshooting
+
+- If the project does not build, ensure Simplicity Studio and the WiSeConnect extension are installed and the board is connected.
+- If the device is not detected, reinstall the connectivity firmware and check USB drivers.
+
+## Resources
+
+- [WiSeConnect Getting Started](https://docs.silabs.com/wiseconnect/latest/wiseconnect-getting-started/)
+- [WiSeConnect Examples](https://docs.silabs.com/wiseconnect/latest/wiseconnect-examples/)
+- [SiWx91x SoC Documentation](https://docs.silabs.com/wiseconnect/latest/)
+
+## Report Bugs/Support
+
+For issues and support, use the Silicon Labs Community or your normal support channel.

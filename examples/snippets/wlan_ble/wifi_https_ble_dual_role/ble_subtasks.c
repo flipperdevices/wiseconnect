@@ -239,7 +239,7 @@ void rsi_ble_task_on_conn(void *parameters)
 
   //! connection identifier should always be less than the total no. of connections requested
   if (l_conn_id >= TOTAL_CONNECTIONS) {
-    LOG_PRINT("\r\nWrong connection identifier\r\n");
+    SL_DEBUG_LOG_V2(ERROR, "Wrong connection identifier\r\n");
     //! check why this state has occurred
     return;
   }
@@ -247,7 +247,7 @@ void rsi_ble_task_on_conn(void *parameters)
   //! create semaphore for each connection
   ble_conn_sem[l_conn_id] = osSemaphoreNew(1, 0, NULL);
   if (ble_conn_sem[l_conn_id] == NULL) {
-    LOG_PRINT("\r\nSemaphore creation failed for peripheral%d\r\n", l_conn_id);
+    SL_DEBUG_LOG_V2(ERROR, "Semaphore creation failed for peripheral%d\r\n", l_conn_id);
     return;
   }
 
@@ -285,15 +285,15 @@ void rsi_ble_task_on_conn(void *parameters)
 
     switch (event_id) {
       case RSI_APP_EVENT_ADV_REPORT: {
-        LOG_PRINT("\r\nAdvertise report received- conn%d \r\n", l_conn_id);
+        SL_DEBUG_LOG_V2(INFO, "Advertise report received- conn%d \r\n", l_conn_id);
         //! clear the advertise report event.
         rsi_ble_clear_event_based_on_conn(l_conn_id, RSI_APP_EVENT_ADV_REPORT);
 
-        LOG_PRINT("\r\nConnect command - conn%d \r\n", l_conn_id);
+        SL_DEBUG_LOG_V2(INFO, "Connect command - conn%d \r\n", l_conn_id);
 
         status = rsi_ble_stop_scanning();
         if (status != RSI_SUCCESS) {
-          LOG_PRINT("\nScan stopping failed with status : %ld - conn%d \r\n", status, l_conn_id);
+          SL_DEBUG_LOG_V2(ERROR, "Scan stopping failed with status : %ld - conn%d \r\n", status, l_conn_id);
         }
         peripheral_con_req_pending    = 0;
         peripheral_connection_in_prgs = 1;
@@ -305,11 +305,12 @@ void rsi_ble_task_on_conn(void *parameters)
                                              M2S12_CONNECTION_INTERVAL_MIN,
                                              M2S12_CONNECTION_LATENCY,
                                              M2S12_SUPERVISION_TIMEOUT);
-        LOG_PRINT("\r\nConnecting to device :  %s - conn%d \n",
-                  (int8_t *)rsi_ble_conn_info[l_conn_id].remote_dev_addr,
-                  l_conn_id);
+        SL_DEBUG_LOG_V2(INFO,
+                        "Connecting to device :  %s - conn%d ",
+                        (uintptr_t)(int8_t *)rsi_ble_conn_info[l_conn_id].remote_dev_addr,
+                        l_conn_id);
         if (status != RSI_SUCCESS) {
-          LOG_PRINT("\r\nConnecting failed with status : 0x%lx - conn%d\n", status, l_conn_id);
+          SL_DEBUG_LOG_V2(ERROR, "Connecting failed with status : 0x%lx - conn%d", status, l_conn_id);
           //return status;
           rsi_ble_set_event_based_on_conn(l_conn_id, RSI_BLE_SCAN_RESTART_EVENT);
         }
@@ -319,10 +320,10 @@ void rsi_ble_task_on_conn(void *parameters)
         event_id = rsi_ble_get_event_based_on_conn(l_conn_id);
 
         if ((event_id == -1) || (!(event_id & (RSI_BLE_CONN_EVENT | RSI_BLE_ENHC_CONN_EVENT)))) {
-          LOG_PRINT("\r\nInitiating connect cancel command in - conn%d \n", l_conn_id);
+          SL_DEBUG_LOG_V2(INFO, "Initiating connect cancel command in - conn%d \r\n", l_conn_id);
           status = rsi_ble_connect_cancel((int8_t *)rsi_ble_conn_info[l_conn_id].rsi_app_adv_reports_to_app.dev_addr);
           if (status != RSI_SUCCESS) {
-            LOG_PRINT("\r\nBLE connect cancel cmd status = %lx \n", status);
+            SL_DEBUG_LOG_V2(ERROR, "BLE connect cancel cmd status = %lx \r\n", status);
           } else {
             num_of_conn_peripherals++;
             rsi_ble_set_event_based_on_conn(l_conn_id, RSI_BLE_DISCONN_EVENT);
@@ -334,7 +335,7 @@ void rsi_ble_task_on_conn(void *parameters)
       case RSI_BLE_CONN_EVENT: {
 #if RSI_DEBUG_EN
         //! event invokes when connection was completed
-        LOG_PRINT("\r\nIn on conn evt - task%d \r\n", l_conn_id);
+        SL_DEBUG_LOG_V2(INFO, "In on conn evt - task%d \r\n", l_conn_id);
 #endif
         //! clear the served event
         rsi_ble_clear_event_based_on_conn(l_conn_id, RSI_BLE_CONN_EVENT);
@@ -350,29 +351,32 @@ void rsi_ble_task_on_conn(void *parameters)
           //! clear the acceptlist completely
           status = rsi_ble_clear_acceptlist();
           if (status != RSI_SUCCESS) {
-            LOG_PRINT("\r\nFailed to clear the accept list, error: 0x%lx - conn%d\r\n", status, l_conn_id);
+            SL_DEBUG_LOG_V2(ERROR, "Failed to clear the accept list, error: 0x%lx - conn%d\r\n", status, l_conn_id);
             break;
           }
           status = rsi_ble_addto_acceptlist((int8_t *)rsi_connected_dev_addr, LE_RANDOM_ADDRESS);
           rsi_6byte_dev_address_to_ascii(str_remote_address, rsi_connected_dev_addr);
           if (status != RSI_SUCCESS) {
-            LOG_PRINT("\r\nFailed to add the device:%s to acceptlist - conn%d\r\n", str_remote_address, l_conn_id);
+            SL_DEBUG_LOG_V2(ERROR,
+                            "Failed to add the device:%s to acceptlist - conn%d",
+                            (uintptr_t)str_remote_address,
+                            l_conn_id);
             break;
           }
-          LOG_PRINT("\r\nDevice %s added to acceptlist - conn%d \r\n", str_remote_address, l_conn_id);
+          SL_DEBUG_LOG_V2(INFO, "Device %s added to acceptlist - conn%d ", (uintptr_t)str_remote_address, l_conn_id);
         }
 
         //! check if connection is from remote central device
         if (rsi_ble_conn_info[l_conn_id].remote_device_role == CENTRAL_ROLE) {
           num_of_conn_centrals++;
 
-          LOG_PRINT("\r\nNumber of central devices connected:%d - conn%d\r\n", num_of_conn_centrals, l_conn_id);
+          SL_DEBUG_LOG_V2(INFO, "Number of central devices connected:%d - conn%d", num_of_conn_centrals, l_conn_id);
 
           if (num_of_conn_centrals < RSI_BLE_MAX_NBR_CENTRALS) {
             //! advertise device with default interval
             status = rsi_ble_start_advertising();
             if (status != RSI_SUCCESS) {
-              LOG_PRINT("\r\nAdvertising failed with status = 0x%lx - conn%d \r\n", status, l_conn_id);
+              SL_DEBUG_LOG_V2(ERROR, "Advertising failed with status = 0x%lx - conn%d \r\n", status, l_conn_id);
               continue;
             }
           }
@@ -381,21 +385,24 @@ void rsi_ble_task_on_conn(void *parameters)
           else if (num_of_conn_centrals == RSI_BLE_MAX_NBR_CENTRALS) {
             status = rsi_ble_start_advertising_with_values(&change_adv_param);
             if (status != RSI_SUCCESS) {
-              LOG_PRINT("\r\nAdvertising with values failed with status = 0x%lx - conn%d \r\n", status, l_conn_id);
+              SL_DEBUG_LOG_V2(ERROR,
+                              "Advertising with values failed with status = 0x%lx - conn%d \r\n",
+                              status,
+                              l_conn_id);
               continue;
             }
           }
-          LOG_PRINT("\r\nAdvertising device - conn%d\n", l_conn_id);
+          SL_DEBUG_LOG_V2(INFO, "Advertising device - conn%d\r\n", l_conn_id);
         } else {
           //! assuming that connection is from remote peripheral device
           num_of_conn_peripherals++;
-          LOG_PRINT("\r\nNumber of peripheral devices connected: %d\n", num_of_conn_peripherals);
+          SL_DEBUG_LOG_V2(INFO, "Number of peripheral devices connected: %d\r\n", num_of_conn_peripherals);
 
           if (rsi_ble_conn_info[l_conn_id].remote_device_role == PERIPHERAL_ROLE) {
-            LOG_PRINT("\r\nStart scanning - conn%d\n", l_conn_id);
+            SL_DEBUG_LOG_V2(INFO, "Start scanning - conn%d\r\n", l_conn_id);
             status = rsi_ble_start_scanning();
             if (status != RSI_SUCCESS) {
-              LOG_PRINT("\r\nScan channel failed to open 0x%lx - conn%d\n", status, l_conn_id);
+              SL_DEBUG_LOG_V2(ERROR, "Scan channel failed to open 0x%lx - conn%d\r\n", status, l_conn_id);
               continue;
             }
             rsi_scan_in_progress = 1;
@@ -403,11 +410,11 @@ void rsi_ble_task_on_conn(void *parameters)
 
           //! do background scan with interval of 33.125ms and window 14.375ms
           else if (num_of_conn_peripherals == RSI_BLE_MAX_NBR_PERIPHERALS) {
-            LOG_PRINT("\r\nStart scanning - conn%d\n", l_conn_id);
+            SL_DEBUG_LOG_V2(INFO, "Start scanning - conn%d\r\n", l_conn_id);
             //! open scan channel with interval of 33.125ms, window 14.375ms
             status = rsi_ble_start_scanning_with_values(&change_scan_param);
             if (status != RSI_SUCCESS) {
-              LOG_PRINT("\r\nScan channel failed to open 0x%lx - conn%d\n", status, l_conn_id);
+              SL_DEBUG_LOG_V2(ERROR, "Scan channel failed to open 0x%lx - conn%d\r\n", status, l_conn_id);
               continue;
             }
             rsi_scan_in_progress = 1;
@@ -421,7 +428,7 @@ void rsi_ble_task_on_conn(void *parameters)
 
           status = rsi_ble_mtu_exchange_event(rsi_connected_dev_addr, MAX_MTU_SIZE);
           if (status != 0) {
-            LOG_PRINT("\r\nMTU Exchange request failed - conn%d\n", l_conn_id);
+            SL_DEBUG_LOG_V2(ERROR, "MTU Exchange request failed - conn%d\r\n", l_conn_id);
           }
         } else {
           mtu_exchange_done = 1;
@@ -429,7 +436,7 @@ void rsi_ble_task_on_conn(void *parameters)
       } break;
       case RSI_BLE_ENHC_CONN_EVENT: {
 
-        LOG_PRINT("\r\nIn on_enhance_conn evt - conn%d\r\n", l_conn_id);
+        SL_DEBUG_LOG_V2(INFO, "In on_enhance_conn evt - conn%d\r\n", l_conn_id);
         //! clear the served event
         rsi_ble_clear_event_based_on_conn(l_conn_id, RSI_BLE_ENHC_CONN_EVENT);
         rsi_ble_conn_info[l_conn_id].conn_status = 1;
@@ -445,26 +452,29 @@ void rsi_ble_task_on_conn(void *parameters)
           //! clear the acceptlist completely
           status = rsi_ble_clear_acceptlist();
           if (status != RSI_SUCCESS) {
-            LOG_PRINT("\r\nFailed to clear the accept list, error: 0x%lx - conn%d\r\n", status, l_conn_id);
+            SL_DEBUG_LOG_V2(ERROR, "Failed to clear the accept list, error: 0x%lx - conn%d\r\n", status, l_conn_id);
           }
           status = rsi_ble_addto_acceptlist((int8_t *)rsi_connected_dev_addr, LE_RANDOM_ADDRESS);
           rsi_6byte_dev_address_to_ascii(str_remote_address, rsi_connected_dev_addr);
           if (status != RSI_SUCCESS) {
-            LOG_PRINT("\r\nFailed to add the device:%s to acceptlist - conn%d\r\n", str_remote_address, l_conn_id);
+            SL_DEBUG_LOG_V2(ERROR,
+                            "Failed to add the device:%s to acceptlist - conn%d",
+                            (uintptr_t)str_remote_address,
+                            l_conn_id);
           }
-          LOG_PRINT("\r\nDevice %s added to acceptlist - conn%d \r\n", str_remote_address, l_conn_id);
+          SL_DEBUG_LOG_V2(INFO, "Device %s added to acceptlist - conn%d ", (uintptr_t)str_remote_address, l_conn_id);
         }
 
         //! check if connection is from remote central device
         if (rsi_ble_conn_info[l_conn_id].remote_device_role == CENTRAL_ROLE) {
           num_of_conn_centrals++;
 
-          LOG_PRINT("\r\nNumber of central devices connected:%d - conn%d\n", num_of_conn_centrals, l_conn_id);
+          SL_DEBUG_LOG_V2(INFO, "Number of central devices connected:%d - conn%d", num_of_conn_centrals, l_conn_id);
 
           //! advertise device with default interval
           status = rsi_ble_stop_advertising();
           if (status != RSI_SUCCESS) {
-            LOG_PRINT("\r\nAdvertising failed to stop, with status = 0x%lx - conn%d \n", status, l_conn_id);
+            SL_DEBUG_LOG_V2(ERROR, "Advertising failed to stop, with status = 0x%lx - conn%d ", status, l_conn_id);
             //continue;
           }
 
@@ -472,7 +482,7 @@ void rsi_ble_task_on_conn(void *parameters)
             //! advertise device with default interval
             status = rsi_ble_start_advertising();
             if (status != RSI_SUCCESS) {
-              LOG_PRINT("\r\nAdvertising failed with status = 0x%lx - conn%d \n", status, l_conn_id);
+              SL_DEBUG_LOG_V2(ERROR, "Advertising failed with status = 0x%lx - conn%d \r\n", status, l_conn_id);
               //continue;
             }
           }
@@ -481,21 +491,24 @@ void rsi_ble_task_on_conn(void *parameters)
           else if (num_of_conn_centrals == RSI_BLE_MAX_NBR_CENTRALS) {
             status = rsi_ble_start_advertising_with_values(&change_adv_param);
             if (status != RSI_SUCCESS) {
-              LOG_PRINT("\r\nAdvertising with values failed with status = 0x%lx - conn%d \n", status, l_conn_id);
+              SL_DEBUG_LOG_V2(ERROR,
+                              "Advertising with values failed with status = 0x%lx - conn%d \r\n",
+                              status,
+                              l_conn_id);
               //continue ;
             }
           }
-          LOG_PRINT("\r\nAdvertising device - conn%d\n", l_conn_id);
+          SL_DEBUG_LOG_V2(INFO, "Advertising device - conn%d\r\n", l_conn_id);
         } else {
           //! assuming that connection is from remote peripheral device
           num_of_conn_peripherals++;
-          LOG_PRINT("\r\nNumber of peripheral devices connected: %d \n", num_of_conn_peripherals);
+          SL_DEBUG_LOG_V2(INFO, "Number of peripheral devices connected: %d \r\n", num_of_conn_peripherals);
 
           if (rsi_ble_conn_info[l_conn_id].remote_device_role == PERIPHERAL_ROLE) {
-            LOG_PRINT("\r\n Start scanning - conn%d\n", l_conn_id);
+            SL_DEBUG_LOG_V2(INFO, " Start scanning - conn%d\r\n", l_conn_id);
             status = rsi_ble_start_scanning();
             if (status != RSI_SUCCESS) {
-              LOG_PRINT("\r\nScan channel failed to open 0x%lx - conn%d\n", status, l_conn_id);
+              SL_DEBUG_LOG_V2(ERROR, "Scan channel failed to open 0x%lx - conn%d\r\n", status, l_conn_id);
               continue;
             }
             rsi_scan_in_progress = 1;
@@ -503,11 +516,11 @@ void rsi_ble_task_on_conn(void *parameters)
 
           //! do background scan with interval of 33.125ms and window 14.375ms
           else if (num_of_conn_peripherals == RSI_BLE_MAX_NBR_PERIPHERALS) {
-            LOG_PRINT("\r\nStart scanning - conn%d\n", l_conn_id);
+            SL_DEBUG_LOG_V2(INFO, "Start scanning - conn%d\r\n", l_conn_id);
             //! open scan channel with interval of 33.125ms, window 14.375ms
             status = rsi_ble_start_scanning_with_values(&change_scan_param);
             if (status != RSI_SUCCESS) {
-              LOG_PRINT("\r\nScan channel failed to open 0x%lx - conn%d\n", status, l_conn_id);
+              SL_DEBUG_LOG_V2(ERROR, "Scan channel failed to open 0x%lx - conn%d\r\n", status, l_conn_id);
               continue;
             }
             rsi_scan_in_progress = 1;
@@ -521,27 +534,27 @@ void rsi_ble_task_on_conn(void *parameters)
 
           status = rsi_ble_mtu_exchange_event(rsi_connected_dev_addr, MAX_MTU_SIZE);
           if (status != 0) {
-            LOG_PRINT("\r\nMTU Exchange request failed - conn%d\n", l_conn_id);
+            SL_DEBUG_LOG_V2(ERROR, "MTU Exchange request failed - conn%d\r\n", l_conn_id);
           }
         }
       } break;
 
       case RSI_BLE_MTU_EXCHANGE_INFORMATION: {
         rsi_ble_clear_event_based_on_conn(l_conn_id, RSI_BLE_MTU_EXCHANGE_INFORMATION);
-        LOG_PRINT("\r\nMTU EXCHANGE INFORMATION - in subtask - conn%d \r\n", l_conn_id);
+        SL_DEBUG_LOG_V2(INFO, "MTU EXCHANGE INFORMATION - in subtask - conn%d \r\n", l_conn_id);
         if ((rsi_ble_conn_info[l_conn_id].mtu_exchange_info.initiated_role == PEER_DEVICE_INITATED_MTU_EXCHANGE)
             && (RSI_BLE_MTU_EXCHANGE_FROM_HOST)) {
           status = rsi_ble_mtu_exchange_resp(rsi_connected_dev_addr, LOCAL_MTU_SIZE);
           //! check for procedure already in progress error
           if (status == RSI_ERROR_BLE_ATT_CMD_IN_PROGRESS) {
             rsi_current_state[l_conn_id] |= BIT64(RSI_BLE_MTU_EXCHANGE_INFORMATION);
-            LOG_PRINT("\r\nrsi_ble_mtu_exchange_resp procedure is already in progress -conn%d \r\n", l_conn_id);
+            SL_DEBUG_LOG_V2(INFO, "rsi_ble_mtu_exchange_resp procedure is already in progress -conn%d \r\n", l_conn_id);
             break;
           }
           if (status != RSI_SUCCESS) {
-            LOG_PRINT("\nMTU EXCHANGE RESP Failed status : 0x%lx\n", status);
+            SL_DEBUG_LOG_V2(ERROR, "MTU EXCHANGE RESP Failed status : 0x%lx\r\n", status);
           } else {
-            LOG_PRINT("\nMTU EXCHANGE RESP SUCCESS status : 0x%lx\n", status);
+            SL_DEBUG_LOG_V2(INFO, "MTU EXCHANGE RESP SUCCESS status : 0x%lx\r\n", status);
           }
         }
       } break;
@@ -549,7 +562,7 @@ void rsi_ble_task_on_conn(void *parameters)
       case RSI_BLE_MORE_DATA_REQ_EVT: {
         rsi_ble_clear_event_based_on_conn(l_conn_id, RSI_BLE_MORE_DATA_REQ_EVT);
 #if RSI_DEBUG_EN
-        LOG_PRINT("\r\nMore data request - conn%d \r\n", l_conn_id);
+        SL_DEBUG_LOG_V2(INFO, "More data request - conn%d \r\n", l_conn_id);
 #endif
 
         if (rsi_current_state[l_conn_id] & BIT64(RSI_DATA_TRANSMIT_EVENT)) {
@@ -592,21 +605,26 @@ void rsi_ble_task_on_conn(void *parameters)
           }
           rsi_ble_clear_event_based_on_conn(l_conn_id, RSI_BLE_REQ_GATT_PROFILE);
           //! get remote device profiles
-          LOG_PRINT("\r\nRemote device profile discovery started - conn%d \r\n", l_conn_id);
+          SL_DEBUG_LOG_V2(INFO, "Remote device profile discovery started - conn%d \r\n", l_conn_id);
           status = rsi_ble_get_profiles_async(rsi_connected_dev_addr, 1, 0xffff, NULL);
           if (status != RSI_SUCCESS) {
             //! check for procedure already in progress error
             if (status == RSI_ERROR_BLE_ATT_CMD_IN_PROGRESS) {
               rsi_current_state[l_conn_id] |= BIT64(RSI_BLE_REQ_GATT_PROFILE);
-              LOG_PRINT("\r\n rsi_ble_get_profiles_async procedure is already in progress -conn%d \r\n", l_conn_id);
+              SL_DEBUG_LOG_V2(INFO,
+                              " rsi_ble_get_profiles_async procedure is already in progress -conn%d \r\n",
+                              l_conn_id);
               break;
             }
             //! check for buffer full error, which is not expected for this procedure
             else if (status == RSI_ERROR_BLE_DEV_BUF_FULL) {
-              LOG_PRINT("\r\nrsi_ble_get_profiles_async failed with buffer full error -conn%d\r\n", l_conn_id);
+              SL_DEBUG_LOG_V2(ERROR, "rsi_ble_get_profiles_async failed with buffer full error -conn%d\r\n", l_conn_id);
               break;
             } else {
-              LOG_PRINT("\r\nGet profile async call failed with error code :%lx -conn%d\r\n", status, l_conn_id);
+              SL_DEBUG_LOG_V2(ERROR,
+                              "Get profile async call failed with error code :%lx -conn%d\r\n",
+                              status,
+                              l_conn_id);
             }
           }
         }
@@ -614,13 +632,13 @@ void rsi_ble_task_on_conn(void *parameters)
       case RSI_BLE_GATT_PROFILES: {
 #if RSI_DEBUG_EN
         //! prof_resp_recvd is set to false for every profile query response
-        LOG_PRINT("\nIn GATT profiles - conn%d \r\n", l_conn_id);
+        SL_DEBUG_LOG_V2(INFO, "In GATT profiles - conn%d \r\n", l_conn_id);
 #endif
         if (!prof_resp_recvd) {
           //! check until completion of first level query
           if (!done_profiles_query) {
 #if RSI_DEBUG_EN
-            LOG_PRINT("\nIn profile query - conn%d \r\n", l_conn_id);
+            SL_DEBUG_LOG_V2(INFO, "In profile query - conn%d \r\n", l_conn_id);
 #endif
             rsi_ble_clear_event_based_on_conn(l_conn_id, RSI_BLE_GATT_PROFILES);
             no_of_profiles = rsi_ble_conn_info[l_conn_id].get_allprofiles.number_of_profiles;
@@ -628,7 +646,7 @@ void rsi_ble_task_on_conn(void *parameters)
             profiles_endhandle =
               *(uint16_t *)(rsi_ble_conn_info[l_conn_id].get_allprofiles.profile_desc[no_of_profiles - 1].end_handle);
 #if RSI_DEBUG_EN
-            LOG_PRINT("\nProfiles end handle = 0x%x - conn%d \r\n", profiles_endhandle, l_conn_id);
+            SL_DEBUG_LOG_V2(INFO, "Profiles end handle = 0x%x - conn%d \r\n", profiles_endhandle, l_conn_id);
 #endif
             //! allocate memory
             if (rsi_ble_profile_list_by_conn.profile_desc == NULL) {
@@ -642,8 +660,9 @@ void rsi_ble_task_on_conn(void *parameters)
               //rsi_ble_profile_list_by_conn.profile_desc = (profile_descriptors_t *)realloc(rsi_ble_profile_list_by_conn.profile_desc, sizeof(profile_descriptors_t) * (total_remote_profiles + no_of_profiles));
               temp = (void *)malloc(sizeof(profile_descriptors_t) * (total_remote_profiles + no_of_profiles));
               if (temp == NULL) {
-                LOG_PRINT("\nFailed to allocate memory for rsi_ble_profile_list_by_conn.profile_desc \r\n, conn_id:%d",
-                          l_conn_id);
+                SL_DEBUG_LOG_V2(ERROR,
+                                "Failed to allocate memory for rsi_ble_profile_list_by_conn.profile_desc , conn_id:%d",
+                                l_conn_id);
                 return;
               }
               //! fill the allocated buffer with '0'
@@ -658,8 +677,9 @@ void rsi_ble_task_on_conn(void *parameters)
               rsi_ble_profile_list_by_conn.profile_desc = temp;
             }
             if (rsi_ble_profile_list_by_conn.profile_desc == NULL) {
-              LOG_PRINT("\nFailed to allocate memory for rsi_ble_profile_list_by_conn.profile_desc \r\n, conn_id:%d",
-                        l_conn_id);
+              SL_DEBUG_LOG_V2(ERROR,
+                              "Failed to allocate memory for rsi_ble_profile_list_by_conn.profile_desc , conn_id:%d",
+                              l_conn_id);
               return;
             }
             //! copy retrieved profiles in local central buffer
@@ -678,16 +698,23 @@ void rsi_ble_task_on_conn(void *parameters)
                 if (status == RSI_ERROR_BLE_ATT_CMD_IN_PROGRESS) {
                   rsi_current_state[l_conn_id] |= BIT64(RSI_BLE_GATT_PROFILES);
 #if RSI_DEBUG_EN
-                  LOG_PRINT("\nrsi_ble_get_profiles_async procedure is already in progress - conn%d \r\n", l_conn_id);
+                  SL_DEBUG_LOG_V2(INFO,
+                                  "rsi_ble_get_profiles_async procedure is already in progress - conn%d ",
+                                  l_conn_id);
 #endif
                   break;
                 }
                 //! check for buffer full error, which is not expected for this procedure
                 else if (status == RSI_ERROR_BLE_DEV_BUF_FULL) {
-                  LOG_PRINT("\nrsi_ble_get_profiles_async failed with buffer full error - conn%d \r\n", l_conn_id);
+                  SL_DEBUG_LOG_V2(ERROR,
+                                  "rsi_ble_get_profiles_async failed with buffer full error - conn%d ",
+                                  l_conn_id);
                   break;
                 } else {
-                  LOG_PRINT("\nGet profile async call failed with error code :%lx - conn%d \r\n", status, l_conn_id);
+                  SL_DEBUG_LOG_V2(ERROR,
+                                  "Get profile async call failed with error code :%lx - conn%d ",
+                                  status,
+                                  l_conn_id);
                 }
               }
             } else {
@@ -706,19 +733,19 @@ void rsi_ble_task_on_conn(void *parameters)
               {
                 search_serv.val.val16 = rsi_ble_profile_list_by_conn.profile_desc[profs_evt_cnt].profile_uuid.val.val16;
 #if RSI_DEBUG_EN
-                LOG_PRINT("\nSearch for profile :0x%x - conn%d \r\n", search_serv.val.val16, l_conn_id);
+                SL_DEBUG_LOG_V2(INFO, "Search for profile :0x%x - conn%d \r\n", search_serv.val.val16, l_conn_id);
 #endif
               } else if (search_serv.size == 4) {
                 search_serv.val.val32 = rsi_ble_profile_list_by_conn.profile_desc[profs_evt_cnt].profile_uuid.val.val32;
 #if RSI_DEBUG_EN
-                LOG_PRINT("\nSearch for profile :0x%x - conn%d \r\n", search_serv.val.val32, l_conn_id);
+                SL_DEBUG_LOG_V2(INFO, "Search for profile :0x%x - conn%d \r\n", search_serv.val.val32, l_conn_id);
 #endif
               } else if (search_serv.size == 16) //! 128 bit(16 byte) UUID value
               {
                 search_serv.val.val128 =
                   rsi_ble_profile_list_by_conn.profile_desc[profs_evt_cnt].profile_uuid.val.val128;
 #if RSI_DEBUG_EN
-                LOG_PRINT("\nSearch for profile :0x%x - conn%d \r\n", search_serv.val.val128, l_conn_id);
+                SL_DEBUG_LOG_V2(INFO, "Search for profile :0x%x - conn%d \r\n", search_serv.val.val128, l_conn_id);
 #endif
               }
               status = rsi_ble_get_profile_async(rsi_connected_dev_addr, search_serv, NULL);
@@ -728,16 +755,23 @@ void rsi_ble_task_on_conn(void *parameters)
                   prof_resp_recvd = false;
                   rsi_current_state[l_conn_id] |= BIT64(RSI_BLE_GATT_PROFILES);
 #if RSI_DEBUG_EN
-                  LOG_PRINT("\nrsi_ble_get_profile_async procedure is already in progress - conn%d \r\n", l_conn_id);
+                  SL_DEBUG_LOG_V2(INFO,
+                                  "rsi_ble_get_profile_async procedure is already in progress - conn%d ",
+                                  l_conn_id);
 #endif
                   break;
                 }
                 //! check for buffer full error, which is not expected for this procedure
                 else if (status == RSI_ERROR_BLE_DEV_BUF_FULL) {
-                  LOG_PRINT("\nrsi_ble_get_profiles_async failed with buffer full error - conn%d \r\n", l_conn_id);
+                  SL_DEBUG_LOG_V2(ERROR,
+                                  "rsi_ble_get_profiles_async failed with buffer full error - conn%d ",
+                                  l_conn_id);
                   break;
                 } else {
-                  LOG_PRINT("\nGet profile async call failed with error code :%lx - conn%d \r\n", status, l_conn_id);
+                  SL_DEBUG_LOG_V2(ERROR,
+                                  "Get profile async call failed with error code :%lx - conn%d ",
+                                  status,
+                                  l_conn_id);
                 }
               } else {
                 profs_evt_cnt++;
@@ -753,7 +787,7 @@ void rsi_ble_task_on_conn(void *parameters)
       } break;
       case RSI_BLE_GATT_PROFILE: {
 #if RSI_DEBUG_EN
-        LOG_PRINT("\nIn gatt profile - conn%d \r\n", l_conn_id);
+        SL_DEBUG_LOG_V2(INFO, "In gatt profile - conn%d \r\n", l_conn_id);
 #endif
         if (!profile_mem_init) {
           if (rsi_ble_profile_list_by_conn.profile_info_uuid == NULL) {
@@ -761,8 +795,9 @@ void rsi_ble_task_on_conn(void *parameters)
               sizeof(rsi_ble_event_profile_by_uuid_t) * total_remote_profiles);
           }
           if (rsi_ble_profile_list_by_conn.profile_info_uuid == NULL) {
-            LOG_PRINT("\nFailed to allocate memory for rsi_ble_profile_list_by_conn[%d].profile_info_uuid \r\n",
-                      l_conn_id);
+            SL_DEBUG_LOG_V2(ERROR,
+                            "Failed to allocate memory for rsi_ble_profile_list_by_conn[%d].profile_info_uuid ",
+                            l_conn_id);
             return;
           }
           memset(rsi_ble_profile_list_by_conn.profile_info_uuid,
@@ -780,23 +815,26 @@ void rsi_ble_task_on_conn(void *parameters)
                  sizeof(rsi_ble_event_profile_by_uuid_t));
           prof_resp_recvd = false;
 #if RSI_DEBUG_EN
-          LOG_PRINT("\nGATT profile:\nStart handle: 0x%x  \nEnd handle:0x%x - conn%d \r\n",
-                    *(uint16_t *)rsi_ble_profile_list_by_conn.profile_info_uuid[prof_evt_cnt].start_handle,
-                    *(uint16_t *)rsi_ble_profile_list_by_conn.profile_info_uuid[prof_evt_cnt].end_handle,
-                    l_conn_id);
+          SL_DEBUG_LOG_V2(INFO,
+                          "GATT profile:Start handle: 0x%x  End handle:0x%x - conn%d ",
+                          *(uint16_t *)rsi_ble_profile_list_by_conn.profile_info_uuid[prof_evt_cnt].start_handle,
+                          *(uint16_t *)rsi_ble_profile_list_by_conn.profile_info_uuid[prof_evt_cnt].end_handle,
+                          l_conn_id);
 #endif
           prof_evt_cnt++;
         } else {
 #if RSI_DEBUG_EN
-          LOG_PRINT("\nCompleted gatt profile - conn%d \r\n", l_conn_id);
+          SL_DEBUG_LOG_V2(INFO, "Completed gatt profile - conn%d ", l_conn_id);
 #endif
           if (!char_resp_recvd) {
             if (profile_index_for_char_query < total_remote_profiles) {
               char_resp_recvd = true;
 #if RSI_DEBUG_EN
-              LOG_PRINT("\nSearch for profile characteristics :0x%x - conn%d \r\n",
-                        rsi_ble_profile_list_by_conn.profile_desc[profile_index_for_char_query].profile_uuid.val.val16,
-                        l_conn_id);
+              SL_DEBUG_LOG_V2(
+                INFO,
+                "Search for profile characteristics :0x%x - conn%d ",
+                rsi_ble_profile_list_by_conn.profile_desc[profile_index_for_char_query].profile_uuid.val.val16,
+                l_conn_id);
 #endif
               uint16_t start_handle =
                 *(uint16_t *)rsi_ble_profile_list_by_conn.profile_info_uuid[profile_index_for_char_query].start_handle;
@@ -811,19 +849,23 @@ void rsi_ble_task_on_conn(void *parameters)
                   char_resp_recvd = false;
                   rsi_current_state[l_conn_id] |= BIT64(RSI_BLE_GATT_PROFILE);
 #if RSI_DEBUG_EN
-                  LOG_PRINT("\nrsi_ble_get_char_services_async procedure is already in progress - conn%d \r\n",
-                            l_conn_id);
+                  SL_DEBUG_LOG_V2(INFO,
+                                  "rsi_ble_get_char_services_async procedure is already in progress - conn%d ",
+                                  l_conn_id);
 #endif
                   break;
                 }
                 //! check for buffer full error, which is not expected for this procedure
                 else if (status == RSI_ERROR_BLE_DEV_BUF_FULL) {
-                  LOG_PRINT("\nrsi_ble_get_char_services_async failed with buffer full error - conn%d \r\n", l_conn_id);
+                  SL_DEBUG_LOG_V2(ERROR,
+                                  "rsi_ble_get_char_services_async failed with buffer full error - conn%d ",
+                                  l_conn_id);
                   break;
                 } else {
-                  LOG_PRINT(
-                    "\nFailed to get service characteristics of the remote GATT server UUID:0x%x,error:0x%lx - conn%d "
-                    "\r\n",
+                  SL_DEBUG_LOG_V2(
+                    ERROR,
+                    "Failed to get service characteristics of the remote GATT server UUID:0x%x,error:0x%lx - conn%d "
+                    "",
                     rsi_ble_profile_list_by_conn.profile_desc[profile_index_for_char_query].profile_uuid.val.val16,
                     status,
                     l_conn_id);
@@ -840,7 +882,7 @@ void rsi_ble_task_on_conn(void *parameters)
       } break;
       case RSI_BLE_GATT_CHAR_SERVICES: {
 #if RSI_DEBUG_EN
-        LOG_PRINT("\nIn GATT test:RSI_BLE_GATT_CHAR_SERVICES - conn%d \r\n", l_conn_id);
+        SL_DEBUG_LOG_V2(INFO, "In GATT test:RSI_BLE_GATT_CHAR_SERVICES - conn%d \r\n", l_conn_id);
 #endif
         if (!service_char_mem_init) {
           if (rsi_ble_profile_list_by_conn.profile_char_info == NULL) {
@@ -848,8 +890,9 @@ void rsi_ble_task_on_conn(void *parameters)
               (rsi_ble_event_read_by_type1_t *)malloc(sizeof(rsi_ble_event_read_by_type1_t) * total_remote_profiles);
           }
           if (rsi_ble_profile_list_by_conn.profile_char_info == NULL) {
-            LOG_PRINT("\nFailed to allocate memory for rsi_ble_profile_list_by_conn[%d].profile_char_info\r\n",
-                      l_conn_id);
+            SL_DEBUG_LOG_V2(ERROR,
+                            "Failed to allocate memory for rsi_ble_profile_list_by_conn[%d].profile_char_info",
+                            l_conn_id);
             return;
           }
           memset(rsi_ble_profile_list_by_conn.profile_char_info,
@@ -890,20 +933,25 @@ void rsi_ble_task_on_conn(void *parameters)
                       char_desc_resp_recvd = false;
                       rsi_current_state[l_conn_id] |= BIT64(RSI_BLE_GATT_CHAR_SERVICES);
 #if RSI_DEBUG_EN
-                      LOG_PRINT("\nrsi_ble_get_att_value_async procedure is already in progress - conn%d \r\n",
-                                l_conn_id);
+                      SL_DEBUG_LOG_V2(INFO,
+                                      "rsi_ble_get_att_value_async procedure is already in progress - conn%d ",
+                                      l_conn_id);
 #endif
                       break;
                     }
                     //! check for buffer full error, which is not expected for this procedure
                     else if (status == RSI_ERROR_BLE_DEV_BUF_FULL) {
-                      LOG_PRINT("\nrsi_ble_get_att_value_async failed with buffer full error - conn%d \r\n", l_conn_id);
+                      SL_DEBUG_LOG_V2(ERROR,
+                                      "rsi_ble_get_att_value_async failed with buffer full error - conn%d ",
+                                      l_conn_id);
                       break;
                     } else {
-                      LOG_PRINT("\nFailed to get characteristics descriptor of the remote GATT server with error:0x%lx "
-                                "- conn%d \r\n",
-                                status,
-                                l_conn_id);
+                      SL_DEBUG_LOG_V2(
+                        ERROR,
+                        "Failed to get characteristics descriptor of the remote GATT server with error:0x%lx "
+                        "- conn%d ",
+                        status,
+                        l_conn_id);
                     }
                   }
                 } else {
@@ -929,15 +977,16 @@ void rsi_ble_task_on_conn(void *parameters)
 
       case RSI_BLE_GATT_DESC_SERVICES: {
 #if RSI_DEBUG_EN
-        LOG_PRINT("\nIn GATT test:RSI_BLE_GATT_DESC_SERVICES : temp1 %d - conn%d \r\n", temp1, l_conn_id);
+        SL_DEBUG_LOG_V2(INFO, "In GATT test:RSI_BLE_GATT_DESC_SERVICES : temp1 %d - conn%d \r\n", temp1, l_conn_id);
 #endif
         if (temp1 < total_remote_profiles) {
           temp2++;
           rsi_ble_clear_event_based_on_conn(l_conn_id, RSI_BLE_GATT_DESC_SERVICES);
           char_desc_cnt++;
+          (void)char_desc_cnt; //! suppress unused variable warning
           char_desc_resp_recvd = false;
         } else {
-          LOG_PRINT("\nRemote device profiles discovery completed - conn%d \r\n", l_conn_id);
+          SL_DEBUG_LOG_V2(INFO, "Remote device profiles discovery completed - conn%d \r\n", l_conn_id);
           //LOG_PRINT("free bytes remaining after connection1 - %ld \r\n",xPortGetFreeHeapSize());
           rsi_ble_clear_event_based_on_conn(l_conn_id, RSI_BLE_GATT_DESC_SERVICES);
           //! if data transfer is configured
@@ -965,7 +1014,7 @@ void rsi_ble_task_on_conn(void *parameters)
                   if ((!write_handle_found)
                       && ((rsi_ble_profile_list_by_conn.profile_char_info[i].char_services[ix].char_data.char_property)
                           & RSI_BLE_ATT_PROPERTY_WRITE)) {
-                    LOG_PRINT("\r\nWrite handle found - conn%d \n", l_conn_id);
+                    SL_DEBUG_LOG_V2(INFO, "Write handle found - conn%d \r\n", l_conn_id);
                     write_handle_found = true;
                     write_handle =
                       rsi_ble_profile_list_by_conn.profile_char_info[i].char_services[ix].char_data.char_handle;
@@ -979,7 +1028,7 @@ void rsi_ble_task_on_conn(void *parameters)
             }
           }
           if (!write_handle_found) {
-            LOG_PRINT("\r\nClient GATT write service not found - conn%d \n", l_conn_id);
+            SL_DEBUG_LOG_V2(ERROR, "Client GATT write service not found - conn%d \r\n", l_conn_id);
           }
         }
 
@@ -1000,7 +1049,7 @@ void rsi_ble_task_on_conn(void *parameters)
                       && (rsi_ble_profile_list_by_conn.profile_char_info[i].char_services[ix].char_data.char_property
                           & RSI_BLE_ATT_PROPERTY_WRITE_NO_RESPONSE)) {
 #if RSI_DEBUG_EN
-                    LOG_PRINT("\r\nWrite without response handle found - conn%d \n", l_conn_id);
+                    SL_DEBUG_LOG_V2(INFO, "Write without response handle found - conn%d \r\n", l_conn_id);
 #endif
                     write_wwr_handle_found = true; //! write handle found
                     write_wwr_handle =
@@ -1014,7 +1063,7 @@ void rsi_ble_task_on_conn(void *parameters)
             }
           }
           if (!write_wwr_handle_found) {
-            LOG_PRINT("\r\nClient GATT write no response service not found - conn%d \n", l_conn_id);
+            SL_DEBUG_LOG_V2(ERROR, "Client GATT write no response service not found - conn%d \r\n", l_conn_id);
           }
         }
 
@@ -1033,7 +1082,7 @@ void rsi_ble_task_on_conn(void *parameters)
                   if ((!indication_handle_found)
                       && ((rsi_ble_profile_list_by_conn.profile_char_info[i].char_services[ix].char_data.char_property)
                           & RSI_BLE_ATT_PROPERTY_INDICATE)) {
-                    LOG_PRINT("\r\nIndicate handle found - conn%d \n", l_conn_id);
+                    SL_DEBUG_LOG_V2(INFO, "Indicate handle found - conn%d \r\n", l_conn_id);
                     indication_handle_found = true;
                     indication_handle =
                       rsi_ble_profile_list_by_conn.profile_char_info[i].char_services[ix].char_data.char_handle;
@@ -1046,7 +1095,7 @@ void rsi_ble_task_on_conn(void *parameters)
             }
           }
           if (!indication_handle_found) {
-            LOG_PRINT("\r\nClient GATT Indication service not found - conn%d \n", l_conn_id);
+            SL_DEBUG_LOG_V2(ERROR, "Client GATT Indication service not found - conn%d \r\n", l_conn_id);
           }
         }
 
@@ -1077,14 +1126,14 @@ void rsi_ble_task_on_conn(void *parameters)
             }
           }
           if (!notify_handle_found) {
-            LOG_PRINT("\r\nClient GATT Notification service not found \n");
+            SL_DEBUG_LOG_V2(ERROR, "Client GATT Notification service not found \r\n");
           }
         }
 
       } break;
       case RSI_BLE_BUFF_CONF_EVENT: {
 #if RSI_DEBUG_EN
-        LOG_PRINT("\r\nIn GATT RSI_BLE_BUFF_CONF_EVENT - conn%d \r\n", l_conn_id);
+        SL_DEBUG_LOG_V2(INFO, "In GATT RSI_BLE_BUFF_CONF_EVENT - conn%d \r\n", l_conn_id);
 #endif
         if (!buff_config_done) {
           status = rsi_ble_set_wo_resp_notify_buf_info(rsi_connected_dev_addr,
@@ -1092,7 +1141,10 @@ void rsi_ble_task_on_conn(void *parameters)
                                                        ble_conn_conf->buff_mode_sel.buffer_cnt);
           if (status != RSI_SUCCESS) {
 #if RSI_DEBUG_EN
-            LOG_PRINT("\r\nFailed to set the buffer configuration mode, error:0x%x - conn%d \r\n", status, l_conn_id);
+            SL_DEBUG_LOG_V2(ERROR,
+                            "Failed to set the buffer configuration mode, error:0x%x - conn%d ",
+                            status,
+                            l_conn_id);
 #endif
             break;
           } else {
@@ -1100,13 +1152,13 @@ void rsi_ble_task_on_conn(void *parameters)
           }
         }
         //! set RSI_DATA_TRANSMIT_EVENT to transmit data to remote device
-        LOG_PRINT("\nStart transmitting data to - conn%d \r\n", l_conn_id);
+        SL_DEBUG_LOG_V2(INFO, "Start transmitting data to - conn%d \r\n", l_conn_id);
         rsi_ble_clear_event_based_on_conn(l_conn_id, RSI_BLE_BUFF_CONF_EVENT);
         rsi_ble_set_event_based_on_conn(l_conn_id, RSI_CONN_UPDATE_REQ_EVENT);
       } break;
       case RSI_CONN_UPDATE_REQ_EVENT: {
 #if RSI_DEBUG_EN
-        LOG_PRINT("\r\nIn connection update req event - conn%d \r\n", l_conn_id);
+        SL_DEBUG_LOG_V2(INFO, "In connection update req event - conn%d \r\n", l_conn_id);
 #endif
         if (!conn_param_req_given) {
           //! update connection interval to 45ms, latency 0, supervision timeout 4s
@@ -1118,13 +1170,18 @@ void rsi_ble_task_on_conn(void *parameters)
           if (status != RSI_SUCCESS) {
             //! check for procedure already in progress error
             if (status == RSI_ERROR_BLE_ATT_CMD_IN_PROGRESS) {
-              LOG_PRINT("\r\nrsi_ble_conn_params_update procedure is already in progress - conn%d \r\n", l_conn_id);
+              SL_DEBUG_LOG_V2(INFO,
+                              "rsi_ble_conn_params_update procedure is already in progress - conn%d \r\n",
+                              l_conn_id);
             } else {
-              LOG_PRINT("\r\nFailed to update connection parameters error:0x%lx - conn%d \r\n", status, l_conn_id);
+              SL_DEBUG_LOG_V2(ERROR,
+                              "Failed to update connection parameters error:0x%lx - conn%d \r\n",
+                              status,
+                              l_conn_id);
             }
             break;
           } else {
-            LOG_PRINT("\r\nConnection params request was successful - conn%d \n", l_conn_id);
+            SL_DEBUG_LOG_V2(INFO, "Connection params request was successful - conn%d \r\n", l_conn_id);
             conn_param_req_given = true;
           }
         }
@@ -1132,13 +1189,13 @@ void rsi_ble_task_on_conn(void *parameters)
         //! set RSI_DATA_RECEIVE_EVENT to receive data from remote device
         if (rsi_rx_from_rem_dev) {
           rsi_rx_from_rem_dev = false;
-          LOG_PRINT("\r\nStart receiving data from - conn%d\r\n", l_conn_id);
+          SL_DEBUG_LOG_V2(INFO, "Start receiving data from - conn%d\r\n", l_conn_id);
           rsi_ble_set_event_based_on_conn(l_conn_id, RSI_DATA_RECEIVE_EVENT);
         }
         //! set RSI_DATA_TRANSMIT_EVENT to transmit data to remote device
         if (rsi_tx_to_rem_dev) {
           rsi_tx_to_rem_dev = false;
-          LOG_PRINT("\r\nStart transmitting data to - conn%d\r\n", l_conn_id);
+          SL_DEBUG_LOG_V2(INFO, "Start transmitting data to - conn%d\r\n", l_conn_id);
           rsi_ble_set_event_based_on_conn(l_conn_id, RSI_DATA_TRANSMIT_EVENT);
         }
       } break;
@@ -1151,14 +1208,18 @@ void rsi_ble_task_on_conn(void *parameters)
               //! initiating the SMP pairing process
               status = rsi_ble_smp_pair_request(rsi_connected_dev_addr, RSI_BLE_SMP_IO_CAPABILITY, MITM_ENABLE);
               if (status != RSI_SUCCESS) {
-                LOG_PRINT("\r\nStart of SMP pairing process failed with error code %lx - conn%d \r\n",
-                          status,
-                          l_conn_id);
+                SL_DEBUG_LOG_V2(ERROR,
+                                "Start of SMP pairing process failed with error code %lx - conn%d ",
+                                status,
+                                l_conn_id);
 
               } else {
                 smp_pairing_initated = true;
                 rsi_6byte_dev_address_to_ascii(str_remote_address, rsi_connected_dev_addr);
-                LOG_PRINT("\r\nSMP pairing request initiated to %s - conn%d \r\n", str_remote_address, l_conn_id);
+                SL_DEBUG_LOG_V2(INFO,
+                                "SMP pairing request initiated to %s - conn%d ",
+                                (uintptr_t)str_remote_address,
+                                l_conn_id);
               }
             }
           }
@@ -1167,11 +1228,14 @@ void rsi_ble_task_on_conn(void *parameters)
       case RSI_BLE_CONN_UPDATE_COMPLETE_EVENT: {
 
         rsi_ble_clear_event_based_on_conn(l_conn_id, RSI_BLE_CONN_UPDATE_COMPLETE_EVENT);
-        LOG_PRINT("\r\nconn updated device address : %s\n conn_interval:%d\n supervision timeout:%d -conn%d",
-                  rsi_ble_conn_info[l_conn_id].remote_dev_addr,
-                  rsi_ble_conn_info[l_conn_id].conn_update_resp.conn_interval,
-                  rsi_ble_conn_info[l_conn_id].conn_update_resp.timeout,
-                  l_conn_id);
+        SL_DEBUG_LOG_V2(INFO,
+                        "conn updated device address : %s",
+                        (uintptr_t)rsi_ble_conn_info[l_conn_id].remote_dev_addr);
+        SL_DEBUG_LOG_V2(INFO,
+                        " conn_interval:%d supervision timeout:%d -conn%d",
+                        rsi_ble_conn_info[l_conn_id].conn_update_resp.conn_interval,
+                        rsi_ble_conn_info[l_conn_id].conn_update_resp.timeout,
+                        l_conn_id);
 #if UPDATE_CONN_PARAMETERS
         status = rsi_conn_update_request();
 #endif
@@ -1194,52 +1258,54 @@ void rsi_ble_task_on_conn(void *parameters)
 
         //! check whether disconnection is from central
         if (rsi_ble_conn_info[l_conn_id].remote_device_role == CENTRAL_ROLE) {
-          LOG_PRINT("\r\nCentral is disconnected, reason : 0x%x - conn%d \r\n",
-                    rsi_disconnect_reason[l_conn_id],
-                    l_conn_id);
+          SL_DEBUG_LOG_V2(INFO,
+                          "Central is disconnected, reason : 0x%x - conn%d ",
+                          rsi_disconnect_reason[l_conn_id],
+                          l_conn_id);
           //! decrement the task count
           central_task_instances--;
           num_of_conn_centrals--;
           if (num_of_conn_centrals < RSI_BLE_MAX_NBR_CENTRALS) {
             status = rsi_ble_stop_advertising();
             if (status != RSI_SUCCESS) {
-              LOG_PRINT("\r\nAdvertising failed to stop = 0x%lx - conn%d \n", status, l_conn_id);
+              SL_DEBUG_LOG_V2(ERROR, "Advertising failed to stop = 0x%lx - conn%d ", status, l_conn_id);
               continue;
             }
-            LOG_PRINT("\r\nIn dis-conn evt, Start Adv - conn%d \r\n", l_conn_id);
+            SL_DEBUG_LOG_V2(INFO, "In dis-conn evt, Start Adv - conn%d ", l_conn_id);
             //! Advertising interval set to ~211.25ms with full advertising data payload
             status = rsi_ble_start_advertising();
             if (status != RSI_SUCCESS) {
-              LOG_PRINT("\r\nAdvertising failed to start = 0x%lx - conn%d \n", status, l_conn_id);
+              SL_DEBUG_LOG_V2(ERROR, "Advertising failed to start = 0x%lx - conn%d ", status, l_conn_id);
               continue;
             }
-            LOG_PRINT("\r\nAdvertising started - conn%d \r\n", l_conn_id);
+            SL_DEBUG_LOG_V2(INFO, "Advertising started - conn%d ", l_conn_id);
           }
         } else {
-          LOG_PRINT("\r\nPeripheral is disconnected, reason : 0x%x - conn%d \r\n",
-                    rsi_disconnect_reason[l_conn_id],
-                    l_conn_id);
+          SL_DEBUG_LOG_V2(INFO,
+                          "Peripheral is disconnected, reason : 0x%x - conn%d ",
+                          rsi_disconnect_reason[l_conn_id],
+                          l_conn_id);
           peripheral_task_instances--;
           num_of_conn_peripherals--;
           //rsi_ble_set_event_based_on_conn(l_conn_id, RSI_BLE_SCAN_RESTART_EVENT);
           status = rsi_ble_stop_scanning();
           if (status != RSI_SUCCESS) {
-            LOG_PRINT("\r\nScanning stop failed, cmd status = %lx - conn%d\n", status, l_conn_id);
+            SL_DEBUG_LOG_V2(ERROR, "Scanning stop failed, cmd status = %lx - conn%d\r\n", status, l_conn_id);
           } else {
             rsi_scan_in_progress = 0;
           }
-          LOG_PRINT("\nRestarting scanning \r\n");
+          SL_DEBUG_LOG_V2(INFO, "Restarting scanning ");
           status = rsi_ble_start_scanning();
           if (status != RSI_SUCCESS) {
-            LOG_PRINT("\r\nScanning start failed, cmd status = %lx -conn%d\n", status, l_conn_id);
+            SL_DEBUG_LOG_V2(ERROR, "Scanning start failed, cmd status = %lx -conn%d", status, l_conn_id);
           } else {
             rsi_scan_in_progress = 1;
           }
         }
         rsi_disconnect_reason[l_conn_id] = 0;
 
-        LOG_PRINT("\r\nNumber of connected central devices:%d\n", num_of_conn_centrals);
-        LOG_PRINT("\r\nNumber of connected peripheral devices:%d\n", num_of_conn_peripherals);
+        SL_DEBUG_LOG_V2(INFO, "Number of connected central devices:%d", num_of_conn_centrals);
+        SL_DEBUG_LOG_V2(INFO, "Number of connected peripheral devices:%d", num_of_conn_peripherals);
 
         memset(&rsi_ble_conn_info[l_conn_id], 0, sizeof(rsi_ble_conn_info_t));
 
@@ -1248,7 +1314,7 @@ void rsi_ble_task_on_conn(void *parameters)
           osSemaphoreDelete(ble_conn_sem[l_conn_id]);
         }
 
-        LOG_PRINT("\r\nDelete task%d resources\r\n", l_conn_id);
+        SL_DEBUG_LOG_V2(INFO, "Delete task%d resources\r\n", l_conn_id);
         //! delete the task
         if (task_to_be_deleted != NULL) {
           osThreadTerminate(task_to_be_deleted);
@@ -1292,7 +1358,7 @@ void rsi_ble_task_on_conn(void *parameters)
             //! Update value length
             attribute->value_len = rsi_ble_conn_info[l_conn_id].app_ble_write_event.length;
 
-            LOG_PRINT("\r\nReceived data from remote device: %s \n", (uint8_t *)attribute->value);
+            SL_DEBUG_LOG_V2(INFO, "Received data from remote device: %s \r\n", (uintptr_t)(uint8_t *)attribute->value);
 
             //! Send gatt write response
             rsi_ble_gatt_write_response(rsi_connected_dev_addr, 0);
@@ -1312,8 +1378,9 @@ void rsi_ble_task_on_conn(void *parameters)
 
         //! print the received 'write no response' data packet
         if ((*(uint16_t *)(rsi_ble_conn_info[l_conn_id].app_ble_write_event.handle)) == rsi_ble_att2_val_hndl) {
-          LOG_PRINT("\r\nReceived data from remote device: %s\n",
-                    rsi_ble_conn_info[l_conn_id].app_ble_write_event.att_value);
+          SL_DEBUG_LOG_V2(INFO,
+                          "Received data from remote device: %s",
+                          (uintptr_t)rsi_ble_conn_info[l_conn_id].app_ble_write_event.att_value);
         }
 
         //! when remote device enabled the notifications
@@ -1322,12 +1389,12 @@ void rsi_ble_task_on_conn(void *parameters)
           if (ble_conn_conf->tx_notifications) {
             //check for valid notifications
             if (rsi_ble_conn_info[l_conn_id].app_ble_write_event.att_value[0] == NOTIFY_ENABLE) {
-              LOG_PRINT("\r\nRemote device enabled the notification - conn%d\n", l_conn_id);
+              SL_DEBUG_LOG_V2(INFO, "Remote device enabled the notification - conn%d\r\n", l_conn_id);
               rsi_tx_to_rem_dev = true;
               //! configure the buffer configuration mode
               rsi_ble_set_event_based_on_conn(l_conn_id, RSI_BLE_BUFF_CONF_EVENT);
             } else if (rsi_ble_conn_info[l_conn_id].app_ble_write_event.att_value[0] == NOTIFY_DISABLE) {
-              LOG_PRINT("\r\nRemote device disabled the notification - conn%d\n", l_conn_id);
+              SL_DEBUG_LOG_V2(INFO, "Remote device disabled the notification - conn%d\r\n", l_conn_id);
               //rsi_ble_clear_event_based_on_conn(l_conn_id, RSI_DATA_TRANSMIT_EVENT);
             }
           }
@@ -1338,12 +1405,12 @@ void rsi_ble_task_on_conn(void *parameters)
           if (ble_conn_conf->tx_indications) {
             //check for valid indications
             if (rsi_ble_conn_info[l_conn_id].app_ble_write_event.att_value[0] == INDICATION_ENABLE) {
-              LOG_PRINT("\r\nRemote device enabled the indications - conn%d\n", l_conn_id);
+              SL_DEBUG_LOG_V2(INFO, "Remote device enabled the indications - conn%d\r\n", l_conn_id);
               rsi_tx_to_rem_dev = true;
               //! configure the buffer configuration mode
               rsi_ble_set_event_based_on_conn(l_conn_id, RSI_BLE_BUFF_CONF_EVENT);
             } else if (rsi_ble_conn_info[l_conn_id].app_ble_write_event.att_value[0] == INDICATION_DISABLE) {
-              LOG_PRINT("\r\nRemote device disabled the indications - conn%d\n", l_conn_id);
+              SL_DEBUG_LOG_V2(INFO, "Remote device disabled the indications - conn%d\r\n", l_conn_id);
               //rsi_ble_clear_event_based_on_conn(l_conn_id, RSI_DATA_TRANSMIT_EVENT);
             }
           }
@@ -1352,15 +1419,16 @@ void rsi_ble_task_on_conn(void *parameters)
         //! send acknowledgement to the received indication packet
         if (*(uint16_t *)rsi_ble_conn_info[l_conn_id].app_ble_write_event.handle == (indication_handle)) {
           if (ble_conn_conf->rx_indications) {
-            LOG_PRINT("\r\nReceived indication packet from remote device, data= %s \n",
-                      rsi_ble_conn_info[l_conn_id].app_ble_write_event.att_value);
+            SL_DEBUG_LOG_V2(INFO,
+                            "Received indication packet from remote device, data= %s ",
+                            (uintptr_t)rsi_ble_conn_info[l_conn_id].app_ble_write_event.att_value);
 #if RSI_BLE_INDICATE_CONFIRMATION_FROM_HOST
             //! Send indication acknowledgement to remote device
             status = rsi_ble_indicate_confirm(rsi_connected_dev_addr);
             if (status != RSI_SUCCESS) {
-              LOG_PRINT("\r\nIndication confirm failed \t reason = %lx - conn%d\n", status, l_conn_id);
+              SL_DEBUG_LOG_V2(ERROR, "Indication confirm failed \t reason = %lx - conn%d", status, l_conn_id);
             } else {
-              LOG_PRINT("\r\nIndication confirm response sent - conn%d\n", l_conn_id);
+              SL_DEBUG_LOG_V2(INFO, "Indication confirm response sent - conn%d", l_conn_id);
             }
 #endif
           }
@@ -1371,7 +1439,7 @@ void rsi_ble_task_on_conn(void *parameters)
           if ((!notification_received) && (ble_conn_conf->rx_notifications)) {
             //! stop printing the logs after receiving first notification
             notification_received = true;
-            LOG_PRINT("\r\nReceiving notifications from remote device - conn%d\r\n", l_conn_id);
+            SL_DEBUG_LOG_V2(INFO, "Receiving notifications from remote device - conn%d\r\n", l_conn_id);
           } else {
             //! do nothing as received notifications not required to print
           }
@@ -1379,7 +1447,7 @@ void rsi_ble_task_on_conn(void *parameters)
       } break;
 
       case RSI_BLE_GATT_PREPARE_WRITE_EVENT: {
-        LOG_PRINT("\nPWE\n");
+        SL_DEBUG_LOG_V2(INFO, "PWE\r\n");
         uint8_t err = 0;
         //! clear the served event
         rsi_ble_clear_event_based_on_conn(l_conn_id, RSI_BLE_GATT_PREPARE_WRITE_EVENT);
@@ -1434,7 +1502,7 @@ void rsi_ble_task_on_conn(void *parameters)
         }
       } break;
       case RSI_BLE_GATT_EXECUTE_WRITE_EVENT: {
-        LOG_PRINT("\nEWE\n");
+        SL_DEBUG_LOG_V2(INFO, "EWE\r\n");
         rsi_ble_clear_event_based_on_conn(l_conn_id, RSI_BLE_GATT_EXECUTE_WRITE_EVENT);
         if (*(uint16_t *)rsi_ble_conn_info[l_conn_id].app_ble_prepared_write_event.handle == rsi_ble_att1_val_hndl) {
           rsi_ble_att_list_t *attribute = NULL;
@@ -1492,7 +1560,7 @@ void rsi_ble_task_on_conn(void *parameters)
         if (write_handle_found && ble_conn_conf->tx_write) {
           rsi_ble_clear_event_based_on_conn(l_conn_id, RSI_DATA_TRANSMIT_EVENT);
 #if RSI_DEBUG_EN
-          LOG_PRINT("\r\nIn write with response event - conn%d \n", l_conn_id);
+          SL_DEBUG_LOG_V2(INFO, "In write with response event - conn%d \r\n", l_conn_id);
 #endif
           read_data1[0] = write_cnt;
           status = rsi_ble_set_att_value_async(rsi_connected_dev_addr, write_handle, max_data_length, read_data1);
@@ -1501,15 +1569,17 @@ void rsi_ble_task_on_conn(void *parameters)
             if (status == RSI_ERROR_BLE_ATT_CMD_IN_PROGRESS) {
               rsi_current_state[l_conn_id] |= BIT64(RSI_DATA_TRANSMIT_EVENT);
 #if RSI_DEBUG_EN
-              LOG_PRINT("\r\nrsi_ble_set_att_value_async procedure is already in progress - conn%d \r\n", l_conn_id);
+              SL_DEBUG_LOG_V2(INFO,
+                              "rsi_ble_set_att_value_async procedure is already in progress - conn%d ",
+                              l_conn_id);
 #endif
               break;
             } else if (status == RSI_ERROR_BLE_DEV_BUF_FULL) {
-              LOG_PRINT("\r\nWrite with response failed with buffer error - conn%d \r\n", l_conn_id);
+              SL_DEBUG_LOG_V2(ERROR, "Write with response failed with buffer error - conn%d ", l_conn_id);
               rsi_current_state[l_conn_id] |= BIT64(RSI_DATA_TRANSMIT_EVENT);
               break;
             } else {
-              LOG_PRINT("\r\nWrite with response failed with status = %lx - conn%d \r\n", status, l_conn_id);
+              SL_DEBUG_LOG_V2(ERROR, "Write with response failed with status = %lx - conn%d ", status, l_conn_id);
             }
           } else {
             write_cnt++;
@@ -1521,26 +1591,27 @@ void rsi_ble_task_on_conn(void *parameters)
           read_data1[0] = wwr_count;
 
 #if RSI_DEBUG_EN
-          LOG_PRINT("\r\nIn write without response event - conn%d \n", l_conn_id);
+          SL_DEBUG_LOG_V2(INFO, "In write without response event - conn%d \r\n", l_conn_id);
 #endif
           status =
-            rsi_ble_set_att_cmd(rsi_connected_dev_addr, write_wwr_handle, max_data_length, (uint8_t *)read_data1);
+            rsi_ble_set_att_cmd_async(rsi_connected_dev_addr, write_wwr_handle, max_data_length, (uint8_t *)read_data1);
           if (status != RSI_SUCCESS) {
             if (status == RSI_ERROR_BLE_DEV_BUF_FULL) {
 #if RSI_DEBUG_EN
-              LOG_PRINT("\r\nWrite without response failed with buffer error - conn%d \r\n", l_conn_id);
+              SL_DEBUG_LOG_V2(ERROR, "Write without response failed with buffer error - conn%d \r\n", l_conn_id);
 #endif
               rsi_current_state[l_conn_id] |= BIT64(RSI_DATA_TRANSMIT_EVENT);
               break;
             } else if (status == RSI_ERROR_IN_BUFFER_ALLOCATION) //! TO-DO, add proper error code
             {
-              LOG_PRINT("\r\nCannot transmit %d bytes in small buffer configuration mode - conn%d\n",
-                        max_data_length,
-                        l_conn_id);
+              SL_DEBUG_LOG_V2(ERROR,
+                              "Cannot transmit %d bytes in small buffer configuration mode - conn%d",
+                              max_data_length,
+                              l_conn_id);
               rsi_ble_set_event_based_on_conn(l_conn_id, RSI_BLE_DISCONN_EVENT);
               break;
             } else {
-              LOG_PRINT("\r\nWrite without response failed with status = 0x%lx - conn%d \r\n", status, l_conn_id);
+              SL_DEBUG_LOG_V2(ERROR, "Write without response failed with status = 0x%lx - conn%d ", status, l_conn_id);
             }
           } else {
             wwr_count++;
@@ -1560,20 +1631,28 @@ void rsi_ble_task_on_conn(void *parameters)
           if (status != RSI_SUCCESS) {
             if (status == RSI_ERROR_BLE_DEV_BUF_FULL) {
 #if RSI_DEBUG_EN
-              LOG_PRINT("\r\nIndicate %d failed with buffer full error - conn%d \r\n", indication_cnt, l_conn_id);
+              SL_DEBUG_LOG_V2(ERROR,
+                              "Indicate %d failed with buffer full error - conn%d \r\n",
+                              indication_cnt,
+                              l_conn_id);
 #endif
               rsi_ble_clear_event_based_on_conn(l_conn_id, RSI_DATA_TRANSMIT_EVENT);
               rsi_current_state[l_conn_id] |= BIT64(RSI_DATA_TRANSMIT_EVENT);
               break;
             } else if (status == RSI_ERROR_IN_BUFFER_ALLOCATION) //! TO-DO, add proper error code
             {
-              LOG_PRINT("\r\nCannot transmit %d bytes in small buffer configuration mode - conn%d\n",
-                        max_data_length,
-                        l_conn_id);
+              SL_DEBUG_LOG_V2(ERROR,
+                              "Cannot transmit %d bytes in small buffer configuration mode - conn%d",
+                              max_data_length,
+                              l_conn_id);
               rsi_ble_set_event_based_on_conn(l_conn_id, RSI_BLE_DISCONN_EVENT);
               break;
             } else {
-              LOG_PRINT("\r\nIndication %d failed with error code %lx - conn%d\n", indication_cnt, status, l_conn_id);
+              SL_DEBUG_LOG_V2(ERROR,
+                              "Indication %d failed with error code %lx - conn%d",
+                              indication_cnt,
+                              status,
+                              l_conn_id);
             }
           } else {
             indication_cnt++;
@@ -1587,7 +1666,7 @@ void rsi_ble_task_on_conn(void *parameters)
           read_data1[1] = notfy_cnt >> 8;
 
 #if RSI_DEBUG_EN
-          LOG_PRINT("\r\nSending notify : %d\n", notfy_cnt);
+          SL_DEBUG_LOG_V2(INFO, "Sending notify : %d\r\n", notfy_cnt);
 #endif
           //! set the local attribute value.
           status = rsi_ble_notify_value(rsi_connected_dev_addr,
@@ -1597,24 +1676,25 @@ void rsi_ble_task_on_conn(void *parameters)
           if (status != RSI_SUCCESS) {
             if (status == RSI_ERROR_BLE_DEV_BUF_FULL) {
 #if RSI_DEBUG_EN
-              LOG_PRINT("\r\nNotify %d failed with buffer full error - conn%d \r\n", notfy_cnt, l_conn_id);
+              SL_DEBUG_LOG_V2(ERROR, "Notify %d failed with buffer full error - conn%d \r\n", notfy_cnt, l_conn_id);
 #endif
               rsi_ble_clear_event_based_on_conn(l_conn_id, RSI_DATA_TRANSMIT_EVENT);
               rsi_current_state[l_conn_id] |= BIT64(RSI_DATA_TRANSMIT_EVENT);
               break;
             } else if (status == RSI_ERROR_IN_BUFFER_ALLOCATION) //! TO-DO, add proper error code
             {
-              LOG_PRINT("\r\nCannot transmit %d bytes in small buffer configuration mode - conn%d\n",
-                        max_data_length,
-                        l_conn_id);
+              SL_DEBUG_LOG_V2(ERROR,
+                              "Cannot transmit %d bytes in small buffer configuration mode - conn%d",
+                              max_data_length,
+                              l_conn_id);
               rsi_ble_set_event_based_on_conn(l_conn_id, RSI_BLE_DISCONN_EVENT);
               break;
             } else {
-              LOG_PRINT("\r\nNotify %d failed with error code %lx  - conn%d\n", notfy_cnt, status, l_conn_id);
+              SL_DEBUG_LOG_V2(ERROR, "Notify %d failed with error code %lx  - conn%d", notfy_cnt, status, l_conn_id);
             }
           } else {
 #if RSI_DEBUG_EN
-            LOG_PRINT("\r\nNotify %d success - conn%d \r\n", notfy_cnt, l_conn_id);
+            SL_DEBUG_LOG_V2(INFO, "Notify %d success - conn%d ", notfy_cnt, l_conn_id);
 #endif
             notfy_cnt++;
           }
@@ -1624,7 +1704,7 @@ void rsi_ble_task_on_conn(void *parameters)
         //! To receive notifications from remote device, set the attribute value
         if (notify_handle_found && ble_conn_conf->rx_notifications) {
           uint8_t notify_data[2] = { 1, 0 };
-          LOG_PRINT("\r\nIn receive notification event - conn%d \n", l_conn_id);
+          SL_DEBUG_LOG_V2(INFO, "In receive notification event - conn%d \r\n", l_conn_id);
           //! clear the served event
           rsi_ble_clear_event_based_on_conn(l_conn_id, RSI_DATA_RECEIVE_EVENT);
           status = rsi_ble_set_att_value_async(rsi_connected_dev_addr, //enable the notifications
@@ -1633,18 +1713,18 @@ void rsi_ble_task_on_conn(void *parameters)
                                                notify_data);
           if (status != RSI_SUCCESS) {
             if (status == RSI_ERROR_BLE_DEV_BUF_FULL) {
-              LOG_PRINT("\r\nNotify failed with buffer error - conn%d \r\n", l_conn_id);
+              SL_DEBUG_LOG_V2(ERROR, "Notify failed with buffer error - conn%d \r\n", l_conn_id);
               rsi_current_state[l_conn_id] |= BIT64(RSI_DATA_RECEIVE_EVENT);
               break;
             } else {
-              LOG_PRINT("\r\nNotify value failed with status = %lx - conn%d \r\n", status, l_conn_id);
+              SL_DEBUG_LOG_V2(ERROR, "Notify value failed with status = %lx - conn%d \r\n", status, l_conn_id);
             }
           }
         }
         //! Transmit GATT indications to remote device
         else if (indication_handle_found && ble_conn_conf->rx_indications) {
           uint8_t indicate_data[2] = { 2, 0 };
-          LOG_PRINT("\r\nIn receive indication event - conn%d \n", l_conn_id);
+          SL_DEBUG_LOG_V2(INFO, "In receive indication event - conn%d \r\n", l_conn_id);
           rsi_ble_clear_event_based_on_conn(l_conn_id, RSI_DATA_RECEIVE_EVENT);
           status = rsi_ble_set_att_value_async(rsi_connected_dev_addr, //enable the indications
                                                indication_handle + 1,
@@ -1652,11 +1732,11 @@ void rsi_ble_task_on_conn(void *parameters)
                                                indicate_data);
           if (status != RSI_SUCCESS) {
             if (status == RSI_ERROR_BLE_DEV_BUF_FULL) {
-              LOG_PRINT("\r\nIndication failed with buffer error - conn%d \r\n", l_conn_id);
+              SL_DEBUG_LOG_V2(ERROR, "Indication failed with buffer error - conn%d \r\n", l_conn_id);
               rsi_current_state[l_conn_id] |= BIT64(RSI_DATA_RECEIVE_EVENT);
               break;
             } else {
-              LOG_PRINT("\r\nIndication failed with status = %lx - conn%d \r\n", status, l_conn_id);
+              SL_DEBUG_LOG_V2(ERROR, "Indication failed with status = %lx - conn%d \r\n", status, l_conn_id);
             }
           }
         }
@@ -1668,7 +1748,7 @@ void rsi_ble_task_on_conn(void *parameters)
         if (ble_conn_conf->tx_write) {
           rsi_ble_set_event_based_on_conn(l_conn_id, RSI_DATA_TRANSMIT_EVENT);
 #if RSI_DEBUG_EN
-          LOG_PRINT("\r\nWrite response received - conn%d\n", l_conn_id);
+          SL_DEBUG_LOG_V2(INFO, "Write response received - conn%d\r\n", l_conn_id);
 #endif
         }
       } break;
@@ -1678,7 +1758,7 @@ void rsi_ble_task_on_conn(void *parameters)
         if (ble_conn_conf->tx_indications) {
           rsi_ble_set_event_based_on_conn(l_conn_id, RSI_DATA_TRANSMIT_EVENT);
 #if RSI_DEBUG_EN
-          LOG_PRINT("\r\nIn rsi_ble_on_event_indication_confirmation event\n");
+          SL_DEBUG_LOG_V2(INFO, "In rsi_ble_on_event_indication_confirmation event\r\n");
 #endif
         }
       } break;
@@ -1686,7 +1766,7 @@ void rsi_ble_task_on_conn(void *parameters)
       case RSI_BLE_READ_REQ_EVENT: {
         //! event invokes when read event received
 
-        LOG_PRINT("\r\nRead request initiated by remote device - conn%d \n", l_conn_id);
+        SL_DEBUG_LOG_V2(INFO, "Read request initiated by remote device - conn%d \r\n", l_conn_id);
         //! clear the served event
         rsi_ble_clear_event_based_on_conn(l_conn_id, RSI_BLE_READ_REQ_EVENT);
 
@@ -1707,19 +1787,22 @@ void rsi_ble_task_on_conn(void *parameters)
           status = rsi_ble_gatt_read_response(rsi_connected_dev_addr, 0, handle, 0, (sizeof(read_data1)), read_data1);
         }
         if (status != RSI_SUCCESS) {
-          LOG_PRINT("\r\nRead response failed, error:0x%lx - conn%d \r\n", status, l_conn_id);
+          SL_DEBUG_LOG_V2(ERROR, "Read response failed, error:0x%lx - conn%d \r\n", status, l_conn_id);
         } else {
-          LOG_PRINT("\r\nResponse to read request initiated by remote device was successful - conn%d \n", l_conn_id);
+          SL_DEBUG_LOG_V2(INFO,
+                          "Response to read request initiated by remote device was successful - conn%d ",
+                          l_conn_id);
         }
 
       } break;
       case RSI_BLE_MTU_EVENT: {
         //! event invokes when MTU event received
         rsi_6byte_dev_address_to_ascii(str_remote_address, rsi_ble_conn_info[l_conn_id].app_ble_mtu_event.dev_addr);
-        LOG_PRINT("\r\nMTU size from remote device(%s), %d - conn%d\r\n",
-                  str_remote_address,
-                  rsi_ble_conn_info[l_conn_id].app_ble_mtu_event.mtu_size,
-                  l_conn_id);
+        SL_DEBUG_LOG_V2(INFO,
+                        "MTU size from remote device(%s), %d - conn%d",
+                        (uintptr_t)str_remote_address,
+                        rsi_ble_conn_info[l_conn_id].app_ble_mtu_event.mtu_size,
+                        l_conn_id);
         //! clear the served event
         rsi_ble_clear_event_based_on_conn(l_conn_id, RSI_BLE_MTU_EVENT);
         mtu_exchange_done = 1;
@@ -1730,15 +1813,15 @@ void rsi_ble_task_on_conn(void *parameters)
       case RSI_BLE_SCAN_RESTART_EVENT: {
         //! clear the served event
         rsi_ble_clear_event_based_on_conn(l_conn_id, RSI_BLE_SCAN_RESTART_EVENT);
-        LOG_PRINT("\r\nIn Scan Re-Start evt \r\n");
+        SL_DEBUG_LOG_V2(INFO, "In Scan Re-Start evt \r\n");
         status = rsi_ble_stop_scanning();
         if (status != RSI_SUCCESS) {
-          LOG_PRINT("\r\nScanning stop failed, cmd status = %lx - conn%d\n", status, l_conn_id);
+          SL_DEBUG_LOG_V2(ERROR, "Scanning stop failed, cmd status = %lx - conn%d\r\n", status, l_conn_id);
         }
-        LOG_PRINT("\r\n Restarting scanning \n");
+        SL_DEBUG_LOG_V2(INFO, " Restarting scanning \r\n");
         status = rsi_ble_start_scanning();
         if (status != RSI_SUCCESS) {
-          LOG_PRINT("\r\nScanning start failed, cmd status = %lx - conn%d\n", status, l_conn_id);
+          SL_DEBUG_LOG_V2(ERROR, "Scanning start failed, cmd status = %lx - conn%d\r\n", status, l_conn_id);
           rsi_ble_set_event_based_on_conn(l_conn_id, RSI_BLE_SCAN_RESTART_EVENT);
         }
       } break;
@@ -1746,7 +1829,7 @@ void rsi_ble_task_on_conn(void *parameters)
         //!default ACCEPT the remote conn params request (0-ACCEPT, 1-REJECT)
         status = rsi_ble_conn_param_resp(rsi_ble_conn_info[l_conn_id].rsi_app_remote_device_conn_params.dev_addr, 0);
         if (status != RSI_SUCCESS) {
-          LOG_PRINT("\nConn param resp status: 0x%lX\r\n", status);
+          SL_DEBUG_LOG_V2(INFO, "Conn param resp status: 0x%lX\r\n", status);
         }
         //! remote device conn params request
         //! clear the conn params request event.
@@ -1763,7 +1846,7 @@ void rsi_ble_task_on_conn(void *parameters)
                                   RX_PHY_RATE,
                                   CODDED_PHY_RATE);
           if (status != RSI_SUCCESS) {
-            LOG_PRINT("\r\nFailed to cancel the connection request: 0x%lx \r\n - conn%d", status, l_conn_id);
+            SL_DEBUG_LOG_V2(ERROR, "Failed to cancel the connection request: 0x%lx  - conn%d", status, l_conn_id);
           }
         }
       } break;
@@ -1778,7 +1861,7 @@ void rsi_ble_task_on_conn(void *parameters)
         //! clear the served event
         rsi_ble_clear_event_based_on_conn(l_conn_id, RSI_BLE_SMP_REQ_EVENT);
 
-        LOG_PRINT("\r\nIn SMP request \r\n - conn%d \r\n", l_conn_id);
+        SL_DEBUG_LOG_V2(INFO, "In SMP request  - conn%d ", l_conn_id);
         if (ble_conn_conf->smp_enable) {
           smp_pairing_request_received = true;
 
@@ -1789,13 +1872,17 @@ void rsi_ble_task_on_conn(void *parameters)
                                                 RSI_BLE_SMP_IO_CAPABILITY,
                                                 MITM_ENABLE);
               if (status != RSI_SUCCESS) {
-                LOG_PRINT("\r\nRSI_BLE_SMP_REQ_EVENT: failed to initiate the SMP pairing process: 0x%lx \r\n - conn%d",
-                          status,
-                          l_conn_id);
+                SL_DEBUG_LOG_V2(ERROR,
+                                "RSI_BLE_SMP_REQ_EVENT: failed to initiate the SMP pairing process: 0x%lx  - conn%d",
+                                status,
+                                l_conn_id);
               } else {
                 smp_pairing_initated = true;
                 //rsi_6byte_dev_address_to_ascii(str_remote_address, rsi_connected_dev_addr);
-                LOG_PRINT("\r\nSMP pairing request initiated to %s - conn%d \r\n", str_remote_address, l_conn_id);
+                SL_DEBUG_LOG_V2(INFO,
+                                "SMP pairing request initiated to %s - conn%d ",
+                                (uintptr_t)str_remote_address,
+                                l_conn_id);
               }
             }
 
@@ -1813,7 +1900,7 @@ void rsi_ble_task_on_conn(void *parameters)
         //! clear the served event
         rsi_ble_clear_event_based_on_conn(l_conn_id, RSI_BLE_SMP_RESP_EVENT);
 
-        LOG_PRINT("\r\nIn SMP response - conn%d \r\n", l_conn_id);
+        SL_DEBUG_LOG_V2(INFO, "In SMP response - conn%d \r\n", l_conn_id);
         if (ble_conn_conf->smp_enable) {
           //! initiating the SMP pairing process
           status = rsi_ble_smp_pair_response(rsi_ble_conn_info[l_conn_id].rsi_ble_event_smp_resp.dev_addr,
@@ -1827,10 +1914,12 @@ void rsi_ble_task_on_conn(void *parameters)
         rsi_ble_clear_event_based_on_conn(l_conn_id, RSI_BLE_SMP_PASSKEY_EVENT);
 
 #if RSI_DEBUG_EN
-        LOG_PRINT("\r\nInsmp passkey - conn%d \r\n", l_conn_id);
+        SL_DEBUG_LOG_V2(INFO, "Insmp passkey - conn%d \r\n", l_conn_id);
 #endif
 
-        LOG_PRINT("\r\nIn smp_passkey - str_remote_address : %s\r\n", rsi_ble_conn_info[l_conn_id].remote_dev_addr);
+        SL_DEBUG_LOG_V2(INFO,
+                        "In smp_passkey - str_remote_address : %s",
+                        (uintptr_t)rsi_ble_conn_info[l_conn_id].remote_dev_addr);
 
         //! initiating the SMP pairing process
         status =
@@ -1840,12 +1929,13 @@ void rsi_ble_task_on_conn(void *parameters)
         //! clear the served event
         rsi_ble_clear_event_based_on_conn(l_conn_id, RSI_BLE_SMP_PASSKEY_DISPLAY_EVENT);
 #if RSI_DEBUG_EN
-        LOG_PRINT("\r\nIn SMP pass key display - conn%d \r\n", l_conn_id);
+        SL_DEBUG_LOG_V2(INFO, "In SMP pass key display - conn%d \r\n", l_conn_id);
 #endif
 
-        LOG_PRINT("\r\nremote addr: %s, passkey: %s \r\n",
-                  rsi_ble_conn_info[l_conn_id].remote_dev_addr,
-                  rsi_ble_conn_info[l_conn_id].rsi_ble_smp_passkey_display.passkey);
+        SL_DEBUG_LOG_V2(INFO,
+                        "remote addr: %s, passkey: %s ",
+                        (uintptr_t)rsi_ble_conn_info[l_conn_id].remote_dev_addr,
+                        (uintptr_t)rsi_ble_conn_info[l_conn_id].rsi_ble_smp_passkey_display.passkey);
       } break;
       case RSI_BLE_LTK_REQ_EVENT: {
         //! event invokes when disconnection was completed
@@ -1853,26 +1943,26 @@ void rsi_ble_task_on_conn(void *parameters)
         //! clear the served event
         rsi_ble_clear_event_based_on_conn(l_conn_id, RSI_BLE_LTK_REQ_EVENT);
 
-        LOG_PRINT("\r\nIn LTK  request - conn%d \r\n", l_conn_id);
+        SL_DEBUG_LOG_V2(INFO, "In LTK  request - conn%d \r\n", l_conn_id);
 
         if (0) /* ((rsi_ble_conn_info[l_conn_id].rsi_le_ltk_resp.localediv == l_rsi_encryption_enabled.localediv)
 					&& !((memcmp(rsi_ble_conn_info[l_conn_id].rsi_le_ltk_resp.localrand,
 							l_rsi_encryption_enabled.localrand, 8))))*/
         {
-          LOG_PRINT("\r\nPositive reply\n");
+          SL_DEBUG_LOG_V2(INFO, "Positive reply\r\n");
           //! give le ltk req reply cmd with positive reply
           status = rsi_ble_ltk_req_reply(rsi_ble_conn_info[l_conn_id].rsi_le_ltk_resp.dev_addr,
                                          1,
                                          l_rsi_encryption_enabled.localltk);
           if (status != RSI_SUCCESS) {
-            LOG_PRINT("\r\nFailed to restart SMP pairing with status: 0x%lx - conn%d\r\n", status, l_conn_id);
+            SL_DEBUG_LOG_V2(ERROR, "Failed to restart SMP pairing with status: 0x%lx - conn%d\r\n", status, l_conn_id);
           }
         } else {
-          LOG_PRINT("\r\nNnegative reply\n");
+          SL_DEBUG_LOG_V2(INFO, "Nnegative reply\r\n");
           //! give le ltk req reply cmd with negative reply
           status = rsi_ble_ltk_req_reply(rsi_ble_conn_info[l_conn_id].rsi_le_ltk_resp.dev_addr, 0, NULL);
           if (status != RSI_SUCCESS) {
-            LOG_PRINT("\r\nFailed to restart SMP pairing with status: 0x%lx\r\n", status);
+            SL_DEBUG_LOG_V2(ERROR, "Failed to restart SMP pairing with status: 0x%lx\r\n", status);
           }
         }
       } break;
@@ -1881,12 +1971,13 @@ void rsi_ble_task_on_conn(void *parameters)
         //! clear the served event
         rsi_ble_clear_event_based_on_conn(l_conn_id, RSI_BLE_SC_PASSKEY_EVENT);
 
-        LOG_PRINT("\r\nIn SMP sc passkey event - conn%d \r\n", l_conn_id);
+        SL_DEBUG_LOG_V2(INFO, "In SMP sc passkey event - conn%d \r\n", l_conn_id);
 
-        LOG_PRINT("\r\nIn passkey event, remote addr: %s, passkey: %06ld - conn%d \r\n",
-                  rsi_ble_conn_info[l_conn_id].remote_dev_addr,
-                  rsi_ble_conn_info[l_conn_id].rsi_event_sc_passkey.passkey,
-                  l_conn_id);
+        SL_DEBUG_LOG_V2(INFO,
+                        "In passkey event, remote addr: %s, passkey: %06ld - conn%d ",
+                        (uintptr_t)rsi_ble_conn_info[l_conn_id].remote_dev_addr,
+                        rsi_ble_conn_info[l_conn_id].rsi_event_sc_passkey.passkey,
+                        l_conn_id);
 
         rsi_ble_smp_passkey(rsi_ble_conn_info[l_conn_id].rsi_event_sc_passkey.dev_addr,
                             rsi_ble_conn_info[l_conn_id].rsi_event_sc_passkey.passkey);
@@ -1897,7 +1988,7 @@ void rsi_ble_task_on_conn(void *parameters)
         //! clear the served event
         rsi_ble_clear_event_based_on_conn(l_conn_id, RSI_BLE_SECURITY_KEYS_EVENT);
 
-        LOG_PRINT("\r\nIn SMP security keys event  - conn%d \r\n", l_conn_id);
+        SL_DEBUG_LOG_V2(INFO, "In SMP security keys event  - conn%d \r\n", l_conn_id);
 
       } break;
 
@@ -1907,9 +1998,10 @@ void rsi_ble_task_on_conn(void *parameters)
         //! clear the served event
         rsi_ble_clear_event_based_on_conn(l_conn_id, RSI_BLE_SMP_FAILED_EVENT);
 
-        LOG_PRINT("\r\nIn SMP failed remote address: %s - conn%d \r\n",
-                  rsi_ble_conn_info[l_conn_id].remote_dev_addr,
-                  l_conn_id);
+        SL_DEBUG_LOG_V2(ERROR,
+                        "In SMP failed remote address: %s - conn%d ",
+                        (uintptr_t)rsi_ble_conn_info[l_conn_id].remote_dev_addr,
+                        l_conn_id);
       }
 
       break;
@@ -1923,7 +2015,7 @@ void rsi_ble_task_on_conn(void *parameters)
         memcpy(&l_rsi_encryption_enabled,
                &rsi_ble_conn_info[l_conn_id].rsi_encryption_enabled,
                sizeof(rsi_bt_event_encryption_enabled_t));
-        LOG_PRINT("\r\nIn SMP encrypt event - conn%d \r\n", l_conn_id);
+        SL_DEBUG_LOG_V2(INFO, "In SMP encrypt event - conn%d \r\n", l_conn_id);
         smp_done = 1;
       } break;
       case RSI_BLE_GATT_ERROR: {
@@ -1950,9 +2042,10 @@ void rsi_ble_task_on_conn(void *parameters)
             rsi_ble_set_event_based_on_conn(l_conn_id, RSI_BLE_GATT_PROFILES);
           }
         } else {
-          LOG_PRINT("\r\nGATT ERROR REASON:0x%x - conn%d \n",
-                    *(uint16_t *)rsi_ble_conn_info[l_conn_id].rsi_ble_gatt_err_resp.error,
-                    l_conn_id);
+          SL_DEBUG_LOG_V2(ERROR,
+                          "GATT ERROR REASON:0x%x - conn%d ",
+                          *(uint16_t *)rsi_ble_conn_info[l_conn_id].rsi_ble_gatt_err_resp.error,
+                          l_conn_id);
         }
 
       } break;

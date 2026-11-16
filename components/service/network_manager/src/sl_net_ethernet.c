@@ -102,7 +102,6 @@ sl_status_t sli_net_ethernet_init(const sl_ethernet_config_t *configuration,
     .stack_size = ETHERNET_DRIVER_THREAD_STACK_SIZE,
     .priority   = 0,
     .tz_module  = 0,
-    .reserved   = 0,
   };
   osThreadNew((osThreadFunc_t)ethernet_driver_thread_main, workspace, &thread_attributes);
   //  sl_thread_init( &ethernet_driver_thread, "ethernet_driver_thread", ethernet_driver_thread_main, workspace, workspace->thread_stack, ETHERNET_DRIVER_THREAD_STACK_SIZE );

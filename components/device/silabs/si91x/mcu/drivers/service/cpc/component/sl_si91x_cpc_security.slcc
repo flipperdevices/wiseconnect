@@ -14,7 +14,7 @@ source:
 include:
   - path: "inc"
     file_list:
-    - path: "sl_si91x_cpc_security.h"
+      - path: "sl_si91x_cpc_security.h"
 provides:
   - name: sl_si91x_cpc_security
 requires:
@@ -26,6 +26,7 @@ requires:
   - name: mbedtls_gcm
   - name: mbedtls_aes
   - name: sl_si91x_psa_aes
+  - name: log_none
 
 template_contribution:
   - name: event_handler

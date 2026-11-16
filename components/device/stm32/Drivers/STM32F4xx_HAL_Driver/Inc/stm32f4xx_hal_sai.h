@@ -118,7 +118,7 @@ typedef struct
   uint32_t TriState;            /*!< Specifies the companding mode type.
                                      This parameter can be a value of @ref SAI_TRIState_Management             */
 
-  /* This part of the structure is automatically filled if your are using the high level intialisation
+  /* This part of the structure is automatically filled if your are using the high level initialization
      function HAL_SAI_InitProtocol                                                                             */
 
   uint32_t Protocol;        /*!< Specifies the SAI Block protocol.

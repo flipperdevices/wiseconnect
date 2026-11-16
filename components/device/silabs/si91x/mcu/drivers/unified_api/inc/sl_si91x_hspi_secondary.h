@@ -39,6 +39,7 @@ extern "C" {
 #include "rsi_rom_gpdma.h"
 #include "rsi_rom_clks.h"
 #include "sl_status.h"
+#include "sl_log_helper.h"
 
 /***************************************************************************/
 /**

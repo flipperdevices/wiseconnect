@@ -24,5 +24,6 @@ requires:
   - name: sl_i2c
   - name: sleeptimer
   - name: enum
+  - name: log_none
 provides:
   - name: sl_veml6035

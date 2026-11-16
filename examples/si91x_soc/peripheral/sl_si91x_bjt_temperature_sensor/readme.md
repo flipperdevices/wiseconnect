@@ -1,8 +1,8 @@
-# SI91x BJT Temperature Sensor Example
+# SiWx91x Platform BJT Temperature Sensor
 
 ## Table of Contents
 
-- [SL BJT TEMPERATURE SENSOR](#sl-bjt-temperature-sensor)
+- [SiWx91x Platform BJT Temperature Sensor](#platform-siwx91x-bjt-temperature-sensor)
   - [Table of Contents](#table-of-contents)
   - [Purpose/Scope](#purposescope)
   - [Overview](#overview)
@@ -19,14 +19,17 @@
     - [Pin Configuration](#pin-configuration)
   - [System Resource Usage](#system-resource-usage)
   - [Test the Application](#test-the-application)
+  - [Troubleshooting](#troubleshooting)
+  - [Resources](#resources)
+  - [Report Bugs/Support](#report-bugssupport)
 
 ## Purpose/Scope
 
-This application demonstrates how to use the SI91x Bipolar Junction Transistor (BJT) temperature sensor to measure die temperature. The example shows the complete process of configuring the Analog-to-Digital Converter (ADC), Operational Amplifier (OPAMP), and temperature sensor subsystems to convert the BJT voltage output into temperature readings in the range of -40°C to +125°C.
+This application demonstrates how to use the SiWx91x Bipolar Junction Transistor (BJT) temperature sensor to measure die temperature. The example shows the complete process of configuring the Analog-to-Digital Converter (ADC), Operational Amplifier (OPAMP), and temperature sensor subsystems to convert the BJT voltage output into temperature readings in the range of -40°C to +125°C.
 
 ## Overview
 
-The SI91x BJT temperature sensor is **not a standalone temperature sensor** but rather a **voltage output circuit on the die** that provides a temperature-dependent voltage. This voltage must be measured using the ADC and then converted to temperature using a calibration formula.
+The SiWx91x BJT temperature sensor is **not a standalone temperature sensor** but rather a **voltage output circuit on the die** that provides a temperature-dependent voltage. This voltage must be measured using the ADC and then converted to temperature using a calibration formula.
 
 **Key Points:**
 
@@ -39,7 +42,7 @@ The SI91x BJT temperature sensor is **not a standalone temperature sensor** but 
 
 ### What is the BJT Temperature Sensor?
 
-The BJT temperature sensor is a **temperature-dependent voltage source** built into the SI91x die. It works on the principle that the base-emitter voltage (Vbe) of a silicon bipolar junction transistor decreases linearly with temperature at approximately -2mV/°C.
+The BJT temperature sensor is a **temperature-dependent voltage source** built into the SiWx91x die. It works on the principle that the base-emitter voltage (Vbe) of a silicon bipolar junction transistor decreases linearly with temperature at approximately -2mV/°C.
 
 **Important:** This is not a digital temperature sensor like those found on EFR32 Series 2 devices. Instead, it's an analog voltage that must be:
 
@@ -53,7 +56,7 @@ Measuring the temperature involves the following steps:
 
 1. **Configure OPAMP as a Unity Gain Buffer**: The OPAMP provides impedance matching and signal conditioning.
 2. **Measure Band-gap Reference**: Read the stable ~1.2 V reference voltage via the ADC.
-3. **Measure BJT Output**: Read the temperature-dependent BJT voltage via the ADC.  
+3. **Measure BJT Output**: Read the temperature-dependent BJT voltage via the ADC.
 4. **Apply Calibration**: Use factory-stored eFuse values to correct for manufacturing variations.
 5. **Calculate Temperature**: Apply the conversion formula to get temperature in Celsius.
 
@@ -68,7 +71,7 @@ Measuring the temperature involves the following steps:
 ### Hardware Requirements
 
 - Windows PC
-- Silicon Labs Si917 Evaluation Kit [[BRD4002](https://www.silabs.com/development-tools/wireless/wireless-pro-kit-mainboard?tab=overview) + [BRD4338A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-rb4338a-wifi-6-bluetooth-le-soc-radio-board?tab=overview) / [BRD4342A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx91x-rb4342a-wifi-6-bluetooth-le-soc-radio-board?tab=overview) / [BRD4343A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4343a-wi-fi-6-bluetooth-le-8mb-flash-radio-board-for-module?tab=overview)]
+- Silicon Labs SiWx91x Evaluation Kit [[BRD4002](https://www.silabs.com/development-tools/wireless/wireless-pro-kit-mainboard?tab=overview) + [BRD4338A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-rb4338a-wifi-6-bluetooth-le-soc-radio-board?tab=overview) / [BRD4342A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx91x-rb4342a-wifi-6-bluetooth-le-soc-radio-board?tab=overview) / [BRD4343A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4343a-wi-fi-6-bluetooth-le-8mb-flash-radio-board-for-module?tab=overview) / [BRD4343C](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4343c-wi-fi-6-bluetooth-le-8mb-flash-radio-board-for-module?tab=overview)]
 - SiWx917 AC1 Module Explorer Kit [BRD2708A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-ek2708a-explorer-kit)
 
 ### Software Requirements
@@ -99,14 +102,31 @@ For details on the project folder structure, see the [WiSeConnect Examples](http
 
 The BJT temperature sensor requires specific configuration of the ADC and OPAMP subsystems. The following list describes the key parameters and their purposes:
 
-**Configure the following parameters in [`sl_si91x_bjt_temperature_sensor.c`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.1-content-for-docs/components/device/silabs/si91x/mcu/drivers/unified_api/src/sl_si91x_bjt_temperature_sensor.c) file:**
+**Configure the following parameters in [`sl_si91x_bjt_temperature_sensor.c`](https://github.com/SiliconLabs/wiseconnect/blob/v4.1.2-content-for-docs/components/device/silabs/si91x/mcu/drivers/unified_api/src/sl_si91x_bjt_temperature_sensor.c) file:**
 
-```c
-#define CHANNEL_NUMBER             0       // ADC channel number
-#define POS_IP_OPAMP               20      // OPAMP input selection for band-gap reference
-#define OPAMP_GAIN_OPAMP           51      // OPAMP gain configuration  
-#define OPAMP_CHANNEL              0       // OPAMP instance to use
-```
+- `CHANNEL_NUMBER`: ADC channel used for BJT temperature measurement. The BJT sensor is hardwired to ADC channel 0 and this value must not be changed. By default, it is set to 0.
+
+  ```c
+    #define CHANNEL_NUMBER             0       // ADC channel number
+  ```
+
+- `POS_IP_OPAMP`: ADC input selection that routes the band-gap reference through OPAMP1 to the ADC. This value must remain 20 for correct temperature measurement. By default, it is set to 20.
+
+  ```c
+    #define POS_IP_OPAMP               20      // OPAMP input selection for band-gap reference
+  ```
+
+- `OPAMP_GAIN_OPAMP`: OPAMP gain configuration. A value of 51 selects unity gain, which is required for accurate voltage buffering and calibration. By default, it is set to 51.
+
+  ```c
+    #define OPAMP_GAIN_OPAMP           51      // OPAMP gain configuration
+  ```
+
+- `OPAMP_CHANNEL`: OPAMP instance used for the temperature sensor. OPAMP1 (channel 0) is the only instance with the internal connections needed for this measurement. By default, it is set to 0.
+
+  ```c
+    #define OPAMP_CHANNEL              0       // OPAMP instance to use
+  ```
 
 **Parameter Explanations:**
 
@@ -119,11 +139,23 @@ The BJT temperature sensor requires specific configuration of the ADC and OPAMP 
 
 **Additional Internal Parameters (handled automatically by the driver):**
 
-```c
-#define POS_IP_BJT                 23      // ADC input for BJT sensor output (automatic)
-#define VREF_VALUE                 2.61f   // Default reference voltage (automatic)
-#define SAMPLING_RATE              9000    // ADC sampling rate (automatic)
-```
+- `POS_IP_BJT`: ADC input selection value that routes the BJT temperature sensor output to the ADC. This is handled automatically by the driver. By default, it is set to 23.
+
+  ```c
+    #define POS_IP_BJT                 23      // ADC input for BJT sensor output (automatic)
+  ```
+
+- `VREF_VALUE`: Default ADC reference voltage (in volts) used internally when computing the BJT and band-gap sample voltages. By default, it is set to 2.61f.
+
+  ```c
+    #define VREF_VALUE                 2.61f   // Default reference voltage (automatic)
+  ```
+
+- `SAMPLING_RATE`: ADC sampling rate (in samples per second) used internally for BJT temperature measurements. By default, it is set to 9000.
+
+  ```c
+    #define SAMPLING_RATE              9000    // ADC sampling rate (automatic)
+  ```
 
 **Why These Specific Values?**
 
@@ -225,6 +257,22 @@ Refer to the instructions [here](https://docs.silabs.com/wiseconnect/latest/wise
 > **Note:**
 >
 > - The temperature sensor measures **die temperature**, not ambient air temperature.
-> - For ambient measurements, ensure good thermal coupling between chip and environment.  
+> - For ambient measurements, ensure good thermal coupling between chip and environment.
 > - Interrupt handlers are implemented in the driver layer with user callbacks available.
 > - The abstraced APIs handle all low-level ADC configuration, OPAMP setup, and calibration automatically.
+
+## Troubleshooting
+
+- If the project does not build, ensure Simplicity Studio and the WiSeConnect extension are installed and the board is connected.
+- If the device is not detected, reinstall the connectivity firmware and check USB drivers.
+
+## Resources
+
+- [WiSeConnect Getting Started](https://docs.silabs.com/wiseconnect/latest/wiseconnect-getting-started/)
+- [WiSeConnect Examples](https://docs.silabs.com/wiseconnect/latest/wiseconnect-examples/)
+- [SiWx91x SoC Documentation](https://docs.silabs.com/wiseconnect/latest/)
+
+## Report Bugs/Support
+
+For issues and support, use the Silicon Labs Community or your normal support channel.
+

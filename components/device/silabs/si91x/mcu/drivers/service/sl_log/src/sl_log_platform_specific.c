@@ -11,6 +11,11 @@
 #include "sl_log_platform_specific.h"
 #include "sl_log_helper.h"
 #include "sl_si91x_ulp_timer.h"
+
+#ifdef SL_CATALOG_LOG_BACKEND_PROPRIETARY_PRESENT
+#include "sl_log_proprietary_config.h"
+#endif
+
 #define SL_SI91X_HOST_CORE_ID     0       // Host core identifier
 #define SL_SI91X_LOG_TIMER_FREQ   1000000 // 1 MHz timer frequency for microsecond resolution
 #define SL_SI91X_CAPTIVE_CORE_ID  1       // Captive core identifier
@@ -21,21 +26,84 @@
 #include "sl_si91x_constants.h"
 #include "sl_si91x_driver.h"
 #include "rsi_m4.h"
-#define SL_TIMESYNC_TURNAROUND_TIME 15      // Turn around time for timesync request from Captive core(TA) in us
-#define M4_REQ_TIME_STAMP_FROM_NWP  BIT(12) // M4 request to NWP for timestamp
-#define SL_SI91X_CC_COMMAND_TIMEOUT 10000   // 10 ms Timeout for command wait loop
-uint32_t sl_si91x_cc_timestamp = 0;         //Variable holding captive core timestamp
+#define SL_TIMESYNC_TURNAROUND_TIME 15 // Turn around time for timesync request from Captive core(TA) in us
+uint32_t sl_si91x_cc_timestamp = 0;    //Variable holding captive core timestamp
 uint32_t sl_si91x_log_host_timesync_address =
   (uint32_t)&sl_si91x_cc_timestamp; //Variable holding address of Captive core timestamp
 #endif
-
+#ifdef SL_CATALOG_SI91X_LOG_BACKEND_IOSTREAM_PRESENT
+#include "sl_iostream_init_instances.h"
+#include "sl_event_handler.h"
+#endif
 /*******************************************************************************
  *                               GLOBAL VARIABLES
  ******************************************************************************/
+bool is_timesync_done = false;
 int si91x_timestamp_delta;
+typedef __PACKED_STRUCT
+{
+  /** @brief Timestamp when the event was logged (in system timer units) */
+  uint32_t timestamp;
+  /** @brief Unique event identifier (pointer to format string or numeric ID) */
+  uint32_t event_id;
+  /** @brief Array of arguments associated with the event (up to
+   * SL_LOG_CONFIG_ARG items) */
+  uint32_t args[3];
+  /** @brief Number of valid arguments in the args array (0 to
+   * SL_LOG_CONFIG_ARG) */
+  uint8_t arg_count;
+  /** @brief Core identifier that generated the event (0 = host core) */
+  uint8_t core_id;
+  /** @brief Event flags - bits 1-7: log level, bit 0: event type (0=format
+   * string, 1=numeric) */
+  uint8_t flags;
+  /** @brief Version of the logging component that generated this event */
+  uint8_t version;
+}
+sl_log_nwp_event_t;
 
+/**
+* @brief Copy a packed NWP wire-format log record into a host ring-buffer slot.
+*
+* NWP uses @ref sl_log_nwp_event_t (packed, network layout). The M4 ring stores
+* @ref sl_log_event_t. Layouts are kept identical so the log pipeline matches;
+* This function serves as the dedicated mapping point from NWP to the ring 
+* buffer and documents the relationship between them.
+*/
+/*
+ * Build-time gating for the NWP-to-host event mapping:
+ *   - SL_LOG_CONFIG_MODE == SL_LOG_CONFIG_MODE_HOST: M4 forwards NWP events to the host PC,
+ *     so it must lift NWP wire-format records into the M4 ring buffer.
+ *   - SL_CATALOG_LOG_BACKEND_SYSTEMVIEW_PRESENT: SystemView backend surfaces NWP events
+ *     alongside M4 events on the trace, which requires the same lift.
+ *   - SL_CATALOG_SI91X_LOG_BACKEND_IOSTREAM_COMPACT_PRESENT && SL_CATALOG_IOSTREAM_RTT_SI91X_PRESENT:
+ *     IO Stream Compact over RTT is the only IO Stream variant that ingests NWP records into
+ *     the M4 ring buffer for compact RTT streaming. The Formatted backend renders strings from
+ *     M4 .log_fmt (NWP has no access to those format strings), and Compact over non-RTT
+ *     transports does not currently consume NWP events, so this path is compiled out for
+ *     those builds to avoid an unused-function warning.
+ */
+#if (defined(SL_LOG_CONFIG_MODE) && (SL_LOG_CONFIG_MODE == SL_LOG_CONFIG_MODE_HOST) \
+     || defined(SL_CATALOG_LOG_BACKEND_SYSTEMVIEW_PRESENT)                          \
+     || (defined(SL_CATALOG_SI91X_LOG_BACKEND_IOSTREAM_COMPACT_PRESENT)             \
+         && defined(SL_CATALOG_IOSTREAM_RTT_SI91X_PRESENT)))
+static void sli_sl_log_event_from_nwp(const sl_log_nwp_event_t *nwp, sl_log_event_t *out)
+{
+  out->timestamp = nwp->timestamp;
+  out->event_id  = nwp->event_id;
+  out->args[0]   = nwp->args[0];
+  out->args[1]   = nwp->args[1];
+  out->args[2]   = nwp->args[2];
+  out->arg_count = nwp->arg_count;
+  out->core_id   = nwp->core_id;
+  out->flags     = nwp->flags;
+  out->version   = nwp->version;
+}
+#endif
+
+#if (defined(SL_LOG_CONFIG_MODE) && (SL_LOG_CONFIG_MODE == SL_LOG_CONFIG_MODE_HOST))
 extern sl_log_backend_status_t sl_log_backend_status;
-
+#endif
 /**
  * @brief Start the platform timestamp counter used by the logging core.
  *
@@ -150,7 +218,8 @@ sl_status_t sl_log_hal_set_configuration(void *args, uint8_t core_id);
  *      appropriately.  
  *
  * @param[in] events  
- *   Pointer to an array of `sl_log_event_t` structures to be written.
+ *   Pointer to an array of @ref sl_log_nwp_event_t (NWP wire format); each entry
+ *   is converted into @ref sl_log_event_t in the ring buffer.
  *
  * @param[in] count  
  *   Number of events to write. Must be non-zero.
@@ -176,7 +245,7 @@ sl_status_t sl_log_hal_set_configuration(void *args, uint8_t core_id);
  * write and read indices are updated atomically relative to ISR-based backends.
  ******************************************************************************/
 
-sl_status_t sl_log_write_multiple_to_ring_buffer(const sl_log_event_t *events, uint32_t count);
+sl_status_t sl_log_write_multiple_to_ring_buffer(const sl_log_nwp_event_t *events, uint32_t count);
 
 /**
  * @brief   Core API structure.
@@ -234,6 +303,7 @@ sl_status_t sl_log_hal_start_timestamp_counter(void)
   // Start the timestamp counter from the host
   sl_status_t status = sl_si91x_ulp_timer_init(&ulp_timer_clk_handle);
   if (status != SL_STATUS_OK) {
+
     return status;
   }
   // Updating timer match-value
@@ -241,17 +311,23 @@ sl_status_t sl_log_hal_start_timestamp_counter(void)
   // match-value: 1second
   status = sl_si91x_ulp_timer_set_configuration(&sl_log_timer_handle);
   if (status != SL_STATUS_OK) {
+
     return status;
   }
   status = sl_si91x_ulp_timer_register_timeout_callback(ULP_TIMER_3, &timer_overflow_callback);
   if (status != SL_STATUS_OK) {
+
     return status;
   }
   // Starting Timer instance with default parameters
   status = sl_si91x_ulp_timer_start(ULP_TIMER_3);
   if (status != SL_STATUS_OK) {
+
     return status;
   }
+#if !defined(SLI_CAPTIVE_CORE_PRESENT) || (SLI_CAPTIVE_CORE_PRESENT != 1)
+  is_timesync_done = true;
+#endif
   return status;
 }
 
@@ -266,10 +342,12 @@ sl_status_t sl_log_hal_stop_timestamp_counter(void)
 
   status = sl_si91x_ulp_timer_stop(ULP_TIMER_3);
   if (status != SL_STATUS_OK) {
+
     return status;
   }
   status = sl_si91x_ulp_timer_unregister_timeout_callback(ULP_TIMER_3);
   if (status != SL_STATUS_OK) {
+
     return status;
   }
   return status;
@@ -283,39 +361,34 @@ sl_status_t sl_log_hal_stop_timestamp_counter(void)
  */
 uint32_t sl_log_hal_get_timestamp_count(uint8_t core_id)
 {
-  if (core_id == SL_SI91X_HOST_CORE_ID) {
-    return (TIMERS->MATCH_CTRL[SL_LOG_ULP_TIMER_INSTANCE].MCUULP_TMR_MATCH + si91x_timestamp_delta);
-  } else if (core_id == SL_SI91X_CAPTIVE_CORE_ID) {
+  switch (core_id) {
+    case SL_SI91X_HOST_CORE_ID:
+      if (is_timesync_done) {
+        return (TIMERS->MATCH_CTRL[SL_LOG_ULP_TIMER_INSTANCE].MCUULP_TMR_MATCH + si91x_timestamp_delta);
+      } else {
+        return 0;
+      }
+      break;
+
+    case SL_SI91X_CAPTIVE_CORE_ID:
 #if defined(SLI_CAPTIVE_CORE_PRESENT) && (SLI_CAPTIVE_CORE_PRESENT == 1)
-    volatile uint32_t current_count = TIMERS->MATCH_CTRL[SL_LOG_ULP_TIMER_INSTANCE].MCUULP_TMR_MATCH;
-    P2P_STATUS_REG |= M4_WAKEUP_TA;
-
-    while (!((P2P_STATUS_REG & TA_IS_ACTIVE)
-             && ((TIMERS->MATCH_CTRL[SL_LOG_ULP_TIMER_INSTANCE].MCUULP_TMR_MATCH - current_count)
-                 < SL_SI91X_CC_COMMAND_TIMEOUT)))
-      ; // Wait for NWP
-    if ((TIMERS->MATCH_CTRL[SL_LOG_ULP_TIMER_INSTANCE].MCUULP_TMR_MATCH - current_count)
-        > SL_SI91X_CC_COMMAND_TIMEOUT) {
-      return SL_STATUS_TIMEOUT;
-    }
-
-    M4SS_P2P_INTR_SET_REG = M4_REQ_TIME_STAMP_FROM_NWP;
-
-    current_count = TIMERS->MATCH_CTRL[SL_LOG_ULP_TIMER_INSTANCE].MCUULP_TMR_MATCH;
-    while (!((TASS_P2P_INTR_CLEAR_REG & M4_REQ_TIME_STAMP_FROM_NWP)
-             && ((TIMERS->MATCH_CTRL[SL_LOG_ULP_TIMER_INSTANCE].MCUULP_TMR_MATCH - current_count)
-                 < SL_SI91X_CC_COMMAND_TIMEOUT)))
-      ; // Wait for NWP ACK
-    if ((TIMERS->MATCH_CTRL[SL_LOG_ULP_TIMER_INSTANCE].MCUULP_TMR_MATCH - current_count)
-        > SL_SI91X_CC_COMMAND_TIMEOUT) {
-      return SL_STATUS_TIMEOUT;
-    }
-
-    clear_ta_to_m4_interrupt(M4_REQ_TIME_STAMP_FROM_NWP);
-
-    sl_si91x_host_clear_sleep_indicator();
-    return sl_si91x_cc_timestamp + SL_TIMESYNC_TURNAROUND_TIME;
+      /*
+       * PS2 note: Captive core (NWP) is powered down / unreachable in PS2,
+       * so sli_si91x_M4_TA_Timesync() returns a failure status. In that case
+       * we fall through and return 0 (no captive-core timestamp is available
+       * while the M4 is in PS2). A fresh timestamp can only be obtained after
+       * wake-up to PS3/PS4, when the captive core is reachable again and
+       * sli_si91x_M4_TA_Timesync() succeeds. Any NWP-originated log records
+       * captured during PS2 will therefore carry a 0 timestamp until sync is
+       * re-established.
+       */
+      if (sli_si91x_M4_TA_Timesync() == SL_STATUS_OK) {
+        return sl_si91x_cc_timestamp + SL_TIMESYNC_TURNAROUND_TIME;
+      }
 #endif
+      break;
+    default:
+      break;
   }
   return 0;
 }
@@ -341,14 +414,17 @@ sl_status_t sl_log_hal_pre_sleep_process(void *config)
 {
   sl_status_t status = SL_STATUS_OK;
   (void)config;
+  is_timesync_done          = false;
   sl_log_api_backend_t *api = sl_log_get_api_backend();
   api->backend_deinit();
   status = sl_si91x_ulp_timer_stop(ULP_TIMER_3);
   if (status != SL_STATUS_OK) {
+
     return status;
   }
   status = sl_si91x_ulp_timer_unregister_timeout_callback(ULP_TIMER_3);
   if (status != SL_STATUS_OK) {
+
     return status;
   }
   return status;
@@ -366,9 +442,16 @@ sl_status_t sl_log_hal_post_sleep_process(void *config)
   (void)config;
 
   sl_log_api_backend_t *api = sl_log_get_api_backend();
+#ifdef SL_CATALOG_SI91X_LOG_BACKEND_IOSTREAM_PRESENT
+  sl_iostream_init_instances_stage_1();
+  sl_iostream_init_instances_stage_2();
+#endif
   api->backend_init();
+
   sl_log_hal_start_timestamp_counter();
+
   sl_log_hal_timer_sync(NULL, SL_SI91X_CAPTIVE_CORE_ID);
+
   return SL_STATUS_OK;
 }
 /**
@@ -383,32 +466,36 @@ sl_status_t sl_log_hal_timer_sync(void *args, uint8_t core_id)
   (void)core_id;
   (void)args;
 #if defined(SLI_CAPTIVE_CORE_PRESENT) && (SLI_CAPTIVE_CORE_PRESENT == 1)
-  volatile uint32_t current_count = TIMERS->MATCH_CTRL[SL_LOG_ULP_TIMER_INSTANCE].MCUULP_TMR_MATCH;
-  P2P_STATUS_REG |= M4_WAKEUP_TA;
-
-  while (!((P2P_STATUS_REG & TA_IS_ACTIVE)
-           && ((TIMERS->MATCH_CTRL[SL_LOG_ULP_TIMER_INSTANCE].MCUULP_TMR_MATCH - current_count)
-               < SL_SI91X_CC_COMMAND_TIMEOUT)))
-    ; // Wait for NWP
-  if ((TIMERS->MATCH_CTRL[SL_LOG_ULP_TIMER_INSTANCE].MCUULP_TMR_MATCH - current_count) > SL_SI91X_CC_COMMAND_TIMEOUT) {
-    return SL_STATUS_TIMEOUT;
+  /*
+   * PS2 note: This routine relies on sli_si91x_M4_TA_Timesync() to exchange a
+   * timestamp with the captive core (NWP). In PS2 the NWP is powered down /
+   * unreachable, so the call returns a non-OK status, si91x_timestamp_delta is
+   * NOT updated, is_timesync_done stays false, and this function returns
+   * SL_STATUS_FAIL.
+   *
+   * Consequences while in PS2:
+   *   - sl_log_hal_get_timestamp_count(SL_SI91X_HOST_CORE_ID) returns 0
+   *     because is_timesync_done is false (host-side log events captured
+   *     during PS2 will carry a 0 timestamp).
+   *   - sl_log_hal_get_timestamp_count(SL_SI91X_CAPTIVE_CORE_ID) also
+   *     returns 0 for the same reason (no NWP-side timestamp is available).
+   *
+   * Re-sync sequence:
+   *   - sl_log_hal_pre_sleep_process() clears is_timesync_done before sleep.
+   *   - sl_log_hal_post_sleep_process() calls this function again after wake.
+   *     Once the NWP becomes reachable (i.e. the device is back in PS3/PS4),
+   *     sli_si91x_M4_TA_Timesync() succeeds, the delta is recomputed against
+   *     the local ULP timer match value, and is_timesync_done is set so that
+   *     subsequent host-core timestamp queries return valid values.
+   */
+  if (sli_si91x_M4_TA_Timesync() == SL_STATUS_OK) {
+    si91x_timestamp_delta = sl_si91x_cc_timestamp + SL_TIMESYNC_TURNAROUND_TIME
+                            - TIMERS->MATCH_CTRL[SL_LOG_ULP_TIMER_INSTANCE].MCUULP_TMR_MATCH;
+    is_timesync_done = true;
+    return SL_STATUS_OK;
   }
-  M4SS_P2P_INTR_SET_REG = M4_REQ_TIME_STAMP_FROM_NWP;
-  current_count         = TIMERS->MATCH_CTRL[SL_LOG_ULP_TIMER_INSTANCE].MCUULP_TMR_MATCH;
-  while (!((TASS_P2P_INTR_CLEAR_REG & M4_REQ_TIME_STAMP_FROM_NWP)
-           && ((TIMERS->MATCH_CTRL[SL_LOG_ULP_TIMER_INSTANCE].MCUULP_TMR_MATCH - current_count)
-               < SL_SI91X_CC_COMMAND_TIMEOUT)))
-    ; // Wait for NWP ACK
-  if ((TIMERS->MATCH_CTRL[SL_LOG_ULP_TIMER_INSTANCE].MCUULP_TMR_MATCH - current_count) > SL_SI91X_CC_COMMAND_TIMEOUT) {
-    return SL_STATUS_TIMEOUT;
-  }
-  clear_ta_to_m4_interrupt(M4_REQ_TIME_STAMP_FROM_NWP);
-
-  sl_si91x_host_clear_sleep_indicator();
-  si91x_timestamp_delta = sl_si91x_cc_timestamp + SL_TIMESYNC_TURNAROUND_TIME
-                          - TIMERS->MATCH_CTRL[SL_LOG_ULP_TIMER_INSTANCE].MCUULP_TMR_MATCH;
 #endif
-  return SL_STATUS_OK;
+  return SL_STATUS_FAIL;
 }
 
 /**
@@ -419,7 +506,14 @@ sl_status_t sl_log_hal_timer_sync(void *args, uint8_t core_id)
  */
 void sli_handle_nwp_log_packet(const uint8_t *data, uint16_t length)
 {
-  sl_log_write_multiple_to_ring_buffer((sl_log_event_t *)data, length / sizeof(sl_log_event_t));
+  if (data == NULL || length == 0) {
+    return;
+  }
+  if ((length % sizeof(sl_log_nwp_event_t)) != 0) {
+    return;
+  }
+  uint32_t n = (uint32_t)length / (uint32_t)sizeof(sl_log_nwp_event_t);
+  (void)sl_log_write_multiple_to_ring_buffer((const sl_log_nwp_event_t *)data, n);
 }
 
 /**
@@ -447,7 +541,34 @@ sl_status_t sl_log_hal_set_configuration(void *args, uint8_t core_id)
 {
   (void)args;
   (void)core_id;
-  return SL_STATUS_OK;
+  ulp_timer_config_t sl_log_timer_handle = {
+    .timer_num         = ULP_TIMER_3,
+    .timer_mode        = ULP_TIMER_MODE_PERIODIC,
+    .timer_type        = ULP_TIMER_TYP_1US,
+    .timer_match_value = 0xFFFFFFFF,
+    .timer_direction   = UP_COUNTER,
+  };
+
+  // Updating timer match-value
+  // Configuring timer instance parameters: mode-periodic, type-1us,
+  // match-value: 1second
+  sl_status_t status = sl_si91x_ulp_timer_set_configuration(&sl_log_timer_handle);
+  if (status != SL_STATUS_OK) {
+    return status;
+  }
+#ifdef SL_CATALOG_SI91X_LOG_BACKEND_IOSTREAM_PRESENT
+  sl_iostream_init_instances_stage_1();
+  sl_iostream_init_instances_stage_2();
+#endif
+  sl_log_hal_timer_sync(NULL, SL_SI91X_CAPTIVE_CORE_ID);
+  sl_log_api_backend_t *api = sl_log_get_api_backend();
+  if (api != NULL) {
+    api->backend_deinit();
+    api->backend_init();
+    return SL_STATUS_OK;
+  }
+
+  return SL_STATUS_FAIL;
 }
 /**
  * @brief Return pointer to the core API structure.
@@ -487,7 +608,8 @@ sl_log_api_core_t *sl_log_get_api_core(void)
  *      appropriately.  
  *
  * @param[in] events  
- *   Pointer to an array of `sl_log_event_t` structures to be written.
+ *   Pointer to an array of @ref sl_log_nwp_event_t (NWP wire format); each entry
+ *   is converted into @ref sl_log_event_t in the ring buffer.
  *
  * @param[in] count  
  *   Number of events to write. Must be non-zero.
@@ -513,12 +635,12 @@ sl_log_api_core_t *sl_log_get_api_core(void)
  * write and read indices are updated atomically relative to ISR-based backends.
  ******************************************************************************/
 
-sl_status_t sl_log_write_multiple_to_ring_buffer(const sl_log_event_t *events, uint32_t count)
+sl_status_t sl_log_write_multiple_to_ring_buffer(const sl_log_nwp_event_t *events, uint32_t count)
 {
   if (events == NULL || count == 0) {
     return SL_STATUS_INVALID_PARAMETER;
   }
-
+#if defined(SL_LOG_CONFIG_MODE) && (SL_LOG_CONFIG_MODE == SL_LOG_CONFIG_MODE_HOST)
   sl_log_ring_buffer_t *ring = sl_log_get_ring_buffer_config();
   const uint32_t N           = SL_LOG_NUMBER_OF_EVENTS;
 
@@ -545,17 +667,14 @@ sl_status_t sl_log_write_multiple_to_ring_buffer(const sl_log_event_t *events, u
 
   __enable_irq();
 
-  // ---- 2) Copy events outside critical section ----
-  uint32_t tail_space  = N - start_index;
-  uint32_t first_chunk = (count <= tail_space) ? count : tail_space;
-
-  if (first_chunk > 0) {
-    memcpy(&ring->sl_log_buffer[start_index], &events[0], first_chunk * sizeof(sl_log_event_t));
-  }
-
-  uint32_t remaining = count - first_chunk;
-  if (remaining > 0) {
-    memcpy(&ring->sl_log_buffer[0], &events[first_chunk], remaining * sizeof(sl_log_event_t));
+  // ---- 2) Copy NWP wire events into ring as sl_log_event_t (handles wrap) ----
+  uint32_t ring_idx = start_index;
+  for (uint32_t i = 0; i < count; i++) {
+    sli_sl_log_event_from_nwp(&events[i], &ring->buffer[ring_idx]);
+    ring_idx++;
+    if (ring_idx >= N) {
+      ring_idx = 0;
+    }
   }
 
   // ---- 3) Update event_count/read_index under IRQ-off ----
@@ -580,6 +699,26 @@ sl_status_t sl_log_write_multiple_to_ring_buffer(const sl_log_event_t *events, u
   }
 
   __enable_irq();
-
+#endif
+/*
+ * Forward NWP-side events into the active M4 backend only when that backend ingests
+ * NWP wire-format records:
+ *   - SystemView: NWP events are surfaced on the SystemView trace alongside M4 events.
+ *   - IO Stream Compact over RTT: NWP records are pulled into the M4 ring buffer for
+ *     compact RTT streaming.
+ * The Formatted backend cannot render NWP events (format strings live in M4 .log_fmt,
+ * unreachable from NWP), and Compact over non-RTT transports does not currently consume
+ * NWP events, so this path is compiled out for those builds.
+ */
+#if (defined(SL_CATALOG_LOG_BACKEND_SYSTEMVIEW_PRESENT)                 \
+     || (defined(SL_CATALOG_SI91X_LOG_BACKEND_IOSTREAM_COMPACT_PRESENT) \
+         && defined(SL_CATALOG_IOSTREAM_RTT_SI91X_PRESENT)))
+  sl_log_event_t buffer;
+  sl_log_api_backend_t *sl_log_backend_api = sl_log_get_api_backend();
+  for (uint32_t i = 0; i < count; i++) {
+    sli_sl_log_event_from_nwp(&events[i], &buffer);
+    sl_log_backend_api->backend_write((sl_log_event_t *)&buffer, 0, 1);
+  }
+#endif
   return SL_STATUS_OK;
 }

@@ -28,6 +28,9 @@
  *
  ******************************************************************************/
 
+#include <inttypes.h>
+#include <stdio.h>
+
 #include "sl_net.h"
 #include "app.h"
 #include "errno.h"
@@ -87,8 +90,8 @@
 #define TEMPERATURE_JSON_RESPONSE   "{\"temperature_celcius\": \"%0.2f\"}"
 #define LIGHT_JSON_RESPONSE         "{\"ambient_light_lux\": \"%0.2f\", \"white_light_lux\": \"%0.2f\"}"
 #define MOTION_SENSOR_JSON_RESPONSE "{\"x\": \"%0.2f\", \"y\": \"%0.2f\", \"z\": \"%0.2f\"}"
-#define HUMIDITY_JSON_RESPONSE      "{\"humidity_percentage\": \"%lu\"}"
-#define MICROPHONE_JSON_RESPONSE    "{\"microphone_decibel\": \"%lu\"}"
+#define HUMIDITY_JSON_RESPONSE      "{\"humidity_percentage\": \"%" PRIu32 "\"}"
+#define MICROPHONE_JSON_RESPONSE    "{\"microphone_decibel\": \"%" PRIu32 "\"}"
 #define STATUS_LED_JSON_RESPONSE    "{\"status_led\": \"%s\"}"
 
 #define PROVISIONING_LED_INTERVAL_MS (300)
@@ -177,12 +180,12 @@ void sensor_app_init(void)
 
   status = sl_http_server_init(&server_handle, &server_config);
   if (status != SL_STATUS_OK) {
-    printf("HTTP server init failed:%lx\r\n", status);
+    printf("HTTP server init failed:%x\r\n", (unsigned int)status);
     return;
   }
   status = sl_http_server_start(&server_handle);
   if (status != SL_STATUS_OK) {
-    printf("Server start fail:%lx\r\n", status);
+    printf("Server start fail:%x\r\n", (unsigned int)status);
     return;
   }
   printf("Sensor HTTP server started\r\n");
@@ -194,7 +197,7 @@ static sl_status_t light_request_handler(sl_http_server_t *handle, sl_http_serve
 {
   sl_http_server_response_t http_response = DEFAULT_HTTP_RESPONSE_METHOD_NOT_ALLOWED;
 
-  printf("Got request %s with data length : %lu\r\n", req->uri.path, req->request_data_length);
+  printf("Got request %s with data length : %" PRIu32 "\r\n", req->uri.path, req->request_data_length);
 
   if (req->type == SL_HTTP_REQUEST_GET) {
     char response_data[100] = { 0 };
@@ -220,7 +223,7 @@ static sl_status_t led_request_handler(sl_http_server_t *handle, sl_http_server_
   char response_data[100]                 = { 0 };
   bool rgb_states[RGB_LED_MAX]            = { false };
 
-  printf("Got request %s with data length : %lu\r\n", req->uri.path, req->request_data_length);
+  printf("Got request %s with data length : %" PRIu32 "\r\n", req->uri.path, req->request_data_length);
 
   switch (req->type) {
     case SL_HTTP_REQUEST_POST: {
@@ -303,7 +306,7 @@ static sl_status_t temperature_request_handler(sl_http_server_t *handle, sl_http
 {
   sl_http_server_response_t http_response = DEFAULT_HTTP_RESPONSE_METHOD_NOT_ALLOWED;
 
-  printf("Got request %s with data length : %lu\r\n", req->uri.path, req->request_data_length);
+  printf("Got request %s with data length : %" PRIu32 "\r\n", req->uri.path, req->request_data_length);
 
   if (req->type == SL_HTTP_REQUEST_GET) {
     char response_data[100] = { 0 };
@@ -332,7 +335,7 @@ static sl_status_t accelerometer_request_handler(sl_http_server_t *handle, sl_ht
     float y                 = 0.0f;
     float z                 = 0.0f;
 
-    printf("Got request %s with data length : %lu\r\n", req->uri.path, req->request_data_length);
+    printf("Got request %s with data length : %" PRIu32 "\r\n", req->uri.path, req->request_data_length);
 
     accelerometer_read(&x, &y, &z);
 
@@ -351,7 +354,7 @@ static sl_status_t gyroscope_request_handler(sl_http_server_t *handle, sl_http_s
 {
   sl_http_server_response_t http_response = DEFAULT_HTTP_RESPONSE_METHOD_NOT_ALLOWED;
 
-  printf("Got request %s with data length : %lu\r\n", req->uri.path, req->request_data_length);
+  printf("Got request %s with data length : %" PRIu32 "\r\n", req->uri.path, req->request_data_length);
 
   if (req->type == SL_HTTP_REQUEST_GET) {
     char response_data[100] = { 0 };
@@ -376,7 +379,7 @@ static sl_status_t humidity_request_handler(sl_http_server_t *handle, sl_http_se
 {
   sl_http_server_response_t http_response = DEFAULT_HTTP_RESPONSE_METHOD_NOT_ALLOWED;
 
-  printf("Got request %s with data length : %lu\r\n", req->uri.path, req->request_data_length);
+  printf("Got request %s with data length : %" PRIu32 "\r\n", req->uri.path, req->request_data_length);
 
   if (req->type == SL_HTTP_REQUEST_GET) {
     char response_data[100] = { 0 };
@@ -399,7 +402,7 @@ static sl_status_t microphone_request_handler(sl_http_server_t *handle, sl_http_
 {
   sl_http_server_response_t http_response = DEFAULT_HTTP_RESPONSE_METHOD_NOT_ALLOWED;
 
-  printf("Got request %s with data length : %lu\r\n", req->uri.path, req->request_data_length);
+  printf("Got request %s with data length : %" PRIu32 "\r\n", req->uri.path, req->request_data_length);
 
   if (req->type == SL_HTTP_REQUEST_GET) {
     char response_data[100]     = { 0 };
@@ -422,7 +425,7 @@ static sl_status_t provisioning_request_handler(sl_http_server_t *handle, sl_htt
 {
   sl_http_server_response_t http_response = DEFAULT_HTTP_RESPONSE_METHOD_NOT_ALLOWED;
 
-  printf("Got request %s with data length : %lu\r\n", req->uri.path, req->request_data_length);
+  printf("Got request %s with data length : %" PRIu32 "\r\n", req->uri.path, req->request_data_length);
 
   if (req->type == SL_HTTP_REQUEST_POST) {
     char response_data[100] = { 0 };
@@ -485,7 +488,7 @@ static sl_status_t all_sensors_request_handler(sl_http_server_t *handle, sl_http
     uint32_t humidity                = 0;
     uint32_t microphone_decibel      = 0;
 
-    printf("Got request %s with data length : %lu\r\n", req->uri.path, req->request_data_length);
+    printf("Got request %s with data length : %" PRIu32 "\r\n", req->uri.path, req->request_data_length);
 
     rgb_led_get_state(&red, &green, &blue);
     index = snprintf(current_response_data,
@@ -564,7 +567,7 @@ static sl_status_t status_led_request_handler(sl_http_server_t *handle, sl_http_
   sl_http_server_response_t http_response = DEFAULT_HTTP_RESPONSE_METHOD_NOT_ALLOWED;
   char response_data[100]                 = { 0 };
 
-  printf("Got request %s with data length : %lu\r\n", req->uri.path, req->request_data_length);
+  printf("Got request %s with data length : %" PRIu32 "\r\n", req->uri.path, req->request_data_length);
 
   switch (req->type) {
     case SL_HTTP_REQUEST_POST: {

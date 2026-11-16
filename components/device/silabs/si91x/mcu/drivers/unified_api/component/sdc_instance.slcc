@@ -41,6 +41,3 @@ template_contribution:
 requires:
   - name: sl_sdc
   - name: sl_adc
-documentation:
-    docset: wiseconnect
-    document: wiseconnect-api-reference-guide-si91x-peripherals/sdc

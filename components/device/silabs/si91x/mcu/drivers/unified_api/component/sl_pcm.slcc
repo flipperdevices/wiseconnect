@@ -30,7 +30,7 @@ source:
 include:
   - path: "inc"
     file_list:
-    - path: "sl_si91x_pcm.h"
+      - path: "sl_si91x_pcm.h"
 define:
   - name: SL_SI91X_PCM
 provides:
@@ -38,8 +38,6 @@ provides:
 requires:
   - name: sl_i2s
   - name: sl_dma
-documentation:
-    docset: wiseconnect
-    document: wiseconnect-api-reference-guide-si91x-peripherals/i2-s
+  - name: log_none
 ui_hints:
   visibility: never

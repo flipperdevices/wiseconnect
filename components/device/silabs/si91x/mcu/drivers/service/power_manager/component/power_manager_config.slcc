@@ -2,7 +2,7 @@ id: power_manager_config
 label: Power Manager Configuration
 package: platform_siwx91x
 description: >
-  Provides configuration for the peripheral enable/disable as well as the RAM retention. 
+  This component provides configuration for the peripheral enable/disable and RAM retention. 
   Supports the configuration of HP, ULP, and UULP peripherals.
   RAM configuration is provided either by size or by Bank number, the user can opt for anyone. 
   Priority is given to the RAM Bank number.

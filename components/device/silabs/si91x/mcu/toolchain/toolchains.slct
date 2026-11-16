@@ -83,11 +83,21 @@ schema:
     enum:
       - enabled
       - disabled
-  wiseconnect_link_time_optimization:
+  link_time_optimization:
     type: str
     enum:
       - enabled
       - disabled
+  llvm_compiler_option:
+    type: str
+  llvm_c_compiler_option:
+    type: str
+  llvm_c++_compiler_option:
+    type: str
+  llvm_assembler_option:
+    type: str
+  llvm_linker_option:
+    type: str
 exporter:
   - exporter_id: simplicity_studio
     setting:
@@ -97,6 +107,19 @@ exporter:
         value: "-g"
 
       - tool: makefile.arm.gcc.assembler
+        option: misc
+        action: append
+        value: "-x assembler-with-cpp"
+
+      - tool: makefile.arm.llvm.compiler.c
+        option: misc
+        action: append
+        value: "-g"
+      - tool: makefile.arm.llvm.compiler.cpp
+        option: misc
+        action: append
+        value: "-g"
+      - tool: makefile.arm.llvm.assembler
         option: misc
         action: append
         value: "-x assembler-with-cpp"
@@ -165,6 +188,18 @@ exporter:
             option: misc
             action: append
             value: "-Wl,--gc-sections"
+          - tool: makefile.arm.llvm.compiler.c
+            option: misc
+            action: append
+            value: "-ffunction-sections -fdata-sections"
+          - tool: makefile.arm.llvm.compiler.cpp
+            option: misc
+            action: append
+            value: "-ffunction-sections -fdata-sections"
+          - tool: makefile.arm.llvm.linker
+            option: misc
+            action: append
+            value: "-Wl,--gc-sections"
         disabled: []
       cmse:
         enabled:
@@ -188,6 +223,14 @@ exporter:
             option: iar.arm.toolchain.compiler.option.additionalUserOptions
             action: append
             value: "--cmse"
+          - tool: makefile.arm.llvm.compiler.c
+            option: misc
+            action: append
+            value: "-mcmse"
+          - tool: makefile.arm.llvm.compiler.cpp
+            option: misc
+            action: append
+            value: "-mcmse"
         disabled: []
       nano_c_libs:
         enabled:
@@ -210,6 +253,14 @@ exporter:
           - tool: linker
             option: nano_c_libs
             value: true
+          - tool: makefile.arm.llvm.compiler.c
+            option: misc
+            action: append
+            value: "--config=newlib-nano.cfg"
+          - tool: makefile.arm.llvm.compiler.cpp
+            option: misc
+            action: append
+            value: "--config=newlib-nano.cfg"
         disabled:
           - tool: linker
             option: nano_c_libs
@@ -230,6 +281,14 @@ exporter:
             value: "-mfp16-format=ieee"
           - tool: com.silabs.ide.si32.gcc.cdt.managedbuild.tool.gnu.cpp.compiler.base
             option: com.silabs.gnu.cpp.compiler.option.misc.otherlist
+            action: append
+            value: "-mfp16-format=ieee"
+          - tool: makefile.arm.llvm.compiler.c
+            option: misc
+            action: append
+            value: "-mfp16-format=ieee"
+          - tool: makefile.arm.llvm.compiler.cpp
+            option: misc
             action: append
             value: "-mfp16-format=ieee"
         disabled: []
@@ -295,12 +354,26 @@ exporter:
           - tool: compiler
             option: optimization
             value: size
+          - tool: makefile.arm.llvm.compiler.c
+            option: misc
+            action: append
+            value: "-Oz"
+          - tool: makefile.arm.llvm.compiler.cpp
+            option: misc
+            action: append
+            value: "-Oz"
       c_standard:
         - tool: compiler
           option: c_standard
           value: "{{value}}"
+        - tool: makefile.arm.llvm.compiler.c
+          option: c_standard
+          value: "{{value}}"
       cxx_standard:
         - tool: compiler
+          option: cxx_standard
+          value: "{{value}}"
+        - tool: makefile.arm.llvm.compiler.cpp
           option: cxx_standard
           value: "{{value}}"
       preinclude:
@@ -312,8 +385,23 @@ exporter:
           option: preinclude
           action: append
           value: "{{value}}"
+        - tool: makefile.arm.llvm.compiler.c
+          option: preinclude
+          action: append
+          value: "{{value}}"
+        - tool: makefile.arm.llvm.compiler.cpp
+          option: preinclude
+          action: append
+          value: "{{value}}"
+        - tool: makefile.arm.llvm.assembler
+          option: preinclude
+          action: append
+          value: "{{value}}"
       linkerfile:
         - tool: linker
+          option: linkerScript
+          value: "{{value}}"
+        - tool: makefile.arm.llvm.linker
           option: linkerScript
           value: "{{value}}"
       device_opn:
@@ -373,6 +461,35 @@ exporter:
           option: com.silabs.gnu.cpp.compiler.option.misc.otherlist
           action: append
           value: "{{value}}"
+      llvm_compiler_option:
+        - tool: makefile.arm.llvm.compiler.c
+          option: misc
+          action: append
+          value: "{{value}}"
+        - tool: makefile.arm.llvm.compiler.cpp
+          option: misc
+          action: append
+          value: "{{value}}"
+      llvm_c_compiler_option:
+        - tool: makefile.arm.llvm.compiler.c
+          option: misc
+          action: append
+          value: "{{value}}"
+      llvm_c++_compiler_option:
+        - tool: makefile.arm.llvm.compiler.cpp
+          option: misc
+          action: append
+          value: "{{value}}"
+      llvm_linker_option:
+        - tool: makefile.arm.llvm.linker
+          option: misc
+          action: append
+          value: "{{value}}"
+      llvm_assembler_option:
+        - tool: makefile.arm.llvm.assembler
+          option: misc
+          action: append
+          value: "{{value}}"
       gcc_linker_option:
         - tool: makefile.arm.gcc.linker
           option: misc
@@ -417,6 +534,14 @@ exporter:
             option: com.silabs.gnu.c.compiler.option.misc.otherlist
             action: append
             value: "-fno-builtin-printf"
+          - tool: makefile.arm.llvm.compiler.c
+            option: misc
+            action: append
+            value: "-fno-builtin-printf"
+          - tool: makefile.arm.llvm.compiler.cpp
+            option: misc
+            action: append
+            value: "-fno-builtin-printf"
         disabled: []
       no_builtin_sprintf:
         enabled:
@@ -428,8 +553,16 @@ exporter:
             option: com.silabs.gnu.c.compiler.option.misc.otherlist
             action: append
             value: "-fno-builtin-sprintf"
+          - tool: makefile.arm.llvm.compiler.c
+            option: misc
+            action: append
+            value: "-fno-builtin-sprintf"
+          - tool: makefile.arm.llvm.compiler.cpp
+            option: misc
+            action: append
+            value: "-fno-builtin-sprintf"
         disabled: []
-      wiseconnect_link_time_optimization:
+      link_time_optimization:
         enabled:
           - tool: makefile.arm.gcc.compiler
             option: misc
@@ -439,4 +572,16 @@ exporter:
             option: com.silabs.gnu.c.compiler.option.misc.otherlist
             action: append
             value: "-flto"
+          - tool: makefile.arm.llvm.compiler.c
+            option: misc
+            action: append
+            value: "-flto -fwhole-program-vtables"
+          - tool: makefile.arm.llvm.compiler.cpp
+            option: misc
+            action: append
+            value: "-flto -fwhole-program-vtables"
+          - tool: makefile.arm.llvm.linker
+            option: misc
+            action: append
+            value: "-flto -fwhole-program-vtables"
         disabled: []

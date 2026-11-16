@@ -35,6 +35,7 @@
 #include "rsi_bt_common.h"
 #include "rsi_bt_common_apis.h"
 #include "rsi_common_apis.h"
+#include "sl_constants.h"
 
 /*=======================================================================*/
 //   ! GLOBAL VARIABLES
@@ -147,7 +148,7 @@ uint8_t rsi_add_ble_conn_id(uint8_t *remote_dev_addr, uint8_t *remote_name, uint
   }
 
   if (conn_id == 0xff) {
-    LOG_PRINT("\r\n Dailed to add dev to connection buffer\n");
+    SL_DEBUG_LOG_V2(INFO, "Dailed to add dev to connection buffer\r\n");
   }
 
   return conn_id;

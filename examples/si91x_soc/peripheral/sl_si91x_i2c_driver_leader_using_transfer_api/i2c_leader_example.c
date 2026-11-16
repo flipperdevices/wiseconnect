@@ -81,23 +81,30 @@ void i2c_leader_example_init(void)
   // Initializing I2C instance (update i2c config-strucure name as per instance used)
   i2c_status = sl_i2c_driver_init(i2c_instance, &sl_i2c_config);
   if (i2c_status != SL_I2C_SUCCESS) {
-    DEBUGOUT("sl_i2c_driver_init : Invalid Parameters, Error Code : %u \n", i2c_status);
+    /* Note: All status messages in this example — both success and failure — are
+ * intentionally emitted via SL_PRINT_STRING_ERROR so that they remain visible
+ * on the console at the default log level. This is a demonstration choice, not
+ * a recommendation: in production code, ERROR severity should be reserved for
+ * actual failures, with successful operations logged via SL_PRINT_STRING_INFO
+ * (or SL_PRINT_STRING_DEBUG for verbose trace). */
+    SL_PRINT_STRING_ERROR("sl_i2c_driver_init : Invalid Parameters, Error Code : %u \n", i2c_status);
   } else {
-    DEBUGOUT("Successfully initialized and configured i2c leader\n");
+    SL_PRINT_STRING_ERROR("Successfully initialized and configured i2c leader\n");
   }
   // Configuring RX and TX FIFO thresholds
   i2c_status = sl_i2c_driver_configure_fifo_threshold(i2c_instance, I2C_TX_FIFO_THRESHOLD, I2C_RX_FIFO_THRESHOLD);
   if (i2c_status != SL_I2C_SUCCESS) {
-    DEBUGOUT("sl_i2c_driver_configure_fifo_threshold : Invalid Parameters, Error Code : %u \n", i2c_status);
+    SL_PRINT_STRING_ERROR("sl_i2c_driver_configure_fifo_threshold : Invalid Parameters, Error Code : %u \n",
+                          i2c_status);
   } else {
-    DEBUGOUT("Successfully configured i2c TX & RX FIFO thresholds\n");
+    SL_PRINT_STRING_ERROR("Successfully configured i2c TX & RX FIFO thresholds\n");
   }
   // Enabling combined format transfer, by enabling repeated start
   i2c_status = sl_i2c_driver_enable_repeated_start(i2c_instance, true);
   if (i2c_status != SL_I2C_SUCCESS) {
-    DEBUGOUT("sl_i2c_driver_enable_repeated_start : Invalid Parameters, Error Code : %u \n", i2c_status);
+    SL_PRINT_STRING_ERROR("sl_i2c_driver_enable_repeated_start : Invalid Parameters, Error Code : %u \n", i2c_status);
   } else {
-    DEBUGOUT("Successfully enabled repeated start\n");
+    SL_PRINT_STRING_ERROR("Successfully enabled repeated start\n");
   }
   // Generating a buffer with values that needs to be sent.
   for (uint32_t loop = INITIAL_VALUE; loop < I2C_BUFFER_SIZE; loop++) {
@@ -126,9 +133,9 @@ void i2c_leader_example_process_action(void)
         //  Validation for executing the API only once.
         i2c_status = sl_i2c_driver_transfer_data(i2c_instance, &i2c_transfer_config, FOLLOWER_I2C_ADDR);
         if (i2c_status != SL_I2C_SUCCESS) {
-          DEBUGOUT("sl_i2c_driver_transfer_data : Invalid Parameters, "
-                   "Error Code : %u \n",
-                   i2c_status);
+          SL_PRINT_STRING_ERROR("sl_i2c_driver_transfer_data : Invalid Parameters, "
+                                "Error Code : %u \n",
+                                i2c_status);
           // If error occurs due to timeout then application will retry sending data else not
           if (i2c_status != SL_I2C_TIMEOUT) {
             i2c_transfer_data_flag = false;
@@ -164,10 +171,10 @@ static void compare_data(void)
     }
   }
   if (data_index == I2C_BUFFER_SIZE) {
-    DEBUGOUT("Leader-Follower read-write Data comparison is successful, Test "
-             "Case Passed \n");
+    SL_PRINT_STRING_ERROR("Leader-Follower read-write Data comparison is successful, Test "
+                          "Case Passed \n");
   } else {
-    DEBUGOUT("Leader-Follower read-write Data comparison is not successful, "
-             "Test Case Failed \n");
+    SL_PRINT_STRING_ERROR("Leader-Follower read-write Data comparison is not successful, "
+                          "Test Case Failed \n");
   }
 }

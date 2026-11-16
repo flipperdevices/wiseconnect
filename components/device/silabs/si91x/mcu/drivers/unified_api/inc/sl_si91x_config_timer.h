@@ -34,7 +34,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
+#include "sl_log_helper.h"
 #include "sl_status.h"
 #include "rsi_ct.h"
 #include "sl_si91x_dma.h"

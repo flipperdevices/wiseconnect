@@ -50,32 +50,40 @@ void ps1_state_init(void)
   ps_wireless_shutdown();
   // PS2 State requirement is added, it transits to PS2 state.
   status = sl_si91x_power_manager_add_ps_requirement(SL_SI91X_POWER_MANAGER_PS2);
+
+  /* Note: All status messages in this example — both success and failure — are
+ * intentionally emitted via SL_PRINT_STRING_ERROR so that they remain visible
+ * on the console at the default log level. This is a demonstration choice, not
+ * a recommendation: in production code, ERROR severity should be reserved for
+ * actual failures, with successful operations logged via SL_PRINT_STRING_INFO
+ * (or SL_PRINT_STRING_DEBUG for verbose trace). */
+
   if (status != SL_STATUS_OK) {
     // If status is not OK, return with the error code.
-    DEBUGOUT("Error Code: 0x%lX, Power State Transition Failed \n", status);
+    SL_PRINT_STRING_ERROR("Error Code: 0x%lX, Power State Transition Failed \n", (unsigned long)status);
   }
-  DEBUGOUT("PS%d Active State \n", sl_si91x_power_manager_get_current_state());
+  SL_PRINT_STRING_ERROR("PS%d Active State \n", sl_si91x_power_manager_get_current_state());
   // Configure and initialize the ulp timer wakeup source
   set_ulp_timer_wakeup_source();
   // PS2 state requirement is removed.
   status = sl_si91x_power_manager_remove_ps_requirement(SL_SI91X_POWER_MANAGER_PS2);
   if (status != SL_STATUS_OK) {
     // If status is not OK, return with the error code.
-    DEBUGOUT("Error Code: 0x%lX, Power State Transition Failed \n", status);
+    SL_PRINT_STRING_ERROR("Error Code: 0x%lX, Power State Transition Failed \n", (unsigned long)status);
   }
-  DEBUGOUT("Current State: PS1 \n");
+  SL_PRINT_STRING_ERROR("Current State: PS1 \n");
   // PS1 State requirement is added, it transits to PS1 state.
   status = sl_si91x_power_manager_add_ps_requirement(SL_SI91X_POWER_MANAGER_PS1);
   if (status != SL_STATUS_OK) {
     // If status is not OK, return with the error code.
-    DEBUGOUT("Error Code: 0x%lX, Power State Transition Failed \n", status);
+    SL_PRINT_STRING_ERROR("Error Code: 0x%lX, Power State Transition Failed \n", (unsigned long)status);
   }
-  DEBUGOUT("PS%d Active State \n", sl_si91x_power_manager_get_current_state());
+  SL_PRINT_STRING_ERROR("PS%d Active State \n", sl_si91x_power_manager_get_current_state());
   // Clears ulp timer wakeup source
   clear_ulp_timer_wakeup_source();
-  DEBUGOUT("PS%d Sleep State\n", sl_si91x_power_manager_get_current_state());
+  SL_PRINT_STRING_ERROR("PS%d Sleep State\n", sl_si91x_power_manager_get_current_state());
   // Call the sleep function.
-  sl_si91x_power_manager_sleep();
+  sli_si91x_power_manager_sleep();
 }
 /*******************************************************************************
  * Configure and initialize the ulp timer wakeup source.
@@ -92,7 +100,7 @@ static void set_ulp_timer_wakeup_source(void)
   status = sl_si91x_ulp_timer_init(&sl_timer_clk_handle);
   if (status != SL_STATUS_OK) {
     // If status is not OK, display the error info.
-    DEBUGOUT("sl_si91x_ulp_timer_init failed, Error Code: 0x%lX \n", status);
+    SL_PRINT_STRING_ERROR("sl_si91x_ulp_timer_init failed, Error Code: 0x%lX \n", (unsigned long)status);
     return;
   }
   // Match value is set to 2 seconds.
@@ -101,21 +109,25 @@ static void set_ulp_timer_wakeup_source(void)
   status = sl_si91x_ulp_timer_set_configuration(&sl_timer_handle_timer0);
   if (status != SL_STATUS_OK) {
     // If status is not OK, display the error info.
-    DEBUGOUT("sl_si91x_ulp_timer_set_configuration failed, Error Code: 0x%lX \n", status);
+    SL_PRINT_STRING_ERROR("sl_si91x_ulp_timer_set_configuration failed, Error Code: 0x%lX \n", (unsigned long)status);
     return;
   }
   // Callback is registered to enable the timer interrupt.
   status = sl_si91x_ulp_timer_register_timeout_callback(ULP_TIMER_INSTANCE, ulp_timer_callback);
   if (status != SL_STATUS_OK) {
     // If status is not OK, display the error info.
-    DEBUGOUT("sl_si91x_ulp_timer_register_timeout_callback failed, Error Code: 0x%lX \n", status);
+    SL_PRINT_STRING_ERROR("sl_si91x_ulp_timer_register_timeout_callback "
+                          "failed, Error Code: 0x%lX \n",
+                          (unsigned long)status);
     return;
   }
   // ULP based wakeup source is selected.
   status = sl_si91x_power_manager_set_wakeup_sources(SL_SI91X_POWER_MANAGER_ULPSS_WAKEUP, true);
   if (status != SL_STATUS_OK) {
     // If status is not OK, display the error info.
-    DEBUGOUT("sl_si91x_power_manager_set_wakeup_sources failed, Error Code: 0x%lX \n", status);
+    SL_PRINT_STRING_ERROR("sl_si91x_power_manager_set_wakeup_sources failed, "
+                          "Error Code: 0x%lX \n",
+                          (unsigned long)status);
     return;
   }
 
@@ -123,7 +135,7 @@ static void set_ulp_timer_wakeup_source(void)
   status = sl_si91x_ulp_timer_start(ULP_TIMER_INSTANCE);
   if (status != SL_STATUS_OK) {
     // If status is not OK, display the error info.
-    DEBUGOUT("sl_si91x_ulp_timer_start failed, Error Code: 0x%lX \n", status);
+    SL_PRINT_STRING_ERROR("sl_si91x_ulp_timer_start failed, Error Code: 0x%lX \n", (unsigned long)status);
     return;
   }
 }
@@ -140,21 +152,25 @@ static void clear_ulp_timer_wakeup_source(void)
   status = sl_si91x_ulp_timer_stop(ULP_TIMER_INSTANCE);
   if (status != SL_STATUS_OK) {
     // If status is not OK, display the error info.
-    DEBUGOUT("sl_si91x_ulp_timer_stop failed, Error Code: 0x%lX \n", status);
+    SL_PRINT_STRING_ERROR("sl_si91x_ulp_timer_stop failed, Error Code: 0x%lX \n", (unsigned long)status);
     return;
   }
   // After waking up, ulp timer callback is unregistered.
   status = sl_si91x_ulp_timer_unregister_timeout_callback(ULP_TIMER_INSTANCE);
   if (status != SL_STATUS_OK) {
     // If status is not OK, display the error info.
-    DEBUGOUT("sl_si91x_ulp_timer_unregister_timeout_callback failed, Error Code: 0x%lX \n", status);
+    SL_PRINT_STRING_ERROR("sl_si91x_ulp_timer_unregister_timeout_callback "
+                          "failed, Error Code: 0x%lX \n",
+                          (unsigned long)status);
     return;
   }
   // Once the sleep-wakeup is completed, ulp based wakeup source is removed.
   status = sl_si91x_power_manager_set_wakeup_sources(SL_SI91X_POWER_MANAGER_ULPSS_WAKEUP, false);
   if (status != SL_STATUS_OK) {
     // If status is not OK, display the error info.
-    DEBUGOUT("sl_si91x_power_manager_set_wakeup_sources failed, Error Code: 0x%lX \n", status);
+    SL_PRINT_STRING_ERROR("sl_si91x_power_manager_set_wakeup_sources failed, "
+                          "Error Code: 0x%lX \n",
+                          (unsigned long)status);
     return;
   }
 }

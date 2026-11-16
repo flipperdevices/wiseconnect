@@ -15,6 +15,7 @@
  *
  ******************************************************************************/
 #include "psa_multithread_app.h"
+#include <inttypes.h>
 #include "sl_si91x_crypto_thread.h"
 #include "psa/crypto.h"
 #include "app.h"
@@ -60,9 +61,9 @@ void test_psa_sha_256()
 
   // Compare with the expected result
   if (ret != 0) {
-    printf("\n SHA 256 Operation Failed Status 0x%lx \n", ret);
+    printf("\n SHA 256 Operation Failed Status 0x%" PRIx32 " \n", ret);
   } else if (ret == 0 && memcmp(hash_buf, expect_sha256_hash, sizeof(expect_sha256_hash)) == 0) {
-    printf("\n SHA 256 Operation Success Status 0x%lx \n", ret);
+    printf("\n SHA 256 Operation Success Status 0x%" PRIx32 " \n", ret);
   } else {
     printf("\n SHA 256 Compare with expected value failed \n");
   }
@@ -93,7 +94,7 @@ void test_psa_aes(psa_algorithm_t alg)
   if ((status == 0) && (memcmp(encryption_output, res_test_data, sizeof(msg_test_data)) == 0)) {
     printf("\n Encryption Success \r\n");
   } else {
-    printf("\n Encryption Failed with error: %ld\r\n", status);
+    printf("\n Encryption Failed with error: %" PRId32 "\r\n", status);
   }
 
   /* Decryption */
@@ -107,13 +108,13 @@ void test_psa_aes(psa_algorithm_t alg)
   if ((status == 0) && (memcmp(decryption_output, msg_test_data, sizeof(decryption_output)) == 0)) {
     printf("\n Decryption Success \n");
   } else {
-    printf("\n Decryption Failed with error: %ld\r\n", status);
+    printf("\n Decryption Failed with error: %" PRId32 "\r\n", status);
   }
 
   /* Destroy a volatile plain key for AES */
   status = psa_destroy_key(key_id);
   if (status != PSA_SUCCESS) {
-    printf("Destroy key failed with error: %ld\r\n", status);
+    printf("Destroy key failed with error: %" PRId32 "\r\n", status);
   }
 }
 
@@ -135,7 +136,7 @@ void aes_app_process_action(psa_algorithm_t alg)
     printf("\n Key import Success \r\n");
 
   } else {
-    printf("\n Key import Failed with error: %ld\r\n", status);
+    printf("\n Key import Failed with error: %" PRId32 "\r\n", status);
   }
 
   test_psa_aes(alg);

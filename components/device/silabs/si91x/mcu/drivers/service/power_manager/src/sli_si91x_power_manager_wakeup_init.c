@@ -57,7 +57,8 @@
 #define NO_OF_DAY_IN_MONTH_3     30                 // Number of days in even month
 #define NO_OF_DAY_IN_MONTH_4     31                 // Number of days in odd month
 #define NO_OF_MONTH_IN_YEAR      12                 // Number of months in a year
-#define NEXT_OCCURENECE          1                  // Next time occurence
+#define NEXT_OCCURRENCE          1                  // Next time occurrence
+#define NEXT_OCCURENECE          NEXT_OCCURRENCE    // Legacy alias
 #define RESET_DAY                1                  // Reset day after incrementing month
 #define RESET_MONTH              1                  // Reset month after incrementing year
 #define LEAP_YEAR_VALIDATION     4                  // Value to validate the leap year
@@ -135,6 +136,10 @@ sl_status_t sli_si91x_power_manager_calendar_init(void)
     status = sli_si91x_power_manager_calendar_deinit();
     if (status != SL_STATUS_OK) {
       // If status is not OK, return with the error code.
+      SL_PRINT_STRING_ERROR("sli_si91x_power_manager_calendar_init: calendar de-initialization "
+                            "failed, status: 0x%04lX, line no: %d\r\n",
+                            (unsigned long)status,
+                            __LINE__);
       return status;
     }
     // Calendar is initialized.
@@ -144,12 +149,20 @@ sl_status_t sli_si91x_power_manager_calendar_init(void)
     status = sl_si91x_calendar_register_sec_trigger_callback(calendar_second_callback_function);
     if (status != SL_STATUS_OK) {
       // If status is not OK, return with the error code.
+      SL_PRINT_STRING_ERROR("sli_si91x_power_manager_calendar_init: second based callback "
+                            "registration failed, status: 0x%04lX, line no: %d\r\n",
+                            (unsigned long)status,
+                            __LINE__);
       return status;
     }
     // Second based wakeup source is configured
     status = sl_si91x_power_manager_set_wakeup_sources(SL_SI91X_POWER_MANAGER_SEC_WAKEUP, true);
     if (status != SL_STATUS_OK) {
       // If status is not OK, return with the error code.
+      SL_PRINT_STRING_ERROR("sli_si91x_power_manager_calendar_init: second based wakeup source "
+                            "configuration failed, status: 0x%04lX, line no: %d\r\n",
+                            (unsigned long)status,
+                            __LINE__);
       return status;
     }
 #endif // ENABLE_SECOND
@@ -159,6 +172,10 @@ sl_status_t sli_si91x_power_manager_calendar_init(void)
     // Current date time is fetched
     status = sl_si91x_calendar_get_date_time(&datetime_config);
     if (status != SL_STATUS_OK) {
+      SL_PRINT_STRING_ERROR("sli_si91x_power_manager_calendar_init: date time configuration "
+                            "failed, status: 0x%04lX, line no: %d\r\n",
+                            (unsigned long)status,
+                            __LINE__);
       return status;
     }
     // If the date time is not configured, then only it is configured. Evaluated by the default values
@@ -175,6 +192,10 @@ sl_status_t sli_si91x_power_manager_calendar_init(void)
                                                        SECONDS,
                                                        MILLI_SECONDS);
       if (status != SL_STATUS_OK) {
+        SL_PRINT_STRING_ERROR("sli_si91x_power_manager_calendar_init: calendar build datetime "
+                              "struct failed, status: 0x%04lX, line no: %d\r\n",
+                              (unsigned long)status,
+                              __LINE__);
         return status;
       }
 #if (SL_SI91X_32KHZ_RC_CALIBRATION_ENABLED == ENABLE)
@@ -183,6 +204,10 @@ sl_status_t sli_si91x_power_manager_calendar_init(void)
 #endif
       status = sl_si91x_calendar_set_date_time(&datetime_config);
       if (status != SL_STATUS_OK) {
+        SL_PRINT_STRING_ERROR("sli_si91x_power_manager_calendar_init: calendar set date time "
+                              "failed, status: 0x%04lX, line no: %d\r\n",
+                              (unsigned long)status,
+                              __LINE__);
         return status;
       }
     }
@@ -203,11 +228,19 @@ sl_status_t sli_si91x_power_manager_calendar_init(void)
     // Alarm based callback is registered
     status = sl_si91x_calendar_register_alarm_trigger_callback(calendar_alarm_callback_function);
     if (status != SL_STATUS_OK) {
+      SL_PRINT_STRING_ERROR("sli_si91x_power_manager_calendar_init: alarm based callback "
+                            "registration failed, status: 0x%04lX, line no: %d\r\n",
+                            (unsigned long)status,
+                            __LINE__);
       return status;
     }
     // Alarm based wakeup source is configured
     status = sl_si91x_power_manager_set_wakeup_sources(SL_SI91X_POWER_MANAGER_ALARM_WAKEUP, true);
     if (status != SL_STATUS_OK) {
+      SL_PRINT_STRING_ERROR("sli_si91x_power_manager_calendar_init: alarm based wakeup source "
+                            "configuration failed, status: 0x%04lX, line no: %d\r\n",
+                            (unsigned long)status,
+                            __LINE__);
       return status;
     }
 #endif // ENABLE_ALARM
@@ -217,11 +250,19 @@ sl_status_t sli_si91x_power_manager_calendar_init(void)
     status = sl_si91x_calendar_register_msec_trigger_callback(calendar_alarm_callback_function);
     if (status != SL_STATUS_OK) {
       // If status is not OK, return with the error code.
+      SL_PRINT_STRING_ERROR("sli_si91x_power_manager_calendar_init: milli second based callback "
+                            "registration failed, status: 0x%04lX, line no: %d\r\n",
+                            (unsigned long)status,
+                            __LINE__);
       return status;
     }
     status = sl_si91x_power_manager_set_wakeup_sources(SL_SI91X_POWER_MANAGER_MSEC_WAKEUP, true);
     if (status != SL_STATUS_OK) {
       // If status is not OK, return with the error code.
+      SL_PRINT_STRING_ERROR("sli_si91x_power_manager_calendar_init: milli second based wakeup "
+                            "source configuration failed, status: 0x%04lX, line no: %d\r\n",
+                            (unsigned long)status,
+                            __LINE__);
       return status;
     }
 #endif // ENABLE_MSEC
@@ -245,6 +286,10 @@ static sl_status_t sli_si91x_power_manager_calendar_deinit(void)
   // Unregister the alarm based callback.
   status = sl_si91x_calendar_unregister_alarm_trigger_callback();
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sli_si91x_power_manager_calendar_deinit: alarm based callback "
+                          "unregistration failed, status: 0x%04lX, line no: %d\r\n",
+                          (unsigned long)status,
+                          __LINE__);
     return status;
   }
 #endif
@@ -252,6 +297,10 @@ static sl_status_t sli_si91x_power_manager_calendar_deinit(void)
   // Unregister the second based callback.
   status = sl_si91x_calendar_unregister_sec_trigger_callback();
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sli_si91x_power_manager_calendar_deinit: second based callback "
+                          "unregistration failed, status: 0x%04lX, line no: %d\r\n",
+                          (unsigned long)status,
+                          __LINE__);
     return status;
   }
 #endif
@@ -270,6 +319,10 @@ sl_status_t sli_si91x_power_manager_gpio_init(void)
 #if defined(ENABLE_NPSS_GPIO_0) && (ENABLE_NPSS_GPIO_0 == ENABLE)
   status = uulp_gpio_configuration(UULP_GPIO_0, NPSS_GPIO_0_POLARITY);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sli_si91x_power_manager_gpio_init: GPIO 0 configuration failed, "
+                          "status: 0x%04lX, line no: %d\r\n",
+                          (unsigned long)status,
+                          __LINE__);
     return status;
   }
 #endif // ENABLE_NPSS_GPIO_0
@@ -277,6 +330,10 @@ sl_status_t sli_si91x_power_manager_gpio_init(void)
 #if defined(ENABLE_NPSS_GPIO_1) && (ENABLE_NPSS_GPIO_1 == ENABLE)
   status = uulp_gpio_configuration(UULP_GPIO_1, NPSS_GPIO_1_POLARITY);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sli_si91x_power_manager_gpio_init: GPIO 1 configuration failed, "
+                          "status: 0x%04lX, line no: %d\r\n",
+                          (unsigned long)status,
+                          __LINE__);
     return status;
   }
 #endif // ENABLE_NPSS_GPIO_1
@@ -284,6 +341,10 @@ sl_status_t sli_si91x_power_manager_gpio_init(void)
 #if defined(ENABLE_NPSS_GPIO_2) && (ENABLE_NPSS_GPIO_2 == ENABLE)
   status = uulp_gpio_configuration(UULP_GPIO_2, NPSS_GPIO_2_POLARITY);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sli_si91x_power_manager_gpio_init: GPIO 2 configuration failed, "
+                          "status: 0x%04lX, line no: %d\r\n",
+                          (unsigned long)status,
+                          __LINE__);
     return status;
   }
 #endif // ENABLE_NPSS_GPIO_2
@@ -291,6 +352,10 @@ sl_status_t sli_si91x_power_manager_gpio_init(void)
 #if defined(ENABLE_NPSS_GPIO_3) && (ENABLE_NPSS_GPIO_3 == ENABLE)
   status = uulp_gpio_configuration(UULP_GPIO_3, NPSS_GPIO_3_POLARITY);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sli_si91x_power_manager_gpio_init: GPIO 3 configuration failed, "
+                          "status: 0x%04lX, line no: %d\r\n",
+                          (unsigned long)status,
+                          __LINE__);
     return status;
   }
 #endif // ENABLE_NPSS_GPIO_4
@@ -310,16 +375,28 @@ sl_status_t sli_si91x_power_manager_wdt_init(void)
   // Configuring watchdog-timer
   status = sl_si91x_watchdog_set_configuration(&wdt_config);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sli_si91x_power_manager_wdt_init: watchdog timer configuration "
+                          "failed, status: 0x%04lX, line no: %d\r\n",
+                          (unsigned long)status,
+                          __LINE__);
     return status;
   }
   // Registering timeout callback
   status = sl_si91x_watchdog_register_timeout_callback(wdt_callback_function);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sli_si91x_power_manager_wdt_init: watchdog timer timeout callback "
+                          "registration failed, status: 0x%04lX, line no: %d\r\n",
+                          (unsigned long)status,
+                          __LINE__);
     return status;
   }
   status = sl_si91x_power_manager_set_wakeup_sources(SL_SI91X_POWER_MANAGER_WDT_WAKEUP, true);
   if (status != SL_STATUS_OK) {
     // If status is not OK, return with the error code.
+    SL_PRINT_STRING_ERROR("sli_si91x_power_manager_wdt_init: watchdog timer wakeup source "
+                          "configuration failed, status: 0x%04lX, line no: %d\r\n",
+                          (unsigned long)status,
+                          __LINE__);
     return status;
   }
   sl_si91x_watchdog_start_timer();
@@ -337,6 +414,10 @@ sl_status_t sli_si91x_power_manager_dst_init(void)
   status = sli_si91x_power_manager_dst_deinit();
   if (status != SL_STATUS_OK) {
     // If status is not OK, return with the error code.
+    SL_PRINT_STRING_ERROR("sli_si91x_power_manager_dst_init: deep sleep timer de-initialization "
+                          "failed, status: 0x%04lX, line no: %d\r\n",
+                          (unsigned long)status,
+                          __LINE__);
     return status;
   }
   // Power-up the RTC and Time period block
@@ -356,6 +437,10 @@ sl_status_t sli_si91x_power_manager_dst_init(void)
   status = sl_si91x_power_manager_set_wakeup_sources(SL_SI91X_POWER_MANAGER_DST_WAKEUP, true);
   if (status != SL_STATUS_OK) {
     // If status is not OK, return with the error code.
+    SL_PRINT_STRING_ERROR("sli_si91x_power_manager_dst_init: deep sleep timer wakeup source "
+                          "configuration failed, status: 0x%04lX, line no: %d\r\n",
+                          (unsigned long)status,
+                          __LINE__);
     return status;
   }
   // To validate the function spointer and void pointer, if the parameters is not NULL then, it
@@ -364,6 +449,10 @@ sl_status_t sli_si91x_power_manager_dst_init(void)
   // returns an error code, so it is mandatory to unregister the callback before registering
   // another callback
   if (dst_callback != NULL) {
+    SL_PRINT_STRING_ERROR("sli_si91x_power_manager_dst_init: deep sleep timer callback is "
+                          "already registered, status: 0x%04lX, line no: %d\r\n",
+                          (unsigned long)status,
+                          __LINE__);
     return SL_STATUS_BUSY;
   }
   // The function pointer is feeded to the static variable which is called in the IRQ handler
@@ -374,6 +463,10 @@ sl_status_t sli_si91x_power_manager_dst_init(void)
   // When the trigger is enabled, the bit 15 (deep sleep timer) is 0, so the comparison is to validate whether the
   // deep sleep timer trigger is enabled or not.
   if ((NPSS_INTR_MASK_CLR_REG & NPSS_TO_MCU_WAKEUP_INTR) != DISABLE) {
+    SL_PRINT_STRING_ERROR("sli_si91x_power_manager_dst_init: deep sleep timer trigger is already "
+                          "enabled, status: 0x%04lX, line no: %d\r\n",
+                          (unsigned long)status,
+                          __LINE__);
     return SL_STATUS_FAIL;
   }
 #endif // SL_ENABLE_DST_WAKEUP_SOURCE
@@ -410,6 +503,10 @@ sl_status_t sli_si91x_power_manager_wireless_wakeup_init(void)
   status = sli_si91x_power_manager_wireless_wakeup_deinit();
   if (status != SL_STATUS_OK) {
     // If status is not OK, return with the error code.
+    SL_PRINT_STRING_ERROR("sli_si91x_power_manager_wireless_wakeup_init: wireless wakeup "
+                          "de-initialization failed, status: 0x%04lX, line no: %d\r\n",
+                          (unsigned long)status,
+                          __LINE__);
     return status;
   }
 
@@ -417,6 +514,10 @@ sl_status_t sli_si91x_power_manager_wireless_wakeup_init(void)
   status = sl_si91x_power_manager_set_wakeup_sources(SL_SI91X_POWER_MANAGER_WIRELESS_WAKEUP, true);
   if (status != SL_STATUS_OK) {
     // If status is not OK, return with the error code.
+    SL_PRINT_STRING_ERROR("sli_si91x_power_manager_wireless_wakeup_init: wireless wakeup wakeup "
+                          "source configuration failed, status: 0x%04lX, line no: %d\r\n",
+                          (unsigned long)status,
+                          __LINE__);
     return status;
   }
   /* Enable NVIC */
@@ -453,7 +554,7 @@ static void set_periodic_alarm(uint32_t alarm_time)
   set_alarm_config.MilliSeconds = set_alarm_config.MilliSeconds + (alarm_time % NO_OF_MSEC_IN_SEC);
   if (set_alarm_config.MilliSeconds >= NO_OF_MSEC_IN_SEC) {
     set_alarm_config.MilliSeconds -= NO_OF_MSEC_IN_SEC;
-    set_alarm_config.Second += NEXT_OCCURENECE;
+    set_alarm_config.Second += NEXT_OCCURRENCE;
   }
 
   alarm_time /= NO_OF_MSEC_IN_SEC;
@@ -461,7 +562,7 @@ static void set_periodic_alarm(uint32_t alarm_time)
   set_alarm_config.Second = set_alarm_config.Second + (alarm_time % NO_OF_SEC_IN_MIN);
   if (set_alarm_config.Second >= NO_OF_SEC_IN_MIN) {
     set_alarm_config.Second -= NO_OF_SEC_IN_MIN;
-    set_alarm_config.Minute += NEXT_OCCURENECE;
+    set_alarm_config.Minute += NEXT_OCCURRENCE;
   }
 
   alarm_time /= NO_OF_SEC_IN_MIN;
@@ -469,7 +570,7 @@ static void set_periodic_alarm(uint32_t alarm_time)
   set_alarm_config.Minute = set_alarm_config.Minute + (alarm_time % NO_OF_MIN_IN_HOUR);
   if (set_alarm_config.Minute >= NO_OF_MIN_IN_HOUR) {
     set_alarm_config.Minute -= NO_OF_MIN_IN_HOUR;
-    set_alarm_config.Hour += NEXT_OCCURENECE;
+    set_alarm_config.Hour += NEXT_OCCURRENCE;
   }
 
   alarm_time /= NO_OF_MIN_IN_HOUR;
@@ -477,17 +578,17 @@ static void set_periodic_alarm(uint32_t alarm_time)
   set_alarm_config.Hour = set_alarm_config.Hour + alarm_time;
   if (set_alarm_config.Hour >= NO_OF_HOUR_IN_DAY) {
     set_alarm_config.Hour -= NO_OF_HOUR_IN_DAY;
-    set_alarm_config.Day += NEXT_OCCURENECE;
+    set_alarm_config.Day += NEXT_OCCURRENCE;
   }
 
   if (set_alarm_config.Day > NO_OF_DAY_IN_MONTH_1) {
     if (set_alarm_config.Month == February) {
       if (set_alarm_config.Year % LEAP_YEAR_VALIDATION) {
         set_alarm_config.Day = RESET_DAY;
-        set_alarm_config.Month += NEXT_OCCURENECE;
+        set_alarm_config.Month += NEXT_OCCURRENCE;
       } else if (set_alarm_config.Day > NO_OF_DAY_IN_MONTH_2) {
         set_alarm_config.Day = RESET_DAY;
-        set_alarm_config.Month += NEXT_OCCURENECE;
+        set_alarm_config.Month += NEXT_OCCURRENCE;
       }
     }
 
@@ -495,26 +596,26 @@ static void set_periodic_alarm(uint32_t alarm_time)
       if (!(set_alarm_config.Month % DAY_IN_MONTH_VALIDATION)) {
         if (set_alarm_config.Day > NO_OF_DAY_IN_MONTH_3) {
           set_alarm_config.Day = RESET_DAY;
-          set_alarm_config.Month += NEXT_OCCURENECE;
+          set_alarm_config.Month += NEXT_OCCURRENCE;
         } else if (set_alarm_config.Day > NO_OF_DAY_IN_MONTH_4) {
           set_alarm_config.Day = RESET_DAY;
-          set_alarm_config.Month += NEXT_OCCURENECE;
+          set_alarm_config.Month += NEXT_OCCURRENCE;
         }
       }
     } else if (!(set_alarm_config.Month % DAY_IN_MONTH_VALIDATION)) {
       if (set_alarm_config.Day > NO_OF_DAY_IN_MONTH_4) {
         set_alarm_config.Day = RESET_DAY;
-        set_alarm_config.Month += NEXT_OCCURENECE;
+        set_alarm_config.Month += NEXT_OCCURRENCE;
       } else if (set_alarm_config.Day > NO_OF_DAY_IN_MONTH_3) {
         set_alarm_config.Day = RESET_DAY;
-        set_alarm_config.Month += NEXT_OCCURENECE;
+        set_alarm_config.Month += NEXT_OCCURRENCE;
       }
     }
   }
 
   if (set_alarm_config.Month > NO_OF_MONTH_IN_YEAR) {
     set_alarm_config.Month = RESET_MONTH;
-    set_alarm_config.Year += NEXT_OCCURENECE;
+    set_alarm_config.Year += NEXT_OCCURRENCE;
   }
 #if (SL_SI91X_32KHZ_RC_CALIBRATION_ENABLED == ENABLE)
   // The flag is cleared indicating execution is happening through driver files.
@@ -560,47 +661,90 @@ static sl_status_t uulp_gpio_configuration(uint8_t pin, uint8_t polarity)
   sl_si91x_gpio_interrupt_config_flag_t polarity_flag;
   if (pin > 3) {
     status = SL_STATUS_INVALID_PARAMETER;
+    SL_PRINT_STRING_ERROR("uulp_gpio_configuration: invalid pin, status: "
+                          "0x%04lX, line no: %d\r\n",
+                          (unsigned long)status,
+                          __LINE__);
     return status;
   }
   // Unregister NPSS GPIO interrupts
   status = sl_gpio_driver_unregister(UULP_GPIO_INSTANCE, pin, pin);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("uulp_gpio_configuration: GPIO interrupt unregistration failed, "
+                          "status: 0x%04lX, line no: %d\r\n",
+                          (unsigned long)status,
+                          __LINE__);
     return status;
   }
   status = sl_si91x_gpio_driver_select_uulp_npss_receiver(pin, SET);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("uulp_gpio_configuration: GPIO driver select uulp npss receiver "
+                          "failed, status: 0x%04lX, line no: %d\r\n",
+                          (unsigned long)status,
+                          __LINE__);
     return status;
   }
   // Set NPSS GPIO pin MUX
   status = sl_si91x_gpio_driver_set_uulp_npss_pin_mux(pin, NPSS_GPIO_PIN_MUX_MODE2);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("uulp_gpio_configuration: GPIO driver set uulp npss "
+                          "pin mux failed, status: 0x%04lX, line no: %d\r\n",
+                          (unsigned long)status,
+                          __LINE__);
     return status;
   }
   // Set NPSS GPIO pin direction
   status = sl_si91x_gpio_driver_set_uulp_npss_direction(pin, (sl_si91x_gpio_direction_t)GPIO_INPUT);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("uulp_gpio_configuration: GPIO driver set uulp npss "
+                          "direction failed, status: 0x%04lX, line no: %d\r\n",
+                          (unsigned long)status,
+                          __LINE__);
     return status;
   }
   status = sl_si91x_gpio_driver_select_uulp_npss_polarity(pin, polarity);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("uulp_gpio_configuration: GPIO driver set uulp npss "
+                          "polarity failed, status: 0x%04lX, line no: %d\r\n",
+                          (unsigned long)status,
+                          __LINE__);
     return status;
   }
   status = sl_si91x_gpio_driver_set_uulp_npss_wakeup_interrupt(pin);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("uulp_gpio_configuration: GPIO driver set uulp npss wakeup interrupt "
+                          "failed, status: 0x%04lX, line no: %d\r\n",
+                          (unsigned long)status,
+                          __LINE__);
     return status;
   }
   if (polarity == POLARITY_HIGH) {
     polarity_flag = SL_GPIO_INTERRUPT_LEVEL_HIGH;
   } else if (polarity == POLARITY_LOW) {
     polarity_flag = SL_GPIO_INTERRUPT_LEVEL_LOW;
+  } else {
+    status = SL_STATUS_INVALID_PARAMETER;
+    SL_PRINT_STRING_ERROR("uulp_gpio_configuration: invalid polarity, status: "
+                          "0x%04lX, line no: %d\r\n",
+                          (unsigned long)status,
+                          __LINE__);
+    return status;
   }
   status = sl_si91x_gpio_driver_configure_uulp_interrupt(polarity_flag, pin, (void *)&gpio_uulp_pin_interrupt_callback);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("uulp_gpio_configuration: GPIO driver configure uulp "
+                          "interrupt failed, status: 0x%04lX, line no: %d\r\n",
+                          (unsigned long)status,
+                          __LINE__);
     return status;
   }
   status = sl_si91x_power_manager_set_wakeup_sources(SL_SI91X_POWER_MANAGER_GPIO_WAKEUP, true);
   if (status != SL_STATUS_OK) {
     // If status is not OK, return with the error code.
+    SL_PRINT_STRING_ERROR("uulp_gpio_configuration: GPIO driver set wakeup "
+                          "sources failed, status: 0x%04lX, line no: %d\r\n",
+                          (unsigned long)status,
+                          __LINE__);
     return status;
   }
   return status;

@@ -157,6 +157,7 @@ mem_overflow_init_raw(void *p, size_t size)
 /** mem_init is not used when using pools instead of a heap or using
  * C library malloc().
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 void
 mem_init(void)
 {
@@ -166,6 +167,7 @@ mem_init(void)
  * C library malloc(): we can't free part of a pool element and the stack
  * support mem_trim() to return a different pointer
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 void *
 mem_trim(void *mem, mem_size_t size)
 {
@@ -190,6 +192,7 @@ mem_trim(void *mem, mem_size_t size)
  *
  * Note that the returned value must always be aligned (as defined by MEM_ALIGNMENT).
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 void *
 mem_malloc(mem_size_t size)
 {
@@ -211,6 +214,7 @@ mem_malloc(mem_size_t size)
  *
  * @param rmem is the pointer as returned by a previous call to mem_malloc()
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 void
 mem_free(void *rmem)
 {
@@ -234,6 +238,7 @@ mem_free(void *rmem)
  * @param size the size in bytes of the memory needed
  * @return a pointer to the allocated memory or NULL if the pool is empty
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 void *
 mem_malloc(mem_size_t size)
 {
@@ -291,6 +296,7 @@ mem_malloc(mem_size_t size)
  *
  * @param rmem the memory element to free
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 void
 mem_free(void *rmem)
 {
@@ -434,12 +440,14 @@ mem_overflow_check_element(struct mem *mem)
 #define mem_overflow_check_element(mem)
 #endif /* MEM_OVERFLOW_CHECK */
 
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 static struct mem *
 ptr_to_mem(mem_size_t ptr)
 {
   return (struct mem *)(void *)&ram[ptr];
 }
 
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 static mem_size_t
 mem_to_ptr(void *mem)
 {
@@ -457,6 +465,7 @@ mem_to_ptr(void *mem)
  * This assumes access to the heap is protected by the calling function
  * already.
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 static void
 plug_holes(struct mem *mem)
 {
@@ -499,6 +508,7 @@ plug_holes(struct mem *mem)
 /**
  * Zero the heap and initialize start, end and lowest-free
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 void
 mem_init(void)
 {
@@ -534,6 +544,7 @@ mem_init(void)
 /* Check if a struct mem is correctly linked.
  * If not, double-free is a possible reason.
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 static int
 mem_link_valid(struct mem *mem)
 {
@@ -600,6 +611,7 @@ mem_sanity(void)
  * @param rmem is the data portion of a struct mem as returned by a previous
  *             call to mem_malloc()
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 void
 mem_free(void *rmem)
 {
@@ -682,6 +694,7 @@ mem_free(void *rmem)
  *         or NULL if newsize is > old size, in which case rmem is NOT touched
  *         or freed!
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 void *
 mem_trim(void *rmem, mem_size_t new_size)
 {
@@ -814,6 +827,7 @@ mem_trim(void *rmem, mem_size_t new_size)
  *
  * Note that the returned value will always be aligned (as defined by MEM_ALIGNMENT).
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 void *
 mem_malloc(mem_size_t size_in)
 {
@@ -965,6 +979,7 @@ mem_malloc_adjust_lfree:
 #endif /* MEM_USE_POOLS */
 
 #if MEM_CUSTOM_ALLOCATOR && (!LWIP_STATS || !MEM_STATS)
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 void *
 mem_calloc(mem_size_t count, mem_size_t size)
 {
@@ -982,6 +997,7 @@ mem_calloc(mem_size_t count, mem_size_t size)
  * @param size size of the objects to allocate
  * @return pointer to allocated memory / NULL pointer if there is an error
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 void *
 mem_calloc(mem_size_t count, mem_size_t size)
 {

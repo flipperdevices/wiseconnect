@@ -1,6 +1,6 @@
 /***************************************************************************/ /**
  * @file
- * @brief SI91x IO Stream Log Component header.
+ * @brief SiWx91x IO Stream Log component header.
  *******************************************************************************
  * # License
  * <b>Copyright 2019 Silicon Laboratories Inc. www.silabs.com</b>
@@ -43,6 +43,7 @@ extern "C" {
 #define SL_SI91X_IOSTREAM_SWO_LOG   1
 #define SL_SI91X_IOSTREAM_RTT_LOG   2
 #define SL_SI91X_IOSTREAM_VUART_LOG 3
+#define SL_SI91X_IOSTREAM_DEBUG_LOG 4
 
 /*******************************************************************************
   *************************** FUNCTION PROTOTYPES  *******************************
@@ -57,7 +58,7 @@ extern "C" {
   * 
   * @return sl_status_t Status code indicating the result:
   *         - SL_STATUS_OK                 - Success.
-  *         - SK_STATUS_FAIL               - fail
+  *         - SL_STATUS_FAIL               - fail
   *
   * For more information on status codes, see [SL STATUS DOCUMENTATION](https://docs.silabs.com/gecko-platform/latest/platform-common/status).
   ******************************************************************************/

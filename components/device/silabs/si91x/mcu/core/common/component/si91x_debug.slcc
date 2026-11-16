@@ -1,7 +1,7 @@
 id: si91x_debug
 package: platform_siwx91x
 description: >
-  "Provides debug functionality to the Si91x."
+  This component provides debug functionality for the SiWx91x.
 label: Debug Unit
 category: Device|Si91x|MCU|Common
 quality: production

@@ -65,7 +65,7 @@ sl_si91x_sdc_calibration_data sdc_calibration_data = { 0 }; //Structure for stor
 ******************************************************************************************************************************************/
 
 /**
- * @brief Set up adc neccessary configurations for sdc
+ * @brief Set up adc necessary configurations for sdc
  *
  * This function performs the necessary configurations of ADC hardware,
  * needed for SDC working
@@ -123,6 +123,9 @@ static sl_status_t sli_si91x_setup_adc(void)
   sl_status_t status = SL_STATUS_OK;
   status             = sl_si91x_adc_set_power_mode(ADC_POWER_ON);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sli_si91x_setup_adc: error status=0x%04lX,line no : %d\r\n",
+                          (unsigned long)(status),
+                          (int)__LINE__);
     return status;
   }
 
@@ -357,6 +360,7 @@ sl_status_t sl_si91x_sdc_driver_config(sl_si91x_sdc_config_t *sl_sdc_config)
   sl_status_t status = SL_STATUS_OK;
 
   if (sl_sdc_config == NULL) {
+    SL_PRINT_STRING_ERROR("sl_si91x_sdc_driver_config: handle NULL,line no : %d\r\n", (int)__LINE__);
     return SL_STATUS_NULL_POINTER;
   }
 
@@ -398,6 +402,7 @@ sl_status_t sl_si91x_sdc_driver_channel_config(sl_si91x_sdc_adc_config_t *pin_co
   sl_status_t status = SL_STATUS_OK;
 
   if (pin_config == NULL || sdc_channel_config == NULL) {
+    SL_PRINT_STRING_ERROR("sl_si91x_sdc_driver_channel_config: handle NULL,line no : %d\r\n", (int)__LINE__);
     return SL_STATUS_NULL_POINTER;
   }
 
@@ -408,8 +413,8 @@ sl_status_t sl_si91x_sdc_driver_channel_config(sl_si91x_sdc_adc_config_t *pin_co
 
   for (int i = 0; i < SDC_NUMBER_OF_CHANNELS; i++) {
     sdc_channel_info.sample_length[i] = sdc_channel_config->sample_length[i]; // Set the sample length for each channel
-    sdc_channel_info.recieve_buffer[i] =
-      sdc_channel_config->recieve_buffer[i]; // Set the receive buffer for each channel
+    sdc_channel_info.receive_buffer[i] =
+      sdc_channel_config->receive_buffer[i]; // Set the receive buffer for each channel
     sdc_channel_info.channel_info_bit_field |=
       (misc_config[i].buffer_auto_reset << i)
       << SDC_AUTO_BUFFER_RESET_POS; // Set the auto buffer reset bit in the channel info bit field
@@ -431,6 +436,9 @@ sl_status_t sl_si91x_sdc_driver_register_callback(sl_sdc_callback_t callback_eve
 {
 
   if (callback_event == NULL) {
+    SL_PRINT_STRING_ERROR("sl_si91x_sdc_driver_register_callback: error status=0x%04lX,line no : %d\r\n",
+                          (unsigned long)(SL_STATUS_INVALID_PARAMETER),
+                          (int)__LINE__);
     return SL_STATUS_INVALID_PARAMETER;
   }
   sdc_channel_info.callback_event = callback_event;
@@ -505,7 +513,7 @@ sl_status_t sl_si91x_sdc_driver_store_data(void)
     if (!(sdc_channel_info.channel_info_bit_field & (0x1 << channel_id) << SDC_TRANSFER_COMPLETE_POS)) {
       transfer_count = sdc_channel_info.transfer_count[channel_id]; // Get the current transfer count for the channel
 
-      sdc_channel_info.recieve_buffer[channel_id][transfer_count] =
+      sdc_channel_info.receive_buffer[channel_id][transfer_count] =
         data; // Store the received data in the channel's receive buffer
 
       sdc_channel_info.transfer_count[channel_id]++; // Increment the transfer count for the channel
@@ -547,17 +555,23 @@ sl_status_t sl_si91x_sdc_driver_read_data(uint32_t channel, int16_t *buffer, uin
   uint32_t channel_id = 0;
 
   if (buffer == NULL) {
+    SL_PRINT_STRING_ERROR("sl_si91x_sdc_driver_read_data: buffer is NULL,line no : %d\r\n", (int)__LINE__);
     return SL_STATUS_NULL_POINTER; // Return error if the buffer is NULL
   }
   if (length == 0 || length > SDC_ONE_CH_MAX_FIFO_TH) {
+    SL_PRINT_STRING_ERROR("sl_si91x_sdc_driver_read_data: length is invalid,line no : %d\r\n", (int)__LINE__);
     return SL_STATUS_INVALID_PARAMETER; // Return error if the length is zero
   }
 
   if (channel >= SDC_NUMBER_OF_CHANNELS) {
+    SL_PRINT_STRING_ERROR("sl_si91x_sdc_driver_read_data: channel number is invalid,line no : %d\r\n", (int)__LINE__);
     return SL_STATUS_INVALID_PARAMETER; // Return error if the channel number is invalid
   }
 
   if (SDC_NUMBER_OF_CHANNELS * length > SL_SDC_SAMPLING_THRESHOLD) {
+    SL_PRINT_STRING_ERROR(
+      "sl_si91x_sdc_driver_read_data: total number of samples exceeds the sampling threshold,line no : %d\r\n",
+      (int)__LINE__);
     return SL_STATUS_INVALID_PARAMETER; // Return error if the total number of samples exceeds the sampling threshold
   }
 

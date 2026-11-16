@@ -22,7 +22,16 @@
 #include "sl_si91x_sha.h"
 #include "sl_si91x_psa_sha.h"
 
+#define SL_SLI91x_SHA_ALL
+
+#ifdef SL_SLI91x_SHA_ALL
+#define SL_SLI91x_SHA_1_EN
+#define SL_SLI91x_SHA_224_EN
 #define SL_SLI91x_SHA_256_EN
+#define SL_SLI91x_SHA_384_EN
+#define SL_SLI91x_SHA_512_EN
+#endif
+
 void psa_app_process_action();
 
 #ifdef SL_SLI91x_SHA_1_EN

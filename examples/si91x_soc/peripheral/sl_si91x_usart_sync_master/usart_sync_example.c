@@ -44,7 +44,7 @@ static void compare_loop_back_data(void);
 /*******************************************************************************
  **************************   GLOBAL VARIABLES   *******************************
  ******************************************************************************/
-sl_usart_handle_t usart_handle;
+static sl_usart_handle_t usart_handle;
 usart_mode_enum_t current_mode = SL_USART_TRANSFER_DATA;
 /*******************************************************************************
  * USART Example Initialization function
@@ -72,20 +72,26 @@ void usart_sync_example_init(void)
     // Initialize the UART
     status = sl_si91x_usart_init(USART_0, &usart_handle);
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("sl_si91x_usart_initialize: Error Code : %lu \n", status);
+      /* Note: All status messages in this example — both success and failure — are
+ * intentionally emitted via SL_PRINT_STRING_ERROR so that they remain visible
+ * on the console at the default log level. This is a demonstration choice, not
+ * a recommendation: in production code, ERROR severity should be reserved for
+ * actual failures, with successful operations logged via SL_PRINT_STRING_INFO
+ * (or SL_PRINT_STRING_DEBUG for verbose trace). */
+      SL_PRINT_STRING_ERROR("sl_si91x_usart_initialize: Error Code : %lu \n", status);
       break;
     }
-    DEBUGOUT("USART MASTER initialization is successful \n");
+    SL_PRINT_STRING_ERROR("USART MASTER initialization is successful \n");
     // Configure the USART configurations
     status = sl_si91x_usart_set_configuration(usart_handle, &usart_config);
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("sl_si91x_usart_set_configuration: Error Code : %lu \n", status);
+      SL_PRINT_STRING_ERROR("sl_si91x_usart_set_configuration: Error Code : %lu \n", status);
       break;
     }
     // Register user callback function
     status = sl_si91x_usart_multiple_instance_register_event_callback(USART_0, usart_callback_event);
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("sl_si91x_usart_multiple_instance_register_event_callback: Error Code : %lu \n", status);
+      SL_PRINT_STRING_ERROR("sl_si91x_usart_multiple_instance_register_event_callback: Error Code : %lu \n", status);
       break;
     }
     sl_si91x_usart_get_configurations(USART_0, &get_config);
@@ -113,7 +119,7 @@ void usart_sync_example_process_action(void)
         status = sl_si91x_usart_transfer_data(usart_handle, usart_data_out, usart_data_in, sizeof(usart_data_out));
         if (status != SL_STATUS_OK) {
           // If it fails to execute the API, it will not execute rest of the things
-          DEBUGOUT("sl_si91x_usart_transfer_data: Error Code : %lu \n", status);
+          SL_PRINT_STRING_ERROR("sl_si91x_usart_transfer_data: Error Code : %lu \n", status);
           current_mode = SL_USART_TRANSMISSION_COMPLETED;
           break;
         }
@@ -151,9 +157,9 @@ static void compare_loop_back_data(void)
     }
   }
   if (data_index == USART_BUFFER_SIZE) {
-    DEBUGOUT("Data comparison successful, Loop Back Test Passed \n");
+    SL_PRINT_STRING_ERROR("Data comparison successful, Loop Back Test Passed \n");
   } else {
-    DEBUGOUT("Data comparison failed, Loop Back Test failed \n");
+    SL_PRINT_STRING_ERROR("Data comparison failed, Loop Back Test failed \n");
   }
 }
 

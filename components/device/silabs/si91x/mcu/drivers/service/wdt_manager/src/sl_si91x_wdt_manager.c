@@ -56,7 +56,6 @@ const osThreadAttr_t wdt_thread_attributes = {
   .stack_size = SL_WDT_TASK_STACK_SIZE, // Stack size of WDT task
   .priority   = osPriorityHigh7,        // Priority of WDT task
   .tz_module  = 0,
-  .reserved   = 0,
 };
 #endif //SLI_SI91X_ENABLE_OS
 
@@ -138,20 +137,20 @@ sl_watchdog_manager_reset_reason_t sl_wdt_manager_get_system_reset_status(void)
   switch (SL_SI91X_WDT_RESET & get_status) {
     case SL_SI91X_MCU_WWD_WINDOW_RESET:
     case SL_SI91X_MCU_WWD_RESET:
-      DEBUGOUT("\r\n MCU WDT System Reset  \r\n");
+      SL_PRINT_STRING_INFO("\r\n MCU WDT System Reset  \r\n");
       return SL_SI91X_WATCHDOG_MANAGER_RESET_WATCHDOG;
 
     case SL_SI91X_NWP_WWD_WINDOW_RESET:
     case SL_SI91X_NWP_WWD_RESET:
-      DEBUGOUT("\r\n NWP WDT System Reset  \r\n");
+      SL_PRINT_STRING_INFO("\r\n NWP WDT System Reset  \r\n");
       return SL_SI91X_WATCHDOG_MANAGER_RESET_WATCHDOG;
 
     case SL_SI91X_HOST_RESET_REQUEST:
-      DEBUGOUT("\r\n Software System Reset \r\n");
+      SL_PRINT_STRING_INFO("\r\n Software System Reset \r\n");
       return SL_SI91X_WATCHDOG_MANAGER_RESET_SOFTWARE;
 
     default:
-      DEBUGOUT("\r\n Power-on Reset \r\n");
+      SL_PRINT_STRING_INFO("\r\n Power-on Reset \r\n");
       return SL_SI91X_WATCHDOG_MANAGER_RESET_POR;
   }
 }
@@ -176,6 +175,9 @@ sl_status_t sl_watchdog_manager_init(void)
   // Create WDT task
   si91x_thread = osThreadNew((osThreadFunc_t)WDT_Task, NULL, &wdt_thread_attributes);
   if (si91x_thread == NULL) {
+    SL_PRINT_STRING_ERROR("sl_watchdog_manager_init: osThreadNew failed st=0x%04lX,line no : %d\r\n",
+                          (unsigned long)SL_STATUS_FAIL,
+                          (int)__LINE__);
     return SL_STATUS_FAIL;
   }
 #endif
@@ -196,12 +198,20 @@ sl_status_t sl_watchdog_manager_init(void)
   // Configuring watchdog-timer
   status = sl_si91x_watchdog_set_configuration(&watchdog_config_internal);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR(
+      "sl_watchdog_manager_init: sl_si91x_watchdog_set_configuration failed st=0x%04lX,line no : %d\r\n",
+      (unsigned long)status,
+      (int)__LINE__);
     return status;
   }
 
   // Registering timeout callback
   status = sl_si91x_watchdog_register_timeout_callback(on_timeout_callback);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR(
+      "sl_watchdog_manager_init: sl_si91x_watchdog_register_timeout_callback failed st=0x%04lX,line no : %d\r\n",
+      (unsigned long)status,
+      (int)__LINE__);
     return status;
     //Failed to register callback
   }

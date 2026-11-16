@@ -1,8 +1,8 @@
-# SL ULP GPIO STATE TRANSITION EXAMPLE
+# SiWx91x Platform ULP GPIO
 
 ## Table of Contents
 
-- [SL ULP GPIO STATE TRANSITION EXAMPLE](#sl-ulp-gpio-state-transition-example)
+- [SiWx91x Platform ULP GPIO](#platform-siwx91x-ulp-gpio)
   - [Table of Contents](#table-of-contents)
   - [Purpose/Scope](#purposescope)
   - [Overview](#overview)
@@ -15,6 +15,9 @@
   - [Application Build Environment](#application-build-environment)
     - [Application Configuration Parameters](#application-configuration-parameters)
   - [Test the Application](#test-the-application)
+  - [Troubleshooting](#troubleshooting)
+  - [Resources](#resources)
+  - [Report Bugs/Support](#report-bugssupport)
 
 ## Purpose/Scope
 
@@ -28,7 +31,7 @@ This default application demonstrates the toggling of ULP (Ultra Low Power) inst
   - UULP (Ultra Ultra Low Power) Instance: Controls the UULP GPIOs (UULP_GPIO_n; n=0 to 4).
 - HP and ULP Instance have the same features and functionality except for different base address.
 - Each port in the HP domain supports a maximum of 16 GPIO pins, with a total of four ports (SL_GPIO_PORT_A, SL_GPIO_PORT_B, SL_GPIO_PORT_C, SL_GPIO_PORT_D).
-- The ULP GPIO domain has only one port (SL_GPIO_ULP_PORT) with a maximum of 12 pins.  
+- The ULP GPIO domain has only one port (SL_GPIO_ULP_PORT) with a maximum of 12 pins.
 - Similarly, the UULP GPIO domain has only one port (SL_GPIO_UULP_PORT) with a maximum of 5 pins.
 
   > **Note:** Please note that GPIO_n (n=0:5) are dedicated for the Secure Zone Processor's Flash interface. The MCU should NOT be changing any configuration related to these GPIOs under any circumstances since it may lead to the Flash content being corrupted, rendering the chip unusable. This is applicable to MCU HP EGPIO Instance.
@@ -39,7 +42,7 @@ This default application demonstrates the toggling of ULP (Ultra Low Power) inst
  The table below explains the Port and Pin selection for different instances:
 
 |  GPIO Instance                 |    GPIO Port      |  GPIO Pin Number  |
-|--------------------------------|-------------------|-------------------|  
+|--------------------------------|-------------------|-------------------|
 |                                |  SL_GPIO_PORT_A   |   (0-15)          |
 | HP GPIO Instance               |  SL_GPIO_PORT_B   |   (16-31)         |
 |                                |  SL_GPIO_PORT_C   |   (32-47)         |
@@ -85,18 +88,19 @@ This default application demonstrates the toggling of ULP (Ultra Low Power) inst
 
 ## About Example Code
 
-- By default, the ULP_GPIO_PIN macro is enabled. For Si917, ULP GPIO 2 (F10) will toggle during the transition from PS4 to PS2 and from PS2 back to PS4, after which the GPIO is de-initialized.
+- By default, the ULP_GPIO_PIN macro is enabled. For SiWx91x, ULP GPIO 2 (F10) will toggle during the transition from PS4 to PS2 and from PS2 back to PS4, after which the GPIO is de-initialized.
 - By enabling UULP_GPIO_PIN macro, UULP_GPIO_0(P14) will be toggled when transition takes place from PS4 -> PS2 and from PS2 -> PS4 and finally it de-initializes the GPIO. Connect analyzer to P14 and observe toggles.
 - By enabling ULP_GPIO_PIN_INTR macro, ULP_GPIO_8(P15) acts as a ULP pin interrupt. Connect P15 to BTN1/BTN0 and trigger interrupt. Interrupt occurs during state transitions only, after that GPIO de-initializes.
 - By enabling ULP_GPIO_GROUP_INTR macro, ULP_GPIO_8(P15) and ULP_GPIO_10(P17) acts as a ULP group interrupt on the IC board (or) ULP GPIO8 and ULP_GPIO_4 on the ACX Module board. Connect P15 to BTN1, P17 to BTN0 (or)vice-versa and trigger both interrupts at a time as it is AND event. Interrupt occurs during state transitions only, after that GPIO de-initializes.
 - By enabling UULP_GPIO_PIN_INTR macro, UULP_GPIO_2(F12) acts as a UULP pin interrupt. Press BTN0 and trigger interrupt. Interrupt occurs during state transitions only, after that GPIO de-initializes.
+
 
 ## Prerequisites/Setup Requirements
 
 ### Hardware Requirements
 
 - Windows PC
-- Silicon Labs Si917 Evaluation Kit [WPK(BRD4002) + BRD4338A/ BRD4342A / BRD4343A ]
+- Silicon Labs SiWx91x Evaluation Kit [[BRD4002](https://www.silabs.com/development-tools/wireless/wireless-pro-kit-mainboard?tab=overview) + [BRD4338A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-rb4338a-wifi-6-bluetooth-le-soc-radio-board?tab=overview) / [BRD4342A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx91x-rb4342a-wifi-6-bluetooth-le-soc-radio-board?tab=overview) / [BRD4343A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4343a-wi-fi-6-bluetooth-le-8mb-flash-radio-board-for-module?tab=overview) / [BRD4343C](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4343c-wi-fi-6-bluetooth-le-8mb-flash-radio-board-for-module?tab=overview)]
 - SiWx917 AC1 Module Explorer Kit [BRD2708A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-ek2708a-explorer-kit)
 
 ### Software Requirements
@@ -125,20 +129,108 @@ For details on the project folder structure, see the [WiSeConnect Examples](http
 
 ### Application Configuration Parameters
 
-- Configure the following parameters in the [`ulp_gpio_example.c`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.1-content-for-docs/examples/si91x_soc/peripheral/sl_si91x_ulp_gpio/ulp_gpio_example.c) file and update/modify following macros, if required.
+- Configure the following parameters in the [`ulp_gpio_example.c`](ulp_gpio_example.c) file and update/modify following macros, if required.
+
+- `PORT0`: Identifier for GPIO Port 0, used when configuring pins on port 0. By default, it is set to 0.
 
   ```c
-  #define PORT0                    0      // GPIO Port number(0 to 4)
-  #define PIN_COUNT                2      // Number of interrupts needed
-  #define POLARITY                 0      // Polarity for GPIO pin
-  #define GRP_CNT                  2      // Count of group interrupt pins
-  #define INT_CH                   0      // GPIO Pin interrupt 0
-  #define NPSS_INTR                2      // NPSS GPIO interrupt number
+  #define PORT0             0      // PORT 0
+  ```
+
+- `AVL_INTR_NO`: Specifies the available interrupt number used by the GPIO pin interrupt. By default, it is set to 0.
+
+  ```c
+  #define AVL_INTR_NO       0      // Available interrupt number
+  ```
+
+- `POLARITY`: Polarity configuration for the GPIO pin interrupt. By default, it is set to 0.
+
+  ```c
+  #define POLARITY          0      // Polarity for GPIO pin
+  ```
+
+- `INT_CH`: Specifies the HP GPIO pin interrupt channel (GPIO Pin interrupt 0). By default, it is set to 0.
+
+  ```c
+  #define INT_CH            0      // GPIO Pin interrupt 0
+  ```
+
+- `ULP_INT_CH`: Specifies the ULP GPIO pin interrupt channel (ULP GPIO Pin interrupt 0). By default, it is set to 0.
+
+  ```c
+  #define ULP_INT_CH        0      // ULP GPIO Pin interrupt 0
+  ```
+
+- `MODE_0`: Initialization value for the GPIO pin mode (MODE 0). By default, it is set to 0.
+
+  ```c
+  #define MODE_0            0      // Initializing GPIO MODE_0 value
+  ```
+
+- `PORT1`: Identifier for GPIO Port 1, used when configuring pins on port 1. By default, it is set to 1.
+
+  ```c
+  #define PORT1             1      // PORT 1
+  ```
+
+- `OUTPUT_VALUE`: Value to drive on the GPIO pin when configured as output. By default, it is set to 1.
+
+  ```c
+  #define OUTPUT_VALUE      1      // GPIO output value
+  ```
+
+- `PIN_COUNT`: Number of interrupts needed for the group interrupt configuration. By default, it is set to 2.
+
+  ```c
+  #define PIN_COUNT         2      // Number of interrupts needed
+  ```
+
+- `GRP_COUNT`: Count of group interrupt pins per group. By default, it is set to 2.
+
+  ```c
+  #define GRP_COUNT         2      // Count of group interrupt pins
+  ```
+
+- `PAD_SELECT_9`: Reserved GPIO PAD selection number (9), which is pre-configured for another function and must not be enabled. By default, it is set to 9.
+
+  ```c
+  #define PAD_SELECT_9      9      // GPIO PAD selection number
+  ```
+
+- `MAX_PAD_SELECT`: Maximum valid GPIO PAD selection number. By default, it is set to 34.
+
+  ```c
+  #define MAX_PAD_SELECT    34     // Maximum GPIO PAD selection number
+  ```
+
+- `FIVE_SECOND_DELAY`: Delay (in milliseconds) used within the example for power state transitions. By default, it is set to 5000 (5 seconds).
+
+  ```c
+  #define FIVE_SECOND_DELAY 5000   // Delay for 5 sec
+  ```
+
+- `UULP_GPIO_INTR_2`: Specifies the UULP GPIO pin interrupt number used by the example. By default, it is set to 2.
+
+  ```c
+  #define UULP_GPIO_INTR_2  2      // UULP GPIO pin interrupt 2
+  ```
+
+- `TOGGLE_COUNT`: Number of times the GPIO toggle/transition sequence is repeated. By default, it is set to 10.
+
+  ```c
+  #define TOGGLE_COUNT      10     // Count for number of times to repeat
   ```
 
 > **Note**: For recommended settings, please refer the [recommendations guide](https://docs.silabs.com/wiseconnect/latest/wiseconnect-developers-guide-prog-recommended-settings/).
 
 ## Test the Application
+
+> **Note:** Use **`Log_script.py`** from the **SiWx91x Platform Logger** example (`examples/si91x_soc/service/sl_si91x_logger/`) to decode structured console log output. Run:
+>
+> `python Log_script.py --out firmware.out --descriptor SYSVIEW_CaptiveCore.txt --port COM5 --max-args 3`
+>
+> Replace **COM5** with the serial port your board uses on the host PC.
+
 
 Refer to the instructions [here](https://docs.silabs.com/wiseconnect/latest/wiseconnect-getting-started/) to:
 
@@ -166,3 +258,19 @@ Refer to the instructions [here](https://docs.silabs.com/wiseconnect/latest/wise
 >
 >- Header connection pin references mentioned here are all specific to BRD4338A. If the user runs this application on a different board, it is recommended to refer the board specific schematic for GPIO-Header connection pin mapping.
 >- To use GPIO pins 31-34 in GPIO mode, see the [SiWx917 Software Reference Manual](docs/software-reference/manuals/siwx91x-software-reference-manual.md).
+
+## Troubleshooting
+
+- If the project does not build, ensure Simplicity Studio and the WiSeConnect extension are installed and the board is connected.
+- If the device is not detected, reinstall the connectivity firmware and check USB drivers.
+
+## Resources
+
+- [WiSeConnect Getting Started](https://docs.silabs.com/wiseconnect/latest/wiseconnect-getting-started/)
+- [WiSeConnect Examples](https://docs.silabs.com/wiseconnect/latest/wiseconnect-examples/)
+- [SiWx91x SoC Documentation](https://docs.silabs.com/wiseconnect/latest/)
+
+## Report Bugs/Support
+
+For issues and support, use the Silicon Labs Community or your normal support channel.
+
