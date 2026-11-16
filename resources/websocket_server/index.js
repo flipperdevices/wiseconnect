@@ -7,7 +7,7 @@ import { fileURLToPath } from "url";
 const USE_SSL = false; // Set to true to use WSS (WebSocket Secure), false to use WS (WebSocket)
 const HOSTNAME = "example.com";
 const PATHNAME = "/myresource";
-const PORT = 8080;
+const PORT = USE_SSL ? 443 : 8080; // Standard ports: 443 for wss://, 8080 for ws://
 
 // Conditionally import the HTTP or HTTPS module
 const { createServer } = USE_SSL ? await import("https") : await import("http");

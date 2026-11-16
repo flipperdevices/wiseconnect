@@ -597,6 +597,7 @@ sl_status_t sli_cpc_drv_read_data(sl_cpc_buffer_handle_t **buffer_handle, uint16
   sli_buf_entry_t *entry = (sli_buf_entry_t *)SLI_CPC_POP_BUFFER_HANDLE_LIST(&rx_pending_list_head, sli_buf_entry_t);
   if (entry == NULL) {
     MCU_EXIT_ATOMIC();
+    SL_PRINT_STRING_ERROR("sli_cpc_drv_read_data: No free buffer found");
     return SL_STATUS_EMPTY;
   }
   MCU_EXIT_ATOMIC();
@@ -629,6 +630,7 @@ sl_status_t sli_cpc_drv_transmit_data(sl_cpc_buffer_handle_t *buffer_handle, uin
   MCU_EXIT_ATOMIC();
 
   if (entry == NULL) {
+    SL_PRINT_STRING_ERROR("sli_cpc_drv_transmit_data: No free buffer found");
     return SL_STATUS_NOT_READY;
   }
 
@@ -729,7 +731,7 @@ void Device_Reset(void)
 
   //TODO: Handle NWP reset
   if (status != RSI_SUCCESS) {
-    LOG_PRINT("\r\nWireless deinit failed, Error Code : 0x%1X\r\n", status);
+    SL_PRINT_STRING_ERROR("Wireless deinit failed, Error Code : 0x%1X", status);
   } else {
     /* M4 Reset */
     NVIC_SystemReset();
@@ -827,7 +829,7 @@ void sl_cpc_process_tx_rx(void)
     } break;
     case SPI_CPC_RX_HEADER: {
       // Prepare for header rx
-      if ((no_tx_payload == FALSE)) {
+      if (no_tx_payload == FALSE) {
         prime_for_rx_header(SET_IRQ_HIGH);
       } else {
         cpc_tx_rx_state = SPI_CPC_RX_HEADER;
@@ -907,7 +909,7 @@ static void prime_dma_for_reception(size_t payload_size, enum header_situation l
 
   start_transfer :
 
-      if ((init_header_rx == TRUE))
+      if (init_header_rx == TRUE)
   {
     // initiate header rx
     memset(header_buffer, 0, SLI_CPC_HDLC_HEADER_RAW_SIZE);
@@ -983,7 +985,7 @@ static void prime_dma_for_transmission(void)
     if (count % CPC_TEST_SPI_DRIVER_CRC_ERROR_INJECTION_FREQUENCY == 0) {
       count = 0;
 
-      printf("Invalidated the transmit header CRC\n");
+      SL_PRINT_STRING_ERROR("Invalidated the transmit header CRC");
 
       // Make a copy of the good header we are going to transmit
       // We have to make a copy, because otherwise if we modify the good header itself,
@@ -1081,7 +1083,7 @@ static void end_of_header_xfer(void)
       if (count % CPC_TEST_SPI_DRIVER_CRC_ERROR_INJECTION_FREQUENCY == 0) {
         count = 0;
 
-        printf("Invalidated the CRC\n");
+        SL_PRINT_STRING_ERROR("Invalidated the CRC");
 
         // Mess with the CRC by inverting a byte
         ((uint8_t *)&header_buffer)[4] = ~((uint8_t *)&header_buffer)[4];
@@ -1181,7 +1183,7 @@ static void flush_rx(void)
         if (count % CPC_TEST_SPI_DRIVER_CRC_ERROR_INJECTION_FREQUENCY == 0) {
           count = 0;
 
-          printf("Invalidated the payload CRC\n");
+          SL_PRINT_STRING_ERROR("Invalidated the payload CRC");
 
           //Mess with the first byte of the payload CRC by inverting it
           ((uint8_t *)currently_receiving_rx_entry->handle->data)[0] =

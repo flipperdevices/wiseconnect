@@ -1,7 +1,7 @@
 id: brd4340a
 label: BRD4340A
 package: platform_siwx91x
-description: Board support for BRD4340A.
+description: Board support for BRD4340A(SoC).
 category: Board|Radio Board
 quality: production
 metadata:
@@ -14,6 +14,9 @@ requires:
 - name: hardware_board_mainboard
 - name: external_flash_none
 - name: external_psram_8mb
+- name: psram_aps6404l_sqh
+  condition:
+  - psram_core
 - name: rsilib_board
 - name: si91x_common_flash
 provides:
@@ -26,8 +29,6 @@ provides:
 - name: si917_radio_board
 recommends:
 - id: brd4002a
-  vendor: silabs
-- id: '%extension-wiseconnect3_sdk%psram_aps6404l_sqh'
   vendor: silabs
 define:
 - name: SL_BOARD_NAME

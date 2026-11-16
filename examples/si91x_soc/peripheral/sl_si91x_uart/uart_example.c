@@ -15,6 +15,7 @@
  *
  ******************************************************************************/
 
+#include <inttypes.h>
 #include "sl_si91x_usart.h"
 #include "rsi_debug.h"
 #include "uart_example.h"
@@ -43,7 +44,7 @@ static void compare_loop_back_data(void);
 /*******************************************************************************
  **************************   GLOBAL VARIABLES   *******************************
  ******************************************************************************/
-sl_usart_handle_t uart_handle;
+static sl_usart_handle_t uart_handle;
 uart_mode_enum_t current_mode = SL_UART_SEND_DATA;
 
 /*******************************************************************************
@@ -71,26 +72,34 @@ void uart_example_init(void)
     // Initialize the UART
     status = sl_si91x_usart_init(UART_1, &uart_handle);
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("sl_si91x_usart_initialize: Error Code : %lu \n", status);
+      /* Note: All status messages in this example — both success and failure — are
+ * intentionally emitted via SL_PRINT_STRING_ERROR so that they remain visible
+ * on the console at the default log level. This is a demonstration choice, not
+ * a recommendation: in production code, ERROR severity should be reserved for
+ * actual failures, with successful operations logged via SL_PRINT_STRING_INFO
+ * (or SL_PRINT_STRING_DEBUG for verbose trace). */
+      SL_PRINT_STRING_ERROR("sl_si91x_usart_initialize: Error Code : %lu \n", status);
       break;
     }
-    DEBUGOUT("UART initialization is successful \n");
+    SL_PRINT_STRING_ERROR("UART initialization is successful \n");
     // Configure the UART configurations
     status = sl_si91x_usart_set_configuration(uart_handle, &uart_config);
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("sl_si91x_usart_set_configuration: Error Code : %lu \n", status);
+      SL_PRINT_STRING_ERROR("sl_si91x_usart_set_configuration: Error Code : %lu \n", status);
       break;
     }
-    DEBUGOUT("UART configuration is successful \n");
+    SL_PRINT_STRING_ERROR("UART configuration is successful \n");
     // Register user callback function
     status = sl_si91x_usart_multiple_instance_register_event_callback(UART_1, uart_callback_event);
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("sl_si91x_usart_multiple_instance_register_event_callback: Error Code : %lu \n", status);
+      SL_PRINT_STRING_ERROR("sl_si91x_usart_multiple_instance_register_event_"
+                            "callback: Error Code : %lu \n",
+                            status);
       break;
     }
-    DEBUGOUT("UART user event callback registered successfully \n");
+    SL_PRINT_STRING_ERROR("UART user event callback registered successfully \n");
     sl_si91x_usart_get_configurations(UART_1, &get_config);
-    DEBUGOUT("Baud Rate = %ld \n", get_config.baudrate);
+    SL_PRINT_STRING_ERROR("Baud Rate = %ld \n", get_config.baudrate);
   } while (false);
 }
 
@@ -114,7 +123,7 @@ void uart_example_process_action(void)
         status = sl_si91x_usart_send_data(uart_handle, uart_data_out, sizeof(uart_data_out));
         if (status != SL_STATUS_OK) {
           // If it fails to execute the API, it will not execute rest of the things
-          DEBUGOUT("sl_si91x_uart_send_data: Error Code : %lu \n", status);
+          SL_PRINT_STRING_ERROR("sl_si91x_uart_send_data: Error Code : %lu \n", status);
           current_mode = SL_UART_TRANSMISSION_COMPLETED;
           break;
         }
@@ -129,7 +138,7 @@ void uart_example_process_action(void)
         uart_begin_transmission = true;
         break;
       }
-      DEBUGOUT("UART send completed successfully \n");
+      SL_PRINT_STRING_ERROR("UART send completed successfully \n");
       // Current mode is set to complete
       current_mode = SL_UART_TRANSMISSION_COMPLETED;
       break;
@@ -140,27 +149,27 @@ void uart_example_process_action(void)
         status = sl_si91x_usart_receive_data(uart_handle, uart_data_in, sizeof(uart_data_in));
         if (status != SL_STATUS_OK) {
           // If it fails to execute the API, it will not execute rest of the things
-          DEBUGOUT("sl_si91x_uart_receive_data: Error Code : %lu \n", status);
+          SL_PRINT_STRING_ERROR("sl_si91x_uart_receive_data: Error Code : %lu \n", status);
           current_mode = SL_UART_TRANSMISSION_COMPLETED;
           break;
         }
-        DEBUGOUT("UART receive begin successfully \n");
+        SL_PRINT_STRING_ERROR("UART receive begin successfully \n");
         uart_begin_transmission = false;
       }
       //Waiting till the receive is completed
       if (uart_receive_complete) {
-        // Update the receive compelete flag with 0.
+        // Update the receive complete flag with 0.
         uart_receive_complete = false;
         if (USE_SEND) {
           // If send macro is enabled, current mode is set to send
           current_mode            = SL_UART_SEND_DATA;
           uart_begin_transmission = true;
-          DEBUGOUT("UART receive completed \n");
+          SL_PRINT_STRING_ERROR("UART receive completed \n");
           break;
         }
 
-        DEBUGOUT("UART send completed successfully \n");
-        DEBUGOUT("UART receive completed \n");
+        SL_PRINT_STRING_ERROR("UART send completed successfully \n");
+        SL_PRINT_STRING_ERROR("UART receive completed \n");
         compare_loop_back_data();
         // If send macro is not enabled, current mode is set to completed.
         current_mode = SL_UART_TRANSMISSION_COMPLETED;
@@ -187,9 +196,9 @@ static void compare_loop_back_data(void)
     }
   }
   if (data_index == UART_BUFFER_SIZE) {
-    DEBUGOUT("Data comparison successful, Loop Back Test Passed \n");
+    SL_PRINT_STRING_ERROR("Data comparison successful, Loop Back Test Passed \n");
   } else {
-    DEBUGOUT("Data comparison failed, Loop Back Test failed \n");
+    SL_PRINT_STRING_ERROR("Data comparison failed, Loop Back Test failed \n");
   }
 }
 

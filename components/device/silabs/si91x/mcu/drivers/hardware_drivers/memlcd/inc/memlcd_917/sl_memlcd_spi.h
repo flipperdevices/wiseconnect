@@ -29,6 +29,8 @@
  ******************************************************************************/
 #ifndef SL_MEMLCD_SPI_H
 #define SL_MEMLCD_SPI_H
+#include "sl_log_helper.h"
+
 typedef __UINT32_TYPE__ __uint32_t;
 
 #ifndef _UINT32_T_DECLARED

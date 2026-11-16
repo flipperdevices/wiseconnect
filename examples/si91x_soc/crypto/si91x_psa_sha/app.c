@@ -30,6 +30,7 @@
 
 #include "app.h"
 #include "psa_sha_app.h"
+#include "rsi_debug.h"
 
 #include <string.h>
 #include "cmsis_os2.h"
@@ -38,18 +39,12 @@
 #include "sl_status.h"
 
 /******************************************************
- *               Variable Definitions
- ******************************************************/
-const osThreadAttr_t thread_attributes = {
+  *               Variable Definitions
+  ******************************************************/
+static const osThreadAttr_t thread_attributes = {
   .name       = "app",
-  .attr_bits  = 0,
-  .cb_mem     = 0,
-  .cb_size    = 0,
-  .stack_mem  = 0,
   .stack_size = 3072,
   .priority   = osPriorityLow,
-  .tz_module  = 0,
-  .reserved   = 0,
 };
 
 static const sl_wifi_device_configuration_t client_configuration = {
@@ -80,17 +75,20 @@ static const sl_wifi_device_configuration_t client_configuration = {
                    .ext_tcp_ip_feature_bit_map = 0,
                    .ble_feature_bit_map        = 0,
                    .ble_ext_feature_bit_map    = 0,
-                   .config_feature_bit_map     = 0 }
+                   .config_feature_bit_map     = 0 },
+  .ta_pool         = { .tx_ratio_in_buffer_pool = 0, .rx_ratio_in_buffer_pool = 0, .global_ratio_in_buffer_pool = 0 },
+  .efuse_data_type = SL_SI91X_EFUSE_MFG_SW_VERSION,
+  .nwp_fw_image_number = SL_SI91X_NWP_FW_IMAGE_NUMBER_0
 };
 
 /******************************************************
- *               Function Declarations
- ******************************************************/
+  *               Function Declarations
+  ******************************************************/
 static void application_start(void *argument);
 
 /******************************************************
- *               Function Definitions
- ******************************************************/
+  *               Function Definitions
+  ******************************************************/
 void app_init(void)
 {
   osThreadNew((osThreadFunc_t)application_start, NULL, &thread_attributes);
@@ -102,17 +100,17 @@ static void application_start(void *argument)
 
   sl_status_t status = sl_net_init(SL_NET_WIFI_CLIENT_INTERFACE, &client_configuration, NULL, NULL);
   if (status != SL_STATUS_OK) {
-    printf("Failed to start Wi-Fi client interface: 0x%lx\r\n", status);
+    DEBUGOUT("Failed to start Wi-Fi client interface: 0x%lx\r\n", (unsigned long)status);
     return;
   }
-  printf("\r\nWi-Fi Init Success\r\n");
+  DEBUGOUT("\r\nWi-Fi Init Success\r\n");
 
   app_process_action();
 }
 
 /***************************************************************************/ /**
- * Application state machine, called infinitely.
- ******************************************************************************/
+  * Application state machine, called infinitely.
+  ******************************************************************************/
 void app_process_action(void)
 {
   psa_app_process_action();

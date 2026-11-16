@@ -8,7 +8,7 @@
 #include "lwip/opt.h"
 
 /* This test file is only active when SL_LWIP_ETHARP_ONDEMAND_TIMER is enabled */
-#if defined(SL_LWIP_ETHARP_ONDEMAND_TIMER) && SL_LWIP_ETHARP_ONDEMAND_TIMER && defined(LWIP_TESTMODE)
+#if SL_LWIP_ETHARP_ONDEMAND_TIMER && LWIP_TESTMODE
 
 #include "lwip/timeouts.h"
 #include "arch/sys_arch.h"
@@ -42,7 +42,7 @@ static ip4_addr_t test_ipaddr, test_netmask, test_gw;
 static struct eth_addr test_ethaddr = {{0x00, 0x01, 0x02, 0x03, 0x04, 0x05}};
 static int linkoutput_ctr;
 
-#ifdef LWIP_TESTMODE
+#if LWIP_TESTMODE
 /* ⚠️  MAINTENANCE WARNING: This structure is duplicated from etharp.c for white-box testing.
  *     It MUST be kept synchronized with the internal etharp_entry structure in etharp.c.
  */

@@ -41,6 +41,7 @@ extern "C" {
 #include "rsi_sysrtc.h"
 #include "sl_gpio_board.h"
 #include "sl_si91x_driver_gpio.h"
+#include "sl_log_helper.h"
 /***************************************************************************/
 /**
  * @addtogroup SYSRTC System RTC

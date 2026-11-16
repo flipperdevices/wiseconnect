@@ -1,6 +1,6 @@
 /***************************************************************************/ /**
  * @file
- * @brief IO Stream VUART SI91X.
+ * @brief IO Stream VUART for SiWx91x.
  *******************************************************************************
  * # License
  * <b>Copyright 2019 Silicon Laboratories Inc. www.silabs.com</b>
@@ -43,8 +43,8 @@ extern "C" {
  ******************************************************************************/
 
 /***************************************************************************/ /**
- * @addtogroup iostream_vuart_si91x I/O Stream VUART SI91X
- * @brief IO Stream VUART SI91X
+ * @addtogroup iostream_vuart_si91x I/O Stream VUART SiWx91x
+ * @brief IO Stream VUART for SiWx91x
  * @details
  * ## Overview
  *
@@ -79,7 +79,7 @@ extern "C" {
 ****************************  DEFINES / MACROS   ********************************
 *******************************************************************************/
 
-#define SL_SI91X_IOSTREAM_TYPE_VUART 9 ///<Iostream Type Si9ax Vuart
+#define SL_SI91X_IOSTREAM_TYPE_VUART 9 ///< IOSTREAM type: SiWx91x VUART
 
 /*******************************************************************************
 ****************************  GLOBAL VARIABLES   ********************************

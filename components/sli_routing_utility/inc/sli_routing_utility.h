@@ -32,6 +32,7 @@
 #define SLI_ROUTING_UTILITY_H
 
 #include "sli_routing_utility_types.h"
+#include "sli_code_classification.h"
 #include <stdint.h>
 /**
  * @brief Routes a packet encapsulated in a queue node through the routing table.
@@ -44,6 +45,7 @@
  *
  * @return Status of the routing operation.
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_SLI_ROUTING_UTILITY, SL_CODE_CLASS_TIME_CRITICAL)
 sl_status_t sli_routing_utility_route_queue_node(sli_routing_table_t *routing_table,
                                                  uint16_t packet_type,
                                                  sli_queue_node_t *queue_node,
@@ -60,10 +62,11 @@ sl_status_t sli_routing_utility_route_queue_node(sli_routing_table_t *routing_ta
  *
  * @return Status of the routing operation.
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_SLI_ROUTING_UTILITY, SL_CODE_CLASS_TIME_CRITICAL)
 sl_status_t sli_routing_utility_route_packet(sli_routing_table_t *routing_table,
                                              uint16_t packet_type,
-                                             void *packet,
+                                             const void *packet,
                                              uint16_t packet_size,
-                                             void *context);
+                                             const void *context);
 
 #endif

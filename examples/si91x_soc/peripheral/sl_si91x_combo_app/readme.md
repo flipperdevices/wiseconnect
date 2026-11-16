@@ -1,8 +1,8 @@
-# SL COMBO APP
+# SiWx91x Platform COMBO APPLICATION
 
 ## Table of Contents
 
-- [SL COMBO APP](#sl-combo-app)
+- [SiWx91x Platform COMBO APPLICATION](#platform-siwx91x-combo-application)
   - [Purpose/Scope](#purposescope)
   - [Overview](#overview)
     - [I2C](#1-i2c)
@@ -24,6 +24,9 @@
     - [PWM Channel2](#pwm-channel2)
     - [PWM Channel3](#pwm-channel3)
   - [Test the Application](#test-the-application)
+  - [Troubleshooting](#troubleshooting)
+  - [Resources](#resources)
+  - [Report Bugs/Support](#report-bugssupport)
   - [Expected Results](#expected-results)
     - [I2C](#i2c)
     - [PWM](#pwm)
@@ -75,7 +78,7 @@ The purpose of this application is to demonstrate the use of CMSIS-RTOS concepts
 ### Hardware Requirements
 
 - Windows PC
-- Silicon Labs Si917 Evaluation Kit [[BRD4002](https://www.silabs.com/development-tools/wireless/wireless-pro-kit-mainboard?tab=overview) + [BRD4338A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-rb4338a-wifi-6-bluetooth-le-soc-radio-board?tab=overview) / [BRD4342A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx91x-rb4342a-wifi-6-bluetooth-le-soc-radio-board?tab=overview) / [BRD4343A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4343a-wi-fi-6-bluetooth-le-8mb-flash-radio-board-for-module?tab=overview)]
+- Silicon Labs SiWx91x Evaluation Kit [[BRD4002](https://www.silabs.com/development-tools/wireless/wireless-pro-kit-mainboard?tab=overview) + [BRD4338A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-rb4338a-wifi-6-bluetooth-le-soc-radio-board?tab=overview) / [BRD4342A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx91x-rb4342a-wifi-6-bluetooth-le-soc-radio-board?tab=overview) / [BRD4343A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4343a-wi-fi-6-bluetooth-le-8mb-flash-radio-board-for-module?tab=overview) / [BRD4343C](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4343c-wi-fi-6-bluetooth-le-8mb-flash-radio-board-for-module?tab=overview)]
 - SiWx917 AC1 Module Explorer Kit [BRD2708A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-ek2708a-explorer-kit)
 
 ### Software Requirements
@@ -116,9 +119,28 @@ For details on the project folder structure, see the [WiSeConnect Examples](http
 - Change 'DMA' to 'Enable' or 'Disable' as per DMA requirement.
 - After the above UC configurations, configure following macros in the `i2c_leader_example.c` file and update/modify following macros, if required.
 
-    ```C
-      #define FOLLOWER_I2C_ADDR        // Update I2C follower address
-      #define I2C_SIZE_BUFFERS         // To change the number of bytes to send and receive.Its value should be less than maximum buffer size macro value.
+  - `FOLLOWER_I2C_ADDR`: 7-bit I2C follower (target) address that the leader communicates with. Must match the address configured on the I2C follower device. By default, it is set to `0x50`.
+
+    ```c
+      #define FOLLOWER_I2C_ADDR            0x50  // I2C follower address
+    ```
+
+  - `MAX_BUFFER_SIZE_BLOCKING`: Maximum buffer size (in bytes) allowed for RX and TX length when transferring data without DMA. By default, it is set to 80000.
+
+    ```c
+      #define MAX_BUFFER_SIZE_BLOCKING     80000 // Maximum buffer size for RX and TX length when transferring without DMA
+    ```
+
+  - `MAX_BUFFER_SIZE_NON_BLOCKING`: Maximum buffer size (in bytes) allowed for RX and TX length when transferring data with DMA. By default, it is set to 30000.
+
+    ```c
+      #define MAX_BUFFER_SIZE_NON_BLOCKING 30000 // Maximum buffer size for RX and TX length when transferring with DMA
+    ```
+
+  - `I2C_SIZE_BUFFERS`: Size (in bytes) of the I2C data buffers used for transfer. By default, it is set to 1024.
+
+    ```c
+      #define I2C_SIZE_BUFFERS             1024  // Size of data buffer
     ```
 
   > **Note:** For an I2C0 instance, change the value of following macros in path: `/$project/config/RTE_Device_917.h`.
@@ -140,14 +162,14 @@ For details on the project folder structure, see the [WiSeConnect Examples](http
 ### I2C0
 
 | PIN |   917 GPIO      |    Explorer kit GPIO  |           Description       |
-| --- | ----------------| ----------------------| ----------------------------| 
+| --- | ----------------| ----------------------| ----------------------------|
 | SCL |  GPIO_7 [P20]   | GPIO_7 [SCL]          | Connect to Follower SCL pin |
 | SDA |  GPIO_6 [P19]   | GPIO_6 [SDA]          |Connect to Follower SDA pin  |
 
 ### I2C1
 
 | PIN |     917 GPIO      |   Explorer kit GPIO     |   Description               |
-| --- | ----------------  | ----------------------  | ----------------------------| 
+| --- | ----------------  | ----------------------  | ----------------------------|
 | SCL |    GPIO_50[P32]   | GPIO_50 [EXP_HEADER-13] | Connect to Follower SCL pin |
 | SDA |    GPIO_51[P34]   | GPIO_51 [EXP_HEADER-15] | Connect to Follower SDA pin |
 
@@ -177,17 +199,17 @@ For details on the project folder structure, see the [WiSeConnect Examples](http
 
 ### PWM Channel1
 
-  | Description   | GPIO    | 917 Breakout pin    | 
-  | ------------- | ------- | ------------ | 
-  | PWM_H         | GPIO_9  | F9           | 
-  | PWM_L         | GPIO_8  | F8           | 
+  | Description   | GPIO    | 917 Breakout pin    |
+  | ------------- | ------- | ------------ |
+  | PWM_H         | GPIO_9  | F9           |
+  | PWM_L         | GPIO_8  | F8           |
 
 ### PWM Channel2
 
   | Description   | GPIO    | 917 Breakout pin    |
-  | ------------- | ------- | ------------ | 
-  | PWM_H         | GPIO_11 | F13          | 
-  | PWM_L         | GPIO_10 | F11          | 
+  | ------------- | ------- | ------------ |
+  | PWM_H         | GPIO_11 | F13          |
+  | PWM_L         | GPIO_10 | F11          |
 
 ### PWM Channel3
 
@@ -195,7 +217,7 @@ For details on the project folder structure, see the [WiSeConnect Examples](http
   | ------------- | -------     | ----------- | --------------- |
   | PWM_H         | ULP_GPIO_7  | P12         |  [TX] |
   | PWM_L         | ULP_GPIO_6  | P13         |  [RX] |
-  
+
 ## Test the Application
 
 1. Compile and run the application.
@@ -222,3 +244,19 @@ For details on the project folder structure, see the [WiSeConnect Examples](http
 
 - Recommending to adjust sync delay, according to the I2C Follower.
 - Interrupt handlers are implemented in the driver layer, and user callbacks are provided for custom code. If user needs to implement their own interrupt handler instead of using the default one, it is recommeneded to make the driver interrupt handler a weak handler. Then, copy the necessary code from the driver handler to your custom interrupt handler.
+
+## Troubleshooting
+
+- If the project does not build, ensure Simplicity Studio and the WiSeConnect extension are installed and the board is connected.
+- If the device is not detected, reinstall the connectivity firmware and check USB drivers.
+
+## Resources
+
+- [WiSeConnect Getting Started](https://docs.silabs.com/wiseconnect/latest/wiseconnect-getting-started/)
+- [WiSeConnect Examples](https://docs.silabs.com/wiseconnect/latest/wiseconnect-examples/)
+- [SiWx91x SoC Documentation](https://docs.silabs.com/wiseconnect/latest/)
+
+## Report Bugs/Support
+
+For issues and support, use the Silicon Labs Community or your normal support channel.
+

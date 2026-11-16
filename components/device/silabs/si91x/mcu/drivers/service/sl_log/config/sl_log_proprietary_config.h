@@ -89,7 +89,7 @@ extern "C" {
  *
  * @note Default: SL_LOG_CONFIG_MODE_HOST
  */
-#define SL_LOG_CONFIG_MODE SL_LOG_CONFIG_MODE_HOST
+#define SL_LOG_CONFIG_MODE SL_LOG_CONFIG_MODE_CONSOLE
 
 /** @} (end addtogroup sl_log_uc_proprietary_config) */
 

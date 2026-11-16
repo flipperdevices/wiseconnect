@@ -14,6 +14,7 @@
  * sections of the MSLA applicable to Source Code.
  *
  ******************************************************************************/
+#include <inttypes.h>
 #include "lfs.h"
 #include "sl_net.h"
 #include "sl_si91x_driver.h"
@@ -64,16 +65,10 @@ void application_start(const void *unused);
 /*******************************************************************************
  **************************   GLOBAL VARIABLES   *******************************
  ******************************************************************************/
-const osThreadAttr_t thread_attributes = {
+static const osThreadAttr_t thread_attributes = {
   .name       = "app",
-  .attr_bits  = 0,
-  .cb_mem     = 0,
-  .cb_size    = 0,
-  .stack_mem  = 0,
   .stack_size = 3072,
   .priority   = osPriorityLow,
-  .tz_module  = 0,
-  .reserved   = 0,
 };
 
 static const sl_wifi_device_configuration_t station_init_configuration = {
@@ -104,7 +99,10 @@ static const sl_wifi_device_configuration_t station_init_configuration = {
                    .ext_tcp_ip_feature_bit_map = 0,
                    .ble_feature_bit_map        = 0,
                    .ble_ext_feature_bit_map    = 0,
-                   .config_feature_bit_map     = 0 }
+                   .config_feature_bit_map     = 0 },
+  .ta_pool         = { .tx_ratio_in_buffer_pool = 0, .rx_ratio_in_buffer_pool = 0, .global_ratio_in_buffer_pool = 0 },
+  .efuse_data_type = SL_SI91X_EFUSE_MFG_SW_VERSION,
+  .nwp_fw_image_number = SL_SI91X_NWP_FW_IMAGE_NUMBER_0
 };
 
 /*******************************************************************************
@@ -137,55 +135,61 @@ void application_start(const void *unused)
   uint32_t status;
   uint32_t boot_count = 0;
 
-  DEBUGOUT("\r\nInitializing wireless stack\r\n");
+  /* Note: All status messages in this example — both success and failure — are
+ * intentionally emitted via SL_PRINT_STRING_ERROR so that they remain visible
+ * on the console at the default log level. This is a demonstration choice, not
+ * a recommendation: in production code, ERROR severity should be reserved for
+ * actual failures, with successful operations logged via SL_PRINT_STRING_INFO
+ * (or SL_PRINT_STRING_DEBUG for verbose trace). */
+  SL_PRINT_STRING_ERROR("\r\nInitializing wireless stack\r\n");
   status = sl_net_init(SL_NET_WIFI_CLIENT_INTERFACE, &station_init_configuration, NULL, NULL);
   if (status != SL_STATUS_OK) {
-    DEBUGOUT("\r\nFailed to start Wi-Fi client interface: 0x%lx\r\n", status);
+    SL_PRINT_STRING_ERROR("\r\nFailed to start Wi-Fi client interface: 0x%lx\r\n", status);
     return;
   }
-  DEBUGOUT("\r\nWireless stack initialized successfully\r\n");
+  SL_PRINT_STRING_ERROR("\r\nWireless stack initialized successfully\r\n");
 
-  DEBUGOUT("\r\nMounting file system\r\n");
+  SL_PRINT_STRING_ERROR("\r\nMounting file system\r\n");
   // mount the filesystem
   err = lfs_mount(&lfs, &cfg);
 
   // reformat if we can't mount the filesystem
   // this should only happen on the first boot
   if (err) {
-    DEBUGOUT("\r\nFile system not found, formatting\r\n");
+    SL_PRINT_STRING_ERROR("\r\nFile system not found, formatting\r\n");
     err = lfs_format(&lfs, &cfg);
     err = lfs_mount(&lfs, &cfg);
-    DEBUGOUT("\r\nFile system formatted and mounted\r\n");
+    SL_PRINT_STRING_ERROR("\r\nFile system formatted and mounted\r\n");
   } else {
-    DEBUGOUT("\r\nFile system mounted successfully\r\n");
+    SL_PRINT_STRING_ERROR("\r\nFile system mounted successfully\r\n");
   }
 
-  DEBUGOUT("\r\nBoot count operations\r\n");
+  SL_PRINT_STRING_ERROR("\r\nBoot count operations\r\n");
   // read current count
   err = lfs_file_open(&lfs, &file, "boot_count", LFS_O_RDWR | LFS_O_CREAT);
   if (err) {
-    DEBUGOUT("\r\nFailed to open the file \r\n");
+    SL_PRINT_STRING_ERROR("\r\nFailed to open the file \r\n");
     return;
   }
-  DEBUGOUT("\r\nBoot count file opened\r\n");
+  SL_PRINT_STRING_ERROR("\r\nBoot count file opened\r\n");
 
   lfs_file_read(&lfs, &file, &boot_count, sizeof(boot_count));
-  DEBUGOUT("\r\nCurrent boot count read: %ld\r\n", boot_count);
+  SL_PRINT_STRING_ERROR("\r\nCurrent boot count read: %ld\r\n", boot_count);
 
   // update boot count
   boot_count += 1;
   lfs_file_rewind(&lfs, &file);
   lfs_file_write(&lfs, &file, &boot_count, sizeof(boot_count));
-  DEBUGOUT("\r\nBoot count written: %ld\r\n", boot_count);
+  SL_PRINT_STRING_ERROR("\r\nBoot count written: %ld\r\n", boot_count);
 
   // remember the storage is not updated until the file is closed successfully
   lfs_file_close(&lfs, &file);
-  DEBUGOUT("\r\nBoot count file closed\r\n");
+  SL_PRINT_STRING_ERROR("\r\nBoot count file closed\r\n");
 
   // release any resources we were using
   lfs_unmount(&lfs);
-  DEBUGOUT("\r\nFile system unmounted\r\n");
+  SL_PRINT_STRING_ERROR("\r\nFile system unmounted\r\n");
 
   // print the boot count
-  DEBUGOUT("\r\nboot_count: %ld\r\n", boot_count);
+  SL_PRINT_STRING_ERROR("\r\nboot_count: %ld\r\n", boot_count);
 }

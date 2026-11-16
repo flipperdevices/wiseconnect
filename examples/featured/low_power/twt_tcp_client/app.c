@@ -29,12 +29,12 @@
  ******************************************************************************/
 #include <string.h>
 #include <stdint.h>
+#include <inttypes.h>
 #include "errno.h"
 #include "sl_wifi_callback_framework.h"
 #include "sl_status.h"
 #include "sl_board_configuration.h"
 #include "cmsis_os2.h"
-#include "string.h"
 #include "sl_wifi.h"
 #include "socket.h"
 #include "sl_utility.h"
@@ -63,15 +63,14 @@
 #define SEND_TCP_DATA     0
 #define TWT_AUTO_CONFIG   1
 
+/* Defaults migrated from sl_wifi_filter_broadcast(5000, 1, 1). */
+#define BCAST_FILTER_ENABLE      (1U)
+#define MCAST_FILTER_ENABLE      (1U)
+#define FILTER_MODE              (0U)
+#define BEACON_DROP_THRESHOLD_MS (5000U)
+
 // Use case based TWT selection params
-#define TWT_RX_LATENCY                       60000 // in milli seconds
-#define DEVICE_AVERAGE_THROUGHPUT            20000 // Kbps
-#define ESTIMATE_EXTRA_WAKE_DURATION_PERCENT 0     // in percentage
-#define TWT_TOLERABLE_DEVIATION              10    // in percentage
-#define TWT_DEFAULT_WAKE_INTERVAL_MS         1024  // in milli seconds
-#define TWT_DEFAULT_WAKE_DURATION_MS         8     // in milli seconds
-#define MAX_BEACON_WAKE_UP_AFTER_SP \
-  2 // The number of beacons after the service period completion for which the module wakes up and listens for any pending RX.
+#define TWT_RX_LATENCY      60000 // in milli seconds
 #define TCP_KEEP_ALIVE_TIME 240
 
 static const sl_wifi_device_configuration_t twt_client_configuration = {
@@ -96,10 +95,13 @@ static const sl_wifi_device_configuration_t twt_client_configuration = {
 #endif
                                                   ),
                    .bt_feature_bit_map         = 0,
-                   .ext_tcp_ip_feature_bit_map = SL_SI91X_CONFIG_FEAT_EXTENTION_VALID,
+                   .ext_tcp_ip_feature_bit_map = SL_SI91X_CONFIG_FEAT_EXTENSION_VALID,
                    .ble_feature_bit_map        = 0,
                    .ble_ext_feature_bit_map    = 0,
-                   .config_feature_bit_map = (SL_SI91X_FEAT_SLEEP_GPIO_SEL_BITMAP | SL_WIFI_ENABLE_ENHANCED_MAX_PSP) }
+                   .config_feature_bit_map = (SL_SI91X_FEAT_SLEEP_GPIO_SEL_BITMAP | SL_WIFI_ENABLE_ENHANCED_MAX_PSP) },
+  .ta_pool         = { .tx_ratio_in_buffer_pool = 0, .rx_ratio_in_buffer_pool = 0, .global_ratio_in_buffer_pool = 0 },
+  .efuse_data_type = SL_SI91X_EFUSE_MFG_SW_VERSION,
+  .nwp_fw_image_number = SL_SI91X_NWP_FW_IMAGE_NUMBER_0
 };
 
 /******************************************************
@@ -114,7 +116,6 @@ const osThreadAttr_t thread_attributes = {
   .stack_size = 3072,
   .priority   = 0,
   .tz_module  = 0,
-  .reserved   = 0,
 };
 
 sl_wifi_twt_request_t default_twt_setup_configuration = {
@@ -139,17 +140,11 @@ sl_wifi_twt_request_t default_twt_setup_configuration = {
   .negotiation_type        = 0,
 };
 
-sl_wifi_twt_selection_t default_twt_selection_configuration = {
-  .twt_enable                            = 1,
-  .average_tx_throughput                 = 0,
-  .tx_latency                            = 0,
-  .rx_latency                            = TWT_RX_LATENCY,
-  .device_average_throughput             = DEVICE_AVERAGE_THROUGHPUT,
-  .estimated_extra_wake_duration_percent = ESTIMATE_EXTRA_WAKE_DURATION_PERCENT,
-  .twt_tolerable_deviation               = TWT_TOLERABLE_DEVIATION,
-  .default_wake_interval_ms              = TWT_DEFAULT_WAKE_INTERVAL_MS,
-  .default_minimum_wake_duration_ms      = TWT_DEFAULT_WAKE_DURATION_MS,
-  .beacon_wake_up_count_after_sp         = MAX_BEACON_WAKE_UP_AFTER_SP
+sl_wifi_twt_selection_v2_t default_twt_config = {
+  .twt_enable            = 1,
+  .average_tx_throughput = 0,
+  .tx_latency            = 0,
+  .rx_latency            = TWT_RX_LATENCY,
 };
 
 volatile sl_status_t callback_status = SL_STATUS_OK;
@@ -185,17 +180,17 @@ void application_start()
 
   status = sl_net_init(SL_NET_WIFI_CLIENT_INTERFACE, &twt_client_configuration, NULL, NULL);
   if (status != SL_STATUS_OK) {
-    printf("Failed to start Wi-Fi client interface: 0x%lx\r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "Failed to start Wi-Fi client interface: 0x%" PRIx32 "", (uint32_t)status);
     return;
   }
-  printf("Wi-Fi Init Done\r\n");
+  SL_DEBUG_LOG_V2(INFO, "Wi-Fi Init Done\r\n");
 
   status = sl_net_up(SL_NET_WIFI_CLIENT_INTERFACE, 0);
   if (status != SL_STATUS_OK) {
-    printf("Failed to bring Wi-Fi client interface up: 0x%lx\r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "Failed to bring Wi-Fi client interface up: 0x%" PRIx32 "", (uint32_t)status);
     return;
   }
-  printf("Wi-Fi Client Connected\r\n");
+  SL_DEBUG_LOG_V2(INFO, "Wi-Fi Client Connected\r\n");
 
   sl_net_inet_addr(SERVER_IP, (uint32_t *)&ip);
 
@@ -205,16 +200,16 @@ void application_start()
 
   //! Create socket
   client_socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-  printf("\n Client Socket: %d\n", client_socket);
+  SL_DEBUG_LOG_V2(INFO, " Client Socket: %d\r\n", client_socket);
   if (client_socket < 0) {
-    printf("\r\nSocket Create failed with bsd error: %d\r\n", errno);
+    SL_DEBUG_LOG_V2(ERROR, "Socket Create failed with bsd error: %d\r\n", errno);
     return;
   }
 
   //! Configure TCP keep alive timeout
   return_value = setsockopt(client_socket, SOL_SOCKET, SO_KEEPALIVE, &tcp_keepalive_time, sizeof(tcp_keepalive_time));
   if (return_value < 0) {
-    printf("\r\nsetsockopt tcp_keepalive_time failed with bsd error: %d\r\n", errno);
+    SL_DEBUG_LOG_V2(ERROR, "setsockopt tcp_keepalive_time failed with bsd error: %d\r\n", errno);
     close(client_socket);
     return;
   }
@@ -222,43 +217,37 @@ void application_start()
   //! Socket connect
   return_value = connect(client_socket, (struct sockaddr *)&server_address, sizeof(struct sockaddr_in));
   if (return_value < 0) {
-    printf("\r\nSocket Connect failed with bsd error: %d\r\n", errno);
+    SL_DEBUG_LOG_V2(ERROR, "Socket Connect failed with bsd error: %d\r\n", errno);
     close(client_socket);
     return;
   }
-  printf("\r\n Socket Connected\r\n");
+  SL_DEBUG_LOG_V2(INFO, " Socket Connected\r\n");
 
   status = set_twt();
   if (status != SL_STATUS_OK) {
-    printf("\r\nError while configuring TWT parameters: 0x%lx \r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "Error while configuring TWT parameters: 0x%" PRIx32 " ", (uint32_t)status);
     return;
   }
-  printf("\r\nTWT Config Done\r\n");
+  SL_DEBUG_LOG_V2(INFO, "TWT Config Done\r\n");
 
 #if SEND_TCP_DATA
   status = send_data();
   if (status != SL_STATUS_OK) {
-    printf("\r\nError while sending data: 0x%lx \r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "Error while sending data: 0x%" PRIx32 " ", (uint32_t)status);
     return;
   }
-  printf("\r\nData Sent\r\n");
+  SL_DEBUG_LOG_V2(INFO, "Data Sent\r\n");
 #endif
 
 #ifdef SLI_SI91X_MCU_INTERFACE
-
-#if (SL_SI91X_TICKLESS_MODE == 0)
-  sl_si91x_power_manager_sleep();
-#else
   osSemaphoreId_t wait_semaphore;
   wait_semaphore = osSemaphoreNew(1, 0, NULL);
   if (wait_semaphore == NULL) {
-    printf("Failed to create semaphore\r\n");
+    SL_DEBUG_LOG_V2(ERROR, "Failed to create semaphore\r\n");
     return;
   }
   // Waiting forever using semaphore to put M4 to sleep in tick less mode
   osSemaphoreAcquire(wait_semaphore, osWaitForever);
-#endif
-
 #endif
 }
 
@@ -270,8 +259,7 @@ sl_status_t set_twt(void)
   //! Set TWT Config
   sl_wifi_set_twt_config_callback_v2(twt_callback_handler, NULL);
   if (TWT_AUTO_CONFIG == 1) {
-    performance_profile.twt_selection = default_twt_selection_configuration;
-    status                            = sl_wifi_target_wake_time_auto_selection(&performance_profile.twt_selection);
+    status = sl_wifi_target_wake_time_auto_selection_v2(&default_twt_config);
   } else {
     performance_profile.twt_request = default_twt_setup_configuration;
     status                          = sl_wifi_enable_target_wake_time(&performance_profile.twt_request);
@@ -280,19 +268,26 @@ sl_status_t set_twt(void)
   // A small delay is added so that the asynchronous response from TWT is printed in correct format.
   osDelay(100);
 
-  //! Enable Broadcast data filter
-  status = sl_wifi_filter_broadcast(5000, 1, 1);
+  //! Enable groupcast filter and beacon drop threshold
+  sl_wifi_groupcast_filter_config_t groupcast_filter_config = { 0 };
+  groupcast_filter_config.enable_bcast_filter               = (uint8_t)BCAST_FILTER_ENABLE;
+  groupcast_filter_config.enable_mcast_filter               = (uint8_t)MCAST_FILTER_ENABLE;
+  groupcast_filter_config.filter_mode                       = (uint8_t)FILTER_MODE;
+
+  status = sl_wifi_set_groupcast_filter_config(&groupcast_filter_config);
   VERIFY_STATUS_AND_RETURN(status);
-  printf("\r\nEnabled Broadcast Data Filter\n");
+  status = sl_wifi_set_beacon_drop_threshold(SL_WIFI_CLIENT_INTERFACE, (uint16_t)BEACON_DROP_THRESHOLD_MS);
+  VERIFY_STATUS_AND_RETURN(status);
+  SL_DEBUG_LOG_V2(INFO, "Enabled Broadcast Data Filter\r\n");
 
   //! Apply power save profile
   performance_profile.profile = ASSOCIATED_POWER_SAVE_LOW_LATENCY;
   status                      = sl_wifi_set_performance_profile_v2(&performance_profile);
   if (status != SL_STATUS_OK) {
-    printf("\r\nPowersave Configuration Failed, Error Code : 0x%lX\r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "Powersave Configuration Failed, Error Code : 0x%" PRIx32 "", (uint32_t)status);
     return status;
   }
-  printf("\r\nAssociated Power Save Enabled\n");
+  SL_DEBUG_LOG_V2(INFO, "Associated Power Save Enabled\r\n");
   return SL_STATUS_OK;
 }
 
@@ -313,7 +308,7 @@ sl_status_t send_data(void)
     }
     packet_count++;
   }
-  printf("\r\n Data sent successfully\r\n");
+  SL_DEBUG_LOG_V2(INFO, " Data sent successfully\r\n");
 
   return SL_STATUS_OK;
 }
@@ -334,65 +329,65 @@ static sl_status_t twt_callback_handler(sl_wifi_event_t event,
 
   switch (event) {
     case SL_WIFI_TWT_RESPONSE_EVENT:
-      printf("\r\nTWT Setup success");
+      SL_DEBUG_LOG_V2(INFO, "TWT Setup success");
       break;
     case SL_WIFI_TWT_UNSOLICITED_SESSION_SUCCESS_EVENT:
-      printf("\r\nUnsolicited TWT Setup success");
+      SL_DEBUG_LOG_V2(INFO, "Unsolicited TWT Setup success");
       break;
     case SL_WIFI_TWT_AP_REJECTED_EVENT:
-      printf("\r\nTWT Setup Failed. TWT Setup rejected by AP");
+      SL_DEBUG_LOG_V2(ERROR, "TWT Setup Failed. TWT Setup rejected by AP");
       break;
     case SL_WIFI_TWT_OUT_OF_TOLERANCE_EVENT:
-      printf("\r\nTWT Setup Failed. TWT response out of tolerance limits");
+      SL_DEBUG_LOG_V2(ERROR, "TWT Setup Failed. TWT response out of tolerance limits");
       break;
     case SL_WIFI_TWT_RESPONSE_NOT_MATCHED_EVENT:
-      printf("\r\nTWT Setup Failed. TWT Response not matched with the request parameters");
+      SL_DEBUG_LOG_V2(ERROR, "TWT Setup Failed. TWT Response not matched with the request parameters");
       break;
     case SL_WIFI_TWT_UNSUPPORTED_RESPONSE_EVENT:
-      printf("\r\nTWT Setup Failed. TWT Response Unsupported");
+      SL_DEBUG_LOG_V2(ERROR, "TWT Setup Failed. TWT Response Unsupported");
       break;
     case SL_WIFI_TWT_FAIL_MAX_RETRIES_REACHED_EVENT:
-      printf("\r\nTWT Setup Failed. Max retries reached");
+      SL_DEBUG_LOG_V2(ERROR, "TWT Setup Failed. Max retries reached");
       break;
     case SL_WIFI_TWT_INACTIVE_DUE_TO_ROAMING_EVENT:
-      printf("\r\nTWT session inactive due to roaming");
+      SL_DEBUG_LOG_V2(WARN, "TWT session inactive due to roaming");
       break;
     case SL_WIFI_TWT_INACTIVE_DUE_TO_DISCONNECT_EVENT:
-      printf("\r\nTWT session inactive due to wlan disconnection");
+      SL_DEBUG_LOG_V2(WARN, "TWT session inactive due to wlan disconnection");
       break;
     case SL_WIFI_TWT_TEARDOWN_SUCCESS_EVENT:
-      printf("\r\nTWT session teardown success");
+      SL_DEBUG_LOG_V2(INFO, "TWT session teardown success");
       break;
     case SL_WIFI_TWT_AP_TEARDOWN_SUCCESS_EVENT:
-      printf("\r\nTWT session teardown from AP");
+      SL_DEBUG_LOG_V2(INFO, "TWT session teardown from AP");
       break;
     case SL_WIFI_TWT_INACTIVE_NO_AP_SUPPORT_EVENT:
-      printf("\r\nConnected AP Does not support TWT");
+      SL_DEBUG_LOG_V2(WARN, "Connected AP Does not support TWT");
       break;
     case SL_WIFI_RESCHEDULE_TWT_SUCCESS_EVENT:
-      printf("\r\nTWT rescheduled");
+      SL_DEBUG_LOG_V2(INFO, "TWT rescheduled");
       break;
     case SL_WIFI_TWT_INFO_FRAME_EXCHANGE_FAILED_EVENT:
-      printf("\r\nTWT rescheduling failed due to a failure in the exchange of TWT information frames.");
+      SL_DEBUG_LOG_V2(ERROR, "TWT rescheduling failed due to a failure in the exchange of TWT information frames.");
       break;
     default:
-      printf("TWT Setup Failed.");
+      SL_DEBUG_LOG_V2(ERROR, "TWT Setup Failed.");
   }
   if (event < SL_WIFI_TWT_TEARDOWN_SUCCESS_EVENT) {
-    printf("\r\n wake duration : 0x%X", result->wake_duration);
-    printf("\r\n wake_duration_unit: 0x%X", result->wake_duration_unit);
-    printf("\r\n wake_int_exp : 0x%X", result->wake_int_exp);
-    printf("\r\n negotiation_type : 0x%X", result->negotiation_type);
-    printf("\r\n wake_int_mantissa : 0x%X", result->wake_int_mantissa);
-    printf("\r\n implicit_twt : 0x%X", result->implicit_twt);
-    printf("\r\n un_announced_twt : 0x%X", result->un_announced_twt);
-    printf("\r\n triggered_twt : 0x%X", result->triggered_twt);
-    printf("\r\n twt_channel : 0x%X", result->twt_channel);
-    printf("\r\n twt_protection : 0x%X", result->twt_protection);
-    printf("\r\n twt_flow_id : 0x%X\r\n", result->twt_flow_id);
+    SL_DEBUG_LOG_V2(DEBUG, " wake duration : 0x%X", result->wake_duration);
+    SL_DEBUG_LOG_V2(DEBUG, " wake_duration_unit: 0x%X", result->wake_duration_unit);
+    SL_DEBUG_LOG_V2(DEBUG, " wake_int_exp : 0x%X", result->wake_int_exp);
+    SL_DEBUG_LOG_V2(DEBUG, " negotiation_type : 0x%X\r\n", result->negotiation_type);
+    SL_DEBUG_LOG_V2(DEBUG, " wake_int_mantissa : 0x%X", result->wake_int_mantissa);
+    SL_DEBUG_LOG_V2(DEBUG, " implicit_twt : 0x%X", result->implicit_twt);
+    SL_DEBUG_LOG_V2(DEBUG, " un_announced_twt : 0x%X", result->un_announced_twt);
+    SL_DEBUG_LOG_V2(DEBUG, " triggered_twt : 0x%X", result->triggered_twt);
+    SL_DEBUG_LOG_V2(DEBUG, " twt_channel : 0x%X", result->twt_channel);
+    SL_DEBUG_LOG_V2(DEBUG, " twt_protection : 0x%X", result->twt_protection);
+    SL_DEBUG_LOG_V2(DEBUG, " twt_flow_id : 0x%X\r\n", result->twt_flow_id);
   } else if (event < SL_WIFI_TWT_EVENTS_END) {
-    printf("\r\n twt_flow_id : 0x%X", result->twt_flow_id);
-    printf("\r\n negotiation_type : 0x%X\r\n", result->negotiation_type);
+    SL_DEBUG_LOG_V2(DEBUG, " twt_flow_id : 0x%X\r\n", result->twt_flow_id);
+    SL_DEBUG_LOG_V2(DEBUG, " negotiation_type : 0x%X\r\n", result->negotiation_type);
   }
   return SL_STATUS_OK;
 }

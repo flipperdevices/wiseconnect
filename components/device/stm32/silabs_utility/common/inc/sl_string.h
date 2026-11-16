@@ -91,9 +91,9 @@ void sl_strcat_s(char *dst, size_t dst_size, const char *src);
  *
  * @param[in] str       The string to get the length for.
  *
- * @return              String lenght.
+ * @return              String length.
  ******************************************************************************/
-size_t sl_strlen(char *str);
+size_t sl_strlen(const char *str);
 
 /*******************************************************************************
  * @brief
@@ -103,9 +103,9 @@ size_t sl_strlen(char *str);
  *
  * @param[in] max_len   The input string is searched for at most max_lencharacters.
  *
- * @return              String lenght.
+ * @return              String length.
  ******************************************************************************/
-size_t sl_strnlen(char *str, size_t max_len);
+size_t sl_strnlen(const char *str, size_t max_len);
 
 /*******************************************************************************
  * @brief

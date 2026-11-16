@@ -32,6 +32,7 @@
 #include "sl_si91x_watchdog_timer_config.h"
 #endif
 #include "rsi_rtc.h"
+#include "sl_log_helper.h"
 /*******************************************************************************
  ***************************  DEFINES / MACROS   ********************************
  ******************************************************************************/
@@ -115,6 +116,7 @@ sl_status_t sl_si91x_watchdog_set_configuration(watchdog_timer_config_t *timer_c
     // will return an error code
     if (timer_config_ptr == NULL) {
       status = SL_STATUS_NULL_POINTER;
+      SL_PRINT_STRING_ERROR("sl_si91x_watchdog_set_configuration: handle NULL,line no : %d\r\n", (int)__LINE__);
       break;
     }
     // Validating WDT interrupt time, system-reset time and window time value
@@ -122,11 +124,17 @@ sl_status_t sl_si91x_watchdog_set_configuration(watchdog_timer_config_t *timer_c
         || (timer_config_ptr->system_reset_time >= TIME_DELAY_LAST)
         || (timer_config_ptr->window_time >= TIME_DELAY_16)) {
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR("sl_si91x_watchdog_set_configuration: error status=0x%04lX,line no : %d\r\n",
+                            (unsigned long)(SL_STATUS_INVALID_PARAMETER),
+                            (int)__LINE__);
       break;
     }
     // Comparing interrupt time with window time
     if (timer_config_ptr->interrupt_time <= timer_config_ptr->window_time) {
       status = SL_STATUS_INVALID_CONFIGURATION;
+      SL_PRINT_STRING_ERROR("sl_si91x_watchdog_set_configuration: error status=0x%04lX,line no : %d\r\n",
+                            (unsigned long)(SL_STATUS_INVALID_CONFIGURATION),
+                            (int)__LINE__);
       break;
     }
 #if (WDT_TIMER_UC == 1)
@@ -165,12 +173,16 @@ sl_status_t sl_si91x_watchdog_register_timeout_callback(watchdog_timer_callback_
     // if it is NULL will return an error code
     if (on_timeout_callback == NULL) {
       status = SL_STATUS_NULL_POINTER;
+      SL_PRINT_STRING_ERROR("sl_si91x_watchdog_register_timeout_callback: handle NULL,line no : %d\r\n", (int)__LINE__);
       break;
     }
     // To validate the function pointer, if the parameters is not NULL then it
     //will return an busy error code
     if (timeout_callback_function_pointer != NULL) {
       status = SL_STATUS_BUSY;
+      SL_PRINT_STRING_ERROR("sl_si91x_watchdog_register_timeout_callback: error status=0x%04lX,line no : %d\r\n",
+                            (unsigned long)(SL_STATUS_BUSY),
+                            (int)__LINE__);
       break;
     }
     NVIC_EnableIRQ(NVIC_WDT);
@@ -200,11 +212,17 @@ sl_status_t sl_si91x_watchdog_set_interrupt_time(time_delays_t interrupt_time)
     // Validating interrupt time value
     if (interrupt_time >= TIME_DELAY_LAST) {
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR("sl_si91x_watchdog_set_interrupt_time: error status=0x%04lX,line no : %d\r\n",
+                            (unsigned long)(SL_STATUS_INVALID_PARAMETER),
+                            (int)__LINE__);
       break;
     }
     // Validating interrupt time as per window time value
     if (RSI_WWDT_GetWindowTime(MCU_WDT) >= interrupt_time) {
       status = SL_STATUS_INVALID_CONFIGURATION;
+      SL_PRINT_STRING_ERROR("sl_si91x_watchdog_set_interrupt_time: error status=0x%04lX,line no : %d\r\n",
+                            (unsigned long)(SL_STATUS_INVALID_CONFIGURATION),
+                            (int)__LINE__);
       break;
     }
     // Setting timer interrupt time
@@ -240,16 +258,25 @@ sl_status_t sl_si91x_watchdog_set_window_time(time_delays_t window_time)
     // Validating Window time value
     if (window_time >= TIME_DELAY_16) {
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR("sl_si91x_watchdog_set_window_time: error status=0x%04lX,line no : %d\r\n",
+                            (unsigned long)(SL_STATUS_INVALID_PARAMETER),
+                            (int)__LINE__);
       break;
     }
     // Validating window time as per interrupt time value
     if (RSI_WWDT_GetIntrTime(MCU_WDT) <= window_time) {
       status = SL_STATUS_INVALID_CONFIGURATION;
+      SL_PRINT_STRING_ERROR("sl_si91x_watchdog_set_window_time: error status=0x%04lX,line no : %d\r\n",
+                            (unsigned long)(SL_STATUS_INVALID_CONFIGURATION),
+                            (int)__LINE__);
       break;
     }
     // Validating window time as per system reset time value
     if (RSI_WWDT_GetSysRstTime(MCU_WDT) <= window_time) {
       status = SL_STATUS_INVALID_CONFIGURATION;
+      SL_PRINT_STRING_ERROR("sl_si91x_watchdog_set_window_time: error status=0x%04lX,line no : %d\r\n",
+                            (unsigned long)(SL_STATUS_INVALID_CONFIGURATION),
+                            (int)__LINE__);
       break;
     }
     // Setting timer window time
@@ -277,11 +304,17 @@ sl_status_t sl_si91x_watchdog_set_system_reset_time(time_delays_t system_reset_t
     // Validating system-reset time value
     if (system_reset_time >= TIME_DELAY_LAST) {
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR("sl_si91x_watchdog_set_system_reset_time: error status=0x%04lX,line no : %d\r\n",
+                            (unsigned long)(SL_STATUS_INVALID_PARAMETER),
+                            (int)__LINE__);
       break;
     }
     // Validating system reset time as per window time value
     if (RSI_WWDT_GetWindowTime(MCU_WDT) >= system_reset_time) {
       status = SL_STATUS_INVALID_CONFIGURATION;
+      SL_PRINT_STRING_ERROR("sl_si91x_watchdog_set_system_reset_time: error status=0x%04lX,line no : %d\r\n",
+                            (unsigned long)(SL_STATUS_INVALID_CONFIGURATION),
+                            (int)__LINE__);
       break;
     }
     // Setting system reset time

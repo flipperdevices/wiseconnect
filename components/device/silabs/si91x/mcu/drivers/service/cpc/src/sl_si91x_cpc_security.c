@@ -47,7 +47,6 @@ const osThreadAttr_t cpc_crypto_init_thread_attributes = {
   .stack_size = SL_SI91X_CPC_CRYPTO_INIT_TASK_STACK_SIZE, // Stack size of sl_si91x_cpc_crypto_init_task task
   .priority   = osPriorityHigh, //osPriorityLow,                            // Priority of Sensor task
   .tz_module  = 0,
-  .reserved   = 0,
 };
 
 static const sl_wifi_device_configuration_t client_configuration = {
@@ -78,7 +77,10 @@ static const sl_wifi_device_configuration_t client_configuration = {
                    .ext_tcp_ip_feature_bit_map = 0,
                    .ble_feature_bit_map        = 0,
                    .ble_ext_feature_bit_map    = 0,
-                   .config_feature_bit_map     = 0 }
+                   .config_feature_bit_map     = 0 },
+  .ta_pool         = { .tx_ratio_in_buffer_pool = 0, .rx_ratio_in_buffer_pool = 0, .global_ratio_in_buffer_pool = 0 },
+  .efuse_data_type = SL_SI91X_EFUSE_MFG_SW_VERSION,
+  .nwp_fw_image_number = SL_SI91X_NWP_FW_IMAGE_NUMBER_0
 };
 
 // This function initializes a Semaphore with the `sl_si91x_cpc_crypto_semaphore_attr_st` atrribute
@@ -104,7 +106,7 @@ void sl_ta_trng_init(void)
 {
   sl_status_t status = sl_net_init(SL_NET_WIFI_CLIENT_INTERFACE, &client_configuration, NULL, NULL);
   if (status != SL_STATUS_OK) {
-    DEBUGOUT("Failed to start Wi-Fi client interface: 0x%lx\r\n", status);
+    SL_PRINT_STRING_ERROR("Failed to start Wi-Fi client interface: 0x%lx", status);
     return;
   }
 }
@@ -119,12 +121,12 @@ void sl_si91x_cpc_crypto_init_task(void)
 
   sl_si91x_cpc_crypto_init_semaphore_status = osSemaphoreRelease(sl_si91x_cpc_crypto_init_semaphore_id);
   if (sl_si91x_cpc_crypto_init_semaphore_status != osOK) {
-    DEBUGOUT("Semaphore Release failed: %d \r\n", sl_si91x_cpc_crypto_init_semaphore_status);
+    SL_PRINT_STRING_ERROR("Semaphore Release failed: %d", sl_si91x_cpc_crypto_init_semaphore_status);
   }
 
   sl_si91x_cpc_crypto_wait_semaphore_status = osSemaphoreAcquire(sl_si91x_cpc_crypto_wait_semaphore_id, osWaitForever);
   if (sl_si91x_cpc_crypto_wait_semaphore_status != osOK) {
-    DEBUGOUT("Semaphore Acquire failed in task: %d \r\n", sl_si91x_cpc_crypto_wait_semaphore_status);
+    SL_PRINT_STRING_ERROR("Semaphore Acquire failed in task: %d", sl_si91x_cpc_crypto_wait_semaphore_status);
   }
 }
 

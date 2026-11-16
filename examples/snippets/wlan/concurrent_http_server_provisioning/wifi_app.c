@@ -129,10 +129,11 @@ static void measure_and_print_throughput(uint32_t total_num_of_bytes, uint32_t t
   float duration = (test_timeout / 1000);                      // ms to sec
   float result   = ((float)total_num_of_bytes * 8) / duration; // bytes to bps
   result         = (result / 1000000);                         // bps to Mbps
-  LOG_PRINT("\r\nThroughput achieved @ %0.02f Mbps in %0.03f sec successfully : socket id %lu\r\n",
-            result,
-            duration,
-            socket_id);
+  SL_DEBUG_LOG_V2(INFO,
+                  "Throughput achieved @ %0.02f Mbps in %0.03f sec successfully : socket id %lu",
+                  result,
+                  duration,
+                  socket_id);
 }
 
 void data_callback(uint32_t sock_no,
@@ -153,15 +154,18 @@ void data_callback(uint32_t sock_no,
   }
   if (sock_data[sock_no].first_data_frame == 0) {
     sock_data[sock_no].start = osKernelGetTickCount();
-    LOG_PRINT("\r\nThroughput test start and Client Socket ID : %lu\r\n", sock_no);
+    SL_DEBUG_LOG_V2(INFO, "Throughput test start and Client Socket ID : %lu\r\n", sock_no);
     sock_data[sock_no].first_data_frame = 1;
   }
 
   sock_data[sock_no].bytes_read += length;
   uint32_t now = osKernelGetTickCount();
   if ((sock_data[sock_no].bytes_read >= BYTES_TO_RECEIVE) || ((now - sock_data[sock_no].start) >= TEST_TIMEOUT)) {
-    LOG_PRINT("\r\nThroughput test finished : Client Socket ID %lu\r\n", sock_no);
-    LOG_PRINT("\r\nTotal bytes received : %ld : Client Socket ID %lu\r\n", sock_data[sock_no].bytes_read, sock_no);
+    SL_DEBUG_LOG_V2(INFO, "Throughput test finished : Client Socket ID %lu\r\n", sock_no);
+    SL_DEBUG_LOG_V2(INFO,
+                    "Total bytes received : %ld : Client Socket ID %lu\r\n",
+                    sock_data[sock_no].bytes_read,
+                    sock_no);
     measure_and_print_throughput(sock_data[sock_no].bytes_read, (now - sock_data[sock_no].start), sock_no);
     sock_data[sock_no].is_data_received = 1;
     sock_data[sock_no].bytes_read       = 0;
@@ -175,10 +179,10 @@ void remote_socket_termination(int socket, uint16_t port, uint32_t bytes_sent)
   UNUSED_PARAMETER(bytes_sent);
   if ((socket < 0) || (socket >= MAX_SERVER_CLEINT_SOCKETS)) {
     // Handle error: invalid socket number
-    LOG_PRINT("\r\nReceived remote termination on Invalid Client Socket ID %d :\r\n", socket);
+    SL_DEBUG_LOG_V2(WARN, "Received remote termination on Invalid Client Socket ID %d :\r\n", socket);
     return;
   }
-  LOG_PRINT("\r\nReceived remote termination on Client Socket ID %d :\r\n", socket);
+  SL_DEBUG_LOG_V2(WARN, "Received remote termination on Client Socket ID %d :\r\n", socket);
   sock_data[socket].is_data_received = 1;
 }
 
@@ -272,7 +276,7 @@ void send_data_to_tcp_server(void *userinfo)
   server_address.sin_family = AF_INET;
   server_address.sin_port   = sockinfo->PortNum;
   if (sockinfo->ipaddress[0] == '\0') {
-    LOG_PRINT("\r\nInvalid IP Address : %s \r\n", threadname);
+    SL_DEBUG_LOG_V2(ERROR, "Invalid IP Address : %s \r\n", (uintptr_t)threadname);
     free(userinfo);
     osThreadTerminate(osThreadGetId());
   }
@@ -281,25 +285,31 @@ void send_data_to_tcp_server(void *userinfo)
 
   client_socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
   if (client_socket < 0) {
-    LOG_PRINT("\r\nSocket Create failed with bsd error: %d : %s\r\n", errno, threadname);
+    SL_DEBUG_LOG_V2(ERROR, "Socket Create failed with bsd error: %d : %s\r\n", errno, (uintptr_t)threadname);
     osThreadTerminate(osThreadGetId());
   }
-  LOG_PRINT("\r\nSocket ID : %d : %s\r\n", client_socket, threadname);
+  SL_DEBUG_LOG_V2(INFO, "Socket ID : %d : %s\r\n", client_socket, (uintptr_t)threadname);
 
   socket_return_value = connect(client_socket, (struct sockaddr *)&server_address, socket_length);
   if (socket_return_value < 0) {
-    LOG_PRINT("\r\nSocket Connect failed with bsd error: %d  : %s\r\n", errno, threadname);
+    SL_DEBUG_LOG_V2(ERROR, "Socket Connect failed with bsd error: %d  : %s\r\n", errno, (uintptr_t)threadname);
     sl_status_t status = close(client_socket);
     if (status == SL_STATUS_OK) {
-      LOG_PRINT("\r\nSocket ID : %d closed successfully : %s\r\n", client_socket, threadname);
+      SL_DEBUG_LOG_V2(INFO, "Socket ID : %d closed successfully : %s\r\n", client_socket, (uintptr_t)threadname);
     } else {
-      LOG_PRINT("\r\nSocket ID : %d close failed : %s\r\n", client_socket, threadname);
+      SL_DEBUG_LOG_V2(ERROR, "Socket ID : %d close failed : %s\r\n", client_socket, (uintptr_t)threadname);
     }
     osThreadTerminate(osThreadGetId());
   }
-  LOG_PRINT("\r\nSocket connected to TCP server and Client Socket ID %d : %s\r\n", client_socket, threadname);
+  SL_DEBUG_LOG_V2(INFO,
+                  "Socket connected to TCP server and Client Socket ID %d : %s",
+                  client_socket,
+                  (uintptr_t)threadname);
 
-  LOG_PRINT("\r\nTCP_TX Throughput test start and Client Socket ID %d : %s\r\n", client_socket, threadname);
+  SL_DEBUG_LOG_V2(INFO,
+                  "TCP_TX Throughput test start and Client Socket ID %d : %s",
+                  client_socket,
+                  (uintptr_t)threadname);
   start = osKernelGetTickCount();
   while (total_bytes_sent < BYTES_TO_SEND) {
     sent_bytes = send(client_socket, data_buffer, TCP_BUFFER_SIZE, 0);
@@ -307,27 +317,30 @@ void send_data_to_tcp_server(void *userinfo)
       if (errno == ENOBUFS)
         continue;
       if (errno == ENOTCONN) {
-        LOG_PRINT("\r\nRemote server terminated on Client Socket ID %d : %s\r\n", client_socket, threadname);
+        SL_DEBUG_LOG_V2(WARN,
+                        "Remote server terminated on Client Socket ID %d : %s",
+                        client_socket,
+                        (uintptr_t)threadname);
       } else {
-        LOG_PRINT("\r\nnTCP send failed with BSD error : %d : %s\r\n", errno, threadname);
+        SL_DEBUG_LOG_V2(ERROR, "nTCP send failed with BSD error : %d : %s", errno, (uintptr_t)threadname);
       }
       break;
     }
     total_bytes_sent = total_bytes_sent + sent_bytes;
     now              = osKernelGetTickCount();
     if ((now - start) >= TEST_TIMEOUT) {
-      LOG_PRINT("\r\nTime Out: %ld : %s\r\n", (now - start), threadname);
+      SL_DEBUG_LOG_V2(INFO, "Time Out: %ld : %s\r\n", (now - start), (uintptr_t)threadname);
       break;
     }
   }
-  LOG_PRINT("\r\nTCP_TX Throughput test finished:%s\r\n", threadname);
-  LOG_PRINT("\r\nTotal bytes sent : %ld  : %s\r\n", total_bytes_sent, threadname);
+  SL_DEBUG_LOG_V2(INFO, "TCP_TX Throughput test finished:%s", (uintptr_t)threadname);
+  SL_DEBUG_LOG_V2(INFO, "Total bytes sent : %ld  : %s", total_bytes_sent, (uintptr_t)threadname);
   measure_and_print_throughput(total_bytes_sent, (now - start), client_socket);
   sl_status_t status = close(client_socket);
   if (status == SL_STATUS_OK) {
-    LOG_PRINT("\r\nSocket ID : %d closed successfully : %s\r\n", client_socket, threadname);
+    SL_DEBUG_LOG_V2(INFO, "Socket ID : %d closed successfully : %s\r\n", client_socket, (uintptr_t)threadname);
   } else {
-    LOG_PRINT("\r\nSocket ID : %d close failed : %s\r\n", client_socket, threadname);
+    SL_DEBUG_LOG_V2(ERROR, "Socket ID : %d close failed : %s\r\n", client_socket, (uintptr_t)threadname);
   }
   osThreadTerminate(osThreadGetId());
 }
@@ -345,7 +358,7 @@ void receive_data_from_tcp_server(void *userinfo)
   server_address.sin_port   = sockinfo->PortNum;
   uint8_t flag              = sockinfo->flag;
   if (sockinfo->ipaddress[0] == '\0') {
-    LOG_PRINT("\r\nInvalid IP Address : %s \r\n", threadname);
+    SL_DEBUG_LOG_V2(ERROR, "Invalid IP Address : %s \r\n", (uintptr_t)threadname);
     free(userinfo);
     osThreadTerminate(osThreadGetId());
   }
@@ -354,22 +367,22 @@ void receive_data_from_tcp_server(void *userinfo)
   if (flag == ASYNC_SOCKET) {
     client_socket = sl_si91x_socket_async(AF_INET, SOCK_STREAM, IPPROTO_TCP, &data_callback);
     if (client_socket < 0) {
-      LOG_PRINT("\r\nSocket creation failed with bsd error: %d : %s\r\n", errno, threadname);
+      SL_DEBUG_LOG_V2(ERROR, "Socket creation failed with bsd error: %d : %s\r\n", errno, (uintptr_t)threadname);
       osThreadTerminate(osThreadGetId());
     }
 
     socket_return_value = connect(client_socket, (struct sockaddr *)&server_address, socket_length);
     if (socket_return_value < 0) {
-      LOG_PRINT("\r\nSocket Connect failed with bsd error: %d  : %s\r\n", errno, threadname);
+      SL_DEBUG_LOG_V2(ERROR, "Socket Connect failed with bsd error: %d  : %s\r\n", errno, (uintptr_t)threadname);
       sl_status_t status = close(client_socket);
       if (status == SL_STATUS_OK) {
-        LOG_PRINT("\r\nSocket ID : %d closed successfully : %s\r\n", client_socket, threadname);
+        SL_DEBUG_LOG_V2(INFO, "Socket ID : %d closed successfully : %s\r\n", client_socket, (uintptr_t)threadname);
       } else {
-        LOG_PRINT("\r\nSocket ID : %d close failed : %s\r\n", client_socket, threadname);
+        SL_DEBUG_LOG_V2(ERROR, "Socket ID : %d close failed : %s\r\n", client_socket, (uintptr_t)threadname);
       }
       osThreadTerminate(osThreadGetId());
     }
-    LOG_PRINT("\r\nSocket connected to TCP server: %s\r\n", threadname);
+    SL_DEBUG_LOG_V2(INFO, "Socket connected to TCP server: %s\r\n", (uintptr_t)threadname);
 
     if (client_socket < 0 || client_socket >= MAX_SERVER_CLEINT_SOCKETS) {
       // Handle error: invalid client socket number
@@ -386,20 +399,23 @@ void receive_data_from_tcp_server(void *userinfo)
     uint32_t total_bytes_received = 0;
     client_socket                 = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     if (client_socket < 0) {
-      LOG_PRINT("\r\nSocket Create failed with bsd error: %d : %s\r\n", errno, threadname);
+      SL_DEBUG_LOG_V2(ERROR, "Socket Create failed with bsd error: %d : %s\r\n", errno, (uintptr_t)threadname);
       osThreadTerminate(osThreadGetId());
     }
-    LOG_PRINT("\r\nSocket ID : %d : %s\r\n", client_socket, threadname);
+    SL_DEBUG_LOG_V2(INFO, "Socket ID : %d : %s\r\n", client_socket, (uintptr_t)threadname);
 
     socket_return_value = connect(client_socket, (struct sockaddr *)&server_address, socket_length);
     if (socket_return_value < 0) {
-      LOG_PRINT("\r\nSocket Connect failed with bsd error: %d  : %s\r\n", errno, threadname);
+      SL_DEBUG_LOG_V2(ERROR, "Socket Connect failed with bsd error: %d  : %s\r\n", errno, (uintptr_t)threadname);
       close(client_socket);
       osThreadTerminate(osThreadGetId());
     }
-    LOG_PRINT("\r\nSocket connected to TCP server: %s\r\n", threadname);
+    SL_DEBUG_LOG_V2(INFO, "Socket connected to TCP server: %s\r\n", (uintptr_t)threadname);
 
-    LOG_PRINT("\r\nTCP_RX Throughput test start and Client Socket ID %d : %s\r\n", client_socket, threadname);
+    SL_DEBUG_LOG_V2(INFO,
+                    "TCP_RX Throughput test start and Client Socket ID %d : %s",
+                    client_socket,
+                    (uintptr_t)threadname);
     start = osKernelGetTickCount();
     while (1) {
       read_bytes = recv(client_socket, data_buffer, sizeof(data_buffer), 0);
@@ -410,31 +426,38 @@ void receive_data_from_tcp_server(void *userinfo)
           if (status == SL_STATUS_SI91X_MEMORY_FAILED_FROM_MODULE) {
             continue;
           } else {
-            LOG_PRINT("\r\nTCP recv failed with BSD error = %d and status = 0x%lx : %s\r\n", errno, status, threadname);
+            SL_DEBUG_LOG_V2(ERROR,
+                            "TCP recv failed with BSD error = %d and status = 0x%lx : %s",
+                            errno,
+                            status,
+                            (uintptr_t)threadname);
           }
         } else if (errno == ENOTCONN) {
-          LOG_PRINT("\r\nRemote server terminated on Client Socket ID %d : %s\r\n", client_socket, threadname);
+          SL_DEBUG_LOG_V2(WARN,
+                          "Remote server terminated on Client Socket ID %d : %s",
+                          client_socket,
+                          (uintptr_t)threadname);
         } else {
-          LOG_PRINT("\r\nTCP recv failed with BSD error = %d : %s\r\n", errno, threadname);
+          SL_DEBUG_LOG_V2(ERROR, "TCP recv failed with BSD error = %d : %s", errno, (uintptr_t)threadname);
         }
         break;
       }
       total_bytes_received = total_bytes_received + read_bytes;
       now                  = osKernelGetTickCount();
       if ((now - start) > TEST_TIMEOUT) {
-        LOG_PRINT("\r\nTest Time Out: %ld ms : %s\r\n", (now - start), threadname);
+        SL_DEBUG_LOG_V2(INFO, "Test Time Out: %ld ms : %s", (now - start), (uintptr_t)threadname);
         break;
       }
     }
-    LOG_PRINT("\r\nTCP_RX Throughput test finished : %s\r\n", threadname);
-    LOG_PRINT("\r\nTotal bytes received : %ld : %s\r\n", total_bytes_received, threadname);
+    SL_DEBUG_LOG_V2(INFO, "TCP_RX Throughput test finished : %s", (uintptr_t)threadname);
+    SL_DEBUG_LOG_V2(INFO, "Total bytes received : %ld : %s", total_bytes_received, (uintptr_t)threadname);
     measure_and_print_throughput(total_bytes_received, (now - start), client_socket);
   }
   sl_status_t status = close(client_socket);
   if (status == SL_STATUS_OK) {
-    LOG_PRINT("\r\nSocket ID : %d closed successfully : %s\r\n", client_socket, threadname);
+    SL_DEBUG_LOG_V2(INFO, "Socket ID : %d closed successfully : %s\r\n", client_socket, (uintptr_t)threadname);
   } else {
-    LOG_PRINT("\r\nSocket ID : %d close failed : %s\r\n", client_socket, threadname);
+    SL_DEBUG_LOG_V2(ERROR, "Socket ID : %d close failed : %s\r\n", client_socket, (uintptr_t)threadname);
   }
   osThreadTerminate(osThreadGetId());
 }
@@ -457,10 +480,10 @@ void receive_data_from_tcp_client(void *userinfo)
     server_address.sin_family = AF_INET;
     server_socket             = sl_si91x_socket_async(AF_INET, SOCK_STREAM, IPPROTO_TCP, &data_callback);
     if (server_socket < 0) {
-      LOG_PRINT("\r\nSocket creation failed with bsd error: %d : %s\r\n", errno, threadname);
+      SL_DEBUG_LOG_V2(ERROR, "Socket creation failed with bsd error: %d : %s\r\n", errno, (uintptr_t)threadname);
       osThreadTerminate(osThreadGetId());
     }
-    LOG_PRINT("\r\nServer Socket ID : %d : %s\r\n", server_socket, threadname);
+    SL_DEBUG_LOG_V2(INFO, "Server Socket ID : %d : %s\r\n", server_socket, (uintptr_t)threadname);
 
     socket_return_value = sl_si91x_setsockopt(server_socket,
                                               SOL_SOCKET,
@@ -468,49 +491,58 @@ void receive_data_from_tcp_client(void *userinfo)
                                               &high_performance_socket,
                                               sizeof(high_performance_socket));
     if (socket_return_value < 0) {
-      LOG_PRINT("\r\nSet Socket option failed with bsd error: %d : %s\r\n", errno, threadname);
+      SL_DEBUG_LOG_V2(ERROR, "Set Socket option failed with bsd error: %d : %s\r\n", errno, (uintptr_t)threadname);
       sl_status_t status = close(client_socket);
       if (status == SL_STATUS_OK) {
-        LOG_PRINT("\r\nSocket ID : %d closed successfully : %s\r\n", client_socket, threadname);
+        SL_DEBUG_LOG_V2(INFO, "Socket ID : %d closed successfully : %s\r\n", client_socket, (uintptr_t)threadname);
       } else {
-        LOG_PRINT("\r\nSocket ID : %d close failed : %s\r\n", client_socket, threadname);
+        SL_DEBUG_LOG_V2(ERROR, "Socket ID : %d close failed : %s\r\n", client_socket, (uintptr_t)threadname);
       }
       osThreadTerminate(osThreadGetId());
     }
 
     socket_return_value = sl_si91x_bind(server_socket, (struct sockaddr *)&server_address, socket_length);
     if (socket_return_value < 0) {
-      LOG_PRINT("\r\nSocket bind failed with bsd error: %d : %s\r\n", errno, threadname);
+      SL_DEBUG_LOG_V2(ERROR, "Socket bind failed with bsd error: %d : %s\r\n", errno, (uintptr_t)threadname);
       sl_status_t status = close(server_socket);
       if (status == SL_STATUS_OK) {
-        LOG_PRINT("\r\nServer Socket ID : %d closed successfully : %s\r\n", client_socket, threadname);
+        SL_DEBUG_LOG_V2(INFO,
+                        "Server Socket ID : %d closed successfully : %s\r\n",
+                        client_socket,
+                        (uintptr_t)threadname);
       } else {
-        LOG_PRINT("\r\nnServer Socket ID : %d close failed : %s\r\n", client_socket, threadname);
+        SL_DEBUG_LOG_V2(ERROR, "nServer Socket ID : %d close failed : %s\r\n", client_socket, (uintptr_t)threadname);
       }
       osThreadTerminate(osThreadGetId());
     }
 
     socket_return_value = sl_si91x_listen(server_socket, BACK_LOG);
     if (socket_return_value < 0) {
-      LOG_PRINT("\r\nSocket listen failed with bsd error: %d : %s\r\n", errno, threadname);
+      SL_DEBUG_LOG_V2(ERROR, "Socket listen failed with bsd error: %d : %s\r\n", errno, (uintptr_t)threadname);
       sl_status_t status = close(server_socket);
       if (status == SL_STATUS_OK) {
-        LOG_PRINT("\r\nnServer Socket ID : %d closed successfully : %s\r\n", client_socket, threadname);
+        SL_DEBUG_LOG_V2(INFO,
+                        "nServer Socket ID : %d closed successfully : %s\r\n",
+                        client_socket,
+                        (uintptr_t)threadname);
       } else {
-        LOG_PRINT("\r\nnServer Socket ID : %d close failed : %s\r\n", client_socket, threadname);
+        SL_DEBUG_LOG_V2(ERROR, "nServer Socket ID : %d close failed : %s\r\n", client_socket, (uintptr_t)threadname);
       }
       osThreadTerminate(osThreadGetId());
     }
-    LOG_PRINT("\r\nListening on Local Port : %u : %s\r\n", server_address.sin_port, threadname);
+    SL_DEBUG_LOG_V2(INFO, "Listening on Local Port : %u : %s\r\n", server_address.sin_port, (uintptr_t)threadname);
 
     client_socket = sl_si91x_accept(server_socket, NULL, 0);
     if (client_socket < 0) {
-      LOG_PRINT("\r\nSocket accept failed with bsd error: %d : %s \r\n", errno, threadname);
+      SL_DEBUG_LOG_V2(ERROR, "Socket accept failed with bsd error: %d : %s \r\n", errno, (uintptr_t)threadname);
       sl_status_t status = close(server_socket);
       if (status == SL_STATUS_OK) {
-        LOG_PRINT("\r\nnServer Socket ID : %d closed successfully : %s\r\n", client_socket, threadname);
+        SL_DEBUG_LOG_V2(INFO,
+                        "nServer Socket ID : %d closed successfully : %s\r\n",
+                        client_socket,
+                        (uintptr_t)threadname);
       } else {
-        LOG_PRINT("\r\nnServer Socket ID : %d close failed : %s\r\n", client_socket, threadname);
+        SL_DEBUG_LOG_V2(ERROR, "nServer Socket ID : %d close failed : %s\r\n", client_socket, (uintptr_t)threadname);
       }
       osThreadTerminate(osThreadGetId());
     }
@@ -531,10 +563,10 @@ void receive_data_from_tcp_client(void *userinfo)
     server_address.sin_family = AF_INET;
     server_socket             = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     if (server_socket < 0) {
-      LOG_PRINT("\r\nSocket creation failed with bsd error: %d\r\n", errno);
+      SL_DEBUG_LOG_V2(ERROR, "Socket creation failed with bsd error: %d\r\n", errno);
       osThreadTerminate(osThreadGetId());
     }
-    LOG_PRINT("\r\nServer Socket ID : %d : %s \r\n", server_socket, threadname);
+    SL_DEBUG_LOG_V2(INFO, "Server Socket ID : %d : %s \r\n", server_socket, (uintptr_t)threadname);
 
     socket_return_value = setsockopt(server_socket,
                                      SOL_SOCKET,
@@ -542,55 +574,67 @@ void receive_data_from_tcp_client(void *userinfo)
                                      &high_performance_socket,
                                      sizeof(high_performance_socket));
     if (socket_return_value < 0) {
-      LOG_PRINT("\r\nSet Socket option failed with bsd error: %d : %s\r\n", errno, threadname);
+      SL_DEBUG_LOG_V2(ERROR, "Set Socket option failed with bsd error: %d : %s\r\n", errno, (uintptr_t)threadname);
       sl_status_t status = close(client_socket);
       if (status == SL_STATUS_OK) {
-        LOG_PRINT("\r\nSocket ID : %d closed successfully : %s\r\n", client_socket, threadname);
+        SL_DEBUG_LOG_V2(INFO, "Socket ID : %d closed successfully : %s\r\n", client_socket, (uintptr_t)threadname);
       } else {
-        LOG_PRINT("\r\nSocket ID : %d close failed : %s\r\n", client_socket, threadname);
+        SL_DEBUG_LOG_V2(ERROR, "Socket ID : %d close failed : %s\r\n", client_socket, (uintptr_t)threadname);
       }
       osThreadTerminate(osThreadGetId());
     }
 
     socket_return_value = bind(server_socket, (struct sockaddr *)&server_address, socket_length);
     if (socket_return_value < 0) {
-      LOG_PRINT("\r\nSocket bind failed with bsd error: %d : %s\r\n", errno, threadname);
+      SL_DEBUG_LOG_V2(ERROR, "Socket bind failed with bsd error: %d : %s\r\n", errno, (uintptr_t)threadname);
       sl_status_t status = close(server_socket);
       if (status == SL_STATUS_OK) {
-        LOG_PRINT("\r\nnServer Socket ID : %d closed successfully : %s\r\n", server_socket, threadname);
+        SL_DEBUG_LOG_V2(INFO,
+                        "nServer Socket ID : %d closed successfully : %s\r\n",
+                        server_socket,
+                        (uintptr_t)threadname);
       } else {
-        LOG_PRINT("\r\nnServer Socket ID : %d close failed : %s\r\n", server_socket, threadname);
+        SL_DEBUG_LOG_V2(ERROR, "nServer Socket ID : %d close failed : %s\r\n", server_socket, (uintptr_t)threadname);
       }
       osThreadTerminate(osThreadGetId());
     }
 
     socket_return_value = listen(server_socket, BACK_LOG);
     if (socket_return_value < 0) {
-      LOG_PRINT("\r\nSocket listen failed with bsd error: %d :%s\r\n", errno, threadname);
+      SL_DEBUG_LOG_V2(ERROR, "Socket listen failed with bsd error: %d :%s\r\n", errno, (uintptr_t)threadname);
       sl_status_t status = close(server_socket);
       if (status == SL_STATUS_OK) {
-        LOG_PRINT("\r\nnServer Socket ID : %d closed successfully : %s\r\n", server_socket, threadname);
+        SL_DEBUG_LOG_V2(INFO,
+                        "nServer Socket ID : %d closed successfully : %s\r\n",
+                        server_socket,
+                        (uintptr_t)threadname);
       } else {
-        LOG_PRINT("\r\nnServer Socket ID : %d close failed : %s\r\n", server_socket, threadname);
+        SL_DEBUG_LOG_V2(ERROR, "nServer Socket ID : %d close failed : %s\r\n", server_socket, (uintptr_t)threadname);
       }
       osThreadTerminate(osThreadGetId());
     }
-    LOG_PRINT("\r\nListening on Local Port : %u : %s\r\n", server_address.sin_port, threadname);
+    SL_DEBUG_LOG_V2(INFO, "Listening on Local Port : %u : %s\r\n", server_address.sin_port, (uintptr_t)threadname);
 
     client_socket = accept(server_socket, NULL, NULL);
     if (client_socket < 0) {
-      LOG_PRINT("\r\nSocket accept failed with bsd error: %d : %s\r\n", errno, threadname);
+      SL_DEBUG_LOG_V2(ERROR, "Socket accept failed with bsd error: %d : %s\r\n", errno, (uintptr_t)threadname);
       sl_status_t status = close(server_socket);
       if (status == SL_STATUS_OK) {
-        LOG_PRINT("\r\nnServer Socket ID : %d closed successfully : %s\r\n", server_socket, threadname);
+        SL_DEBUG_LOG_V2(INFO,
+                        "nServer Socket ID : %d closed successfully : %s\r\n",
+                        server_socket,
+                        (uintptr_t)threadname);
       } else {
-        LOG_PRINT("\r\nnServer Socket ID : %d close failed : %s\r\n", server_socket, threadname);
+        SL_DEBUG_LOG_V2(ERROR, "nServer Socket ID : %d close failed : %s\r\n", server_socket, (uintptr_t)threadname);
       }
       osThreadTerminate(osThreadGetId());
     }
-    LOG_PRINT("\r\nClient Socket ID : %d : %s\r\n", client_socket, threadname);
+    SL_DEBUG_LOG_V2(INFO, "Client Socket ID : %d : %s\r\n", client_socket, (uintptr_t)threadname);
 
-    LOG_PRINT("\r\nTCP_RX Throughput test start and Client Socket ID %d : %s\r\n", client_socket, threadname);
+    SL_DEBUG_LOG_V2(INFO,
+                    "TCP_RX Throughput test start and Client Socket ID %d : %s",
+                    client_socket,
+                    (uintptr_t)threadname);
     start = osKernelGetTickCount();
     while (1) {
       read_bytes = recv(client_socket, data_buffer, sizeof(data_buffer), 0);
@@ -601,36 +645,40 @@ void receive_data_from_tcp_client(void *userinfo)
           if (status == SL_STATUS_SI91X_MEMORY_FAILED_FROM_MODULE) {
             continue;
           } else {
-            LOG_PRINT("\r\nTCP recv failed with BSD error = %d and status = 0x%lx : %s\r\n", errno, status, threadname);
+            SL_DEBUG_LOG_V2(ERROR,
+                            "TCP recv failed with BSD error = %d and status = 0x%lx : %s",
+                            errno,
+                            status,
+                            (uintptr_t)threadname);
           }
         } else {
-          LOG_PRINT("\r\nTCP recv failed with BSD error = %d : %s\r\n", errno, threadname);
+          SL_DEBUG_LOG_V2(ERROR, "TCP recv failed with BSD error = %d : %s", errno, (uintptr_t)threadname);
         }
         break;
       }
       total_bytes_received = total_bytes_received + read_bytes;
       now                  = osKernelGetTickCount();
       if ((now - start) > TEST_TIMEOUT) {
-        LOG_PRINT("\r\nTest Time Out: %ld ms : %s\r\n", (now - start), threadname);
+        SL_DEBUG_LOG_V2(INFO, "Test Time Out: %ld ms : %s", (now - start), (uintptr_t)threadname);
         break;
       }
     }
-    LOG_PRINT("\r\nTCP_RX Throughput test finished : %s\r\n", threadname);
-    LOG_PRINT("\r\nTotal bytes received : %ld : %s\r\n", total_bytes_received, threadname);
+    SL_DEBUG_LOG_V2(INFO, "TCP_RX Throughput test finished : %s", (uintptr_t)threadname);
+    SL_DEBUG_LOG_V2(INFO, "Total bytes received : %ld : %s", total_bytes_received, (uintptr_t)threadname);
 
     measure_and_print_throughput(total_bytes_received, (now - start), client_socket);
   }
   sl_status_t status = close(server_socket);
   if (status == SL_STATUS_OK) {
-    LOG_PRINT("\r\nnServer Socket ID : %d closed successfully : %s\r\n", server_socket, threadname);
+    SL_DEBUG_LOG_V2(INFO, "nServer Socket ID : %d closed successfully : %s\r\n", server_socket, (uintptr_t)threadname);
   } else {
-    LOG_PRINT("\r\nnServer Socket ID : %d close failed : %s\r\n", server_socket, threadname);
+    SL_DEBUG_LOG_V2(ERROR, "nServer Socket ID : %d close failed : %s\r\n", server_socket, (uintptr_t)threadname);
   }
   status = close(client_socket);
   if (status == SL_STATUS_OK) {
-    LOG_PRINT("\r\nSocket ID : %d closed successfully : %s\r\n", client_socket, threadname);
+    SL_DEBUG_LOG_V2(INFO, "Socket ID : %d closed successfully : %s\r\n", client_socket, (uintptr_t)threadname);
   } else {
-    LOG_PRINT("\r\nSocket ID : %d close failed : %s\r\n", client_socket, threadname);
+    SL_DEBUG_LOG_V2(ERROR, "Socket ID : %d close failed : %s\r\n", client_socket, (uintptr_t)threadname);
   }
   osThreadTerminate(osThreadGetId());
 }
@@ -648,7 +696,7 @@ void send_data_to_udp_server(void *userinfo)
   const char *threadname = osThreadGetName(osThreadGetId());
 
   if (sockinfo->ipaddress[0] == '\0') {
-    LOG_PRINT("\r\nInvalid IP Address : %s \r\n", threadname);
+    SL_DEBUG_LOG_V2(ERROR, "Invalid IP Address : %s \r\n", (uintptr_t)threadname);
     free(userinfo);
     osThreadTerminate(osThreadGetId());
   }
@@ -663,12 +711,12 @@ void send_data_to_udp_server(void *userinfo)
 
   client_socket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
   if (client_socket < 0) {
-    LOG_PRINT("\r\nSocket creation failed with bsd error: %d : %s\r\n", errno, threadname);
+    SL_DEBUG_LOG_V2(ERROR, "Socket creation failed with bsd error: %d : %s\r\n", errno, (uintptr_t)threadname);
     osThreadTerminate(osThreadGetId());
   }
-  LOG_PRINT("\r\nSocket ID : %d : %s\r\n", client_socket, threadname);
+  SL_DEBUG_LOG_V2(INFO, "Socket ID : %d : %s\r\n", client_socket, (uintptr_t)threadname);
 
-  LOG_PRINT("\r\nUDP_TX Throughput test start : %s\r\n", threadname);
+  SL_DEBUG_LOG_V2(INFO, "UDP_TX Throughput test start : %s\r\n", (uintptr_t)threadname);
   start = osKernelGetTickCount();
   while (total_bytes_sent < BYTES_TO_SEND) {
     sent_bytes =
@@ -676,25 +724,25 @@ void send_data_to_udp_server(void *userinfo)
     if (sent_bytes < 0) {
       if (errno == ENOBUFS)
         continue;
-      LOG_PRINT("\r\nnUDP send failed with BSD error : %d : %s\r\n", errno, threadname);
+      SL_DEBUG_LOG_V2(ERROR, "nUDP send failed with BSD error : %d : %s\r\n", errno, (uintptr_t)threadname);
       break;
     }
     total_bytes_sent = total_bytes_sent + sent_bytes;
     now              = osKernelGetTickCount();
     if ((now - start) >= TEST_TIMEOUT) {
-      LOG_PRINT("\r\nTime Out: %ld : %s\r\n", (now - start), threadname);
+      SL_DEBUG_LOG_V2(INFO, "Time Out: %ld : %s\r\n", (now - start), (uintptr_t)threadname);
       break;
     }
   }
-  LOG_PRINT("\r\nUDP_TX Throughput test finished : %s\r\n", threadname);
-  LOG_PRINT("\r\nTotal bytes sent : %ld : %s\r\n", total_bytes_sent, threadname);
+  SL_DEBUG_LOG_V2(INFO, "UDP_TX Throughput test finished : %s\r\n", (uintptr_t)threadname);
+  SL_DEBUG_LOG_V2(INFO, "Total bytes sent : %ld : %s\r\n", total_bytes_sent, (uintptr_t)threadname);
   measure_and_print_throughput(total_bytes_sent, (now - start), client_socket);
 
   sl_status_t status = close(client_socket);
   if (status == SL_STATUS_OK) {
-    LOG_PRINT("\r\nSocket ID : %d closed successfully : %s\r\n", client_socket, threadname);
+    SL_DEBUG_LOG_V2(INFO, "Socket ID : %d closed successfully : %s\r\n", client_socket, (uintptr_t)threadname);
   } else {
-    LOG_PRINT("\r\nSocket ID : %d close failed : %s\r\n", client_socket, threadname);
+    SL_DEBUG_LOG_V2(ERROR, "Socket ID : %d close failed : %s\r\n", client_socket, (uintptr_t)threadname);
   }
   osThreadTerminate(osThreadGetId());
 }
@@ -716,24 +764,24 @@ void receive_data_from_udp_client(void *userinfo)
     server_address.sin_family = AF_INET;
     client_socket             = sl_si91x_socket_async(AF_INET, SOCK_DGRAM, IPPROTO_UDP, &data_callback);
     if (client_socket < 0) {
-      LOG_PRINT("\r\nSocket creation failed with bsd error: %d : %s\r\n", errno, threadname);
+      SL_DEBUG_LOG_V2(ERROR, "Socket creation failed with bsd error: %d : %s\r\n", errno, (uintptr_t)threadname);
       osThreadTerminate(osThreadGetId());
     }
-    LOG_PRINT("\r\nSocket ID : %d : %s\r\n", client_socket, threadname);
+    SL_DEBUG_LOG_V2(INFO, "Socket ID : %d : %s\r\n", client_socket, (uintptr_t)threadname);
 
     socket_return_value = sl_si91x_bind(client_socket, (struct sockaddr *)&server_address, socket_length);
 
     if (socket_return_value < 0) {
-      LOG_PRINT("\r\nSocket bind failed with bsd error: %d : %s\r\n", errno, threadname);
+      SL_DEBUG_LOG_V2(ERROR, "Socket bind failed with bsd error: %d : %s\r\n", errno, (uintptr_t)threadname);
       sl_status_t status = close(client_socket);
       if (status == SL_STATUS_OK) {
-        LOG_PRINT("\r\nSocket ID : %d closed successfully : %s\r\n", client_socket, threadname);
+        SL_DEBUG_LOG_V2(INFO, "Socket ID : %d closed successfully : %s\r\n", client_socket, (uintptr_t)threadname);
       } else {
-        LOG_PRINT("\r\nSocket ID : %d close failed : %s\r\n", client_socket, threadname);
+        SL_DEBUG_LOG_V2(ERROR, "Socket ID : %d close failed : %s\r\n", client_socket, (uintptr_t)threadname);
       }
       osThreadTerminate(osThreadGetId());
     }
-    LOG_PRINT("\r\nListening on Local Port %u : %s\r\n", server_address.sin_port, threadname);
+    SL_DEBUG_LOG_V2(INFO, "Listening on Local Port %u : %s\r\n", server_address.sin_port, (uintptr_t)threadname);
     if (client_socket < 0 || client_socket >= MAX_SERVER_CLEINT_SOCKETS) {
       // Handle error: invalid client socket number
       osThreadTerminate(osThreadGetId());
@@ -751,25 +799,28 @@ void receive_data_from_udp_client(void *userinfo)
     server_address.sin_family = AF_INET;
     client_socket             = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
     if (client_socket < 0) {
-      LOG_PRINT("\r\nSocket creation failed with bsd error: %d : %s\r\n", errno, threadname);
+      SL_DEBUG_LOG_V2(ERROR, "Socket creation failed with bsd error: %d : %s\r\n", errno, (uintptr_t)threadname);
       osThreadTerminate(osThreadGetId());
     }
-    LOG_PRINT("\r\nSocket ID : %d : %s\r\n", client_socket, threadname);
+    SL_DEBUG_LOG_V2(INFO, "Socket ID : %d : %s\r\n", client_socket, (uintptr_t)threadname);
 
     socket_return_value = bind(client_socket, (struct sockaddr *)&server_address, socket_length);
     if (socket_return_value < 0) {
-      LOG_PRINT("\r\nSocket bind failed with bsd error: %d : %s\r\n", errno, threadname);
+      SL_DEBUG_LOG_V2(ERROR, "Socket bind failed with bsd error: %d : %s\r\n", errno, (uintptr_t)threadname);
       sl_status_t status = close(client_socket);
       if (status == SL_STATUS_OK) {
-        LOG_PRINT("\r\nSocket ID : %d closed successfully : %s\r\n", client_socket, threadname);
+        SL_DEBUG_LOG_V2(INFO, "Socket ID : %d closed successfully : %s\r\n", client_socket, (uintptr_t)threadname);
       } else {
-        LOG_PRINT("\r\nSocket ID : %d close failed : %s\r\n", client_socket, threadname);
+        SL_DEBUG_LOG_V2(ERROR, "Socket ID : %d close failed : %s\r\n", client_socket, (uintptr_t)threadname);
       }
       osThreadTerminate(osThreadGetId());
     }
-    LOG_PRINT("\r\nListening on Local Port %u : %s\r\n", server_address.sin_port, threadname);
+    SL_DEBUG_LOG_V2(INFO, "Listening on Local Port %u : %s\r\n", server_address.sin_port, (uintptr_t)threadname);
 
-    LOG_PRINT("\r\nUDP_RX Throughput test start and Client Socket ID %d : %s\r\n", client_socket, threadname);
+    SL_DEBUG_LOG_V2(INFO,
+                    "UDP_RX Throughput test start and Client Socket ID %d : %s",
+                    client_socket,
+                    (uintptr_t)threadname);
     start = osKernelGetTickCount();
     while (1) {
       read_bytes = recvfrom(client_socket, data_buffer, sizeof(data_buffer), 0, NULL, NULL);
@@ -780,30 +831,34 @@ void receive_data_from_udp_client(void *userinfo)
           if (status == SL_STATUS_SI91X_MEMORY_FAILED_FROM_MODULE) {
             continue;
           } else {
-            LOG_PRINT("\r\nUDP recv failed with BSD error = %d and status = 0x%lx : %s\r\n", errno, status, threadname);
+            SL_DEBUG_LOG_V2(ERROR,
+                            "UDP recv failed with BSD error = %d and status = 0x%lx : %s",
+                            errno,
+                            status,
+                            (uintptr_t)threadname);
           }
         } else {
-          LOG_PRINT("\r\nUDP recv failed with BSD error = %d : %s\r\n", errno, threadname);
+          SL_DEBUG_LOG_V2(ERROR, "UDP recv failed with BSD error = %d : %s", errno, (uintptr_t)threadname);
         }
         break;
       }
       total_bytes_received = total_bytes_received + read_bytes;
       now                  = osKernelGetTickCount();
       if ((now - start) > TEST_TIMEOUT) {
-        LOG_PRINT("\r\nTest Time Out: %ld ms : %s\r\n", (now - start), threadname);
+        SL_DEBUG_LOG_V2(INFO, "Test Time Out: %ld ms : %s", (now - start), (uintptr_t)threadname);
         break;
       }
     }
-    LOG_PRINT("\r\nUDP_RX Throughput test finished : %s\r\n", threadname);
-    LOG_PRINT("\r\nTotal bytes received : %ld : %s\r\n", total_bytes_received, threadname);
+    SL_DEBUG_LOG_V2(INFO, "UDP_RX Throughput test finished : %s", (uintptr_t)threadname);
+    SL_DEBUG_LOG_V2(INFO, "Total bytes received : %ld : %s", total_bytes_received, (uintptr_t)threadname);
 
     measure_and_print_throughput(total_bytes_received, (now - start), client_socket);
   }
   sl_status_t status = close(client_socket);
   if (status == SL_STATUS_OK) {
-    LOG_PRINT("\r\nSocket ID : %d closed successfully : %s\r\n", client_socket, threadname);
+    SL_DEBUG_LOG_V2(INFO, "Socket ID : %d closed successfully : %s\r\n", client_socket, (uintptr_t)threadname);
   } else {
-    LOG_PRINT("\r\nSocket ID : %d close failed : %s\r\n", client_socket, threadname);
+    SL_DEBUG_LOG_V2(ERROR, "Socket ID : %d close failed : %s\r\n", client_socket, (uintptr_t)threadname);
   }
   osThreadTerminate(osThreadGetId());
 }
@@ -828,19 +883,19 @@ void receive_data_from_tls_server(void *userinfo)
     server_address.sin_family = AF_INET;
     client_socket             = sl_si91x_socket_async(AF_INET, SOCK_STREAM, IPPROTO_TCP, &data_callback);
     if (client_socket < 0) {
-      LOG_PRINT("\r\nSocket creation failed with bsd error: %d : %s\r\n", errno, threadname);
+      SL_DEBUG_LOG_V2(ERROR, "Socket creation failed with bsd error: %d : %s\r\n", errno, (uintptr_t)threadname);
       osThreadTerminate(osThreadGetId());
     }
-    LOG_PRINT("\r\nSocket ID : %d : %s\r\n", client_socket, threadname);
+    SL_DEBUG_LOG_V2(INFO, "Socket ID : %d : %s\r\n", client_socket, (uintptr_t)threadname);
 
     socket_return_value = setsockopt(client_socket, SOL_TCP, TCP_ULP, TLS, sizeof(TLS));
     if (socket_return_value < 0) {
-      LOG_PRINT("\r\nSet Socket option failed with bsd error: %d :%s\r\n", errno, threadname);
+      SL_DEBUG_LOG_V2(ERROR, "Set Socket option failed with bsd error: %d :%s\r\n", errno, (uintptr_t)threadname);
       sl_status_t status = close(client_socket);
       if (status == SL_STATUS_OK) {
-        LOG_PRINT("\r\nSocket ID : %d closed successfully : %s\r\n", client_socket, threadname);
+        SL_DEBUG_LOG_V2(INFO, "Socket ID : %d closed successfully : %s\r\n", client_socket, (uintptr_t)threadname);
       } else {
-        LOG_PRINT("\r\nSocket ID : %d close failed : %s\r\n", client_socket, threadname);
+        SL_DEBUG_LOG_V2(ERROR, "Socket ID : %d close failed : %s\r\n", client_socket, (uintptr_t)threadname);
       }
       osThreadTerminate(osThreadGetId());
     }
@@ -851,28 +906,28 @@ void receive_data_from_tls_server(void *userinfo)
                                               &high_performance_socket,
                                               sizeof(high_performance_socket));
     if (socket_return_value < 0) {
-      LOG_PRINT("\r\nSet Socket option failed with bsd error: %d : %s\r\n", errno, threadname);
+      SL_DEBUG_LOG_V2(ERROR, "Set Socket option failed with bsd error: %d : %s\r\n", errno, (uintptr_t)threadname);
       sl_status_t status = close(client_socket);
       if (status == SL_STATUS_OK) {
-        LOG_PRINT("\r\nSocket ID : %d closed successfully : %s\r\n", client_socket, threadname);
+        SL_DEBUG_LOG_V2(INFO, "Socket ID : %d closed successfully : %s\r\n", client_socket, (uintptr_t)threadname);
       } else {
-        LOG_PRINT("\r\nSocket ID : %d close failed : %s\r\n", client_socket, threadname);
+        SL_DEBUG_LOG_V2(ERROR, "Socket ID : %d close failed : %s\r\n", client_socket, (uintptr_t)threadname);
       }
       osThreadTerminate(osThreadGetId());
     }
 
     socket_return_value = connect(client_socket, (struct sockaddr *)&server_address, socket_length);
     if (socket_return_value < 0) {
-      LOG_PRINT("\r\nSocket Connect failed with bsd error: %d : %s\r\n", errno, threadname);
+      SL_DEBUG_LOG_V2(ERROR, "Socket Connect failed with bsd error: %d : %s\r\n", errno, (uintptr_t)threadname);
       sl_status_t status = close(client_socket);
       if (status == SL_STATUS_OK) {
-        LOG_PRINT("\r\nSocket ID : %d closed successfully : %s\r\n", client_socket, threadname);
+        SL_DEBUG_LOG_V2(INFO, "Socket ID : %d closed successfully : %s\r\n", client_socket, (uintptr_t)threadname);
       } else {
-        LOG_PRINT("\r\nSocket ID : %d close failed : %s\r\n", client_socket, threadname);
+        SL_DEBUG_LOG_V2(ERROR, "Socket ID : %d close failed : %s\r\n", client_socket, (uintptr_t)threadname);
       }
       osThreadTerminate(osThreadGetId());
     }
-    LOG_PRINT("\r\nSocket connected to TLS server : %s\r\n", threadname);
+    SL_DEBUG_LOG_V2(INFO, "Socket connected to TLS server : %s\r\n", (uintptr_t)threadname);
     if (client_socket < 0 || client_socket >= MAX_SERVER_CLEINT_SOCKETS) {
       // Handle error: invalid client socket number
       osThreadTerminate(osThreadGetId());
@@ -889,19 +944,19 @@ void receive_data_from_tls_server(void *userinfo)
     server_address.sin_family = AF_INET;
     client_socket             = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     if (client_socket < 0) {
-      LOG_PRINT("\r\nSocket creation failed with bsd error: %d : %s \r\n", errno, threadname);
+      SL_DEBUG_LOG_V2(ERROR, "Socket creation failed with bsd error: %d : %s \r\n", errno, (uintptr_t)threadname);
       osThreadTerminate(osThreadGetId());
     }
-    LOG_PRINT("\r\nSocket ID : %d : %s\r\n", client_socket, threadname);
+    SL_DEBUG_LOG_V2(INFO, "Socket ID : %d : %s\r\n", client_socket, (uintptr_t)threadname);
 
     socket_return_value = setsockopt(client_socket, SOL_TCP, TCP_ULP, TLS, sizeof(TLS));
     if (socket_return_value < 0) {
-      LOG_PRINT("\r\nSet Socket option failed with bsd error: %d : %s\r\n", errno, threadname);
+      SL_DEBUG_LOG_V2(ERROR, "Set Socket option failed with bsd error: %d : %s\r\n", errno, (uintptr_t)threadname);
       sl_status_t status = close(client_socket);
       if (status == SL_STATUS_OK) {
-        LOG_PRINT("\r\nSocket ID : %d closed successfully : %s\r\n", client_socket, threadname);
+        SL_DEBUG_LOG_V2(INFO, "Socket ID : %d closed successfully : %s\r\n", client_socket, (uintptr_t)threadname);
       } else {
-        LOG_PRINT("\r\nSocket ID : %d close failed : %s\r\n", client_socket, threadname);
+        SL_DEBUG_LOG_V2(ERROR, "Socket ID : %d close failed : %s\r\n", client_socket, (uintptr_t)threadname);
       }
       osThreadTerminate(osThreadGetId());
     }
@@ -912,30 +967,33 @@ void receive_data_from_tls_server(void *userinfo)
                                      &high_performance_socket,
                                      sizeof(high_performance_socket));
     if (socket_return_value < 0) {
-      LOG_PRINT("\r\nSet Socket option failed with bsd error: %d : %s\r\n", errno, threadname);
+      SL_DEBUG_LOG_V2(ERROR, "Set Socket option failed with bsd error: %d : %s\r\n", errno, (uintptr_t)threadname);
       sl_status_t status = close(client_socket);
       if (status == SL_STATUS_OK) {
-        LOG_PRINT("\r\nSocket ID : %d closed successfully : %s\r\n", client_socket, threadname);
+        SL_DEBUG_LOG_V2(INFO, "Socket ID : %d closed successfully : %s\r\n", client_socket, (uintptr_t)threadname);
       } else {
-        LOG_PRINT("\r\nSocket ID : %d close failed : %s\r\n", client_socket, threadname);
+        SL_DEBUG_LOG_V2(ERROR, "Socket ID : %d close failed : %s\r\n", client_socket, (uintptr_t)threadname);
       }
       osThreadTerminate(osThreadGetId());
     }
 
     socket_return_value = connect(client_socket, (struct sockaddr *)&server_address, socket_length);
     if (socket_return_value < 0) {
-      LOG_PRINT("\r\nSocket Connect failed with bsd error: %d : %s\r\n", errno, threadname);
+      SL_DEBUG_LOG_V2(ERROR, "Socket Connect failed with bsd error: %d : %s\r\n", errno, (uintptr_t)threadname);
       sl_status_t status = close(client_socket);
       if (status == SL_STATUS_OK) {
-        LOG_PRINT("\r\nSocket ID : %d closed successfully : %s\r\n", client_socket, threadname);
+        SL_DEBUG_LOG_V2(INFO, "Socket ID : %d closed successfully : %s\r\n", client_socket, (uintptr_t)threadname);
       } else {
-        LOG_PRINT("\r\nSocket ID : %d close failed : %s\r\n", client_socket, threadname);
+        SL_DEBUG_LOG_V2(ERROR, "Socket ID : %d close failed : %s\r\n", client_socket, (uintptr_t)threadname);
       }
       osThreadTerminate(osThreadGetId());
     }
-    LOG_PRINT("\r\nSocket connected to TLS server : %s\r\n", threadname);
+    SL_DEBUG_LOG_V2(INFO, "Socket connected to TLS server : %s\r\n", (uintptr_t)threadname);
 
-    LOG_PRINT("\r\nTLS_RX Throughput test start and Client Socket ID %d : %s\r\n", client_socket, threadname);
+    SL_DEBUG_LOG_V2(INFO,
+                    "TLS_RX Throughput test start and Client Socket ID %d : %s",
+                    client_socket,
+                    (uintptr_t)threadname);
     start          = osKernelGetTickCount();
     now            = start;
     int read_bytes = 1;
@@ -948,32 +1006,39 @@ void receive_data_from_tls_server(void *userinfo)
           if (status == SL_STATUS_SI91X_MEMORY_FAILED_FROM_MODULE) {
             continue;
           } else {
-            LOG_PRINT("\r\nSSL recv failed with BSD error = %d and status = 0x%lx : %s\r\n", errno, status, threadname);
+            SL_DEBUG_LOG_V2(ERROR,
+                            "SSL recv failed with BSD error = %d and status = 0x%lx : %s",
+                            errno,
+                            status,
+                            (uintptr_t)threadname);
           }
         } else if (errno == ENOTCONN) {
-          LOG_PRINT("\r\nRemote server terminated and Client Socket ID %d : %s\r\n", client_socket, threadname);
+          SL_DEBUG_LOG_V2(WARN,
+                          "Remote server terminated and Client Socket ID %d : %s",
+                          client_socket,
+                          (uintptr_t)threadname);
         } else {
-          LOG_PRINT("\r\nSSL recv failed with BSD error = %d : %s\r\n", errno, threadname);
+          SL_DEBUG_LOG_V2(ERROR, "SSL recv failed with BSD error = %d : %s", errno, (uintptr_t)threadname);
         }
         break;
       }
       total_bytes_received = total_bytes_received + read_bytes;
       now                  = osKernelGetTickCount();
       if ((now - start) > TEST_TIMEOUT) {
-        LOG_PRINT("\r\nTest Time Out: %ld ms : %s\r\n", (now - start), threadname);
+        SL_DEBUG_LOG_V2(INFO, "Test Time Out: %ld ms : %s", (now - start), (uintptr_t)threadname);
         break;
       }
     }
-    LOG_PRINT("\r\nTLS_RX Throughput test finished : %s\r\n", threadname);
-    LOG_PRINT("\r\nTotal bytes received : %ld : %s\r\n", total_bytes_received, threadname);
+    SL_DEBUG_LOG_V2(INFO, "TLS_RX Throughput test finished : %s", (uintptr_t)threadname);
+    SL_DEBUG_LOG_V2(INFO, "Total bytes received : %ld : %s", total_bytes_received, (uintptr_t)threadname);
 
     measure_and_print_throughput(total_bytes_received, (now - start), client_socket);
   }
   sl_status_t status = close(client_socket);
   if (status == SL_STATUS_OK) {
-    LOG_PRINT("\r\nSocket ID : %d closed successfully : %s\r\n", client_socket, threadname);
+    SL_DEBUG_LOG_V2(INFO, "Socket ID : %d closed successfully : %s\r\n", client_socket, (uintptr_t)threadname);
   } else {
-    LOG_PRINT("\r\nSocket ID : %d close failed : %s\r\n", client_socket, threadname);
+    SL_DEBUG_LOG_V2(ERROR, "Socket ID : %d close failed : %s\r\n", client_socket, (uintptr_t)threadname);
   }
   osThreadTerminate(osThreadGetId());
 }
@@ -1000,27 +1065,30 @@ void send_data_to_tls_server(void *userinfo)
 
   client_socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
   if (client_socket < 0) {
-    LOG_PRINT("\r\nSocket creation failed with bsd error: %d : %s\r\n", errno, threadname);
+    SL_DEBUG_LOG_V2(ERROR, "Socket creation failed with bsd error: %d : %s\r\n", errno, (uintptr_t)threadname);
     return;
   }
-  LOG_PRINT("\r\nSocket ID : %d : %s\r\n", client_socket, threadname);
+  SL_DEBUG_LOG_V2(INFO, "Socket ID : %d : %s\r\n", client_socket, (uintptr_t)threadname);
 
   socket_return_value = setsockopt(client_socket, SOL_TCP, TCP_ULP, TLS, sizeof(TLS));
   if (socket_return_value < 0) {
-    LOG_PRINT("\r\nSet Socket option failed with bsd error: %d : %s\r\n", errno, threadname);
+    SL_DEBUG_LOG_V2(ERROR, "Set Socket option failed with bsd error: %d : %s\r\n", errno, (uintptr_t)threadname);
     close(client_socket);
     osThreadTerminate(osThreadGetId());
   }
 
   socket_return_value = connect(client_socket, (struct sockaddr *)&server_address, socket_length);
   if (socket_return_value < 0) {
-    LOG_PRINT("\r\nSocket Connect failed with bsd error: %d : %s\r\n", errno, threadname);
+    SL_DEBUG_LOG_V2(ERROR, "Socket Connect failed with bsd error: %d : %s\r\n", errno, (uintptr_t)threadname);
     close(client_socket);
     osThreadTerminate(osThreadGetId());
   }
-  LOG_PRINT("\r\nSocket connected to TLS server : %s\r\n", threadname);
+  SL_DEBUG_LOG_V2(INFO, "Socket connected to TLS server : %s\r\n", (uintptr_t)threadname);
 
-  LOG_PRINT("\r\nTLS_TX Throughput test start and Client Socket ID %d : %s\r\n", client_socket, threadname);
+  SL_DEBUG_LOG_V2(INFO,
+                  "TLS_TX Throughput test start and Client Socket ID %d : %s",
+                  client_socket,
+                  (uintptr_t)threadname);
   start          = osKernelGetTickCount();
   now            = start;
   int sent_bytes = 0;
@@ -1030,21 +1098,24 @@ void send_data_to_tls_server(void *userinfo)
       if (errno == ENOBUFS)
         continue;
       if (errno == ENOTCONN) {
-        LOG_PRINT("\r\nRemote server terminated on Client Socket ID %d : %s\r\n", client_socket, threadname);
+        SL_DEBUG_LOG_V2(WARN,
+                        "Remote server terminated on Client Socket ID %d : %s",
+                        client_socket,
+                        (uintptr_t)threadname);
       } else {
-        LOG_PRINT("\r\nnSSL send failed with BSD error : %d : %s\r\n", errno, threadname);
+        SL_DEBUG_LOG_V2(ERROR, "nSSL send failed with BSD error : %d : %s", errno, (uintptr_t)threadname);
       }
       break;
     }
     total_bytes_sent = total_bytes_sent + sent_bytes;
     now              = osKernelGetTickCount();
     if ((now - start) >= TEST_TIMEOUT) {
-      LOG_PRINT("\r\nTime Out: %ld : %s\r\n", (now - start), threadname);
+      SL_DEBUG_LOG_V2(INFO, "Time Out: %ld : %s\r\n", (now - start), (uintptr_t)threadname);
       break;
     }
   }
-  LOG_PRINT("\r\nTLS_TX Throughput test finished : %s\r\n", threadname);
-  LOG_PRINT("\r\nTotal bytes sent : %ld : %s\r\n", total_bytes_sent, threadname);
+  SL_DEBUG_LOG_V2(INFO, "TLS_TX Throughput test finished : %s", (uintptr_t)threadname);
+  SL_DEBUG_LOG_V2(INFO, "Total bytes sent : %ld : %s\r\n", total_bytes_sent, (uintptr_t)threadname);
   measure_and_print_throughput(total_bytes_sent, (now - start), client_socket);
 
   close(client_socket);

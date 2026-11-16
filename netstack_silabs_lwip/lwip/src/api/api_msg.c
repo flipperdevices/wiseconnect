@@ -127,6 +127,7 @@ lwip_netconn_err_to_msg(err_t err)
   }
 }
 
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 int
 lwip_netconn_is_err_msg(void *msg, err_t *err)
 {
@@ -214,6 +215,7 @@ recv_raw(void *arg, struct raw_pcb *pcb, struct pbuf *p,
  *
  * @see udp.h (struct udp_pcb.recv) for parameters
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 static void
 recv_udp(void *arg, struct udp_pcb *pcb, struct pbuf *p,
          const ip_addr_t *addr, u16_t port)
@@ -292,6 +294,7 @@ recv_udp(void *arg, struct udp_pcb *pcb, struct pbuf *p,
  *
  * @see tcp.h (struct tcp_pcb.recv) for parameters and return value
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 static err_t
 recv_tcp(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err_t err)
 {
@@ -356,6 +359,7 @@ recv_tcp(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err_t err)
  *
  * @see tcp.h (struct tcp_pcb.poll) for parameters and return value
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 static err_t
 poll_tcp(void *arg, struct tcp_pcb *pcb)
 {
@@ -397,6 +401,7 @@ poll_tcp(void *arg, struct tcp_pcb *pcb)
  *
  * @see tcp.h (struct tcp_pcb.sent) for parameters and return value
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 static err_t
 sent_tcp(void *arg, struct tcp_pcb *pcb, u16_t len)
 {
@@ -1532,6 +1537,7 @@ lwip_netconn_do_listen(void *m)
  *
  * @param m the api_msg pointing to the connection
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 void
 lwip_netconn_do_send(void *m)
 {
@@ -1589,6 +1595,7 @@ lwip_netconn_do_send(void *m)
  *
  * @param m the api_msg pointing to the connection
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 void
 lwip_netconn_do_recv(void *m)
 {
@@ -1640,6 +1647,7 @@ lwip_netconn_do_accepted(void *m)
  * @return ERR_OK
  *         ERR_MEM if LWIP_TCPIP_CORE_LOCKING=1 and sending hasn't yet finished
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 static err_t
 lwip_netconn_do_writemore(struct netconn *conn  WRITE_DELAYED_PARAM)
 {
@@ -1813,6 +1821,7 @@ err_mem:
  *
  * @param m the api_msg pointing to the connection
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 void
 lwip_netconn_do_write(void *m)
 {

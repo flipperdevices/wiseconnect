@@ -1,8 +1,8 @@
-# SL I2C DRIVER FOLLOWER BLOCKING
+# SiWx91x Platform I2C Driver Follower
 
 ## Table of Contents
 
-- [SL I2C DRIVER FOLLOWER BLOCKING](#sl-i2c-driver-follower-blocking)
+- [SiWx91x Platform I2C Driver Follower](#platform-siwx91x-i2c-driver-follower)
   - [Table of Contents](#table-of-contents)
   - [Purpose/Scope](#purposescope)
   - [Overview](#overview)
@@ -16,6 +16,9 @@
     - [Application Configuration Parameters](#application-configuration-parameters)
     - [Pin Configuration](#pin-configuration)
   - [Test the Application](#test-the-application)
+  - [Troubleshooting](#troubleshooting)
+  - [Resources](#resources)
+  - [Report Bugs/Support](#report-bugssupport)
 
 ## Purpose/Scope
 
@@ -44,7 +47,7 @@ The application demonstrates the data transfer from leader to follower and then 
   - [sl_i2c_operating_mode_t](https://docs.silabs.com/wiseconnect/latest/wiseconnect-api-reference-guide-si91x-peripherals/i2-c#sl-i2c-operating-mode-t) bus speed, it can be Standard, Fast, Fast plus or High speed.
   - [sl_i2c_mode_t](https://docs.silabs.com/wiseconnect/latest/wiseconnect-api-reference-guide-si91x-peripherals/i2-c#sl-i2c-mode-t) mode, it should be Follower mode for the Follower application.
   - [sl_i2c_transfer_type_t](https://docs.silabs.com/wiseconnect/latest/wiseconnect-api-reference-guide-si91x-peripherals/i2-c#sl-i2c-transfer-type-t), using NON-DMA.
-  - [sl_i2c_callback_t](https://docs.silabs.com/wiseconnect/latest/wiseconnect-api-reference-guide-si91x-peripherals/i2-c#sl-i2c-callback-t) , I2C callback
+  - [sl_i2c_callback_t](https://docs.silabs.com/wiseconnect/latest/wiseconnect-api-reference-guide-si91x-peripherals/i2-c#sl-i2c-callback-t),  I2C callback
 - It also initializes I2C clock and configures I2C SDA & SCL pins.
 - Now Follower address has to configure its own address through [sl_i2c_driver_set_follower_address](https://docs.silabs.com/wiseconnect/latest/wiseconnect-api-reference-guide-si91x-peripherals/i2-c#sl-i2c-driver-set-follower-address) API.
 - Now transmit and receive FIFO threshold values are configured using [sl_i2c_driver_configure_fifo_threshold](https://docs.silabs.com/wiseconnect/latest/wiseconnect-api-reference-guide-si91x-peripherals/i2-c#sl-i2c-driver-configure-fifo-threshold) API.
@@ -72,7 +75,7 @@ The application demonstrates the data transfer from leader to follower and then 
 ### Hardware Requirements
 
 - Windows PC
-- Silicon Labs Si917 Evaluation Kit [[BRD4002](https://www.silabs.com/development-tools/wireless/wireless-pro-kit-mainboard?tab=overview) + [BRD4338A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-rb4338a-wifi-6-bluetooth-le-soc-radio-board?tab=overview) / [BRD4342A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx91x-rb4342a-wifi-6-bluetooth-le-soc-radio-board?tab=overview) / [BRD4343A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4343a-wi-fi-6-bluetooth-le-8mb-flash-radio-board-for-module?tab=overview)] - as a Follower and Leader
+- Silicon Labs SiWx91x Evaluation Kit [[BRD4002](https://www.silabs.com/development-tools/wireless/wireless-pro-kit-mainboard?tab=overview) + [BRD4338A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-rb4338a-wifi-6-bluetooth-le-soc-radio-board?tab=overview) / [BRD4342A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx91x-rb4342a-wifi-6-bluetooth-le-soc-radio-board?tab=overview) / [BRD4343A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4343a-wi-fi-6-bluetooth-le-8mb-flash-radio-board-for-module?tab=overview) / [BRD4343C](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4343c-wi-fi-6-bluetooth-le-8mb-flash-radio-board-for-module?tab=overview)] - as a Follower and Leader
 - SiWx917 AC1 Module Explorer Kit [BRD2708A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-ek2708a-explorer-kit) as a Follower and Leader
 
 ### Software Requirements
@@ -109,11 +112,24 @@ For details on the project folder structure, see the [WiSeConnect Examples](http
 - If the project built is without selecting configurations, it uses default values from UC.
 - Configure mode, operating-mode, and transfer-type of I2C instance using the respective instance UC.
 - Change 'Operating Mode' as per bus-speed requirement.
-- After the above UC configurations, also configure following macros in [`i2c_follower_example.c`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.1-content-for-docs/examples/si91x_soc/peripheral/sl_si91x_i2c_driver_follower/i2c_follower_example.c) file and update/modify following macros, if required.
+- After the above UC configurations, also configure following macros in [`i2c_follower_example.c`](i2c_follower_example.c) file and update/modify following macros, if required.
 
-  ```C
-    #define OWN_I2C_ADDR             // Update I2C own address
-    #define I2C_SIZE_BUFFERS         // To change the number of bytes to send and receive.Its value should be less than maximum buffer size macro value.
+- `OWN_I2C_ADDR`: 7-bit I2C follower address assigned to this device. The leader application must target this same address when communicating. By default, it is set to `0x50`.
+
+  ```c
+    #define OWN_I2C_ADDR             0x50  // Own I2C address
+  ```
+
+- `I2C_BUFFER_SIZE`: Defines the size of the data buffer used for I2C transfer. By default, it is set to 1024.
+
+  ```c
+    #define I2C_BUFFER_SIZE          1024  // Size of data buffer
+  ```
+
+- `MAX_BUFFER_SIZE_BLOCKING`: Defines the maximum buffer size allowed for RX and TX lengths when transferring without DMA. By default, it is set to 80000.
+
+  ```c
+    #define MAX_BUFFER_SIZE_BLOCKING 80000 // Maximum buffer size for RX and TX length when transferring without DMA
   ```
 
 > **Notes**
@@ -156,6 +172,7 @@ For details on the project folder structure, see the [WiSeConnect Examples](http
 > **Note- In case of sleep-wakeup :**
 >
 >- As GPIO configurations will be lost after going to sleep state, the user has to initialize I2C pins and driver again after wakeup, by using [sl_i2c_driver_init](https://docs.silabs.com/wiseconnect/latest/wiseconnect-api-reference-guide-si91x-peripherals/i2-c#sl-i2c-driver-init) API for initializing driver and [sl_si91x_i2c_pin_init](https://docs.silabs.com/wiseconnect/latest/wiseconnect-api-reference-guide-si91x-peripherals/i2-c#sl-si91x-i2c-pin-init) API for initializing pins.
+>- If the project uses UC-generated I2C instances, call `sl_i2c_init_instances()` after wakeup before resuming I2C transfers so the configured I2C instances are restored.
 
 > **Note**: For recommended settings, please refer the [recommendations guide](https://docs.silabs.com/wiseconnect/latest/wiseconnect-developers-guide-prog-recommended-settings/).
 
@@ -175,3 +192,19 @@ Refer to the instructions [here](https://docs.silabs.com/wiseconnect/latest/wise
 > **Note:**
 >
 > - Interrupt handlers are implemented in the driver layer, and user callbacks are provided for custom code. If you want to write your own interrupt handler instead of using the default one, make the driver interrupt handler a weak handler. Then, copy the necessary code from the driver handler to your custom interrupt handler.
+
+## Troubleshooting
+
+- If the project does not build, ensure Simplicity Studio and the WiSeConnect extension are installed and the board is connected.
+- If the device is not detected, reinstall the connectivity firmware and check USB drivers.
+
+## Resources
+
+- [WiSeConnect Getting Started](https://docs.silabs.com/wiseconnect/latest/wiseconnect-getting-started/)
+- [WiSeConnect Examples](https://docs.silabs.com/wiseconnect/latest/wiseconnect-examples/)
+- [SiWx91x SoC Documentation](https://docs.silabs.com/wiseconnect/latest/)
+
+## Report Bugs/Support
+
+For issues and support, use the Silicon Labs Community or your normal support channel.
+

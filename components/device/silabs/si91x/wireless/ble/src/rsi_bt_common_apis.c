@@ -169,7 +169,7 @@ int32_t rsi_bt_get_rssi(const uint8_t *dev_addr, int8_t *resp)
 #ifdef BD_ADDR_IN_ASCII
   rsi_ascii_dev_address_to_6bytes_rev(bt_rssi.dev_addr, dev_addr);
 #else
-  memcpy(bt_rssi.dev_addr, dev_addr, 6);
+  memcpy(bt_rssi.dev_addr, dev_addr, RSI_DEV_ADDR_LEN);
 #endif
   SL_PRINTF(SL_RSI_BT_GET_RSSI, BLUETOOTH, LOG_INFO);
   return rsi_bt_driver_send_cmd(RSI_BT_GET_RSSI, &bt_rssi, resp);

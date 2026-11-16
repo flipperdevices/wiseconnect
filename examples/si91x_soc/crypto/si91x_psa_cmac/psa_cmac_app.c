@@ -15,6 +15,7 @@
  *
  ******************************************************************************/
 #include "psa_cmac_app.h"
+#include <inttypes.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -40,7 +41,7 @@ void test_psa_cmac()
 
   ret = psa_crypto_init();
   if (ret != PSA_SUCCESS) {
-    printf("PSA Crypto Init Failed with error : %ld\n", ret);
+    printf("PSA Crypto Init Failed with error : %" PRId32 "\n", ret);
   } else {
     printf("PSA Crypto Init Success!\n");
   }
@@ -53,7 +54,7 @@ void test_psa_cmac()
   // Import a volatile plain key for CMAC
   ret = psa_import_key(&key_attr, cmac_key, sizeof(cmac_key), &key_id);
   if (ret != PSA_SUCCESS) {
-    printf("PSA Import key failed with error : %ld\n", ret);
+    printf("PSA Import key failed with error : %" PRId32 "\n", ret);
   } else {
     printf("PSA Import Key Success!\n");
   }
@@ -62,7 +63,7 @@ void test_psa_cmac()
   // Expected CMAC MAC: aa f3 d8 f1 de 56 40 c2 32 f5 b1 69 b9 c9 11 e6
   ret = psa_mac_compute(key_id, PSA_ALG_CMAC, cmac_msg, sizeof(cmac_msg), mac_buf, sizeof(mac_buf), &mac_len);
   if (ret != PSA_SUCCESS || (memcmp(mac_buf, expected_mac, sizeof(expected_mac)))) {
-    printf("MAC Compute failed with error : %ld\n", ret);
+    printf("MAC Compute failed with error : %" PRId32 "\n", ret);
   } else {
     printf("MAC Compute is Successful!\n");
   }
@@ -70,7 +71,7 @@ void test_psa_cmac()
   // Verify the CMAC MAC of a message
   ret = psa_mac_verify(key_id, PSA_ALG_CMAC, cmac_msg, sizeof(cmac_msg), mac_buf, mac_len);
   if (ret != PSA_SUCCESS) {
-    printf("MAC Verify Failed with error : %ld\n", ret);
+    printf("MAC Verify Failed with error : %" PRId32 "\n", ret);
   } else {
     printf("MAC Verification Success!\n");
   }
@@ -78,7 +79,7 @@ void test_psa_cmac()
   // Destroy a volatile plain key for CMAC
   ret = psa_destroy_key(key_id);
   if (ret != PSA_SUCCESS) {
-    printf("PSA Destroy Key failed with error : %ld\n", ret);
+    printf("PSA Destroy Key failed with error : %" PRId32 "\n", ret);
   } else {
     printf("PSA Destroy Key Success!\n");
   }

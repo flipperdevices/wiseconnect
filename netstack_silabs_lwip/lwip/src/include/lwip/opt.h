@@ -50,6 +50,7 @@
  */
 #include "lwipopts.h"
 #include "lwip/debug.h"
+#include "sl_code_classification.h"
 
 /**
  * @defgroup lwip_opts Options (lwipopts.h)

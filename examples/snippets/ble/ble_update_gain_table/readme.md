@@ -1,16 +1,25 @@
 # BLE - Update Gain Table 
 
+## High-Level Overview
+
+SiWx91x BLE update gain table example: overwrite the default region-based gain table with user-defined max power and offset values on SoC, PSRAM, and NCP modes using Simplicity Studio.
+
 ## Table of Contents
 
 - [BLE - Update Gain Table](#ble---update-gain-table)
+  - [High-Level Overview](#high-level-overview)
   - [Table of Contents](#table-of-contents)
   - [Purpose/Scope](#purposescope)
   - [Prerequisites/Setup Requirements](#prerequisitessetup-requirements)
     - [Hardware Requirements](#hardware-requirements)
     - [Software Requirements](#software-requirements)
-  - [Getting Started](#getting-started)
-  - [Application Build Environment](#application-build-environment)
-  - [Test the Application](#test-the-application)
+  - [Steps to Run Demo](#steps-to-run-demo)
+    - [Getting Started](#getting-started)
+    - [Configuration and Setup](#configuration-and-setup)
+    - [Steps for Execution](#steps-for-execution)
+  - [Troubleshooting](#troubleshooting)
+  - [Resources](#resources)
+  - [Report Bugs and Get Support](#report-bugs-and-get-support)
 
 ## Purpose/Scope
 
@@ -28,18 +37,18 @@ Both gain tables must be configured in the correct order to successfully apply c
 
 - Windows PC
 - SoC Mode:
-  - Silicon Labs [BRD4325A, BRD4325B, BRD4325C, BRD4325G, BRD4338A, BRD4339B, BRD4343A](https://www.silabs.com/)
+  - Silicon Labs [[BRD4002B](https://www.silabs.com/development-tools/wireless/wireless-pro-kit-mainboard?tab=overview) + [BRD4338A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-rb4338a-wifi-6-bluetooth-le-soc-radio-board?tab=overview) / [BRD4343A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4343a-wi-fi-6-bluetooth-le-8mb-flash-radio-board-for-module?tab=overview) / [BRD4343C](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4343c-wi-fi-6-bluetooth-le-8mb-flash-radio-board-for-module?tab=overview)]
   - Kits
-    - SiWx917 AC1 Module Explorer Kit (BRD2708A)
+    - SiWG917 Dev Kit [BRD2605B]
+    - SiWx917 AC1 Module Explorer Kit [BRD2708A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-ek2708a-explorer-kit)
 - PSRAM Mode:  
-  - Silicon Labs [BRD4340A, BRD4342A, BRD4325G](https://www.silabs.com/)
+  - Silicon Labs [[BRD4002B](https://www.silabs.com/development-tools/wireless/wireless-pro-kit-mainboard?tab=overview) + [BRD4342A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx91x-rb4342a-wifi-6-bluetooth-le-soc-radio-board?tab=overview)]
 - NCP Mode:
-  - Silicon Labs [BRD4180B](https://www.silabs.com/);
+  - Silicon Labs [BRD4186C](https://www.silabs.com/development-tools/wireless/xg24-rb4186c-efr32xg24-wireless-gecko-radio-board?tab=overview)
   - Host MCU Eval Kit. This example has been tested with:
     - Silicon Labs [WSTK + EFR32MG21](https://www.silabs.com/development-tools/wireless/efr32xg21-bluetooth-starter-kit)
-    - NCP Expansion Kit with NCP Radio boards
-      - (BRD4346A + BRD8045A) [SiWx917-EB4346A]
-      - (BRD4357A + BRD8045A) [SiWx917-EB4357A]
+  - NCP Expansion Kit with NCP Radio boards
+      - [[BRD8045A](https://www.silabs.com/development-tools/wireless/wi-fi/expansion-adapter-board-for-co-processor-radio-boards?tab=overview) + [BRD4346A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-rb4346a-wifi-6-bluetooth-le-soc-4mb-flash-radio-board?tab=overview) / [BRD4357A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4357a-wi-fi-6-bluetooth-le-4mb-flash-radio-board-for-rcp-and-ncp-modules?tab=overview) / [BRD4357C](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4357c-wi-fi-6-bluetooth-le-4mb-flash-radio-board-for-rcp-and-ncp-modules?tab=overview)]
 - Smartphone 
 
 ### Software Requirements
@@ -48,7 +57,9 @@ Both gain tables must be configured in the correct order to successfully apply c
 
 - Download and install the Silicon Labs [Simplicity Connect App(formerly EFR Connect App) or other BLE Central/Peripheral app.](https://www.silabs.com/developers/simplicity-connect-mobile-app ) in the android smart phones for testing BLE applications. Users can also use their choice of BLE apps available in Android/iOS smart phones.
   
-## Getting Started
+## Steps to Run Demo
+
+### Getting Started
 
 Refer to the instructions [here](https://docs.silabs.com/wiseconnect/latest/wiseconnect-getting-started/) to:
 
@@ -60,7 +71,7 @@ Refer to the instructions [here](https://docs.silabs.com/wiseconnect/latest/wise
 
 For details on the project folder structure, see the [WiSeConnect Examples](https://docs.silabs.com/wiseconnect/latest/wiseconnect-examples/#example-folder-structure) page.
 
-## Application Build Environment
+### Configuration and Setup
 
 The application can be configured to suit your requirements and development environment. Read through the following sections and make any changes needed.
 
@@ -225,7 +236,7 @@ uint8_t Si917_BLE_REGION_BASED_LP_CHAIN_10DBM_OFFSET_XX[] = {};  // Fill the use
 > - The Worldwide table is available for BLE only, and must not be modified. 
 > - The values in the worldwide table comply with Bluetooth SIG specifications.
 
-## Test the Application
+### Steps for Execution
 
 Refer to the instructions [here](https://docs.silabs.com/wiseconnect/latest/wiseconnect-getting-started/) to:
 
@@ -243,4 +254,26 @@ Follow the steps as mentioned for the successful execution of the application:
 4. Review gain table updates on the serial terminal. Refer the following image for console prints:
 
 ![](resources/readme/update_gain_table_logs.png)
+
+## Troubleshooting
+
+If you encounter issues while running the BLE Update Gain Table example, check the following:
+
+- Ensure the gain table update API is called immediately after the opermode request; calling it later may not take effect.
+- Verify `GAIN_TABLE_AND_MAX_POWER_UPDATE_ENABLE` is set to `1` to apply the user-defined tables.
+- Confirm the `node_id` and `req_type` combination matches the payload array being passed.
+- Make sure the region value (FCC, ETSI, TELEC, WORLDWIDE, KCC) and channel numbers in the payload are within the allowed ranges.
+- The Worldwide table must not be modified — only regional tables (FCC/ETSI/TELEC/KCC) should be customized.
+
+## Resources
+
+- [WiSeConnect Getting Started Guide](https://docs.silabs.com/wiseconnect/latest/wiseconnect-getting-started/)
+- [WiSeConnect API Reference Guide](https://docs.silabs.com/wiseconnect/latest/wiseconnect-api-reference-guide-si91x-driver/)
+- [WiSeConnect Developers Guide - Recommended Settings](https://docs.silabs.com/wiseconnect/latest/wiseconnect-developers-guide-prog-recommended-settings/)
+
+## Report Bugs and Get Support
+
+Report issues and get help from the Silicon Labs community:
+
+- [Silicon Labs Community](https://www.silabs.com/community)
 

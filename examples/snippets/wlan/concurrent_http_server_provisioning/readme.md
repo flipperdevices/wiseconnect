@@ -1,25 +1,40 @@
 # Wi-Fi - Concurrent HTTP Server Provisioning
 
+## High-Level Overview
+
+SiWx91x concurrent HTTP provisioning example: Provision STA credentials through a provisioning AP and HTTP server, then run concurrent STA and SoftAP with IPv4/IPv6 and multi-threaded UDP throughput in SoC and NCP modes.
+
 ## Table of Contents
 
-- [Purpose/Scope](#purposescope)
-- [Prerequisites/Setup Requirements](#prerequisitessetup-requirements)
-  - [Hardware Requirements](#hardware-requirements)
-  - [Software Requirements](#software-requirements)
-  - [Setup Diagram](#setup-diagram)
-- [Getting Started](#getting-started)
-- [Application Build Environment](#application-build-environment)
-- [Test the Application](#test-the-application)
+- [Wi-Fi - Concurrent HTTP Server Provisioning](#wi-fi---concurrent-http-server-provisioning)
+  - [High-Level Overview](#high-level-overview)
+  - [Table of Contents](#table-of-contents)
+  - [Purpose/Scope](#purposescope)
+  - [Prerequisites/Setup Requirements](#prerequisitessetup-requirements)
+    - [Hardware Requirements](#hardware-requirements)
+    - [Software Requirements](#software-requirements)
+    - [Setup Diagram](#setup-diagram)
+  - [Getting Started](#getting-started)
+  - [Application Build Environment](#application-build-environment)
+  - [Socket Configuration Macros](#socket-configuration-macros)
+  - [Socket Type Macros](#socket-type-macros)
+  - [Test the Application](#test-the-application)
+  - [Application Output](#application-output)
+  - [Troubleshooting](#troubleshooting)
+  - [Resources](#resources)
+  - [Report Bugs and Get Support](#report-bugs-and-get-support)
 
 ## Purpose/Scope
 
 *This application demonstrates how to configure the SiWx91x in concurrent mode, i.e., in both Wi-Fi Station mode (STA instance) and Access Point mode (SoftAP instance) with HTTP Provisioning.*
 
-In this example application, the SiWx91x is configured as Provisioning Access Point (SiWx91x Provisioning AP instance) which acts as an HTTP server (Provisioning HTTP server) to obtain the SSID, PSK, and SECURITY_TYPE of a third-party AP (where SiWx91x STA should be connected). A third-party station connects to the SiWx91x Provisioning AP and using the webpage serverd by the Provisioning HTTP server and provides the third-party AP cerdentials (to which SiWx91x STA should be connected). After obtaining the third-party AP credentials, the Provisioning HTTP server and the SiWx91x Provisioning AP will shutdown.
+In this example application, the SiWx91x is configured as Provisioning Access Point (SiWx91x Provisioning AP instance) which acts as an HTTP server (Provisioning HTTP server) to obtain the SSID, PSK, and SECURITY_TYPE of a third-party AP (where SiWx91x STA should be connected). A third-party station connects to the SiWx91x Provisioning AP and, using the webpage served by the Provisioning HTTP server, provides the third-party AP credentials (to which SiWx91x STA should be connected). After obtaining the third-party AP credentials, the Provisioning HTTP server and the SiWx91x Provisioning AP will shutdown.
 
 Now, the SiWx91x will bring-up as Wi-Fi Station mode (SiWx91x STA instance) with the obtained third-party AP credentials and Access Point mode (SoftAP instance). The HTTP server is initialized again on SoftAP instance (SoftAP HTTP server).
 
-It showcases support for both IPv4 and IPv6 addressing, along with data transfer capabilities, i.e., UDPv4 TX data transfer in SiWx91x STA mode . The SiWx91x opens a UDPv6 client socket on the SiWx91x STA instance and sends data to the UDPv4 server connected to the third-party AP. On the SoftAP instance, a UDPv4 server socket is listening to receive data from a UDPv4 client connected to the SoftAP.
+The example uses **IPv4 and IPv6** for interface bring-up (DHCP/static as configured in `app.c`). For **throughput after concurrent mode is established**, the checked-in `start_wifi_throughput()` in **`wifi_app.c`** spawns **five** CMSIS-RTOS threads. Each thread runs **`send_data_to_udp_server`** as an **IPv4 UDP client** on the **STA** interface toward a remote host (default IPv4 **`192.168.0.156`**) on **UDP ports 5002–5006** (one port per thread). Socket pool settings in **`app.h`** (`TOTAL_SOCKETS`, `UDP_TX_ONLY_SOCKETS`, and related macros) are sized for that default pattern. Other variants (UDP server on SoftAP, TCP/TLS, fewer sockets) are left as **commented** code in `wifi_app.c` for you to enable and then retune `app.h` accordingly.
+
+**Threading overview:** `app_init()` in **`app.c`** starts the Wi-Fi / HTTP state machine on a dedicated RTOS thread (`application_start`, attributes in `app.c`). Per-socket work uses **`create_newsocket_with_new_osthread()`** in **`wifi_app.c`**. **`LOG_PRINT`** in **`app.h`** uses **`printf_mutex`** so UART output from these threads does not interleave.
 
 If SiWx91x STA disconnects from the third-party AP, then the SoftAP HTTP server and the SoftAP instance are shutdown and the SiWx91x STA tries to reconnect to the third-party AP for a maximum of five times. If SiWx91x STA is unable to connect to the third-party AP, then SiWx91x will deinitialize and start the application from the beginning (From the SoftAP being up as a Provisioning AP).
 
@@ -32,33 +47,52 @@ If SiWx91x STA disconnects from the third-party AP, then the SoftAP HTTP server 
 - Wireless Access Point
 - **SoC Mode**:
   - Standalone
-    - BRD4002A Wireless Pro Kit Mainboard [SI-MB4002A]
+    - BRD4002B Wireless Pro Kit Mainboard [SI-MB4002B](https://www.silabs.com/development-tools/wireless/wireless-pro-kit-mainboard?tab=overview)
     - Radio Boards 
-  	  - BRD4338A [SiWx917-RB4338A]
-  	  - BRD4343A [SiWx917-RB4343A]
+  	  - BRD4338A [SiWx917-RB4338A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-rb4338a-wifi-6-bluetooth-le-soc-radio-board?tab=overview)
+  	  - BRD4342A [SiWx917-RB4342A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx91x-rb4342a-wifi-6-bluetooth-le-soc-radio-board?tab=overview)
+  	  - BRD4339B [SiWx917-RB4339B](https://docs.silabs.com/wiseconnect/latest/wiseconnect-getting-started/getting-started-with-at)
+  	  - BRD4340A [SiWx917-RB4340A](https://docs.silabs.com/wiseconnect/latest/wiseconnect-getting-started/getting-started-with-at)
+  	  - BRD4343A [SiWx917-RB4343A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4343a-wi-fi-6-bluetooth-le-8mb-flash-radio-board-for-module?tab=overview)
+  	  - BRD4343C [SiWx917-RB4343C](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4343c-wi-fi-6-bluetooth-le-8mb-flash-radio-board-for-module?tab=overview)
   - Kits
+  	- SiWG917 Dev Kit [BRD2605A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-dk2605a-wifi-6-bluetooth-le-soc-dev-kit?tab=overview)
+  	- SiWG917 Dev Kit [BRD2605B]
   	- SiWx917 Pro Kit [Si917-PK6031A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-pro-kit?tab=overview)
   	- SiWx917 Pro Kit [Si917-PK6032A]
-    - SiWx917 AC1 Module Explorer Kit (BRD2708A)
+    - SiWx917 AC1 Module Explorer Kit [BRD2708A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-ek2708a-explorer-kit?tab=overview)
   	
-- **NCP Mode**:
-  - Standalone
-    - BRD4002A Wireless pro kit mainboard [SI-MB4002A]
-    - EFR32xG24 Wireless 2.4 GHz +10 dBm Radio Board [xG24-RB4186C](https://www.silabs.com/development-tools/wireless/xg24-rb4186c-efr32xg24-wireless-gecko-radio-board?tab=overview)
-    - EFR32FG25 863-876 MHz +16 dBm Radio Board [FG25-RB4271A](https://www.silabs.com/development-tools/wireless/proprietary/fg25-rb4271a-efr32fg25-radio-board?tab=overview)
+- **NCP Mode** (select either the EFR32 or STM32 host MCU platform; a single platform is sufficient to run the application):
+  - **Option 1: EFR32 host**
+    - Standalone
+      - BRD4002B Wireless Pro Kit Mainboard [SI-MB4002B](https://www.silabs.com/development-tools/wireless/wireless-pro-kit-mainboard?tab=overview)
+      - EFR32xG24 Wireless 2.4 GHz +10 dBm Radio Board [xG24-RB4186C](https://www.silabs.com/development-tools/wireless/xg24-rb4186c-efr32xg24-wireless-gecko-radio-board?tab=overview)
+      - EFR32xG25 863-876 MHz +16 dBm Radio Board [FG25-RB4271A](https://www.silabs.com/development-tools/wireless/proprietary/fg25-rb4271a-efr32fg25-radio-board?tab=overview)
+      - NCP Expansion Kit with NCP Radio Boards
+        - [BRD4346A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-rb4346a-wifi-6-bluetooth-le-soc-4mb-flash-radio-board?tab=overview) + [BRD8045A](https://www.silabs.com/development-tools/wireless/wi-fi/expansion-adapter-board-for-co-processor-radio-boards?tab=overview)
+        - [BRD4357A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4357a-wi-fi-6-bluetooth-le-4mb-flash-radio-board-for-rcp-and-ncp-modules?tab=overview) + [BRD8045A](https://www.silabs.com/development-tools/wireless/wi-fi/expansion-adapter-board-for-co-processor-radio-boards?tab=overview)
+        - [BRD4357C](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4357c-wi-fi-6-bluetooth-le-4mb-flash-radio-board-for-rcp-and-ncp-modules?tab=overview) + [BRD8045A](https://www.silabs.com/development-tools/wireless/wi-fi/expansion-adapter-board-for-co-processor-radio-boards?tab=overview)
+    - Kits
+    	- EFR32xG24 Pro Kit +10 dBm [xG24-PK6009A](https://www.silabs.com/development-tools/wireless/efr32xg24-pro-kit-10-dbm?tab=overview)
+
+    > **NOTE**: The Host MCU platform (EFR32MG21) and the SiWx91x interact with each other through the SPI interface.
+
+  - **Option 2: STM32F411RE host**
+    - [STM32F411RE](https://www.st.com/en/microcontrollers-microprocessors/stm32f411re.html) MCU
     - NCP Expansion Kit with NCP Radio Boards
-      - (BRD4346A + BRD8045A) [SiWx917-EB4346A]
-      - (BRD4357A + BRD8045A) [SiWx917-EB4357A]
-  - Kits
-  	- EFR32xG24 Pro Kit +10 dBm [xG24-PK6009A](https://www.silabs.com/development-tools/wireless/efr32xg24-pro-kit-10-dbm?tab=overview)
+      - [BRD4346A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-rb4346a-wifi-6-bluetooth-le-soc-4mb-flash-radio-board?tab=overview) + [BRD8045C](https://www.silabs.com/development-tools/wireless/wi-fi/shield-adapter-board-for-co-processor-radio-boards?tab=overview)
+      - [BRD4357A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4357a-wi-fi-6-bluetooth-le-4mb-flash-radio-board-for-rcp-and-ncp-modules?tab=overview) + [BRD8045C](https://www.silabs.com/development-tools/wireless/wi-fi/shield-adapter-board-for-co-processor-radio-boards?tab=overview)
+      - [BRD4357C](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4357c-wi-fi-6-bluetooth-le-4mb-flash-radio-board-for-rcp-and-ncp-modules?tab=overview) + [BRD8045C](https://www.silabs.com/development-tools/wireless/wi-fi/shield-adapter-board-for-co-processor-radio-boards?tab=overview)
 
-  **NOTE**:
-
-  - The Host MCU platform (EFR32MG21) and the SiWx91x interact with each other through the SPI interface.
+  - Interface and host MCU supported
+    - SPI : EFR32 and STM32
+    - UART : EFR32
 
 ### Software Requirements
 
 - Simplicity Studio
+
+- [Keil IDE](https://www.keil.com/) (to be used with STM32F411RE MCU)
 
 ### Setup Diagram
 
@@ -130,10 +164,15 @@ The application can be configured to suit your requirements and development envi
     ```
   - Other SoftAP instance configurations can be modified if required in the `wifi_ap_profile_4` and `wifi_ap_profile_6` configuration structures.
 
+3. **UDP throughput targets (default five parallel TX clients)** — edit **`wifi_app.c`**:
+
+   - In **`start_wifi_throughput()`**, set the destination IPv4 address passed to **`create_newsocket_with_new_osthread()`** (default **`192.168.0.156`**) and, if you change the number of iterations in the `for` loop, update **`app.h`** so **`UDP_TX_ONLY_SOCKETS`**, **`TOTAL_UDP_SOCKETS`**, and **`TOTAL_SOCKETS`** still match the maximum concurrent UDP (and other) sockets you use.
+   - Default ports are **5002–5006** (`5001 + i` for `i = 1 … 5`). Any change must stay consistent with the UDP servers you run on the PC side.
+
 > Note:
 >
 > 1. In concurrent mode, STA and AP should be configured on the same channel. The STA instance shall first scan for the specified external AP, wherein the channel number of AP is fetched and passed as an argument during SoftAP creation.
-> 2. Valid values for CHANNEL_NO are 1 to 11 in 2.4 GHz band and 36 to 48 and 149 to 165 in 5 GHz. In this example, the default configured band is 2.4 GHz.
+> 2. Valid values for CHANNEL_NO are 1 to 14 in the 2.4 GHz band. The default region code is set to US.
 
 
 > Note:
@@ -384,11 +423,11 @@ create_newsocket_with_new_osthread(receive_data_from_tls_server,
                                    SYNC_SOCKET);    // Synchronous socket
 ```
 
-- Throughput test options
+- Throughput test options (in **`wifi_app.c`**; values below match the **checked-in** project)
 
     ```c
-      #define BYTES_TO_SEND     (1 << 29)     // To measure TX throughput with 512MB data transfer
-      #define BYTES_TO_RECEIVE  (1 << 20)     // To measure RX throughput with 1MB data transfer
+      #define BYTES_TO_SEND     (1 << 30)     // TX cap per thread (~1024 MiB), UDP TX path
+      #define BYTES_TO_RECEIVE  (1 << 30)     // Used by RX / async callback paths when enabled
       #define TEST_TIMEOUT      30000         // Throughput test timeout in ms
     ```
 
@@ -427,27 +466,32 @@ Refer to the instructions [here](https://docs.silabs.com/wiseconnect/latest/wise
 
 **Step 7** : HTTP server is initialized again on SoftAP instance (SoftAP HTTP server).
 
-**Step 8** : IPv4 UDP_TX data transfer is performed on SiWx91x STA. Client device should connect to the third party HTTP SiWx91x SoftAP.
+**Step 8** : IPv4 **UDP TX** runs on the **SiWx91x STA** (not on the SoftAP data path in the default project). On a host **reachable from the STA** through the third-party AP (by default the firmware targets **`192.168.0.156`**), start **five** UDP servers on **ports 5002, 5003, 5004, 5005, and 5006**, or change the IP and port loop in **`start_wifi_throughput()`** in **`wifi_app.c`** to match your LAN. The firmware then starts **five** RTOS threads, each sending UDP from the STA toward that host.
 
-**Step 9** : To trigger rejoin failure on SiWx91x STA, change the SSID, PSK, or CH_NO of the third-party AP by opening it's Admin/login page. Once rejoin is triggered, SiWx91x will shutdown the SoftAP HTTP server and SiWx91x SoftAP. SiWx917 STA then tries to reconnect to the same third-party AP. If unable to reconnect, SiWx917 deinits and goes to Step 1.
+**Step 9** : To trigger rejoin failure on SiWx91x STA, change the SSID, PSK, or CH_NO of the third-party AP by opening its Admin/login page. Once rejoin is triggered, SiWx91x will shutdown the SoftAP HTTP server and SiWx91x SoftAP. SiWx917 STA then tries to reconnect to the same third-party AP. If unable to reconnect, SiWx917 deinits and goes to Step 1.
 
 >
 > Note:
 >
-> When data transfer occurs, communication happens between the client-side and the server-side. Typically, it's recommended to initiate the server first, as the client immediately attempts to establish a connection to transmit data.
+> When data transfer occurs, communication happens between the client-side and the server-side. Start the **PC UDP listeners** (or iPerf servers) **before** or as soon as concurrent mode is up, because the device threads begin sending shortly after entering the data-transfer state.
 
-The following sections describe how to run the SiWx91x application together with examples for UDP and TCP iPerf configurations that run on the PC.
+The following subsection describes UDP iPerf usage for the default throughput path. TCP and TLS throughput patterns exist as commented examples in **`wifi_app.c`** if you enable them and adjust socket counts in **`app.h`**.
 
-### UDP Tx on IPv4
+### UDP Tx on IPv4 (default: five STA clients)
 
-To use IPv4 UDP Tx, the SiWx91x STA is configured as a UDP client and starts a UDP server on the remote PC. 
-The iPerf command to start the IPv6 UDP server on remote PC is:
+The SiWx91x STA acts as **five** simultaneous **UDP clients** to the configured server IP, **one UDP server port per thread** (**5002–5006** with the stock `for` loop in **`start_wifi_throughput()`** in **`wifi_app.c`**).
+
+On the PC (Windows example), start **five** iPerf UDP servers—one per port—or use another tool that listens on those UDP ports:
+
+> `C:\> iperf.exe -s -u -p 5002 -i 1`  
+> `C:\> iperf.exe -s -u -p 5003 -i 1`  
+> `C:\> iperf.exe -s -u -p 5004 -i 1`  
+> `C:\> iperf.exe -s -u -p 5005 -i 1`  
+> `C:\> iperf.exe -s -u -p 5006 -i 1`
+
+Use the **same** IP address in **`wifi_app.c`** as the PC’s address on the third-party AP subnet. Generic form:
 
 > `C:\> iperf.exe -s -u -p <SERVER_PORT> -i 1`
->
-> For example ...
->
-> `C:\> iperf.exe -s -u -p 5000 -i 1`
 
 ## Application Output
 
@@ -456,3 +500,28 @@ The iPerf command to start the IPv6 UDP server on remote PC is:
    ![Application prints](resources/readme/application_console_output_soc_ncp_2.png)
    
    ![Application prints](resources/readme/application_console_output_soc_ncp_3.png)
+
+## Troubleshooting
+
+If you encounter issues while running the Concurrent HTTP Server Provisioning example, check the following:
+
+- Connect to the SiWx91x provisioning AP and complete the HTTP provisioning webpage before you expect STA and SoftAP concurrent mode to start.
+- Verify that the third-party AP credentials entered on the provisioning page are correct. The provisioning AP and HTTP server shut down after credentials are received.
+- If the STA disconnects, the application retries up to five times before it restarts from the provisioning AP state. Review console logs against the state machine diagram in [Purpose/Scope](#purposescope).
+- For UDP throughput testing, start iPerf UDP servers on ports 5002–5006 on the PC before the DUT connects, and match the server IP in `wifi_app.c` to the PC address on the third-party AP subnet.
+- Ensure that socket pool macros in `app.h` (`TOTAL_SOCKETS`, `UDP_TX_ONLY_SOCKETS`, etc.) match the enabled throughput code in `wifi_app.c`.
+- If you enable commented TCP/TLS or SoftAP server variants in `wifi_app.c`, retune the `app.h` socket configuration accordingly.
+- For NCP mode, verify that the host interface matches the project variant.
+
+## Resources
+
+- [WiSeConnect Getting Started Guide](https://docs.silabs.com/wiseconnect/latest/wiseconnect-getting-started/)
+- [WiSeConnect Examples](https://docs.silabs.com/wiseconnect/latest/wiseconnect-examples/#example-folder-structure)
+- [WiSeConnect Recommended Settings Guide](https://docs.silabs.com/wiseconnect/latest/wiseconnect-developers-guide-prog-recommended-settings/)
+- [iPerf 2.0.8 Download](https://sourceforge.net/projects/iperf2/files/iperf-2.0.8-win.zip/download)
+
+## Report Bugs and Get Support
+
+Report issues and get help from the Silicon Labs community:
+
+- [Silicon Labs Community](https://www.silabs.com/community)

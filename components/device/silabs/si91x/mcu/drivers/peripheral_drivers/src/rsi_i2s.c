@@ -121,6 +121,53 @@ static uint8_t I2S_get_freq_div_factor(uint32_t req_freq_hz, uint32_t *clk_sourc
   return 0U;
 }
 
+/**
+ * @brief Fill common DMA channel config and control for I2S TX or RX.
+ *        Reduces duplication between Transfer, I2S_Send, and I2S_Receive.
+ */
+static void I2S_FillDmaChannelCfg(I2S_RESOURCES *i2s,
+                                  RSI_UDMA_CHA_CFG_T *chnl_cfg,
+                                  uint32_t total_num_trans,
+                                  uint32_t resolution,
+                                  bool is_tx)
+{
+  const bool use_16bit      = (resolution == RES_12_BIT) || (resolution == RES_16_BIT);
+  chnl_cfg->altStruct       = 0;
+  chnl_cfg->burstReq        = 1;
+  chnl_cfg->channelPrioHigh = (i2s->reg == I2S0) ? UDMA0_CHNL_PRIO_LVL : UDMA1_CHNL_PRIO_LVL;
+  chnl_cfg->periAck         = 0;
+  chnl_cfg->periphReq       = 0;
+  chnl_cfg->reqMask         = 0;
+  if (is_tx) {
+    chnl_cfg->dmaCh                         = i2s->dma_tx->channel;
+    i2s->dma_tx->control.totalNumOfDMATrans = total_num_trans;
+    if (use_16bit) {
+      i2s->dma_tx->control.srcSize = SRC_SIZE_16;
+      i2s->dma_tx->control.srcInc  = SRC_INC_16;
+      i2s->dma_tx->control.dstSize = DST_SIZE_16;
+      i2s->dma_tx->control.dstInc  = DST_INC_NONE;
+    } else {
+      i2s->dma_tx->control.srcSize = SRC_SIZE_32;
+      i2s->dma_tx->control.srcInc  = SRC_INC_32;
+      i2s->dma_tx->control.dstSize = DST_SIZE_32;
+      i2s->dma_tx->control.dstInc  = DST_INC_NONE;
+    }
+  } else {
+    chnl_cfg->dmaCh                         = i2s->dma_rx->channel;
+    i2s->dma_rx->control.totalNumOfDMATrans = total_num_trans;
+    if (use_16bit) {
+      i2s->dma_rx->control.srcSize = SRC_SIZE_16;
+      i2s->dma_rx->control.srcInc  = SRC_INC_NONE;
+      i2s->dma_rx->control.dstSize = DST_SIZE_16;
+      i2s->dma_rx->control.dstInc  = DST_INC_16;
+    } else {
+      i2s->dma_rx->control.srcSize = SRC_SIZE_32;
+      i2s->dma_rx->control.srcInc  = SRC_INC_NONE;
+      i2s->dma_rx->control.dstSize = DST_SIZE_32;
+      i2s->dma_rx->control.dstInc  = DST_INC_32;
+    }
+  }
+}
 /*****************************************************************************
  * Public functions
  ****************************************************************************/
@@ -703,7 +750,6 @@ void I2S1_PinMux(I2S_RESOURCES *i2s)
       RSI_EGPIO_UlpSocGpioMode(ULPCLK, (i2s->io.dout0->pin - 6), i2s->io.dout0->mode);
     }
   }
-
   // RX pin
   //if the pin is ULP_GPIO then set the pin mode for direct ULP_GPIO.
   if (i2s->io.din0->pin >= GPIO_MAX_PIN) {
@@ -938,6 +984,247 @@ int32_t I2S_PowerControl(ARM_POWER_STATE state, I2S_RESOURCES *i2s, UDMA_RESOURC
     default:
       return ARM_DRIVER_ERROR_UNSUPPORTED;
   }
+  return ARM_DRIVER_OK;
+}
+/*==============================================*/
+/**
+ * @brief I2S Transfer API -This function performs simultaneous transmit and
+ * receive operations on the I2S peripheral using direct register manipulations.
+ *  @param[in] data_out     Pointer to transmit data buffer.
+ *  @param[in] data_in      Pointer to receive data buffer.
+ *  @param[in] data_out_size   Number of data samples to transfer (in 16-bit
+ * words).
+ *  @param[in] data_in_size    Number of data samples to transfer (in 16-bit
+ * words).
+ *  @param[in] i2s_instance  i2s instance i2s0 or i2s1
+ *  @return int32_t
+ *  - ARM_DRIVER_OK: Transfer started successfully
+ *  - ARM_DRIVER_ERROR_PARAMETER: Invalid parameters
+ *  - ARM_DRIVER_ERROR: I2S not configured or other error
+ *  - ARM_DRIVER_ERROR_BUSY: Transfer already in progress
+ */
+int32_t I2S_Transfer(const void *data_out,
+                     void *data_in,
+                     uint32_t data_out_size,
+                     uint32_t data_in_size,
+                     uint32_t i2s_instance)
+{
+  int32_t stat                 = 0;
+  RSI_UDMA_CHA_CFG_T chnl_cfg  = { 0 };
+  uint32_t resolution          = 0;
+  uint32_t tx_num              = 0;
+  uint32_t rx_num              = 0;
+  uint32_t tx_resolution       = 0;
+  uint32_t rx_resolution       = 0;
+  uint32_t tx_byte_size        = 0;
+  uint32_t rx_byte_size        = 0;
+  SAI_UDMA_I2S_Resources_t res = SAI_GetUDMAI2SResources(i2s_instance);
+
+  I2S_RESOURCES *i2s = res.i2s_resources;
+  if (i2s == NULL) {
+    return ARM_DRIVER_ERROR_PARAMETER;
+  }
+  // Validate input parameters
+  if ((data_out == NULL) || (data_in == NULL) || (data_out_size == 0U) || (data_in_size == 0U)) {
+    return ARM_DRIVER_ERROR_PARAMETER;
+  }
+  if ((i2s->flags & I2S_FLAG_CONFIGURED) == 0U) {
+    // I2S is not configured
+    return ARM_DRIVER_ERROR;
+  }
+  if (i2s->info->status.tx_busy || i2s->info->status.rx_busy) {
+    // Transfer is not completed yet
+    return ARM_DRIVER_ERROR_BUSY;
+  }
+
+  // Fetch the TX resolution from TCR register (from transmit_data)
+  tx_resolution = i2s->reg->CHANNEL_CONFIG[i2s->xfer_chnl].I2S_TCR_b.WLEN;
+
+  // Fetch the RX resolution from RCR register (from receive_data)
+  rx_resolution = i2s->reg->CHANNEL_CONFIG[i2s->xfer_chnl].I2S_RCR_b.WLEN;
+
+  tx_byte_size = data_out_size * (i2s->info->tx.data_bits / 8U);
+  rx_byte_size = data_in_size * (i2s->info->rx.data_bits / 8U);
+
+  // For 12-bit and 24-bit resolutions, transfer size should be multiple of 4
+  // (TX validation from transmit_data)
+  if ((tx_resolution == RES_12_BIT) || (tx_resolution == RES_24_BIT)) {
+    if ((tx_byte_size % 4U) != 0U) {
+      // Invalid data size
+      return ARM_DRIVER_ERROR_PARAMETER;
+    }
+  }
+
+  // For 12-bit and 24-bit resolutions, transfer size should be multiple of 4
+  // (RX validation from receive_data)
+  if ((rx_resolution == RES_12_BIT) || (rx_resolution == RES_24_BIT)) {
+    if ((rx_byte_size % 4U) != 0U) {
+      // Invalid data size
+      return ARM_DRIVER_ERROR_PARAMETER;
+    }
+  }
+
+  // Reset RX FIFO before starting transfer (from receive_data)
+  // Disable Rx channel and reset the Rx FIFO
+  i2s->reg->CHANNEL_CONFIG[i2s->xfer_chnl].I2S_RER_b.RXCHEN = 0;
+  i2s->reg->CHANNEL_CONFIG[i2s->xfer_chnl].I2S_RFF_b.RXCHFR = 1;
+
+  // ========== TX REGISTER MANIPULATIONS ==========
+  // Set TX busy flag
+  i2s->info->status.tx_busy      = 1U;
+  i2s->info->status.tx_underflow = 0U;
+  i2s->info->tx.buf              = (uint8_t *)data_out;
+  i2s->info->tx.cnt              = 0U;
+  tx_num                         = data_out_size * (i2s->info->tx.data_bits / 8U);
+
+  // Set TX FIFO level
+  i2s->reg->CHANNEL_CONFIG[i2s->xfer_chnl].I2S_TXFCR_b.TXCHET = (unsigned int)((i2s->tx_fifo_level) & 0x0F);
+
+  // Handle TX residue buffer (if any data left from previous transfer)
+  if (i2s->info->tx.residue_cnt != 0U) {
+    while ((i2s->info->tx.residue_cnt < 4U) && (i2s->info->tx.cnt < tx_num)) {
+      i2s->info->tx.residue_buf[i2s->info->tx.residue_cnt++] = i2s->info->tx.buf[i2s->info->tx.cnt++];
+    }
+    if (i2s->info->tx.residue_cnt == 4U) {
+      // Write 32bits to TX FIFO
+      i2s->reg->CHANNEL_CONFIG[i2s->xfer_chnl].I2S_LTHR = i2s->info->tx.residue_buf[3];
+      i2s->reg->CHANNEL_CONFIG[i2s->xfer_chnl].I2S_LTHR = (i2s->reg->CHANNEL_CONFIG[i2s->xfer_chnl].I2S_LTHR << 8)
+                                                          | i2s->info->tx.residue_buf[2];
+      i2s->reg->CHANNEL_CONFIG[i2s->xfer_chnl].I2S_LTHR = (i2s->reg->CHANNEL_CONFIG[i2s->xfer_chnl].I2S_LTHR << 8)
+                                                          | i2s->info->tx.residue_buf[1];
+      i2s->reg->CHANNEL_CONFIG[i2s->xfer_chnl].I2S_LTHR = (i2s->reg->CHANNEL_CONFIG[i2s->xfer_chnl].I2S_LTHR << 8)
+                                                          | i2s->info->tx.residue_buf[0];
+      i2s->info->tx.residue_cnt = 0U;
+    }
+  }
+
+  // Enable TX interrupt
+  RSI_I2S_InterruptEnableDisable(i2s, i2s->xfer_chnl, F_TXFEM, INTR_UNMASK);
+
+  // Set TX count and enable TX channel
+  i2s->info->tx.num = tx_num;
+
+  // ========== RX REGISTER MANIPULATIONS  ==========
+  // Set RX busy flag
+  i2s->info->status.rx_busy     = 1U;
+  i2s->info->status.rx_overflow = 0U;
+  i2s->info->rx.buf             = (uint8_t *)data_in;
+  i2s->info->rx.cnt             = 0U;
+  rx_num                        = data_in_size * (i2s->info->rx.data_bits / 8U);
+
+  // Set RX FIFO level
+  i2s->reg->CHANNEL_CONFIG[i2s->xfer_chnl].I2S_RFCR_b.RXCHDT = (unsigned int)((i2s->rx_fifo_level) & 0x0F);
+
+  // Handle RX residue buffer (if any data available from previous transfer)
+  while ((i2s->info->rx.cnt < rx_num) && (i2s->info->rx.residue_cnt < i2s->info->rx.residue_num)) {
+    i2s->info->rx.buf[i2s->info->rx.cnt++] = i2s->info->rx.residue_buf[i2s->info->rx.residue_cnt++];
+    if (i2s->info->rx.residue_cnt == i2s->info->rx.residue_num) {
+      i2s->info->rx.residue_cnt = 0U;
+      i2s->info->rx.residue_num = 0U;
+    }
+  }
+
+  // Enable RX interrupt
+  RSI_I2S_InterruptEnableDisable(i2s, i2s->xfer_chnl, F_RXDAM, INTR_UNMASK);
+  i2s->info->rx.num = rx_num;
+
+  // ========== DMA CONFIGURATION (if DMA is enabled) ==========
+  // Configure TX DMA
+  if (i2s->dma_tx != NULL) {
+    uint32_t tx_dma_num = tx_num - i2s->info->tx.cnt;
+    if (tx_dma_num >= 4U) {
+      uint32_t total_trans = ((tx_dma_num / 2) < 1024)
+                               ? (unsigned int)(((tx_dma_num / (i2s->info->tx.data_bits / 8U)) - 1) & 0x03FF)
+                               : 0x3FFU;
+      resolution           = i2s->reg->CHANNEL_CONFIG[i2s->xfer_chnl].I2S_TCR_b.WLEN;
+      I2S_FillDmaChannelCfg(i2s, &chnl_cfg, total_trans, resolution, true);
+      // Configure and enable TX DMA channel
+      if ((i2s->reg == I2S0) || (i2s->reg == I2S1)) {
+        stat = UDMAx_ChannelConfigure(res.udma_resources,
+                                      i2s->dma_tx->channel,
+                                      (uint32_t)(i2s->info->tx.buf),
+                                      (uint32_t)(&(i2s->reg->I2S_TXDMA)),
+                                      tx_dma_num / (i2s->info->tx.data_bits / 8U),
+                                      i2s->dma_tx->control,
+                                      &chnl_cfg,
+                                      i2s->dma_tx->cb_event,
+                                      res.udma_channel_info,
+                                      res.udma_handle);
+        if (stat == -1) {
+          return ARM_DRIVER_ERROR;
+        }
+        UDMAx_ChannelEnable(i2s->dma_tx->channel, res.udma_resources, res.udma_handle);
+        UDMAx_DMAEnable(res.udma_resources, res.udma_handle);
+      }
+    } else {
+      // Enable TX interrupt for small transfers
+      RSI_I2S_InterruptEnableDisable(i2s, i2s->xfer_chnl, F_TXFEM, INTR_UNMASK);
+    }
+  } else {
+    // Enable TX interrupt (non-DMA mode)
+    RSI_I2S_InterruptEnableDisable(i2s, i2s->xfer_chnl, F_TXFEM, INTR_UNMASK);
+  }
+
+  // Configure RX DMA
+  if (i2s->dma_rx != NULL) {
+    uint32_t rx_dma_num = rx_num - i2s->info->rx.cnt;
+    if (rx_dma_num >= 4U) {
+      rx_dma_num           = rx_dma_num / 4;
+      i2s->info->rx.cnt    = i2s->info->rx.cnt + (rx_dma_num * 4);
+      uint32_t total_trans = ((rx_dma_num / 2) < 1024)
+                               ? (unsigned int)(((rx_dma_num / (i2s->info->rx.data_bits / 8U)) - 1) & 0x03FF)
+                               : 0x3FFU;
+      resolution           = i2s->reg->CHANNEL_CONFIG[i2s->xfer_chnl].I2S_RCR_b.WLEN;
+      I2S_FillDmaChannelCfg(i2s, &chnl_cfg, total_trans, resolution, false);
+      // Configure and enable RX DMA channel
+      if ((i2s->reg == I2S0) || (i2s->reg == I2S1)) {
+        stat = UDMAx_ChannelConfigure(res.udma_resources,
+                                      i2s->dma_rx->channel,
+                                      (uint32_t)(&(i2s->reg->I2S_RXDMA)),
+                                      (uint32_t)(i2s->info->rx.buf),
+                                      (i2s->info->rx.cnt) / (i2s->info->rx.data_bits / 8U),
+                                      i2s->dma_rx->control,
+                                      &chnl_cfg,
+                                      i2s->dma_rx->cb_event,
+                                      res.udma_channel_info,
+                                      res.udma_handle);
+        if (stat == -1) {
+          return ARM_DRIVER_ERROR;
+        }
+
+        UDMAx_ChannelEnable(i2s->dma_rx->channel, res.udma_resources, res.udma_handle);
+        UDMAx_DMAEnable(res.udma_resources, res.udma_handle);
+      }
+    } else {
+      // Enable RX interrupt for small transfers
+      RSI_I2S_InterruptEnableDisable(i2s, i2s->xfer_chnl, F_RXDAM, INTR_UNMASK);
+    }
+  } else {
+    // Enable RX interrupt (non-DMA mode)
+    RSI_I2S_InterruptEnableDisable(i2s, i2s->xfer_chnl, F_RXDAM, INTR_UNMASK);
+  }
+
+  // ========== ENABLE I2S PERIPHERAL ==========
+
+  i2s->reg->CHANNEL_CONFIG[i2s->xfer_chnl].I2S_TER_b.TXCHEN = 0x1;
+  // Enable RX channel
+  i2s->reg->CHANNEL_CONFIG[i2s->xfer_chnl].I2S_RER_b.RXCHEN = 0x1;
+  // Enable I2S transmitter
+  if (i2s->dma_tx != NULL) {
+    i2s->reg->I2S_ITER_b.TXEN = 0x1;
+  }
+
+  if (i2s->reg == I2S0) {
+    i2s->reg->I2S_IRER_b.RXEN = 0x1;
+  } else if (i2s->reg == I2S1) {
+    i2s->reg->I2S_IRER_b.RXEN = 0x1;
+  }
+
+  //   Enable I2S clock if master mode
+  if ((i2s->info->tx.master) || (i2s->info->rx.master)) {
+    i2s->reg->I2S_CER_b.CLKEN = ENABLE;
+  }
+
   return ARM_DRIVER_OK;
 }
 

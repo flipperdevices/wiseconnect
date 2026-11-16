@@ -326,29 +326,6 @@ psa_status_t derive_key(psa_key_derivation_operation_t *operation)
 }
 
 /***************************************************************************/ /**
- * Derive a symmetric key using Silicon Labs custom API.
- ******************************************************************************/
-psa_status_t sl_derive_key(psa_algorithm_t algo,
-                           psa_key_id_t master_id,
-                           const uint8_t *kdf_info,
-                           size_t info_len,
-                           const uint8_t *kdf_salt,
-                           size_t salt_len,
-                           size_t iterations)
-{
-  // Derive a key
-  print_error_cycle(sl_psa_key_derivation_single_shot(algo,
-                                                      master_id,
-                                                      kdf_info,
-                                                      info_len,
-                                                      kdf_salt,
-                                                      salt_len,
-                                                      iterations,
-                                                      &key_attr,
-                                                      &key_id));
-}
-
-/***************************************************************************/ /**
  * Free any auxiliary resources that the key attribute object might contain.
  ******************************************************************************/
 void reset_key_attr(void)

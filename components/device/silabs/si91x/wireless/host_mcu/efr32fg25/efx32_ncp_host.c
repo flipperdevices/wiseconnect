@@ -14,7 +14,7 @@
  * sections of the MSLA applicable to Source Code.
  *
  ******************************************************************************/
-#include "sli_wifi_utility.h"
+#include "sli_hal_si91x.h"
 #include "sl_wifi_constants.h"
 #include "sl_si91x_host_interface.h"
 #include "sl_board_configuration.h"
@@ -23,7 +23,8 @@
 #include "em_cmu.h"
 #include "em_gpio.h"
 #include "cmsis_os2.h"
-#include "dmadrv.h"
+#include "sl_dma_manager.h"
+#include "sl_dma_channel.h"
 #include "gpiointerrupt.h"
 #include "sl_si91x_status.h"
 #include "sl_rsi_utility.h"
@@ -31,44 +32,48 @@
 #include <stdbool.h>
 #include <string.h>
 
-#define SLI_LDMA_MAX_TRANSFER_LENGTH     4096
-#define SLI_LDMA_DESCRIPTOR_ARRAY_LENGTH (SLI_LDMA_MAX_TRANSFER_LENGTH / 2048)
-#define PACKET_PENDING_INT_PRI           3
-#define SLI_SPI_BIT_RATE                 10000000
+// Maximum SPI transfer size handled in one call. Used to size the dummy
+// buffer used when the caller passes NULL for tx_buffer / rx_buffer.
+#define SLI_NCP_SPI_MAX_TRANSFER_LENGTH 4096
+#define PACKET_PENDING_INT_PRI          3
+#define SLI_SPI_BIT_RATE                10000000
+#define SLI_SPI_TRANSFER_TIMEOUT_MS     1000
 
-static bool sli_dma_callback(unsigned int channel, unsigned int sequenceNo, void *userParam);
+static void sli_dma_callback(sl_dma_channel_handle_t *dma_channel_handle, void *user_data, bool error, bool aborted);
 
-unsigned int rx_ldma_channel;
-unsigned int tx_ldma_channel;
+// DMA Driver 2.0 channel resources. Handles are caller-allocated stack
+// structs; the channel driver does not allocate them. The DMA Manager is
+// auto-initialized via SL Main, so no manual sl_dma_manager_init() is
+// required.
+static uint8_t rx_dma_channel_nbr = 0;
+static uint8_t tx_dma_channel_nbr = 0;
+static sl_dma_channel_handle_t rx_dma_handle;
+static sl_dma_channel_handle_t tx_dma_handle;
+
 osMutexId_t spi_transfer_mutex = NULL;
 
-static uint32_t dummy_buffer;
-static uint8_t host_initialized = 0;
+static uint8_t host_initialized             = 0;
+static volatile bool spi_dma_transfer_error = false;
 
-uint8_t dummy_buffer_test[2500];
-// LDMA descriptor and transfer configuration structures for EUSART TX channel
-LDMA_Descriptor_t ldmaTXDescriptor[SLI_LDMA_DESCRIPTOR_ARRAY_LENGTH];
-LDMA_TransferCfg_t ldmaTXConfig;
-
-// LDMA descriptor and transfer configuration structures for EUSART RX channel
-LDMA_Descriptor_t ldmaRXDescriptor[SLI_LDMA_DESCRIPTOR_ARRAY_LENGTH];
-LDMA_TransferCfg_t ldmaRXConfig;
+// Dummy buffer used as tx source / rx sink when the caller does not supply
+// a buffer. Sized to cover the maximum supported transfer length so the
+// new DMA driver can auto-segment without overrunning it.
+static uint8_t dummy_buffer[SLI_NCP_SPI_MAX_TRANSFER_LENGTH];
 
 static osSemaphoreId_t transfer_done_semaphore = NULL;
 
-static bool sli_dma_callback(unsigned int channel, unsigned int sequenceNo, void *userParam)
+static void sli_dma_callback(sl_dma_channel_handle_t *dma_channel_handle, void *user_data, bool error, bool aborted)
 {
-  UNUSED_PARAMETER(channel);
-  UNUSED_PARAMETER(sequenceNo);
-  UNUSED_PARAMETER(userParam);
+  UNUSED_PARAMETER(dma_channel_handle);
+  UNUSED_PARAMETER(user_data);
+  spi_dma_transfer_error = (error || aborted);
   osSemaphoreRelease(transfer_done_semaphore);
-  return false;
 }
 
 static void gpio_interrupt(uint8_t interrupt_number)
 {
   UNUSED_PARAMETER(interrupt_number);
-  sli_wifi_set_event(SL_SI91X_NCP_HOST_BUS_RX_EVENT);
+  sli_hal_si91x_notify_events(SLI_HAL_SI91X_RX_EVENT);
   //  GPIO_IntClear(0xAAAA);
 }
 
@@ -89,6 +94,7 @@ uint32_t sl_si91x_host_get_wake_indicator(void)
 
 sl_status_t sl_si91x_host_init(const sl_si91x_host_init_configuration_t *config)
 {
+  sl_status_t dma_status = SL_STATUS_OK;
   UNUSED_PARAMETER(config);
   if (!host_initialized) {
     // Enable clock (not needed on xG21)
@@ -146,9 +152,37 @@ sl_status_t sl_si91x_host_init(const sl_si91x_host_init_configuration_t *config)
       spi_transfer_mutex = osMutexNew(NULL);
     }
 
-    DMADRV_Init();
-    DMADRV_AllocateChannel(&rx_ldma_channel, NULL);
-    DMADRV_AllocateChannel(&tx_ldma_channel, NULL);
+    // DMA Driver 2.0 init: allocate one channel per direction, bind a
+    // handle to each and program the EUSART peripheral signals once. The
+    // DMA Manager itself is auto-initialized by SL Main. The TX channel
+    // does not need a callback (completion is observed via the RX-side
+    // semaphore), so NULL is registered.
+    dma_status = sl_dma_manager_allocate_channel(NULL, &rx_dma_channel_nbr);
+    if (dma_status != SL_STATUS_OK) {
+      return dma_status;
+    }
+    dma_status = sl_dma_manager_allocate_channel(NULL, &tx_dma_channel_nbr);
+    if (dma_status != SL_STATUS_OK) {
+      return dma_status;
+    }
+
+    dma_status = sl_dma_channel_init(&rx_dma_handle, SL_PERIPHERAL_LDMA0, rx_dma_channel_nbr, sli_dma_callback, NULL);
+    if (dma_status != SL_STATUS_OK) {
+      return dma_status;
+    }
+    dma_status = sl_dma_channel_init(&tx_dma_handle, SL_PERIPHERAL_LDMA0, tx_dma_channel_nbr, NULL, NULL);
+    if (dma_status != SL_STATUS_OK) {
+      return dma_status;
+    }
+
+    dma_status = sl_dma_channel_set_peripheral_signal(&tx_dma_handle, SPI_EUSART_LDMA_TX);
+    if (dma_status != SL_STATUS_OK) {
+      return dma_status;
+    }
+    dma_status = sl_dma_channel_set_peripheral_signal(&rx_dma_handle, SPI_EUSART_LDMA_RX);
+    if (dma_status != SL_STATUS_OK) {
+      return dma_status;
+    }
 
     // Start reset line low
     GPIO_PinModeSet(RESET_PIN.port, RESET_PIN.pin, gpioModeWiredAnd, 0);
@@ -210,59 +244,61 @@ __WEAK void sl_si91x_host_spi_cs_deassert()
  */
 sl_status_t sl_si91x_host_spi_transfer(const void *tx_buffer, void *rx_buffer, uint16_t buffer_length)
 {
-  int i;
-  osMutexAcquire(spi_transfer_mutex, 0xFFFFFFFFUL);
-
-  if (buffer_length <= 2048) {
-    if (tx_buffer == NULL) {
-      dummy_buffer = 0;
-      ldmaTXDescriptor[0] =
-        (LDMA_Descriptor_t)LDMA_DESCRIPTOR_SINGLE_P2P_BYTE(&dummy_buffer, &(SPI_EUSART->TXDATA), buffer_length);
-    } else {
-      ldmaTXDescriptor[0] =
-        (LDMA_Descriptor_t)LDMA_DESCRIPTOR_SINGLE_M2P_BYTE(tx_buffer, &(SPI_EUSART->TXDATA), buffer_length);
-    }
-    if (rx_buffer == NULL) {
-      ldmaRXDescriptor[0] =
-        (LDMA_Descriptor_t)LDMA_DESCRIPTOR_SINGLE_P2P_BYTE(&(SPI_EUSART->RXDATA), &dummy_buffer, buffer_length);
-    } else {
-      ldmaRXDescriptor[0] =
-        (LDMA_Descriptor_t)LDMA_DESCRIPTOR_SINGLE_P2M_BYTE(&(SPI_EUSART->RXDATA), rx_buffer, buffer_length);
-    }
-  } else {
-    if (tx_buffer == NULL) {
-      tx_buffer = (uint8_t *)&dummy_buffer_test;
-    } else if (rx_buffer == NULL) {
-      rx_buffer = (uint8_t *)&dummy_buffer_test;
-    }
-    //Transfer length is more than 2048 bytes. Initialize multiple LDMA Tx descriptor.
-    for (i = 0; i < (SLI_LDMA_DESCRIPTOR_ARRAY_LENGTH - 1); i++) {
-      ldmaRXDescriptor[i] =
-        (LDMA_Descriptor_t)LDMA_DESCRIPTOR_LINKREL_P2M_BYTE(&(SPI_EUSART->RXDATA), (rx_buffer + (2048 * i)), 2048, 1);
-      ldmaTXDescriptor[i] =
-        (LDMA_Descriptor_t)LDMA_DESCRIPTOR_LINKREL_M2P_BYTE((tx_buffer + (2048 * i)), &(SPI_EUSART->TXDATA), 2048, 1);
-    }
-    ldmaRXDescriptor[i] = (LDMA_Descriptor_t)LDMA_DESCRIPTOR_SINGLE_P2M_BYTE(&(SPI_EUSART->RXDATA),
-                                                                             (rx_buffer + (2048 * i)),
-                                                                             (buffer_length - (2048 * i)));
-    ldmaTXDescriptor[i] = (LDMA_Descriptor_t)LDMA_DESCRIPTOR_SINGLE_M2P_BYTE((tx_buffer + (2048 * i)),
-                                                                             &(SPI_EUSART->TXDATA),
-                                                                             (buffer_length - (2048 * i)));
+  sl_status_t dma_status = SL_STATUS_OK;
+  if ((host_initialized == 0U) || (spi_transfer_mutex == NULL) || (transfer_done_semaphore == NULL)) {
+    return SL_STATUS_NOT_INITIALIZED;
+  }
+  if (((tx_buffer == NULL) || (rx_buffer == NULL)) && (buffer_length > SLI_NCP_SPI_MAX_TRANSFER_LENGTH)) {
+    return SL_STATUS_INVALID_PARAMETER;
   }
 
-  // Transfer a byte on free space in the USART buffer
-  ldmaTXConfig = (LDMA_TransferCfg_t)LDMA_TRANSFER_CFG_PERIPHERAL(SPI_EUSART_LDMA_TX);
+  osMutexAcquire(spi_transfer_mutex, 0xFFFFFFFFUL);
+  spi_dma_transfer_error = false;
+  while (osSemaphoreAcquire(transfer_done_semaphore, 0) == osOK) {
+  }
 
-  // Transfer a byte on receive data valid
-  ldmaRXConfig = (LDMA_TransferCfg_t)LDMA_TRANSFER_CFG_PERIPHERAL(SPI_EUSART_LDMA_RX);
+  // Substitute a dummy buffer when the caller does not supply one. The DMA
+  // Driver 2.0 m2p/p2m helpers always increment the memory side, so we need
+  // a backing buffer at least buffer_length bytes long.
+  const void *tx = (tx_buffer != NULL) ? tx_buffer : (const void *)dummy_buffer;
+  void *rx       = (rx_buffer != NULL) ? rx_buffer : (void *)dummy_buffer;
 
-  // Start both channels
-  DMADRV_LdmaStartTransfer(rx_ldma_channel, &ldmaRXConfig, ldmaRXDescriptor, sli_dma_callback, NULL);
-  DMADRV_LdmaStartTransfer(tx_ldma_channel, &ldmaTXConfig, ldmaTXDescriptor, NULL, NULL);
+  // Submit RX first so the receive path is armed before TX starts clocking
+  // bytes onto the bus. The new driver auto-segments transfers larger than
+  // a single descriptor, so no manual descriptor chaining is required.
+  dma_status = sl_dma_channel_submit_transfer_p2m(&rx_dma_handle,
+                                                  (void *)&(SPI_EUSART->RXDATA),
+                                                  rx,
+                                                  buffer_length,
+                                                  SL_DMA_CTRL_SIZE_BYTE,
+                                                  NULL);
+  if (dma_status != SL_STATUS_OK) {
+    osMutexRelease(spi_transfer_mutex);
+    return dma_status;
+  }
 
-  if (osSemaphoreAcquire(transfer_done_semaphore, 1000) != osOK) {
+  dma_status = sl_dma_channel_submit_transfer_m2p(&tx_dma_handle,
+                                                  (void *)tx,
+                                                  (void *)&(SPI_EUSART->TXDATA),
+                                                  buffer_length,
+                                                  SL_DMA_CTRL_SIZE_BYTE,
+                                                  NULL);
+  if (dma_status != SL_STATUS_OK) {
+    (void)sl_dma_channel_abort(&rx_dma_handle);
+    osMutexRelease(spi_transfer_mutex);
+    return dma_status;
+  }
+
+  // Wait for RX completion (signaled by sli_dma_callback). The TX side
+  // necessarily finishes first, so RX completion implies the full transfer
+  // has clocked through.
+  if (osSemaphoreAcquire(transfer_done_semaphore, SLI_SPI_TRANSFER_TIMEOUT_MS) != osOK) {
     osMutexRelease(spi_transfer_mutex);
     return SL_STATUS_BUS_ERROR;
+  }
+  if (spi_dma_transfer_error) {
+    osMutexRelease(spi_transfer_mutex);
+    return SL_STATUS_FAIL;
   }
 
   osMutexRelease(spi_transfer_mutex);

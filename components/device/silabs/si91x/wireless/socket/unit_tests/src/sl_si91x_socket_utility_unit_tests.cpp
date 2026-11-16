@@ -29,12 +29,19 @@
  ******************************************************************************/
 #include <gtest/gtest.h>
 #include <cstring> // For memset
+#include <cstdlib>
+#include <string>
 #include "fff.h"
 
 // Include the header file for the function under test
 extern "C" {
 #include "sl_si91x_socket_utility_fake_function.h"
 #include "sl_string.h"
+#include "sli_wifi_constants.h"
+#include "sl_status.h"
+#include "sl_si91x_socket_constants.h"
+#include "sl_si91x_socket_utility.h"
+#include <errno.h>
 void sli_si91x_create_socket_request(sli_si91x_socket_t *si91x_bsd_socket,
                                      sli_si91x_socket_create_request_t *socket_create_request,
                                      int type,
@@ -300,8 +307,8 @@ TEST(sl_si91x_socket_utility_unit_tests, CreateSocketRequestWithSSL)
 TEST(sl_si91x_socket_utility_unit_tests, SuccessfulRequest)
 {
   // Reset all fake functions
-  RESET_FAKE(sli_si91x_driver_send_command);
-  RESET_FAKE(sli_si91x_host_free_buffer);
+  RESET_FAKE(sli_wifi_send_command);
+  RESET_FAKE(sli_buffer_manager_free_buffer);
   RESET_FAKE(sli_wifi_host_get_buffer_data);
 
   // Set up mock socket
@@ -324,7 +331,7 @@ TEST(sl_si91x_socket_utility_unit_tests, SuccessfulRequest)
 
   // Set up fake function behavior
   sli_wifi_host_get_buffer_data_fake.return_val = fake_packet;
-  sli_si91x_driver_send_command_fake.return_val = SL_STATUS_OK;
+  sli_wifi_send_command_fake.return_val         = SL_STATUS_OK;
 
   sli_si91x_sockets[0] = &mock_socket;
 
@@ -337,7 +344,7 @@ TEST(sl_si91x_socket_utility_unit_tests, SuccessfulRequest)
   EXPECT_EQ(status, SL_STATUS_OK);
   EXPECT_EQ(mock_socket.id, 1);
   EXPECT_EQ(mock_socket.local_address.sin6_port, 0x3412); // Port is in little-endian format
-  EXPECT_EQ(sli_si91x_driver_send_command_fake.call_count, 1);
+  EXPECT_EQ(sli_wifi_send_command_fake.call_count, 1);
   EXPECT_EQ(sli_wifi_host_get_buffer_data_fake.call_count, 1);
 }
 
@@ -345,8 +352,8 @@ TEST(sl_si91x_socket_utility_unit_tests, SuccessfulRequest)
 TEST(sl_si91x_socket_utility_unit_tests, SocketDoesNotExist)
 {
   // Reset all fake functions
-  RESET_FAKE(sli_si91x_driver_send_command);
-  RESET_FAKE(sli_si91x_host_free_buffer);
+  RESET_FAKE(sli_wifi_send_command);
+  RESET_FAKE(sli_buffer_manager_free_buffer);
   RESET_FAKE(sli_wifi_host_get_buffer_data);
 
   // Call the function under test
@@ -360,8 +367,8 @@ TEST(sl_si91x_socket_utility_unit_tests, SocketDoesNotExist)
 TEST(sl_si91x_socket_utility_unit_tests, DriverSendCommandFails)
 {
   // Reset all fake functions
-  RESET_FAKE(sli_si91x_driver_send_command);
-  RESET_FAKE(sli_si91x_host_free_buffer);
+  RESET_FAKE(sli_wifi_send_command);
+  RESET_FAKE(sli_buffer_manager_free_buffer);
   RESET_FAKE(sli_wifi_host_get_buffer_data);
 
   // Set up mock socket
@@ -370,7 +377,7 @@ TEST(sl_si91x_socket_utility_unit_tests, DriverSendCommandFails)
   mock_socket.state = INITIALIZED;
 
   // Set up fake function behavior
-  sli_si91x_driver_send_command_fake.return_val = SL_STATUS_FAIL;
+  sli_wifi_send_command_fake.return_val = SL_STATUS_FAIL;
 
   sli_si91x_sockets[0] = &mock_socket;
 
@@ -381,5 +388,219 @@ TEST(sl_si91x_socket_utility_unit_tests, DriverSendCommandFails)
 
   // Verify the results
   EXPECT_EQ(status, SL_STATUS_FAIL);
-  EXPECT_EQ(sli_si91x_driver_send_command_fake.call_count, 1);
+  EXPECT_EQ(sli_wifi_send_command_fake.call_count, 1);
+}
+
+// STA disconnect response (SLI_WIFI_RSP_DISCONNECT) with OK status marks matching client VAP BSD sockets
+// disconnected when the packet VAP matches the client (same path as post-flush BSD sync).
+TEST(sl_si91x_socket_utility_unit_tests, SyncBsdSocketStates_StaDisconnectOk)
+{
+  RESET_FAKE(sli_wifi_get_opermode);
+  RESET_FAKE(sli_wifi_get_vap_id_from_operation_mode);
+  RESET_FAKE(sli_wifi_get_wifi_frame_status);
+
+  sli_wifi_get_opermode_fake.return_val                   = SL_WIFI_CLIENT_MODE;
+  sli_wifi_get_vap_id_from_operation_mode_fake.return_val = (uint8_t)SL_WIFI_CLIENT_VAP_ID;
+  sli_wifi_get_wifi_frame_status_fake.return_val          = SL_STATUS_OK;
+
+  sli_si91x_socket_t mock_socket;
+  memset(&mock_socket, 0, sizeof(mock_socket));
+  mock_socket.state = CONNECTED;
+
+  sl_wifi_system_packet_t packet;
+  memset(&packet, 0, sizeof(packet));
+  packet.command = SLI_WIFI_RSP_DISCONNECT;
+
+  sli_si91x_sockets[0] = &mock_socket;
+  sli_si91x_sync_bsd_socket_states_for_flush_scenarios(&packet);
+  sli_si91x_sockets[0] = NULL;
+
+  EXPECT_EQ(mock_socket.state, DISCONNECTED);
+  EXPECT_EQ(mock_socket.disconnect_reason, SLI_SI91X_BSD_DISCONNECT_REASON_INTERFACE_DOWN);
+  EXPECT_EQ(sli_wifi_get_opermode_fake.call_count, 1u);
+  EXPECT_EQ(sli_wifi_get_vap_id_from_operation_mode_fake.call_count, 1u);
+  EXPECT_EQ(sli_wifi_get_wifi_frame_status_fake.call_count, 1u);
+}
+
+namespace {
+
+sl_si91x_socket_type_length_value_t *make_tls_extension_tlv(uint16_t type, const char *value, socklen_t *option_length)
+{
+  const size_t value_length = strlen(value);
+  const size_t total_size   = sizeof(sl_si91x_socket_type_length_value_t) + value_length;
+  auto *tlv                 = (sl_si91x_socket_type_length_value_t *)malloc(total_size);
+
+  tlv->type   = type;
+  tlv->length = (uint16_t)value_length;
+  memcpy(tlv->value, value, value_length);
+  *option_length = (socklen_t)total_size;
+  return tlv;
+}
+
+} // namespace
+
+TEST(sl_si91x_socket_utility_unit_tests, AddTlsExtension_ValidAlpn)
+{
+  sli_si91x_tls_extensions_t extensions = { 0 };
+  socklen_t option_length               = 0;
+  sl_si91x_socket_type_length_value_t *alpn =
+    make_tls_extension_tlv(SL_SI91X_TLS_EXTENSION_ALPN_TYPE, "mqtt", &option_length);
+
+  sl_status_t status = sli_si91x_add_tls_extension(&extensions, alpn, option_length);
+
+  EXPECT_EQ(status, SL_STATUS_OK);
+  EXPECT_EQ(extensions.total_extensions, 1u);
+  EXPECT_EQ(extensions.current_size_of_extensions, option_length);
+  free(alpn);
+}
+
+TEST(sl_si91x_socket_utility_unit_tests, AddTlsExtension_ValidSni)
+{
+  sli_si91x_tls_extensions_t extensions = { 0 };
+  socklen_t option_length               = 0;
+  sl_si91x_socket_type_length_value_t *sni =
+    make_tls_extension_tlv(SL_SI91X_TLS_EXTENSION_SNI_TYPE, "broker.example.com", &option_length);
+
+  sl_status_t status = sli_si91x_add_tls_extension(&extensions, sni, option_length);
+
+  EXPECT_EQ(status, SL_STATUS_OK);
+  EXPECT_EQ(extensions.total_extensions, 1u);
+  EXPECT_EQ(extensions.current_size_of_extensions, option_length);
+  free(sni);
+}
+
+TEST(sl_si91x_socket_utility_unit_tests, AddTlsExtension_NullArguments)
+{
+  sli_si91x_tls_extensions_t extensions = { 0 };
+  socklen_t option_length               = 0;
+  sl_si91x_socket_type_length_value_t *alpn =
+    make_tls_extension_tlv(SL_SI91X_TLS_EXTENSION_ALPN_TYPE, "mqtt", &option_length);
+
+  EXPECT_EQ(sli_si91x_add_tls_extension(nullptr, alpn, option_length), SL_STATUS_NULL_POINTER);
+  EXPECT_EQ(sli_si91x_add_tls_extension(&extensions, nullptr, option_length), SL_STATUS_NULL_POINTER);
+  free(alpn);
+}
+
+TEST(sl_si91x_socket_utility_unit_tests, AddTlsExtension_OptionLengthTooSmall)
+{
+  sli_si91x_tls_extensions_t extensions = { 0 };
+  socklen_t option_length               = 0;
+  sl_si91x_socket_type_length_value_t *alpn =
+    make_tls_extension_tlv(SL_SI91X_TLS_EXTENSION_ALPN_TYPE, "mqtt", &option_length);
+
+  EXPECT_EQ(sli_si91x_add_tls_extension(&extensions, alpn, sizeof(uint16_t)), SL_STATUS_INVALID_PARAMETER);
+  free(alpn);
+}
+
+TEST(sl_si91x_socket_utility_unit_tests, AddTlsExtension_ZeroLengthValue)
+{
+  sli_si91x_tls_extensions_t extensions   = { 0 };
+  sl_si91x_socket_type_length_value_t tlv = { 0 };
+  tlv.type                                = SL_SI91X_TLS_EXTENSION_ALPN_TYPE;
+  tlv.length                              = 0;
+  const socklen_t option_length           = (socklen_t)sizeof(sl_si91x_socket_type_length_value_t);
+
+  EXPECT_EQ(sli_si91x_add_tls_extension(&extensions, &tlv, option_length), SL_STATUS_INVALID_PARAMETER);
+}
+
+TEST(sl_si91x_socket_utility_unit_tests, AddTlsExtension_InvalidType)
+{
+  sli_si91x_tls_extensions_t extensions    = { 0 };
+  socklen_t option_length                  = 0;
+  sl_si91x_socket_type_length_value_t *tlv = make_tls_extension_tlv(99, "mqtt", &option_length);
+
+  EXPECT_EQ(sli_si91x_add_tls_extension(&extensions, tlv, option_length), SL_STATUS_INVALID_PARAMETER);
+  free(tlv);
+}
+
+TEST(sl_si91x_socket_utility_unit_tests, AddTlsExtension_OptionLengthMismatch)
+{
+  sli_si91x_tls_extensions_t extensions              = { 0 };
+  sl_si91x_socket_type_length_value_t raw_string_tlv = { 0 };
+  memcpy(&raw_string_tlv, "mqtt", sizeof("mqtt"));
+
+  EXPECT_EQ(sli_si91x_add_tls_extension(&extensions, &raw_string_tlv, sizeof("mqtt")), SL_STATUS_INVALID_PARAMETER);
+}
+
+TEST(sl_si91x_socket_utility_unit_tests, AddTlsExtension_BufferFull)
+{
+  sli_si91x_tls_extensions_t extensions = { 0 };
+  extensions.current_size_of_extensions = SLI_SI91X_MAX_SIZE_OF_EXTENSION_DATA - 3;
+
+  socklen_t option_length = 0;
+  sl_si91x_socket_type_length_value_t *alpn =
+    make_tls_extension_tlv(SL_SI91X_TLS_EXTENSION_ALPN_TYPE, "mqtt", &option_length);
+
+  EXPECT_EQ(sli_si91x_add_tls_extension(&extensions, alpn, option_length), SL_STATUS_SI91X_MEMORY_ERROR);
+  free(alpn);
+}
+
+TEST(sl_si91x_socket_utility_unit_tests, AddTlsExtension_MaxSingleExtensionSize)
+{
+  sli_si91x_tls_extensions_t extensions = { 0 };
+  const std::string value(252, 'a');
+  const size_t total_size = sizeof(sl_si91x_socket_type_length_value_t) + value.size();
+  auto *tlv               = (sl_si91x_socket_type_length_value_t *)malloc(total_size);
+
+  tlv->type   = SL_SI91X_TLS_EXTENSION_SNI_TYPE;
+  tlv->length = (uint16_t)value.size();
+  memcpy(tlv->value, value.data(), value.size());
+
+  const socklen_t option_length = (socklen_t)total_size;
+  const sl_status_t status      = sli_si91x_add_tls_extension(&extensions, tlv, option_length);
+
+  EXPECT_EQ(status, SL_STATUS_OK);
+  EXPECT_EQ(extensions.total_extensions, 1u);
+  EXPECT_EQ(extensions.current_size_of_extensions, option_length);
+  free(tlv);
+}
+
+TEST(sl_si91x_socket_utility_unit_tests, ConfigureTlsExtension_Success)
+{
+  sli_si91x_tls_extensions_t extensions = { 0 };
+  socklen_t option_length               = 0;
+  sl_si91x_socket_type_length_value_t *alpn =
+    make_tls_extension_tlv(SL_SI91X_TLS_EXTENSION_ALPN_TYPE, "mqtt", &option_length);
+
+  EXPECT_EQ(sli_si91x_configure_tls_extension(&extensions, alpn, option_length), SLI_SI91X_NO_ERROR);
+  EXPECT_EQ(extensions.total_extensions, 1u);
+  free(alpn);
+}
+
+TEST(sl_si91x_socket_utility_unit_tests, ConfigureTlsExtension_MemoryError)
+{
+  sli_si91x_tls_extensions_t extensions = { 0 };
+  extensions.current_size_of_extensions = SLI_SI91X_MAX_SIZE_OF_EXTENSION_DATA - 3;
+
+  socklen_t option_length = 0;
+  sl_si91x_socket_type_length_value_t *alpn =
+    make_tls_extension_tlv(SL_SI91X_TLS_EXTENSION_ALPN_TYPE, "mqtt", &option_length);
+
+  EXPECT_EQ(sli_si91x_configure_tls_extension(&extensions, alpn, option_length), -1);
+  EXPECT_EQ(errno, ENOMEM);
+  free(alpn);
+}
+
+TEST(sl_si91x_socket_utility_unit_tests, ConfigureTlsExtension_InvalidParameter)
+{
+  sli_si91x_tls_extensions_t extensions = { 0 };
+  socklen_t option_length               = 0;
+  sl_si91x_socket_type_length_value_t *alpn =
+    make_tls_extension_tlv(SL_SI91X_TLS_EXTENSION_ALPN_TYPE, "mqtt", &option_length);
+
+  EXPECT_EQ(sli_si91x_configure_tls_extension(&extensions, alpn, sizeof(uint16_t)), -1);
+  EXPECT_EQ(errno, EINVAL);
+  free(alpn);
+}
+
+TEST(sl_si91x_socket_utility_unit_tests, ConfigureTlsExtension_NullPointer)
+{
+  sli_si91x_tls_extensions_t extensions = { 0 };
+  socklen_t option_length               = 0;
+  sl_si91x_socket_type_length_value_t *alpn =
+    make_tls_extension_tlv(SL_SI91X_TLS_EXTENSION_ALPN_TYPE, "mqtt", &option_length);
+
+  EXPECT_EQ(sli_si91x_configure_tls_extension(nullptr, alpn, option_length), -1);
+  EXPECT_EQ(errno, EINVAL);
+  free(alpn);
 }

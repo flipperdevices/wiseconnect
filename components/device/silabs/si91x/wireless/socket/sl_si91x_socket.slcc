@@ -1,8 +1,8 @@
 id: sl_si91x_socket
 package: wifi
 description: >
-  The Si91x Socket provides an API to manage Si91x internal sockets
-label: Si91x Socket
+  The SiWx91x Socket provides an API to manage SiWx91x internal sockets
+label: SiWx91x Socket
 category: Device|Si91x|Wireless|Socket
 quality: production
 metadata:
@@ -15,13 +15,13 @@ source:
 - path: src/sl_si91x_socket_utility.c
 include:
 - path: inc
-- path: inc
   file_list:
     - path: sl_bsd_utility.h
     - path: sl_si91x_socket_callback_framework.h
     - path: sl_si91x_socket_constants.h
     - path: sl_si91x_socket_types.h
     - path: sl_si91x_socket_utility.h
+    - path: sli_si91x_socket_defs.h
 
 define:
 - name: SLI_SI91X_SOCKETS
@@ -29,4 +29,6 @@ define:
 requires:
 - name: sl_si91x_wireless
 - name: sl_si91x_internal_stack
+  unless: [sl_si91x_network_dual_stack, sl_si91x_lwip_stack]
+- name: log_none
 

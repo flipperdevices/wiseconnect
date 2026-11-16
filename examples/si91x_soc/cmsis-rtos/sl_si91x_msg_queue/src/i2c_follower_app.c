@@ -98,24 +98,32 @@ void i2c_follower_example_init(void)
   // Initializing I2C instance
   i2c_status = sl_i2c_driver_init(i2c_instance, &sl_i2c_config);
   DEBUGINIT();
+  /* Note: All status messages in this example — both success and failure — are
+ * intentionally emitted via SL_PRINT_STRING_ERROR so that they remain visible
+ * on the console at the default log level. This is a demonstration choice, not
+ * a recommendation: in production code, ERROR severity should be reserved for
+ * actual failures, with successful operations logged via SL_PRINT_STRING_INFO
+ * (or SL_PRINT_STRING_DEBUG for verbose trace). */
   if (i2c_status != SL_I2C_SUCCESS) {
-    DEBUGOUT("sl_i2c_driver_init : Invalid Parameters, Error Code : %u \n", i2c_status);
+    SL_PRINT_STRING_ERROR("sl_i2c_driver_init : Invalid Parameters, Error Code : %u \n", i2c_status);
   } else {
-    DEBUGOUT("Successfully initialized i2c follower\n");
+    SL_PRINT_STRING_ERROR("Successfully initialized i2c follower\n");
   }
   // Configuring follower mask address
   i2c_status = sl_i2c_driver_set_follower_address(i2c_instance, OWN_I2C_ADDR);
   if (i2c_status != SL_I2C_SUCCESS) {
-    DEBUGOUT("sl_i2c_driver_init : Invalid Parameters, Error Code : %u \n", i2c_status);
+    SL_PRINT_STRING_ERROR("sl_i2c_driver_init : Invalid Parameters, Error Code : %u \n", i2c_status);
   } else {
-    DEBUGOUT("Successfully configured i2c follower address\n");
+    SL_PRINT_STRING_ERROR("Successfully configured i2c follower address\n");
   }
   // Configuring RX and TX FIFO thresholds
   i2c_status = sl_i2c_driver_configure_fifo_threshold(i2c_instance, I2C_TX_FIFO_THRESHOLD, I2C_RX_FIFO_THRESHOLD);
   if (i2c_status != SL_I2C_SUCCESS) {
-    DEBUGOUT("sl_i2c_driver_configure_fifo_threshold : Invalid Parameters, Error Code : %u \n", i2c_status);
+    SL_PRINT_STRING_ERROR("sl_i2c_driver_configure_fifo_threshold : Invalid "
+                          "Parameters, Error Code : %u \n",
+                          i2c_status);
   } else {
-    DEBUGOUT("Successfully configured i2c TX & RX FIFO thresholds\n");
+    SL_PRINT_STRING_ERROR("Successfully configured i2c TX & RX FIFO thresholds\n");
   }
 
   // Generating a buffer with values that needs to be sent.
@@ -152,7 +160,9 @@ void i2c_follower_example_process_action(void)
           i2c_status =
             sl_i2c_driver_receive_data_blocking(i2c_instance, DUMMY_FOLLOWER_ADDRESS, i2c_read_buffer, BUFFER_SIZE);
           if (i2c_status != SL_I2C_SUCCESS) {
-            DEBUGOUT("sl_i2c_driver_receive_data_blocking : Invalid Parameters, Error Code : %u \n", i2c_status);
+            SL_PRINT_STRING_ERROR("sl_i2c_driver_receive_data_blocking : Invalid "
+                                  "Parameters, Error Code : %u \n",
+                                  i2c_status);
             if (i2c_status != SL_I2C_TIMEOUT) {
               receive_data_flag = false;
             }
@@ -165,12 +175,13 @@ void i2c_follower_example_process_action(void)
           i2c_receive_complete = false;
           send_data_flag       = true;
 
-          DEBUGOUT("I2C_Task: Data read from Leader successfully and writing the same into I2C_Message_Queue\n");
+          SL_PRINT_STRING_ERROR("I2C_Task: Data read from Leader successfully and "
+                                "writing the same into I2C_Message_Queue\n");
 
           // put the received msg into MessageQueue which will be taken by USART
           os_status = osMessageQueuePut(mid_i2c_msg_queue, i2c_read_buffer, 0U, 0U);
           if (os_status != osOK) {
-            DEBUGOUT("I2C Message Queue write failed\n");
+            SL_PRINT_STRING_ERROR("I2C Message Queue write failed\n");
             break;
           }
         }
@@ -180,16 +191,19 @@ void i2c_follower_example_process_action(void)
           // wait for the i2c_write_buffer buffer to be filled from uart reception
           os_status = osMessageQueueGet(mid_usart_msg_queue, i2c_write_buffer, NULL, osWaitForever); // wait for message
           if (os_status != osOK) {
-            DEBUGOUT("USART Message Queue read failed\n");
+            SL_PRINT_STRING_ERROR("USART Message Queue read failed\n");
             break;
           }
-          DEBUGOUT("I2C_Task: Data read from USART_Message_Queue successfully and forwarding to Leader\n");
+          SL_PRINT_STRING_ERROR("I2C_Task: Data read from USART_Message_Queue "
+                                "successfully and forwarding to Leader\n");
 
           // Validation for executing the API only once.
           i2c_status =
             sl_i2c_driver_send_data_blocking(i2c_instance, DUMMY_FOLLOWER_ADDRESS, i2c_write_buffer, BUFFER_SIZE);
           if (i2c_status != SL_I2C_SUCCESS) {
-            DEBUGOUT("sl_i2c_driver_send_data_blocking : Invalid Parameters, Error Code : %u \n", i2c_status);
+            SL_PRINT_STRING_ERROR("sl_i2c_driver_send_data_blocking : Invalid "
+                                  "Parameters, Error Code : %u \n",
+                                  i2c_status);
             if (i2c_status != SL_I2C_TIMEOUT) {
               send_data_flag = false;
             }
@@ -230,8 +244,10 @@ static void compare_data(void)
     }
   }
   if (data_index == BUFFER_SIZE) {
-    DEBUGOUT("Leader-follower read-write data comparison is successful, Test Case Passed \n");
+    SL_PRINT_STRING_ERROR("Leader-follower read-write data comparison is "
+                          "successful, Test Case Passed \n");
   } else {
-    DEBUGOUT("Leader-follower read-write data comparison is not successful, Test Case Failed \n");
+    SL_PRINT_STRING_ERROR("Leader-follower read-write data comparison is not "
+                          "successful, Test Case Failed \n");
   }
 }

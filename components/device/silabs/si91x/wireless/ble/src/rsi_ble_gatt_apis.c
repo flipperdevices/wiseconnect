@@ -72,7 +72,7 @@ int32_t rsi_ble_get_profiles_async(uint8_t *dev_addr,
 #ifdef BD_ADDR_IN_ASCII
   rsi_ascii_dev_address_to_6bytes_rev(req_profiles.dev_addr, dev_addr);
 #else
-  memcpy((uint8_t *)req_profiles.dev_addr, (int8_t *)dev_addr, 6);
+  memcpy((uint8_t *)req_profiles.dev_addr, (int8_t *)dev_addr, RSI_DEV_ADDR_LEN);
 #endif
   req_profiles.start_handle = start_handle;
   req_profiles.end_handle   = end_handle;
@@ -117,7 +117,7 @@ int32_t rsi_ble_get_profile_async(uint8_t *dev_addr, uuid_t profile_uuid, profil
 #ifdef BD_ADDR_IN_ASCII
   rsi_ascii_dev_address_to_6bytes_rev(req_profile.dev_addr, dev_addr);
 #else
-  memcpy((uint8_t *)req_profile.dev_addr, (int8_t *)dev_addr, 6);
+  memcpy((uint8_t *)req_profile.dev_addr, (int8_t *)dev_addr, RSI_DEV_ADDR_LEN);
 #endif
   memcpy(&req_profile.profile_uuid, &profile_uuid, sizeof(uuid_t));
 
@@ -166,7 +166,7 @@ int32_t rsi_ble_get_char_services_async(uint8_t *dev_addr,
 #ifdef BD_ADDR_IN_ASCII
   rsi_ascii_dev_address_to_6bytes_rev(req_char_services.dev_addr, dev_addr);
 #else
-  memcpy((uint8_t *)req_char_services.dev_addr, (int8_t *)dev_addr, 6);
+  memcpy((uint8_t *)req_char_services.dev_addr, (int8_t *)dev_addr, RSI_DEV_ADDR_LEN);
 #endif
   rsi_uint16_to_2bytes(req_char_services.start_handle, start_handle);
   rsi_uint16_to_2bytes(req_char_services.end_handle, end_handle);
@@ -223,7 +223,7 @@ int32_t rsi_ble_get_inc_services_async(uint8_t *dev_addr,
 #ifdef BD_ADDR_IN_ASCII
   rsi_ascii_dev_address_to_6bytes_rev(req_inc_services.dev_addr, dev_addr);
 #else
-  memcpy((uint8_t *)req_inc_services.dev_addr, (int8_t *)dev_addr, 6);
+  memcpy((uint8_t *)req_inc_services.dev_addr, (int8_t *)dev_addr, RSI_DEV_ADDR_LEN);
 #endif
   rsi_uint16_to_2bytes(req_inc_services.start_handle, start_handle);
   rsi_uint16_to_2bytes(req_inc_services.end_handle, end_handle);
@@ -285,7 +285,7 @@ int32_t rsi_ble_get_char_value_by_uuid_async(uint8_t *dev_addr,
 #ifdef BD_ADDR_IN_ASCII
   rsi_ascii_dev_address_to_6bytes_rev(req_char_val.dev_addr, dev_addr);
 #else
-  memcpy((uint8_t *)req_char_val.dev_addr, (int8_t *)dev_addr, 6);
+  memcpy((uint8_t *)req_char_val.dev_addr, (int8_t *)dev_addr, RSI_DEV_ADDR_LEN);
 #endif
   rsi_uint16_to_2bytes(req_char_val.start_handle, start_handle);
   rsi_uint16_to_2bytes(req_char_val.end_handle, end_handle);
@@ -343,7 +343,7 @@ int32_t rsi_ble_get_att_descriptors_async(uint8_t *dev_addr,
 #ifdef BD_ADDR_IN_ASCII
   rsi_ascii_dev_address_to_6bytes_rev(req_att_desc.dev_addr, dev_addr);
 #else
-  memcpy((uint8_t *)req_att_desc.dev_addr, (int8_t *)dev_addr, 6);
+  memcpy((uint8_t *)req_att_desc.dev_addr, (int8_t *)dev_addr, RSI_DEV_ADDR_LEN);
 #endif
   rsi_uint16_to_2bytes(req_att_desc.start_handle, start_handle);
   rsi_uint16_to_2bytes(req_att_desc.end_handle, end_handle);
@@ -394,7 +394,7 @@ int32_t rsi_ble_get_att_value_async(uint8_t *dev_addr, uint16_t handle, rsi_ble_
 #ifdef BD_ADDR_IN_ASCII
   rsi_ascii_dev_address_to_6bytes_rev(req_att_val.dev_addr, dev_addr);
 #else
-  memcpy((uint8_t *)req_att_val.dev_addr, (int8_t *)dev_addr, 6);
+  memcpy((uint8_t *)req_att_val.dev_addr, (int8_t *)dev_addr, RSI_DEV_ADDR_LEN);
 #endif
   rsi_uint16_to_2bytes(req_att_val.handle, handle);
 
@@ -448,7 +448,7 @@ int32_t rsi_ble_get_multiple_att_values_async(uint8_t *dev_addr,
 #ifdef BD_ADDR_IN_ASCII
   rsi_ascii_dev_address_to_6bytes_rev(req_att_vals.dev_addr, dev_addr);
 #else
-  memcpy((uint8_t *)req_att_vals.dev_addr, (int8_t *)dev_addr, 6);
+  memcpy((uint8_t *)req_att_vals.dev_addr, (int8_t *)dev_addr, RSI_DEV_ADDR_LEN);
 #endif
   req_att_vals.num_of_handles = (uint8_t)(RSI_MIN(num_of_handlers, RSI_BLE_MAX_REQ_LIST));
   for (uint8_t ix = 0; ix < req_att_vals.num_of_handles; ix++) {
@@ -505,7 +505,7 @@ int32_t rsi_ble_get_long_att_value_async(uint8_t *dev_addr,
 #ifdef BD_ADDR_IN_ASCII
   rsi_ascii_dev_address_to_6bytes_rev(req_long_att_val.dev_addr, dev_addr);
 #else
-  memcpy((uint8_t *)req_long_att_val.dev_addr, (int8_t *)dev_addr, 6);
+  memcpy((uint8_t *)req_long_att_val.dev_addr, (int8_t *)dev_addr, RSI_DEV_ADDR_LEN);
 #endif
   req_long_att_val.handle = handle;
   req_long_att_val.offset = offset;
@@ -553,7 +553,7 @@ int32_t rsi_ble_set_att_value_async(uint8_t *dev_addr, uint16_t handle, uint8_t 
 #ifdef BD_ADDR_IN_ASCII
   rsi_ascii_dev_address_to_6bytes_rev(set_att_val.dev_addr, dev_addr);
 #else
-  memcpy((uint8_t *)set_att_val.dev_addr, (int8_t *)dev_addr, 6);
+  memcpy((uint8_t *)set_att_val.dev_addr, (int8_t *)dev_addr, RSI_DEV_ADDR_LEN);
 #endif
   rsi_uint16_to_2bytes(set_att_val.handle, handle);
   set_att_val.length = (uint8_t)(RSI_MIN(sizeof(set_att_val.att_value), data_len));
@@ -574,7 +574,7 @@ void ble_prepare_write_request(rsi_ble_req_prepare_write_t *req_prepare_write,
 #ifdef BD_ADDR_IN_ASCII
   rsi_ascii_dev_address_to_6bytes_rev(req_prepare_write->dev_addr, dev_addr);
 #else
-  memcpy((uint8_t *)req_prepare_write->dev_addr, (int8_t *)dev_addr, 6);
+  memcpy((uint8_t *)req_prepare_write->dev_addr, (int8_t *)dev_addr, RSI_DEV_ADDR_LEN);
 #endif
   rsi_uint16_to_2bytes(req_prepare_write->handle, handle);
   rsi_uint16_to_2bytes(req_prepare_write->offset, offset);
@@ -672,7 +672,7 @@ int32_t rsi_ble_execute_write_async(uint8_t *dev_addr, uint8_t exe_flag)
 #ifdef BD_ADDR_IN_ASCII
   rsi_ascii_dev_address_to_6bytes_rev(req_exe_write.dev_addr, dev_addr);
 #else
-  memcpy((uint8_t *)req_exe_write.dev_addr, (int8_t *)dev_addr, 6);
+  memcpy((uint8_t *)req_exe_write.dev_addr, (int8_t *)dev_addr, RSI_DEV_ADDR_LEN);
 #endif
   req_exe_write.flag = exe_flag;
 
@@ -733,7 +733,7 @@ int32_t rsi_ble_get_profiles(uint8_t *dev_addr,
 #ifdef BD_ADDR_IN_ASCII
   rsi_ascii_dev_address_to_6bytes_rev(req_profiles.dev_addr, dev_addr);
 #else
-  memcpy((uint8_t *)req_profiles.dev_addr, (int8_t *)dev_addr, 6);
+  memcpy((uint8_t *)req_profiles.dev_addr, (int8_t *)dev_addr, RSI_DEV_ADDR_LEN);
 #endif
   req_profiles.start_handle = start_handle;
   req_profiles.end_handle   = end_handle;
@@ -782,7 +782,7 @@ int32_t rsi_ble_get_profile(uint8_t *dev_addr, uuid_t profile_uuid, profile_desc
 #ifdef BD_ADDR_IN_ASCII
   rsi_ascii_dev_address_to_6bytes_rev(req_profile.dev_addr, dev_addr);
 #else
-  memcpy((uint8_t *)req_profile.dev_addr, (int8_t *)dev_addr, 6);
+  memcpy((uint8_t *)req_profile.dev_addr, (int8_t *)dev_addr, RSI_DEV_ADDR_LEN);
 #endif
   memcpy(&req_profile.profile_uuid, &profile_uuid, sizeof(uuid_t));
 
@@ -838,7 +838,7 @@ int32_t rsi_ble_get_char_services(uint8_t *dev_addr,
 #ifdef BD_ADDR_IN_ASCII
   rsi_ascii_dev_address_to_6bytes_rev(req_char_services.dev_addr, dev_addr);
 #else
-  memcpy((uint8_t *)req_char_services.dev_addr, (int8_t *)dev_addr, 6);
+  memcpy((uint8_t *)req_char_services.dev_addr, (int8_t *)dev_addr, RSI_DEV_ADDR_LEN);
 #endif
   rsi_uint16_to_2bytes(req_char_services.start_handle, start_handle);
   rsi_uint16_to_2bytes(req_char_services.end_handle, end_handle);
@@ -897,7 +897,7 @@ int32_t rsi_ble_get_inc_services(uint8_t *dev_addr,
 #ifdef BD_ADDR_IN_ASCII
   rsi_ascii_dev_address_to_6bytes_rev(req_inc_services.dev_addr, dev_addr);
 #else
-  memcpy((uint8_t *)req_inc_services.dev_addr, (int8_t *)dev_addr, 6);
+  memcpy((uint8_t *)req_inc_services.dev_addr, (int8_t *)dev_addr, RSI_DEV_ADDR_LEN);
 #endif
   rsi_uint16_to_2bytes(req_inc_services.start_handle, start_handle);
   rsi_uint16_to_2bytes(req_inc_services.end_handle, end_handle);
@@ -954,7 +954,7 @@ int32_t rsi_ble_get_char_value_by_uuid(uint8_t *dev_addr,
 #ifdef BD_ADDR_IN_ASCII
   rsi_ascii_dev_address_to_6bytes_rev(req_char_val.dev_addr, dev_addr);
 #else
-  memcpy((uint8_t *)req_char_val.dev_addr, (int8_t *)dev_addr, 6);
+  memcpy((uint8_t *)req_char_val.dev_addr, (int8_t *)dev_addr, RSI_DEV_ADDR_LEN);
 #endif
 
   rsi_uint16_to_2bytes(req_char_val.start_handle, start_handle);
@@ -1012,7 +1012,7 @@ int32_t rsi_ble_get_att_descriptors(uint8_t *dev_addr,
 #ifdef BD_ADDR_IN_ASCII
   rsi_ascii_dev_address_to_6bytes_rev(req_att_desc.dev_addr, dev_addr);
 #else
-  memcpy((uint8_t *)req_att_desc.dev_addr, (int8_t *)dev_addr, 6);
+  memcpy((uint8_t *)req_att_desc.dev_addr, (int8_t *)dev_addr, RSI_DEV_ADDR_LEN);
 #endif
   rsi_uint16_to_2bytes(req_att_desc.start_handle, start_handle);
   rsi_uint16_to_2bytes(req_att_desc.end_handle, end_handle);
@@ -1034,6 +1034,8 @@ int32_t rsi_ble_get_att_descriptors(uint8_t *dev_addr,
  * @note       This is a non-blocking API.
  *             Still you need to wait until the callback \ref rsi_ble_on_read_resp_t is received from the device,
  *             to initiate further attribute related transactions on this remote device address.
+ *
+ * @note       Disable `SL_SI91X_BLE_GATT_ASYNC_ENABLE` when using GATT Client synchronous APIs to ensure the response is delivered through the corresponding API callback.
  *
  * @pre        Pre-conditions:
  *             \ref rsi_ble_connect() API needs to be called before this API.
@@ -1061,7 +1063,7 @@ int32_t rsi_ble_get_att_value(uint8_t *dev_addr, uint16_t handle, rsi_ble_resp_a
 #ifdef BD_ADDR_IN_ASCII
   rsi_ascii_dev_address_to_6bytes_rev(req_att_val.dev_addr, dev_addr);
 #else
-  memcpy((uint8_t *)req_att_val.dev_addr, (int8_t *)dev_addr, 6);
+  memcpy((uint8_t *)req_att_val.dev_addr, (int8_t *)dev_addr, RSI_DEV_ADDR_LEN);
 #endif
   rsi_uint16_to_2bytes(req_att_val.handle, handle);
 
@@ -1114,7 +1116,7 @@ int32_t rsi_ble_get_multiple_att_values(uint8_t *dev_addr,
 #ifdef BD_ADDR_IN_ASCII
   rsi_ascii_dev_address_to_6bytes_rev(req_att_vals.dev_addr, dev_addr);
 #else
-  memcpy((uint8_t *)req_att_vals.dev_addr, (int8_t *)dev_addr, 6);
+  memcpy((uint8_t *)req_att_vals.dev_addr, (int8_t *)dev_addr, RSI_DEV_ADDR_LEN);
 #endif
   req_att_vals.num_of_handles = (uint8_t)(RSI_MIN(num_of_handlers, RSI_BLE_MAX_REQ_LIST));
   for (uint8_t ix = 0; ix < req_att_vals.num_of_handles; ix++) {
@@ -1169,7 +1171,7 @@ int32_t rsi_ble_get_long_att_value(uint8_t *dev_addr,
 #ifdef BD_ADDR_IN_ASCII
   rsi_ascii_dev_address_to_6bytes_rev(req_long_att_val.dev_addr, dev_addr);
 #else
-  memcpy((uint8_t *)req_long_att_val.dev_addr, (int8_t *)dev_addr, 6);
+  memcpy((uint8_t *)req_long_att_val.dev_addr, (int8_t *)dev_addr, RSI_DEV_ADDR_LEN);
 #endif
   req_long_att_val.handle = handle;
   req_long_att_val.offset = offset;
@@ -1215,7 +1217,7 @@ int32_t rsi_ble_set_att_value(uint8_t *dev_addr, uint16_t handle, uint8_t data_l
 #ifdef BD_ADDR_IN_ASCII
   rsi_ascii_dev_address_to_6bytes_rev(set_att_val.dev_addr, dev_addr);
 #else
-  memcpy((uint8_t *)set_att_val.dev_addr, (int8_t *)dev_addr, 6);
+  memcpy((uint8_t *)set_att_val.dev_addr, (int8_t *)dev_addr, RSI_DEV_ADDR_LEN);
 #endif
   rsi_uint16_to_2bytes(set_att_val.handle, handle);
   set_att_val.length = (uint8_t)(RSI_MIN(sizeof(set_att_val.att_value), data_len));
@@ -1254,7 +1256,7 @@ int32_t rsi_ble_set_att_cmd_async(uint8_t *dev_addr, uint16_t handle, uint8_t da
 #ifdef BD_ADDR_IN_ASCII
   rsi_ascii_dev_address_to_6bytes_rev(set_att_cmd_A.dev_addr, dev_addr);
 #else
-  memcpy((uint8_t *)set_att_cmd_A.dev_addr, (int8_t *)dev_addr, 6);
+  memcpy((uint8_t *)set_att_cmd_A.dev_addr, (int8_t *)dev_addr, RSI_DEV_ADDR_LEN);
 #endif
   rsi_uint16_to_2bytes(set_att_cmd_A.handle, handle);
   set_att_cmd_A.length = (uint8_t)(RSI_MIN(sizeof(set_att_cmd_A.att_value), data_len));
@@ -1300,7 +1302,7 @@ int32_t rsi_ble_set_att_cmd(uint8_t *dev_addr, uint16_t handle, uint8_t data_len
 #ifdef BD_ADDR_IN_ASCII
   rsi_ascii_dev_address_to_6bytes_rev(set_att_cmd.dev_addr, dev_addr);
 #else
-  memcpy((uint8_t *)set_att_cmd.dev_addr, (int8_t *)dev_addr, 6);
+  memcpy((uint8_t *)set_att_cmd.dev_addr, (int8_t *)dev_addr, RSI_DEV_ADDR_LEN);
 #endif
   rsi_uint16_to_2bytes(set_att_cmd.handle, handle);
   set_att_cmd.length = (uint8_t)(RSI_MIN(sizeof(set_att_cmd.att_value), data_len));
@@ -1360,7 +1362,7 @@ int32_t rsi_ble_set_long_att_value(uint8_t *dev_addr,
 #ifdef BD_ADDR_IN_ASCII
   rsi_ascii_dev_address_to_6bytes_rev(set_long_att.dev_addr, dev_addr);
 #else
-  memcpy((uint8_t *)set_long_att.dev_addr, (int8_t *)dev_addr, 6);
+  memcpy((uint8_t *)set_long_att.dev_addr, (int8_t *)dev_addr, RSI_DEV_ADDR_LEN);
 #endif
   rsi_uint16_to_2bytes(set_long_att.handle, handle);
   rsi_uint16_to_2bytes(set_long_att.offset, offset);
@@ -1462,7 +1464,7 @@ int32_t rsi_ble_execute_write(uint8_t *dev_addr, uint8_t exe_flag)
 #ifdef BD_ADDR_IN_ASCII
   rsi_ascii_dev_address_to_6bytes_rev(req_exe_write.dev_addr, dev_addr);
 #else
-  memcpy((uint8_t *)req_exe_write.dev_addr, (int8_t *)dev_addr, 6);
+  memcpy((uint8_t *)req_exe_write.dev_addr, (int8_t *)dev_addr, RSI_DEV_ADDR_LEN);
 #endif
   req_exe_write.flag = exe_flag;
 
@@ -1576,7 +1578,7 @@ int32_t rsi_ble_set_local_att_value(uint16_t handle, uint16_t data_len, const ui
 			only value 1 and 2 are supporetd in BLE_SMALL_BUFF_MODE  \n
 
 			in BLE_BIG_BUFF_MODE, buffers allocated based on the below notations.
-			intial available_buf_cnt = RSI_BLE_NUM_CONN_EVENTS,
+			initial available_buf_cnt = RSI_BLE_NUM_CONN_EVENTS,
 			a) When connection 1 is formed, the possible range of buffers is (available_buf_cnt - remaining possible no.connections)
 			b) After allocating X buffers using \ref rsi_ble_set_wo_resp_notify_buf_info to the 1st connection remaiining available_buf_cnt = (available_buf_cnt - X ) \n
  * @return     0		-	Success \n
@@ -1611,7 +1613,7 @@ int32_t rsi_ble_set_wo_resp_notify_buf_info(const uint8_t *dev_addr, uint8_t buf
  * @fn         int32_t rsi_ble_notify_value(uint8_t *dev_addr, uint16_t handle,
  *                                          uint16_t data_len, uint8_t *p_data)
  * @brief      Notify the local value to the remote device. This is a Blocking API.
- *             If the API returns RSI_ERROR_BLE_DEV_BUF_FULL  (-31) error then wait untill the \ref rsi_ble_on_le_more_data_req_t event gets received from the module.
+ *             If the API returns RSI_ERROR_BLE_DEV_BUF_FULL  (-31) error then wait until the \ref rsi_ble_on_le_more_data_req_t event gets received from the module.
  * @pre        \ref rsi_ble_connect() API needs to be called before this API.
  * @param[in]  dev_addr - remote device address
  * @param[in]  handle 	- local attribute handle
@@ -1640,7 +1642,7 @@ int32_t rsi_ble_notify_value(const uint8_t *dev_addr, uint16_t handle, uint16_t 
 #ifdef BD_ADDR_IN_ASCII
   rsi_ascii_dev_address_to_6bytes_rev(rec_data.dev_addr, dev_addr);
 #else
-  memcpy(rec_data.dev_addr, dev_addr, 6);
+  memcpy(rec_data.dev_addr, dev_addr, RSI_DEV_ADDR_LEN);
 #endif
 
   rec_data.handle   = handle;
@@ -1678,7 +1680,7 @@ int32_t rsi_ble_indicate_value(const uint8_t *dev_addr, uint16_t handle, uint16_
 #ifdef BD_ADDR_IN_ASCII
   rsi_ascii_dev_address_to_6bytes_rev(rec_data.dev_addr, dev_addr);
 #else
-  memcpy(rec_data.dev_addr, dev_addr, 6);
+  memcpy(rec_data.dev_addr, dev_addr, RSI_DEV_ADDR_LEN);
 #endif
 
   rec_data.handle   = handle;
@@ -1719,7 +1721,7 @@ int32_t rsi_ble_indicate_value_sync(const uint8_t *dev_addr, uint16_t handle, ui
 #ifdef BD_ADDR_IN_ASCII
   rsi_ascii_dev_address_to_6bytes_rev(rec_data.dev_addr, dev_addr);
 #else
-  memcpy(rec_data.dev_addr, dev_addr, 6);
+  memcpy(rec_data.dev_addr, dev_addr, RSI_DEV_ADDR_LEN);
 #endif
 
   rec_data.handle   = handle;
@@ -1753,7 +1755,7 @@ int32_t rsi_ble_indicate_confirm(const uint8_t *dev_addr)
 #ifdef BD_ADDR_IN_ASCII
   rsi_ascii_dev_address_to_6bytes_rev(rec_data.dev_addr, dev_addr);
 #else
-  memcpy(rec_data.dev_addr, dev_addr, 6);
+  memcpy(rec_data.dev_addr, dev_addr, RSI_DEV_ADDR_LEN);
 #endif
 
   return rsi_bt_driver_send_cmd(RSI_BLE_CMD_INDICATE_CONFIRMATION, &rec_data, NULL);
@@ -1834,7 +1836,7 @@ int32_t rsi_ble_gatt_read_response(uint8_t *dev_addr,
 #ifdef BD_ADDR_IN_ASCII
   rsi_ascii_dev_address_to_6bytes_rev(local_read_blob_resp.dev_addr, dev_addr);
 #else
-  memcpy((uint8_t *)local_read_blob_resp.dev_addr, (int8_t *)dev_addr, 6);
+  memcpy((uint8_t *)local_read_blob_resp.dev_addr, (int8_t *)dev_addr, RSI_DEV_ADDR_LEN);
 #endif
   local_read_blob_resp.type     = read_type;
   local_read_blob_resp.data_len = (uint16_t)(RSI_MIN(length, sizeof(local_read_blob_resp.data)));
@@ -1917,7 +1919,7 @@ int32_t rsi_ble_att_error_response(uint8_t *dev_addr, uint16_t handle, uint8_t o
 #ifdef BD_ADDR_IN_ASCII
   rsi_ascii_dev_address_to_6bytes_rev(att_error.dev_addr, dev_addr);
 #else
-  memcpy((uint8_t *)att_error.dev_addr, (int8_t *)dev_addr, 6);
+  memcpy((uint8_t *)att_error.dev_addr, (int8_t *)dev_addr, RSI_DEV_ADDR_LEN);
 #endif
 
   att_error.att_handle = handle;
@@ -1954,7 +1956,7 @@ int32_t rsi_ble_mtu_exchange_event(uint8_t *dev_addr, uint8_t mtu_size)
 #ifdef BD_ADDR_IN_ASCII
   rsi_ascii_dev_address_to_6bytes_rev(mtu_req.dev_addr, dev_addr);
 #else
-  memcpy((uint8_t *)mtu_req.dev_addr, (int8_t *)dev_addr, 6);
+  memcpy((uint8_t *)mtu_req.dev_addr, (int8_t *)dev_addr, RSI_DEV_ADDR_LEN);
 #endif
   mtu_req.req_mtu_size = mtu_size;
 
@@ -1980,7 +1982,7 @@ int32_t rsi_ble_mtu_exchange_resp(uint8_t *dev_addr, uint8_t mtu_size)
 #ifdef BD_ADDR_IN_ASCII
   rsi_ascii_dev_address_to_6bytes_rev(mtu_resp.dev_addr, dev_addr);
 #else
-  memcpy((uint8_t *)mtu_resp.dev_addr, (int8_t *)dev_addr, 6);
+  memcpy((uint8_t *)mtu_resp.dev_addr, (int8_t *)dev_addr, RSI_DEV_ADDR_LEN);
 #endif
   mtu_resp.req_mtu_size = mtu_size;
 
@@ -2017,7 +2019,7 @@ int32_t rsi_ble_gatt_write_response(uint8_t *dev_addr, uint8_t type)
 #ifdef BD_ADDR_IN_ASCII
   rsi_ascii_dev_address_to_6bytes_rev(local_write_resp.dev_addr, dev_addr);
 #else
-  memcpy((uint8_t *)local_write_resp.dev_addr, (int8_t *)dev_addr, 6);
+  memcpy((uint8_t *)local_write_resp.dev_addr, (int8_t *)dev_addr, RSI_DEV_ADDR_LEN);
 #endif
   local_write_resp.type = type;
 
@@ -2063,7 +2065,7 @@ int32_t rsi_ble_gatt_prepare_write_response(uint8_t *dev_addr,
 #ifdef BD_ADDR_IN_ASCII
   rsi_ascii_dev_address_to_6bytes_rev(local_prepare_write_resp.dev_addr, dev_addr);
 #else
-  memcpy((uint8_t *)local_prepare_write_resp.dev_addr, (int8_t *)dev_addr, 6);
+  memcpy((uint8_t *)local_prepare_write_resp.dev_addr, (int8_t *)dev_addr, RSI_DEV_ADDR_LEN);
 #endif
   local_prepare_write_resp.handle   = handle;
   local_prepare_write_resp.offset   = offset;

@@ -1,10 +1,15 @@
 id: sl_si91x_mem_pool_buffers_with_quota
 package: wifi
 description: >
-  Si91x Memory Pool based buffer system with quota based allocation and deallocation
+  SiWx91x Memory Pool based buffer system with quota based allocation and deallocation
+
+  Deprecated: This component is retained only for backward compatibility and
+  should not be added to new applications. It has been superseded by
+  `sli_buffer_manager`, which is pulled in automatically by the
+  `sl_si91x_wireless` component, so no explicit inclusion is required.
 label: Memory Pool buffers With Quota
 category: Device|Si91x|Wireless|Buffer Manager
-quality: production
+quality: deprecated
 metadata:
   sbom:
     license: Zlib
@@ -17,4 +22,5 @@ source:
 requires:
 - name: mem_pool
 - name: sl_si91x_wireless
+- name: log_none
 

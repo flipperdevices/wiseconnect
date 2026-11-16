@@ -1,20 +1,30 @@
 # BLE Interoperability Test App
   
+## High-Level Overview
+
+Demonstrates BLE interoperability (IOP) on SiWG917 with the IOP test firmware and Simplicity Connect app: GATT, pairing, throughput, and LE Privacy checks against smartphones.
+
 ## Table of Contents
 
 - [BLE Interoperability Test App](#ble-interoperability-test-app)
+	- [High-Level Overview](#high-level-overview)
 	- [Table of Contents](#table-of-contents)
 	- [Purpose/Scope](#purposescope)
 	- [Prerequisites/Setup Requirements](#prerequisitessetup-requirements)
 		- [Hardware Requirements](#hardware-requirements)
 		- [Software Requirements](#software-requirements)
+		- [NCP mode: host application and project files](#ncp-mode-host-application-and-project-files)
 		- [Setup Diagram](#setup-diagram)
-	- [Getting Started](#getting-started)
-	- [Application Build Environment](#application-build-environment)
-	- [Test the Application](#test-the-application)
-	- [Logging and Sharing data](#logging-and-sharing-data)
-		- [Programming the Radio Board](#programming-the-radio-board)
-		- [Limitation](#limitation)
+  - [Steps to Run Demo](#steps-to-run-demo)
+    - [Getting Started](#getting-started)
+    - [Configuration and Setup](#configuration-and-setup)
+    - [Steps for Execution](#steps-for-execution)
+    - [Logging and Sharing data](#logging-and-sharing-data)
+      - [Programming the Radio Board](#programming-the-radio-board)
+      - [Limitation](#limitation)
+	- [Troubleshooting](#troubleshooting)
+	- [Resources](#resources)
+	- [Report Bugs and Get Support](#report-bugs-and-get-support)
 
 ## Purpose/Scope
 
@@ -34,8 +44,14 @@ This document outlines the requirements, setup process, test execution, and data
 	
 - Test Hardware:
 	- SiWG917 SoC Family Development Kits:
-		-   SOC Expansion Kits with SOC Radio Boards:
-			- (BRD4338A + BRD4002A)
+    - Standalone
+      - [BRD4002B](https://www.silabs.com/development-tools/wireless/wireless-pro-kit-mainboard?tab=overview) Wireless Pro Kit Mainboard [SI-MB4002B]
+    - Radio Boards 
+  	  - [BRD4338A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-rb4338a-wifi-6-bluetooth-le-soc-radio-board?tab=overview) [SiWx917-RB4338A]
+      - [BRD4343A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4343a-wi-fi-6-bluetooth-le-8mb-flash-radio-board-for-module?tab=overview) [SiWx917-RB4343A]
+      - [BRD4343C](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4343c-wi-fi-6-bluetooth-le-8mb-flash-radio-board-for-module?tab=overview) [SiWx917-RB4343C]
+	- Kits
+	  - SiWG917 Dev Kit [BRD2605B]
 	- BLE Smartphone
 			
 ### Software Requirements
@@ -57,11 +73,23 @@ This document outlines the requirements, setup process, test execution, and data
     - If bonded, remove the bond via the smartphone’s Bluetooth settings before initiating the test.
 > **Note:** The provided mobile screenshots are from the 3.0.1 version of the Simplicity Connect App(formerly EFR Connect App), it is recommended to use the latest version.
 
+### NCP mode: host application and project files
+
+| Mode | Host / target                | Project file (this example folder) |
+|------|------------------------------|------------------------------------|
+| SoC  | Application runs on SiWx91x. | `ble_iop_test.slcp`                |
+
+> **Note:** The BLE IOP Test example is provided only in **SoC** mode. PSRAM and NCP variants are not shipped for this example.
+
+Open `ble_iop_test.slcp` from `examples/snippets/ble/ble_iop_test/` in Simplicity Studio.
+
 ### Setup Diagram
 
 ![](resources/readme/new_image.png)
 
-## Getting Started
+## Steps to Run Demo
+
+### Getting Started
 
 Refer to the instructions [here](https://docs.silabs.com/wiseconnect/latest/wiseconnect-getting-started/) to:
 
@@ -73,7 +101,7 @@ Refer to the instructions [here](https://docs.silabs.com/wiseconnect/latest/wise
 
 For details on the project folder structure, see the [WiSeConnect Examples](https://docs.silabs.com/wiseconnect/latest/wiseconnect-examples/#example-folder-structure) page.
 
-## Application Build Environment
+### Configuration and Setup
 
 The application can be configured to suit your requirements and development environment. Read through the following sections and make any changes needed.
 
@@ -87,7 +115,7 @@ The application can be configured to suit your requirements and development envi
 
 > **Note**: For recommended settings, please refer the [recommendations guide](https://docs.silabs.com/wiseconnect/latest/wiseconnect-developers-guide-prog-recommended-settings/).
 
-## Test the Application
+### Steps for Execution
 
 Refer to the instructions [here](https://docs.silabs.com/wiseconnect/latest/wiseconnect-getting-started/) to:
 
@@ -168,7 +196,7 @@ After successful program execution, the output should be similar to the images s
 
    ![](resources/readme/test_log_3.png)
 
-## Logging and Sharing data
+### Logging and Sharing data
 
 After all the tests are executed, the SiConnect app provides an option to share the results.
 
@@ -182,14 +210,37 @@ NOTE: Below is an example of a test log from running IOP test on Samsung A14 wit
 
 ![](resources/readme/log.png)
 
-### Programming the Radio Board
+#### Programming the Radio Board
 
 Before programming the radio board mounted on the mainboard, make sure the power supply switch is in the AEM position (right side) as shown below.
 
 ![](resources/readme/readme_img0.png)
 
-### Limitation
+#### Limitation
 
 - OTA ACK/UNACK features are not supported in Si917 IOP application.
 - PSRAM support is not provided for ble_iop_app application.
 - The ble_iop_app application is not supported NCP mode.
+
+## Troubleshooting
+
+If you encounter issues, try the following:
+
+- Confirm the SiWG917 board is flashed with the **IOP Test** firmware before launching the Simplicity Connect app.
+- Make sure no existing pairing/bond exists between the smartphone and the device. Remove the bond from the phone's Bluetooth settings and reset the device with the on-board reset button.
+- Use the latest version of the Simplicity Connect mobile app (v2.4 or newer).
+- If a test gets stuck, hard-reset the radio board and rerun the test sequence from the **Test** tab.
+- For OTA ACK/UNACK pop-ups, click **Cancel** — OTA is not supported in the current release.
+
+## Resources
+
+- [WiSeConnect SDK documentation](https://docs.silabs.com/wiseconnect/latest/)
+- [Getting started with SiWx91x](https://docs.silabs.com/wiseconnect/latest/wiseconnect-getting-started/)
+- [Simplicity Connect mobile app](https://www.silabs.com/developer-tools/simplicity-connect-mobile-app)
+- [Bluetooth Low Energy fundamentals](https://docs.silabs.com/bluetooth/latest/bluetooth-fundamentals/)
+
+## Report Bugs and Get Support
+
+To report bugs, use the [Silicon Labs Support Portal](https://www.silabs.com/support).
+
+For questions and discussion, visit the [Silicon Labs community forums](https://community.silabs.com/).

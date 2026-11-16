@@ -64,7 +64,7 @@ sl_mqtt_client_configuration_t mqtt_client_configuration = { .is_clean_session =
                                                              .client_id_length = strlen(CLIENT_ID),
                                                              .client_port      = CLIENT_PORT };
 
-sl_mqtt_broker_t mqtt_broker_configuration = {
+sl_mqtt_broker_v2_t mqtt_broker_configuration = {
   .port                    = MQTT_BROKER_PORT,
   .is_connection_encrypted = ENCRYPT_CONNECTION,
   .connect_timeout         = MQTT_CONNECT_TIMEOUT,
@@ -219,8 +219,8 @@ sl_status_t status;
     //mqtt_client_cleanup();
     return status;
   }
- status = sl_mqtt_client_connect((sl_mqtt_client_t *)xContext,
-                                   (const sl_mqtt_broker_t *)&mqtt_broker_configuration,
+ status = sl_mqtt_client_connect_v2((sl_mqtt_client_t *)xContext,
+                                   (const sl_mqtt_broker_v2_t *)&mqtt_broker_configuration,
                                    (const sl_mqtt_client_last_will_message_t *)&last_will_message,
                                    (const sl_mqtt_client_configuration_t *)&mqtt_client_configuration,
                                    (uint32_t)ulMilliseconds);

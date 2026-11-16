@@ -18,6 +18,8 @@
 #ifndef APP_H
 #define APP_H
 
+#include "sl_status.h"
+
 /***************************************************************************/ /**
  * Initialize application.
  ******************************************************************************/
@@ -27,5 +29,7 @@ void app_init(void);
  * App ticking function.
  ******************************************************************************/
 void app_process_action(void);
+
+sl_status_t clear_and_load_certificates_in_flash(void);
 
 #endif // APP_H

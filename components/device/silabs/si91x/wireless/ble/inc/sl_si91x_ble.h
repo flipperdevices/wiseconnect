@@ -52,4 +52,40 @@ sl_status_t sl_si91x_bt_set_performance_profile(const sl_bt_performance_profile_
  ******************************************************************************/
 sl_status_t sl_si91x_bt_get_performance_profile(sl_bt_performance_profile_t *profile);
 
-sl_status_t sl_si91x_bt_get_performance_profile(sl_bt_performance_profile_t *profile);
+/***************************************************************************/ /**
+ * @brief
+ *   Utility to issue a disconnect request for each tracked BLE connection.
+ * @details
+ *   Application helper that iterates connected remote BLE devices tracked by
+ *   the driver and calls rsi_ble_disconnect() for each one. It is **not**
+ *   invoked automatically from sl_wifi_deinit() / sl_net_deinit(); the
+ *   application owns the full teardown sequence (stop ADV/SCAN, disconnect,
+ *   wait for events, then deinit).
+ *
+ *   For each peer, this API waits only for the disconnect **command response**
+ *   (command ACK). It does **not** wait for disconnect-complete events.
+ *   On a per-peer command failure the API continues remaining peers and
+ *   returns the first rsi_ble_disconnect() status after the loop.
+ *
+ *   The application is responsible for interpreting and mapping returned
+ *   error codes (host RSI_ERROR_* and firmware BLE statuses) as needed.
+ *
+ *   Recommended application teardown sequence before Wi-Fi/NWP deinit:
+ *   -# Stop BLE advertising and scanning (classic and/or AE) if active
+ *   -# Call @ref sl_si91x_ble_disconnect_all
+ *   -# Wait for BLE disconnect event(s), or until rsi_ble_is_device_connected()
+ *      returns false
+ *   -# Call sl_wifi_deinit() / sl_net_deinit() / rsi_ble_disable()
+ * @note
+ *   If this API is invoked as part of the sl_wifi_deinit() sequence, ensure
+ *   that any active BLE advertising and scanning roles are stopped before
+ *   calling this API. After the API call, wait for the BLE disconnect event(s)
+ *   to be received before invoking sl_wifi_deinit(). Additionally, the
+ *   application should not restart advertising or scanning from the BLE
+ *   disconnect event handler during this deinitialization flow.
+ * @return
+ *   SL_STATUS_OK if every disconnect command response succeeds.
+ *   Otherwise returns the first rsi_ble_disconnect() status value; the
+ *   application must map/interpret error codes.
+ ******************************************************************************/
+sl_status_t sl_si91x_ble_disconnect_all(void);

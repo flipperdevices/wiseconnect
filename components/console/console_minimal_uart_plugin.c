@@ -156,6 +156,10 @@ void console_process_uart_data(void)
   console_data_rx_receive = 0;
 }
 
+static void handle_normal_character(char character, uint8_t *last_char_lf);
+static void handle_escape_sequence(char character, uint8_t *escape_sequence);
+static void handle_linefeed_character(char character, uint8_t *last_char_lf);
+
 static void post_uart_rx_handler(char character)
 {
   static uint8_t escape_sequence = 0;
@@ -183,27 +187,11 @@ static void post_uart_rx_handler(char character)
       case CARRIAGE_RETURN_CHARACTER:
         if (last_char_lf != false) {
           last_char_lf = false;
-          break;
         }
         break;
 
       case LINEFEED_CHARACTER:
-        // check if the last character is a linefeed and set last_char_lf as true.
-        if (character == '\n') {
-          last_char_lf = true;
-        }
-        //        user_rx_buffer[current_buffer_index][user_rx_buffer_write_pointer] = 0;
-        memset(&user_rx_buffer[current_buffer_index][user_rx_buffer_write_pointer],
-               0,
-               USER_RX_BUFFER_SIZE - user_rx_buffer_write_pointer);
-        buffer_ready_index           = current_buffer_index;
-        user_rx_buffer_write_pointer = 0;
-        current_buffer_index++;
-
-        if (current_buffer_index >= USER_RX_BUFFER_COUNT) {
-          current_buffer_index = 0;
-        }
-        console_line_ready = 1;
+        handle_linefeed_character(character, &last_char_lf);
         break;
 
       case ESCAPE_CHARACTER:
@@ -212,36 +200,63 @@ static void post_uart_rx_handler(char character)
         break;
 
       default:
-        last_char_lf                                                       = false;
-        user_rx_buffer[current_buffer_index][user_rx_buffer_write_pointer] = character;
-        user_rx_buffer_write_pointer++;
-#ifndef SLI_CONSOLE_SUPPRESS_AUTO_ECHO
-        printf("%c", character);
-#endif
+        handle_normal_character(character, &last_char_lf);
         break;
     }
   } else {
-    if (escape_sequence == 1) {
-      if (character == OPEN_SQUARE_BRACKET_CHARACTER) {
-        escape_sequence = 2;
-      } else {
-        escape_sequence = 0;
-      }
-    } else {
-      if (character == 'A') {
-        // Up arrow pressed
-        current_buffer_index--;
-        if (current_buffer_index >= USER_RX_BUFFER_COUNT) {
-          current_buffer_index = USER_RX_BUFFER_COUNT - 1;
-        }
-
-#ifndef SLI_CONSOLE_SUPPRESS_AUTO_ECHO
-        printf("%s", (const char *)&user_rx_buffer[current_buffer_index][0]);
-#endif
-      }
-      escape_sequence = 0;
-    }
+    handle_escape_sequence(character, &escape_sequence);
   }
+}
+
+static void handle_linefeed_character(char character, uint8_t *last_char_lf)
+{
+  if (character == '\n') {
+    *last_char_lf = true;
+  }
+  memset(&user_rx_buffer[current_buffer_index][user_rx_buffer_write_pointer],
+         0,
+         USER_RX_BUFFER_SIZE - user_rx_buffer_write_pointer);
+  buffer_ready_index           = current_buffer_index;
+  user_rx_buffer_write_pointer = 0;
+  current_buffer_index++;
+
+  if (current_buffer_index >= USER_RX_BUFFER_COUNT) {
+    current_buffer_index = 0;
+  }
+  console_line_ready = 1;
+}
+
+static void handle_normal_character(char character, uint8_t *last_char_lf)
+{
+  *last_char_lf                                                      = false;
+  user_rx_buffer[current_buffer_index][user_rx_buffer_write_pointer] = character;
+  user_rx_buffer_write_pointer++;
+#ifndef SLI_CONSOLE_SUPPRESS_AUTO_ECHO
+  printf("%c", character);
+#endif
+}
+
+static void handle_escape_sequence(char character, uint8_t *escape_sequence)
+{
+  if (*escape_sequence == 1) {
+    if (character == OPEN_SQUARE_BRACKET_CHARACTER) {
+      *escape_sequence = 2;
+    } else {
+      *escape_sequence = 0;
+    }
+    return;
+  }
+
+  if (character == 'A') {
+    current_buffer_index--;
+    if (current_buffer_index >= USER_RX_BUFFER_COUNT) {
+      current_buffer_index = USER_RX_BUFFER_COUNT - 1;
+    }
+#ifndef SLI_CONSOLE_SUPPRESS_AUTO_ECHO
+    printf("%s", (const char *)&user_rx_buffer[current_buffer_index][0]);
+#endif
+  }
+  *escape_sequence = 0;
 }
 
 extern const arg_list_t console_argument_types[];
@@ -253,7 +268,7 @@ void console_print_command_args(const console_descriptive_command_t *command)
     if (command->argument_list[a] & CONSOLE_ARG_OPTIONAL) {
       char option_char[2] = { (char)command->argument_list[a] & CONSOLE_ARG_OPTIONAL_CHARACTER_MASK, 0 };
       printf("[-");
-      printf(option_char);
+      printf("%s", option_char);
       printf(" ");
       ++argument_help_offset;
       is_optional = true;
@@ -262,7 +277,7 @@ void console_print_command_args(const console_descriptive_command_t *command)
       printf("{");
       uint8_t enum_index = command->argument_list[a] & CONSOLE_ARG_ENUM_INDEX_MASK;
       for (int b = 0; console_argument_types[enum_index][b] != NULL;) {
-        printf(console_argument_types[enum_index][b]);
+        printf("%s", console_argument_types[enum_index][b]);
         if (console_argument_types[enum_index][++b]) {
           printf("|");
         }
@@ -271,9 +286,9 @@ void console_print_command_args(const console_descriptive_command_t *command)
     } else {
       printf("<");
       if (command->argument_help && command->argument_help[a - argument_help_offset]) {
-        printf(command->argument_help[a - argument_help_offset]);
+        printf("%s", command->argument_help[a - argument_help_offset]);
       } else {
-        printf(console_argument_type_strings[command->argument_list[a] & CONSOLE_ARG_ENUM_INDEX_MASK]);
+        printf("%s", console_argument_type_strings[command->argument_list[a] & CONSOLE_ARG_ENUM_INDEX_MASK]);
       }
       printf(">");
     }
@@ -320,10 +335,10 @@ static void print_command_database(const console_database_t *database, const cha
 
     printf("\r\n");
     if (prefix != NULL) {
-      printf(prefix);
+      printf("%s", prefix);
       printf(".");
     }
-    printf(database->entries[a].key);
+    printf("%s", database->entries[a].key);
 
     // Check if this is a sub-command
     if (command->argument_list[0] == CONSOLE_ARG_SUB_COMMAND) {
@@ -331,22 +346,22 @@ static void print_command_database(const console_database_t *database, const cha
       printf(".");
       if (command->description) {
         printf(" : ");
-        printf(command->description);
+        printf("%s", command->description);
       }
       printf("\r\n");
       for (uint32_t b = 0; b < temp->length; b++) {
         printf("  - ");
-        printf(temp->entries[b].key);
+        printf("%s", temp->entries[b].key);
         printf(" : ");
         const console_descriptive_command_t *sub_command = temp->entries[b].value;
-        printf(sub_command->description);
+        printf("%s", sub_command->description);
         printf("\r\n");
       }
     } else {
       printf("  ");
       console_print_command_args((const console_descriptive_command_t *)database->entries[a].value);
       printf("\r\n   ");
-      printf(((const console_descriptive_command_t *)database->entries[a].value)->description);
+      printf("%s", ((const console_descriptive_command_t *)database->entries[a].value)->description);
     }
     printf("\r\n");
   }

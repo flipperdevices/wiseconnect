@@ -31,6 +31,7 @@
 
 #include "rsi_ccp_user_config.h"
 #include "rsi_ccp_common.h"
+#include "sl_code_classification.h"
 #ifndef ROMDRIVER_PRESENT
 #include "rsi_rom_egpio.h"
 /** @addtogroup SOC11
@@ -49,6 +50,7 @@
  *                \n '1' : Input
  * @return       None
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_RSILIB_EGPIO, SL_CODE_CLASS_TIME_CRITICAL)
 void egpio_set_dir(EGPIO_Type *pEGPIO, uint8_t port, uint8_t pin, boolean_t dir)
 {
   pEGPIO->PIN_CONFIG[(port * 16) + pin].GPIO_CONFIG_REG_b.DIRECTION = (unsigned int)(dir & 0x01);
@@ -67,6 +69,7 @@ void egpio_set_dir(EGPIO_Type *pEGPIO, uint8_t port, uint8_t pin, boolean_t dir)
  *                \n '1' : Logic on Pin
  * @return       None
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_RSILIB_EGPIO, SL_CODE_CLASS_TIME_CRITICAL)
 void egpio_set_pin(EGPIO_Type *pEGPIO, uint8_t port, uint8_t pin, uint8_t val)
 {
   pEGPIO->PIN_CONFIG[(port * 16) + pin].BIT_LOAD_REG = val;
@@ -81,6 +84,7 @@ void egpio_set_pin(EGPIO_Type *pEGPIO, uint8_t port, uint8_t pin, uint8_t val)
  * @param[in]    pin     : GPIO pin number
  * @return       returns Pin status
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_RSILIB_EGPIO, SL_CODE_CLASS_TIME_CRITICAL)
 boolean_t egpio_get_pin(const EGPIO_Type *pEGPIO, uint8_t port, uint8_t pin)
 {
   return ((boolean_t)(pEGPIO->PIN_CONFIG[(port * 16) + pin].BIT_LOAD_REG));
@@ -96,6 +100,7 @@ boolean_t egpio_get_pin(const EGPIO_Type *pEGPIO, uint8_t port, uint8_t pin)
  * @param[in]    pin     : GPIO pin number
  * @return       returns the GPIO direction value
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_RSILIB_EGPIO, SL_CODE_CLASS_TIME_CRITICAL)
 boolean_t egpio_get_dir(const EGPIO_Type *pEGPIO, uint8_t port, uint8_t pin)
 {
   return pEGPIO->PIN_CONFIG[(port * 16) + pin].GPIO_CONFIG_REG_b.DIRECTION;
@@ -111,6 +116,7 @@ boolean_t egpio_get_dir(const EGPIO_Type *pEGPIO, uint8_t port, uint8_t pin)
  * @param[in]    pin     : GPIO pin number
  * @return       None
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_RSILIB_EGPIO, SL_CODE_CLASS_TIME_CRITICAL)
 void egpio_pin_int_sel(EGPIO_Type *pEGPIO, uint8_t intCh, uint8_t port, uint8_t pin)
 {
   pEGPIO->INTR[intCh].GPIO_INTR_CTRL_b.PIN_NUMBER  = (unsigned int)(pin & 0x0F);
@@ -127,6 +133,7 @@ void egpio_pin_int_sel(EGPIO_Type *pEGPIO, uint8_t intCh, uint8_t port, uint8_t 
  * @param[in]    intCh   : GPIO pin interrupt channel number (0 to 7)
  * @return       None
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_RSILIB_EGPIO, SL_CODE_CLASS_TIME_CRITICAL)
 void egpio_set_int_fall_edge_enable(EGPIO_Type *pEGPIO, uint8_t intCh)
 {
   pEGPIO->INTR[intCh].GPIO_INTR_CTRL_b.FALL_EDGE_ENABLE = 1U;
@@ -142,6 +149,7 @@ void egpio_set_int_fall_edge_enable(EGPIO_Type *pEGPIO, uint8_t intCh)
  * @param[in]    intCh   : GPIO pin interrupt channel number (0 to 7)
  * @return       None
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_RSILIB_EGPIO, SL_CODE_CLASS_TIME_CRITICAL)
 void egpio_set_int_fall_edge_disable(EGPIO_Type *pEGPIO, uint8_t intCh)
 {
   pEGPIO->INTR[intCh].GPIO_INTR_CTRL_b.FALL_EDGE_ENABLE = 0U;
@@ -157,6 +165,7 @@ void egpio_set_int_fall_edge_disable(EGPIO_Type *pEGPIO, uint8_t intCh)
  * @param[in]    intCh   : GPIO pin interrupt channel number (0 to 7)
  * @return       None
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_RSILIB_EGPIO, SL_CODE_CLASS_TIME_CRITICAL)
 void egpio_set_int_rise_edge_enable(EGPIO_Type *pEGPIO, uint8_t intCh)
 {
   pEGPIO->INTR[intCh].GPIO_INTR_CTRL_b.RISE_EDGE_ENABLE = 1U;
@@ -172,6 +181,7 @@ void egpio_set_int_rise_edge_enable(EGPIO_Type *pEGPIO, uint8_t intCh)
  * @param[in]    intCh   : GPIO pin interrupt channel number (0 to 7)
  * @return       None
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_RSILIB_EGPIO, SL_CODE_CLASS_TIME_CRITICAL)
 void egpio_set_int_rise_edge_disable(EGPIO_Type *pEGPIO, uint8_t intCh)
 {
   pEGPIO->INTR[intCh].GPIO_INTR_CTRL_b.RISE_EDGE_ENABLE = 0U;
@@ -187,6 +197,7 @@ void egpio_set_int_rise_edge_disable(EGPIO_Type *pEGPIO, uint8_t intCh)
  * @param[in]    intCh   : GPIO pin interrupt channel number (0 to 7)
  * @return       None
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_RSILIB_EGPIO, SL_CODE_CLASS_TIME_CRITICAL)
 void egpio_set_int_low_level_enable(EGPIO_Type *pEGPIO, uint8_t intCh)
 {
   pEGPIO->INTR[intCh].GPIO_INTR_CTRL_b.LEVEL_LOW_ENABLE = 1U;
@@ -202,6 +213,7 @@ void egpio_set_int_low_level_enable(EGPIO_Type *pEGPIO, uint8_t intCh)
  * @param[in]    intCh   : GPIO pin interrupt channel number (0 to 7)
  * @return       None
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_RSILIB_EGPIO, SL_CODE_CLASS_TIME_CRITICAL)
 void egpio_int_mask(EGPIO_Type *pEGPIO, uint8_t intCh)
 {
   pEGPIO->INTR[intCh].GPIO_INTR_CTRL_b.MASK = 1U;
@@ -216,6 +228,7 @@ void egpio_int_mask(EGPIO_Type *pEGPIO, uint8_t intCh)
  * @param[in]    intCh   : GPIO pin interrupt channel number (0 to 7)
  * @return       None
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_RSILIB_EGPIO, SL_CODE_CLASS_TIME_CRITICAL)
 void egpio_int_un_mask(EGPIO_Type *pEGPIO, uint8_t intCh)
 {
   pEGPIO->INTR[intCh].GPIO_INTR_CTRL_b.MASK = 0U;
@@ -230,6 +243,7 @@ void egpio_int_un_mask(EGPIO_Type *pEGPIO, uint8_t intCh)
  * @param[in]    intCh   : GPIO pin interrupt channel number (0 to 7)
  * @return       None
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_RSILIB_EGPIO, SL_CODE_CLASS_TIME_CRITICAL)
 void egpio_set_int_low_level_disable(EGPIO_Type *pEGPIO, uint8_t intCh)
 {
   pEGPIO->INTR[intCh].GPIO_INTR_CTRL_b.LEVEL_LOW_ENABLE = 0U;
@@ -244,6 +258,7 @@ void egpio_set_int_low_level_disable(EGPIO_Type *pEGPIO, uint8_t intCh)
  * @param[in]    intCh   : GPIO pin interrupt channel number (0 to 7)
  * @return       None
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_RSILIB_EGPIO, SL_CODE_CLASS_TIME_CRITICAL)
 void egpio_set_int_high_level_enable(EGPIO_Type *pEGPIO, uint8_t intCh)
 {
   pEGPIO->INTR[intCh].GPIO_INTR_CTRL_b.LEVEL_HIGH_ENABLE = 1U;
@@ -258,6 +273,7 @@ void egpio_set_int_high_level_enable(EGPIO_Type *pEGPIO, uint8_t intCh)
  * @param[in]    intCh   : GPIO pin interrupt channel number (0 to 7)
  * @return       None
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_RSILIB_EGPIO, SL_CODE_CLASS_TIME_CRITICAL)
 void egpio_set_int_high_level_disable(EGPIO_Type *pEGPIO, uint8_t intCh)
 {
   pEGPIO->INTR[intCh].GPIO_INTR_CTRL_b.LEVEL_HIGH_ENABLE = 0U;
@@ -271,6 +287,7 @@ void egpio_set_int_high_level_disable(EGPIO_Type *pEGPIO, uint8_t intCh)
  * @param[in]    intCh   : GPIO pin interrupt channel number (0 to 7)
  * @return       returns the interrupt status register
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_RSILIB_EGPIO, SL_CODE_CLASS_TIME_CRITICAL)
 uint8_t egpio_get_int_stat(const EGPIO_Type *pEGPIO, uint8_t intCh)
 {
   return (uint8_t)(pEGPIO->INTR[intCh].GPIO_INTR_STATUS);
@@ -288,6 +305,7 @@ uint8_t egpio_get_int_stat(const EGPIO_Type *pEGPIO, uint8_t intCh)
 													\n 0- \ref INTERRUPT_STATUS_CLR
  * @return       None
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_RSILIB_EGPIO, SL_CODE_CLASS_TIME_CRITICAL)
 void egpio_int_clr(EGPIO_Type *pEGPIO, uint8_t intCh, uint8_t flags)
 {
   pEGPIO->INTR[intCh].GPIO_INTR_STATUS = flags;
@@ -321,6 +339,7 @@ void egpio_int_clr(EGPIO_Type *pEGPIO, uint8_t intCh, uint8_t flags)
  *               - \ref EGPIO_PIN_MUX_MODE15  : Select pin mode 15
  * @return       None
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_RSILIB_EGPIO, SL_CODE_CLASS_TIME_CRITICAL)
 void egpio_set_pin_mux(EGPIO_Type *pEGPIO, uint8_t port, uint8_t pin, uint8_t mux)
 {
   pEGPIO->PIN_CONFIG[(port * 16) + pin].GPIO_CONFIG_REG_b.MODE = (unsigned int)(mux & 0x0F);
@@ -345,6 +364,7 @@ void egpio_set_pin_mux(EGPIO_Type *pEGPIO, uint8_t port, uint8_t pin, uint8_t mu
  *               - \ref EGPIO_PIN_MUX_MODE7   : Select pin mode 7
  * @return       None
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_RSILIB_EGPIO, SL_CODE_CLASS_TIME_CRITICAL)
 void egpio_ulp_soc_gpio_mode(ULPCLK_Type *pULPCLK, uint8_t gpio, uint8_t mode)
 {
 #if defined(SLI_SI917)
@@ -363,6 +383,7 @@ void egpio_ulp_soc_gpio_mode(ULPCLK_Type *pULPCLK, uint8_t gpio, uint8_t mode)
  * @param[in]    pin     : GPIO pin number
  * @return       None
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_RSILIB_EGPIO, SL_CODE_CLASS_TIME_CRITICAL)
 void egpio_set_port_mask(EGPIO_Type *pEGPIO, uint8_t port, uint8_t pin)
 {
   pEGPIO->PIN_CONFIG[(port * 16) + pin].GPIO_CONFIG_REG_b.PORTMASK = 1U;
@@ -378,6 +399,7 @@ void egpio_set_port_mask(EGPIO_Type *pEGPIO, uint8_t port, uint8_t pin)
  * @param[in]    pin     : GPIO pin number
  * @return       None
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_RSILIB_EGPIO, SL_CODE_CLASS_TIME_CRITICAL)
 void egpio_set_port_un_mask(EGPIO_Type *pEGPIO, uint8_t port, uint8_t pin)
 {
   pEGPIO->PIN_CONFIG[(port * 16) + pin].GPIO_CONFIG_REG_b.PORTMASK = 0U;
@@ -393,6 +415,7 @@ void egpio_set_port_un_mask(EGPIO_Type *pEGPIO, uint8_t port, uint8_t pin)
  * @param[in]    val     : Port value to be set
  * @return       None
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_RSILIB_EGPIO, SL_CODE_CLASS_TIME_CRITICAL)
 void egpio_port_masked_load(EGPIO_Type *pEGPIO, uint8_t port, uint16_t val)
 {
   pEGPIO->PORT_CONFIG[port].PORT_MASKED_LOAD_REG_b.PORT_MASKED_LOAD = val;
@@ -408,6 +431,7 @@ void egpio_port_masked_load(EGPIO_Type *pEGPIO, uint8_t port, uint16_t val)
  * @param[in]    val     : Port value to be set
  * @return       None
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_RSILIB_EGPIO, SL_CODE_CLASS_TIME_CRITICAL)
 void egpio_set_port(EGPIO_Type *pEGPIO, uint8_t port, uint16_t val)
 {
   pEGPIO->PORT_CONFIG[port].PORT_SET_REG = val;
@@ -423,6 +447,7 @@ void egpio_set_port(EGPIO_Type *pEGPIO, uint8_t port, uint16_t val)
  * @param[in]    val     : Port value to be set
  * @return       None
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_RSILIB_EGPIO, SL_CODE_CLASS_TIME_CRITICAL)
 void egpio_port_load(EGPIO_Type *pEGPIO, uint8_t port, uint16_t val)
 {
   pEGPIO->PORT_CONFIG[port].PORT_LOAD_REG = val;
@@ -438,6 +463,7 @@ void egpio_port_load(EGPIO_Type *pEGPIO, uint8_t port, uint16_t val)
  * @param[in]    val     : Port value to be set
  * @return       None
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_RSILIB_EGPIO, SL_CODE_CLASS_TIME_CRITICAL)
 void egpio_word_load(EGPIO_Type *pEGPIO, uint8_t pin, uint16_t val)
 {
   pEGPIO->PIN_CONFIG[pin].WORD_LOAD_REG_b.WORD_LOAD = val;
@@ -453,6 +479,7 @@ void egpio_word_load(EGPIO_Type *pEGPIO, uint8_t pin, uint16_t val)
  * @param[in]    val     : Port value to be clear
  * @return       None
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_RSILIB_EGPIO, SL_CODE_CLASS_TIME_CRITICAL)
 void egpio_clr_port(EGPIO_Type *pEGPIO, uint8_t port, uint16_t val)
 {
   pEGPIO->PORT_CONFIG[port].PORT_CLEAR_REG = val;
@@ -468,6 +495,7 @@ void egpio_clr_port(EGPIO_Type *pEGPIO, uint8_t port, uint16_t val)
  * @param[in]    val     : Port value to be toggle
  * @return       None
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_RSILIB_EGPIO, SL_CODE_CLASS_TIME_CRITICAL)
 void egpio_toggle_port(EGPIO_Type *pEGPIO, uint8_t port, uint16_t val)
 {
   pEGPIO->PORT_CONFIG[port].PORT_TOGGLE_REG = val;
@@ -482,6 +510,7 @@ void egpio_toggle_port(EGPIO_Type *pEGPIO, uint8_t port, uint16_t val)
  * @param[in]    port    : Port number to be read
  * @return       port value
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_RSILIB_EGPIO, SL_CODE_CLASS_TIME_CRITICAL)
 uint16_t egpio_get_port(const EGPIO_Type *pEGPIO, uint8_t port)
 {
   return (pEGPIO->PORT_CONFIG[port].PORT_READ_REG & 0XFFFF);
@@ -497,6 +526,7 @@ uint16_t egpio_get_port(const EGPIO_Type *pEGPIO, uint8_t port)
  * @param[in]    pin     : GPIO pin number
  * @return       None
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_RSILIB_EGPIO, SL_CODE_CLASS_TIME_CRITICAL)
 void egpio_group_int_one_enable(EGPIO_Type *pEGPIO, uint8_t port, uint8_t pin)
 {
   pEGPIO->PIN_CONFIG[(port * 16) + pin].GPIO_CONFIG_REG_b.GROUP_INTERRUPT1_ENABLE = 1U;
@@ -511,6 +541,7 @@ void egpio_group_int_one_enable(EGPIO_Type *pEGPIO, uint8_t port, uint8_t pin)
  * @param[in]    pin     : GPIO pin number
  * @return       None
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_RSILIB_EGPIO, SL_CODE_CLASS_TIME_CRITICAL)
 void egpio_group_int_one_disable(EGPIO_Type *pEGPIO, uint8_t port, uint8_t pin)
 {
   pEGPIO->PIN_CONFIG[(port * 16) + pin].GPIO_CONFIG_REG_b.GROUP_INTERRUPT1_ENABLE = 0U;
@@ -526,6 +557,7 @@ void egpio_group_int_one_disable(EGPIO_Type *pEGPIO, uint8_t port, uint8_t pin)
  * @param[in]    pin     : GPIO pin number
  * @return       None
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_RSILIB_EGPIO, SL_CODE_CLASS_TIME_CRITICAL)
 void egpio_group_int_two_enable(EGPIO_Type *pEGPIO, uint8_t port, uint8_t pin)
 {
   pEGPIO->PIN_CONFIG[(port * 16) + pin].GPIO_CONFIG_REG_b.GROUP_INTERRUPT2_ENABLE = 1U;
@@ -539,6 +571,7 @@ void egpio_group_int_two_enable(EGPIO_Type *pEGPIO, uint8_t port, uint8_t pin)
  * @param[in]    grpInt  : Group interrupt number
  * @return       None
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_RSILIB_EGPIO, SL_CODE_CLASS_TIME_CRITICAL)
 void egpio_group_int_mask(EGPIO_Type *pEGPIO, uint8_t grpInt)
 {
   pEGPIO->GPIO_GRP_INTR[grpInt].GPIO_GRP_INTR_CTRL_REG_b.MASK = 1u;
@@ -552,6 +585,7 @@ void egpio_group_int_mask(EGPIO_Type *pEGPIO, uint8_t grpInt)
  * @param[in]    grpInt  : Group interrupt number
  * @return       None
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_RSILIB_EGPIO, SL_CODE_CLASS_TIME_CRITICAL)
 void egpio_group_int_un_Mask(EGPIO_Type *pEGPIO, uint8_t grpInt)
 {
   pEGPIO->GPIO_GRP_INTR[grpInt].GPIO_GRP_INTR_CTRL_REG_b.MASK = 0u;
@@ -565,6 +599,7 @@ void egpio_group_int_un_Mask(EGPIO_Type *pEGPIO, uint8_t grpInt)
  * @param[in]    grpInt  : Group interrupt number
  * @return       None
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_RSILIB_EGPIO, SL_CODE_CLASS_TIME_CRITICAL)
 void egpio_group_int_enable(EGPIO_Type *pEGPIO, uint8_t grpInt)
 {
   pEGPIO->GPIO_GRP_INTR[grpInt].GPIO_GRP_INTR_CTRL_REG_b.ENABLE_INTERRUPT = 1u;
@@ -578,6 +613,7 @@ void egpio_group_int_enable(EGPIO_Type *pEGPIO, uint8_t grpInt)
  * @param[in]    grpInt  : Group interrupt number
  * @return       None
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_RSILIB_EGPIO, SL_CODE_CLASS_TIME_CRITICAL)
 void egpio_group_int_disable(EGPIO_Type *pEGPIO, uint8_t grpInt)
 {
   pEGPIO->GPIO_GRP_INTR[grpInt].GPIO_GRP_INTR_CTRL_REG_b.ENABLE_INTERRUPT = 0u;
@@ -591,6 +627,7 @@ void egpio_group_int_disable(EGPIO_Type *pEGPIO, uint8_t grpInt)
  * @param[in]    grpInt   : Group interrupt number
  * @return       None
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_RSILIB_EGPIO, SL_CODE_CLASS_TIME_CRITICAL)
 void egpio_group_int_level(EGPIO_Type *pEGPIO, uint8_t grpInt)
 {
   pEGPIO->GPIO_GRP_INTR[grpInt].GPIO_GRP_INTR_CTRL_REG_b.LEVEL_EDGE = 0u;
@@ -604,6 +641,7 @@ void egpio_group_int_level(EGPIO_Type *pEGPIO, uint8_t grpInt)
  * @param[in]    grpInt  : Group interrupt number
  * @return       None
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_RSILIB_EGPIO, SL_CODE_CLASS_TIME_CRITICAL)
 void egpio_group_int_edge(EGPIO_Type *pEGPIO, uint8_t grpInt)
 {
   pEGPIO->GPIO_GRP_INTR[grpInt].GPIO_GRP_INTR_CTRL_REG_b.LEVEL_EDGE = 1u;
@@ -617,6 +655,7 @@ void egpio_group_int_edge(EGPIO_Type *pEGPIO, uint8_t grpInt)
  * @param[in]    grpInt  : Group interrupt number
  * @return       None
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_RSILIB_EGPIO, SL_CODE_CLASS_TIME_CRITICAL)
 void egpio_group_int_and(EGPIO_Type *pEGPIO, uint8_t grpInt)
 {
   pEGPIO->GPIO_GRP_INTR[grpInt].GPIO_GRP_INTR_CTRL_REG_b.AND_OR = 0u;
@@ -630,6 +669,7 @@ void egpio_group_int_and(EGPIO_Type *pEGPIO, uint8_t grpInt)
  * @param[in]    grpInt  : Group interrupt number
  * @return       None
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_RSILIB_EGPIO, SL_CODE_CLASS_TIME_CRITICAL)
 void egpio_group_int_or(EGPIO_Type *pEGPIO, uint8_t grpInt)
 {
   pEGPIO->GPIO_GRP_INTR[grpInt].GPIO_GRP_INTR_CTRL_REG_b.AND_OR = 1u;
@@ -643,6 +683,7 @@ void egpio_group_int_or(EGPIO_Type *pEGPIO, uint8_t grpInt)
  * @param[in]    grpInt   : Group interrupt number
  * @return       returns the group interrupt status register
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_RSILIB_EGPIO, SL_CODE_CLASS_TIME_CRITICAL)
 uint32_t egpio_group_int_stat(const EGPIO_Type *pEGPIO, uint8_t grpInt)
 {
   return pEGPIO->GPIO_GRP_INTR[grpInt].GPIO_GRP_INTR_STS;
@@ -656,6 +697,7 @@ uint32_t egpio_group_int_stat(const EGPIO_Type *pEGPIO, uint8_t grpInt)
  * @param[in]    grpInt  : Group interrupt number
  * @return       None
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_RSILIB_EGPIO, SL_CODE_CLASS_TIME_CRITICAL)
 void egpio_group_int_wkeup_Enable(EGPIO_Type *pEGPIO, uint8_t grpInt)
 {
   pEGPIO->GPIO_GRP_INTR[grpInt].GPIO_GRP_INTR_CTRL_REG_b.ENABLE_WAKEUP = 1;
@@ -669,6 +711,7 @@ void egpio_group_int_wkeup_Enable(EGPIO_Type *pEGPIO, uint8_t grpInt)
  * @param[in]    grpInt  : Group interrupt number
  * @return       None
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_RSILIB_EGPIO, SL_CODE_CLASS_TIME_CRITICAL)
 void egpio_group_int_wkeup_disable(EGPIO_Type *pEGPIO, uint8_t grpInt)
 {
   pEGPIO->GPIO_GRP_INTR[grpInt].GPIO_GRP_INTR_CTRL_REG_b.ENABLE_WAKEUP = 0;
@@ -683,6 +726,7 @@ void egpio_group_int_wkeup_disable(EGPIO_Type *pEGPIO, uint8_t grpInt)
  * @param[in]    flags : clear flags
  * @return       None
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_RSILIB_EGPIO, SL_CODE_CLASS_TIME_CRITICAL)
 void egpio_group_int_clr(EGPIO_Type *pEGPIO, uint8_t grpInt, uint8_t u8ClrFlags)
 {
   pEGPIO->GPIO_GRP_INTR[grpInt].GPIO_GRP_INTR_STS = u8ClrFlags;
@@ -697,6 +741,7 @@ void egpio_group_int_clr(EGPIO_Type *pEGPIO, uint8_t grpInt, uint8_t u8ClrFlags)
  * @param[in]    pin     : PIN number
  * @return       None
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_RSILIB_EGPIO, SL_CODE_CLASS_TIME_CRITICAL)
 void egpio_group_int_two_disable(EGPIO_Type *pEGPIO, uint8_t port, uint8_t pin)
 {
   pEGPIO->PIN_CONFIG[(port * 16) + pin].GPIO_CONFIG_REG_b.GROUP_INTERRUPT2_ENABLE = 0U;
@@ -715,6 +760,7 @@ void egpio_group_int_two_disable(EGPIO_Type *pEGPIO, uint8_t port, uint8_t pin)
  *               \n '1'  : group interrupt gets generated when GPIO input pin status is '1'
  * @return       None
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_RSILIB_EGPIO, SL_CODE_CLASS_TIME_CRITICAL)
 void egpio_set_group_int_one_pol(EGPIO_Type *pEGPIO, uint8_t port, uint8_t pin, uint8_t pol)
 {
   pEGPIO->PIN_CONFIG[(port * 16) + pin].GPIO_CONFIG_REG_b.GROUP_INTERRUPT1_POLARITY = (unsigned int)(pol & 0x01);
@@ -733,6 +779,7 @@ void egpio_set_group_int_one_pol(EGPIO_Type *pEGPIO, uint8_t port, uint8_t pin, 
  *               \n '1'  : group interrupt gets generated when GPIO input pin status is '1'.
  * @return       None
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_RSILIB_EGPIO, SL_CODE_CLASS_TIME_CRITICAL)
 void egpio_set_group_int_two_pol(EGPIO_Type *pEGPIO, uint8_t port, uint8_t pin, uint8_t pol)
 {
   pEGPIO->PIN_CONFIG[(port * 16) + pin].GPIO_CONFIG_REG_b.GROUP_INTERRUPT2_POLARITY = (unsigned int)(pol & 0x01);
@@ -745,6 +792,7 @@ void egpio_set_group_int_two_pol(EGPIO_Type *pEGPIO, uint8_t port, uint8_t pin, 
  * @param[in]    u8GpioNum  :  PAD number to be use
  * @return       None
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_RSILIB_EGPIO, SL_CODE_CLASS_TIME_CRITICAL)
 void egpio_host_pads_gpio_mode_enable(uint8_t u8GpioNum)
 {
   if (u8GpioNum == 25) {
@@ -769,6 +817,7 @@ void egpio_host_pads_gpio_mode_enable(uint8_t u8GpioNum)
  * @param[in]    u8GpioNum  :  PAD number to be use
  * @return       None
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_RSILIB_EGPIO, SL_CODE_CLASS_TIME_CRITICAL)
 void egpio_host_pads_gpio_mode_disable(uint8_t u8GpioNum)
 {
   if (u8GpioNum == 25) {
@@ -793,6 +842,7 @@ void egpio_host_pads_gpio_mode_disable(uint8_t u8GpioNum)
  * @param[in]    padNum  :  PAD number to be use
  * @return       None
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_RSILIB_EGPIO, SL_CODE_CLASS_TIME_CRITICAL)
 void egpio_pad_selection_enable(uint8_t padNum)
 {
   if (padNum < 22) {
@@ -816,6 +866,7 @@ void egpio_pad_selection_enable(uint8_t padNum)
  * @param[in]    padNum  :  PAD number to be use
  * @return       None
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_RSILIB_EGPIO, SL_CODE_CLASS_TIME_CRITICAL)
 void egpio_pad_selection_disable(uint8_t padNum)
 {
   if (padNum < 22) {
@@ -839,6 +890,7 @@ void egpio_pad_selection_disable(uint8_t padNum)
  * @param[in]    u8GpioNum  :  GPIO num to be use
  * @return       None
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_RSILIB_EGPIO, SL_CODE_CLASS_TIME_CRITICAL)
 void egpio_pad_receiver_enable(uint8_t u8GpioNum)
 {
   // REN enable bit(this should be enable)
@@ -852,6 +904,7 @@ void egpio_pad_receiver_enable(uint8_t u8GpioNum)
  * @param[in]    u8GpioNum  :  GPIO num to be use
  * @return       None
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_RSILIB_EGPIO, SL_CODE_CLASS_TIME_CRITICAL)
 void egpio_pad_receiver_disable(uint8_t u8GpioNum)
 {
   // REN enable bit(this should be enable)
@@ -864,6 +917,7 @@ void egpio_pad_receiver_disable(uint8_t u8GpioNum)
  * @brief        This API is used to use the SDIO pins(25 to 30) in M4 or NWP (0 for M4SS and 1 for TASS)
  * @return       None
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_RSILIB_EGPIO, SL_CODE_CLASS_TIME_CRITICAL)
 void egpio_pad_sdio_connected()
 {
   // sdio connected to tass  (0 for M4SS and 1 for TASS) for SDIO pads(25 to 30)
@@ -883,6 +937,7 @@ void egpio_pad_sdio_connected()
  *	             \n         -   3 for  \ref Repeater (P1=1,P2=1)
  * @return       None
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_RSILIB_EGPIO, SL_CODE_CLASS_TIME_CRITICAL)
 void egpio_pad_driver_disable_state(uint8_t u8GpioNum, en_driver_state_t endstate)
 {
   uint32_t reg = 0;
@@ -905,6 +960,7 @@ void egpio_pad_driver_disable_state(uint8_t u8GpioNum, en_driver_state_t endstat
  *               \n          -  3 for \ref twelve_milli_amps(E1=1,E2=1)
  * @return       None
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_RSILIB_EGPIO, SL_CODE_CLASS_TIME_CRITICAL)
 void egpio_pad_driver_strength_select(uint8_t u8GpioNum, en_driver_strength_select_t strength)
 {
   uint32_t reg = 0;
@@ -925,6 +981,7 @@ void egpio_pad_driver_strength_select(uint8_t u8GpioNum, en_driver_strength_sele
  *               \n AD is pulled to weak 0. When POS is set to 0, PAD remains in a high-Z state. : Default 0
  * @return       None
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_RSILIB_EGPIO, SL_CODE_CLASS_TIME_CRITICAL)
 void egpio_pad_power_on_start_enable(uint8_t u8GpioNum, uint8_t val)
 {
   uint32_t reg = 0;
@@ -943,6 +1000,7 @@ void egpio_pad_power_on_start_enable(uint8_t u8GpioNum, uint8_t val)
  * @param[in]    val        : SMT=0 : No hysteresis; Default value for reset is 1'b1 and others is 1'b0
  * @return       None
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_RSILIB_EGPIO, SL_CODE_CLASS_TIME_CRITICAL)
 void egpio_pad_active_high_schmitt_trigger(uint8_t u8GpioNum, uint8_t val)
 {
   uint32_t reg = 0;
@@ -962,6 +1020,7 @@ void egpio_pad_active_high_schmitt_trigger(uint8_t u8GpioNum, uint8_t val)
                  \n         -  SR = 1 : Fast  ,Default 1
  * @return       None
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_RSILIB_EGPIO, SL_CODE_CLASS_TIME_CRITICAL)
 void egpio_pad_slew_rate_controll(uint8_t u8GpioNum, uint8_t val)
 {
   uint32_t reg = 0;
@@ -978,6 +1037,7 @@ void egpio_pad_slew_rate_controll(uint8_t u8GpioNum, uint8_t val)
  * @param[in]    u8GpioNum   : GPIO number to be used
  * @return       None
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_RSILIB_EGPIO, SL_CODE_CLASS_TIME_CRITICAL)
 void egpio_ulp_pad_receiver_enable(uint8_t u8GpioNum)
 {
   ULP_PAD_CONFIG_REG_2 |= (0x1 << u8GpioNum);
@@ -990,6 +1050,7 @@ void egpio_ulp_pad_receiver_enable(uint8_t u8GpioNum)
  * @param[in]    u8GpioNum   : GPIO number to be used
  * @return       None
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_RSILIB_EGPIO, SL_CODE_CLASS_TIME_CRITICAL)
 void egpio_ulp_pad_receiver_disable(uint8_t u8GpioNum)
 {
   ULP_PAD_CONFIG_REG_2 &= (uint32_t)(~(0x1 << u8GpioNum));
@@ -1008,6 +1069,7 @@ void egpio_ulp_pad_receiver_disable(uint8_t u8GpioNum)
  *	             \n           - 3 for  \ref Repeater (P1=1,P2=1)
  * @return       None
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_RSILIB_EGPIO, SL_CODE_CLASS_TIME_CRITICAL)
 void egpio_ulp_pad_driver_disable_state(uint8_t u8GpioNum, en_ulp_driver_disable_state_t disablestate)
 {
   uint32_t reg = 0;
@@ -1066,6 +1128,7 @@ void egpio_ulp_pad_driver_disable_state(uint8_t u8GpioNum, en_ulp_driver_disable
  *               \n          -  3 for \ref twelve_milli_amps(E1=1,E2=1)
  * @return       None
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_RSILIB_EGPIO, SL_CODE_CLASS_TIME_CRITICAL)
 void egpio_ulp_pad_driver_strength_select(uint8_t u8GpioNum, en_ulp_driver_strength_select_t strength)
 {
   uint32_t reg = 0;
@@ -1122,6 +1185,7 @@ void egpio_ulp_pad_driver_strength_select(uint8_t u8GpioNum, en_ulp_driver_stren
  *               PAD is pulled to weak 0. When POS is set to 0, PAD remains in a high Z state. : Default 0
  * @return       None
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_RSILIB_EGPIO, SL_CODE_CLASS_TIME_CRITICAL)
 void egpio_ulp_pad_power_on_start_enable(uint8_t u8GpioNum, uint8_t val)
 {
   uint32_t reg = 0;
@@ -1175,6 +1239,7 @@ void egpio_ulp_pad_power_on_start_enable(uint8_t u8GpioNum, uint8_t val)
  * @param[in]    val        :  SMT=0 : No hysteresis; Default value for reset is 1'b1 and others is 1'b0
  * @return       None
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_RSILIB_EGPIO, SL_CODE_CLASS_TIME_CRITICAL)
 void egpio_ulp_pad_active_high_schmitt_trigger(uint8_t u8GpioNum, uint8_t val)
 {
   uint32_t reg = 0;
@@ -1229,6 +1294,7 @@ void egpio_ulp_pad_active_high_schmitt_trigger(uint8_t u8GpioNum, uint8_t val)
  *               \n         -   SR = 0 : Slow (half frequency); SR = 1 for Fast , Default 1
  * @return       None
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_RSILIB_EGPIO, SL_CODE_CLASS_TIME_CRITICAL)
 void egpio_ulp_pad_slew_rate_controll(uint8_t u8GpioNum, uint8_t val)
 {
   uint32_t reg = 0;

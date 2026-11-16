@@ -19,12 +19,13 @@ source:
 include:
   - path: "inc"
     file_list:
-    - path: "sl_si91x_gpdma.h"
+      - path: "sl_si91x_gpdma.h"
 provides:
   - name: sl_gpdma
 requires:
   - name: rsilib_gpdma
   - name: syscalls
+  - name: log_none
 define:
   - name: __STATIC_INLINE
     value: "static inline"

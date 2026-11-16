@@ -115,6 +115,10 @@ sl_status_t sl_http_server_deinit(sl_http_server_t *handle);
  *   - SL_STATUS_OK: Operation successful.
  *   - SL_STATUS_INVALID_PARAMETER: The provided handle is NULL.
  *   - SL_STATUS_FAIL: Failed to create the server thread.
+ *
+ * @note
+ *   The server accepts only one TCP connection at a time. Simultaneous connections (e.g., multiple browser tabs or browsers) are not supported. 
+ *   Further attempts might be refused or might time out until the current connection closes.
  */
 sl_status_t sl_http_server_start(sl_http_server_t *handle);
 
@@ -191,7 +195,7 @@ sl_status_t sl_http_server_get_request_headers(sl_http_server_t *handle,
  *   sl_status_t - Status of the operation. For more details, see https://docs.silabs.com/gecko-platform/latest/platform-common/status.
  *   - SL_STATUS_OK: Operation successful.
  *   - SL_STATUS_INVALID_PARAMETER: One or more input parameters are NULL or invalid.
- *   - SL_STATUS_FAIL: Failed to read the request data.
+ *   - SL_STATUS_FAIL: Failed to read the request data (e.g. socket error, or connection closed by peer before full request body received).
  */
 sl_status_t sl_http_server_read_request_data(sl_http_server_t *handle, sl_http_recv_req_data_t *data);
 

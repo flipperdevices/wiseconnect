@@ -114,10 +114,9 @@ bool x_compat_int_in_irq();
 #define X_REVERSE_BYTES32(bits) x_compat_reverse32_bytes(bits)
 
 #define X_ATOMIC_BIT_SET(bitmask, bit) \
-  {                                    \
+  do {                                 \
     *bitmask |= BIT(bit);              \
-  }                                    \
-  while (0)
+  } while (0)
 
 #define X_ATOMIC_BIT_CLR(bitmask, bit) \
   do {                                 \

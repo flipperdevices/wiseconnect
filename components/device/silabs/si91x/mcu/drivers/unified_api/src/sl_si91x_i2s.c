@@ -94,17 +94,24 @@ sl_status_t sl_si91x_i2s_init(uint32_t i2s_instance, sl_i2s_handle_t *i2s_handle
   do {
     if (i2s_handle == NULL) {
       status = SL_STATUS_NULL_POINTER;
+      SL_PRINT_STRING_ERROR("sl_si91x_i2s_init: i2s_handle is NULL,line no : %d\r\n", (int)__LINE__);
       break;
     }
     if (i2s_instance > I2S1_INSTANCE) {
       //Invalid i2S instance number
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR("sl_si91x_i2s_init: invalid instance %lu,line no : %d\r\n",
+                            (unsigned long)i2s_instance,
+                            (int)__LINE__);
       break;
     }
     // To validate status of I2S, if already enabled, returns error code.
     if (I2S_GetInitState((uint8_t)i2s_instance)) {
       //I2S instance already initialized
       status = SL_STATUS_BUSY;
+      SL_PRINT_STRING_ERROR("sl_si91x_i2s_init: instance %lu already initialized (busy),line no : %d\r\n",
+                            (unsigned long)i2s_instance,
+                            (int)__LINE__);
       break;
     }
     if (i2s_instance == I2S0_INSTANCE) {
@@ -125,6 +132,11 @@ sl_status_t sl_si91x_i2s_init(uint32_t i2s_instance, sl_i2s_handle_t *i2s_handle
       error_status = ((sl_i2s_driver_t *)i2s_temp_handle)->Initialize(i2s1_callback_event_handler);
     }
     status = convert_arm_to_sl_error_code(error_status);
+    if (status != SL_STATUS_OK) {
+      SL_PRINT_STRING_ERROR("sl_si91x_i2s_init: Initialize failed st=0x%04lX,line no : %d\r\n",
+                            (unsigned long)status,
+                            (int)__LINE__);
+    }
   } while (false);
 
   return status;
@@ -140,6 +152,7 @@ sl_status_t sl_si91x_i2s_deinit(sl_i2s_handle_t *i2s_handle)
 
   if (i2s_handle == NULL) {
     status = SL_STATUS_NULL_POINTER;
+    SL_PRINT_STRING_ERROR("sl_si91x_i2s_deinit: handle pointer is NULL,line no : %d\r\n", (int)__LINE__);
   } else {
     if ((i2s_handle == (sl_i2s_handle_t *)&Driver_SAI0) || (i2s_handle == (sl_i2s_handle_t *)&Driver_SAI1)) {
       //Unregister callbacks
@@ -154,9 +167,15 @@ sl_status_t sl_si91x_i2s_deinit(sl_i2s_handle_t *i2s_handle)
       // the API is converted to SL error code via convert_arm_to_sl_error_code function.
       error_status = ((sl_i2s_driver_t *)i2s_handle)->Uninitialize();
       status       = convert_arm_to_sl_error_code(error_status);
+      if (status != SL_STATUS_OK) {
+        SL_PRINT_STRING_ERROR("sl_si91x_i2s_deinit: Uninitialize failed st=0x%04lX,line no : %d\r\n",
+                              (unsigned long)status,
+                              (int)__LINE__);
+      }
     } else {
       //Invalid I2S handle
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR("sl_si91x_i2s_deinit: invalid handle,line no : %d\r\n", (int)__LINE__);
     }
   }
 
@@ -172,6 +191,7 @@ sl_status_t sl_si91x_i2s_deinit_v2(sl_i2s_handle_t i2s_handle)
   int32_t error_status;
 
   if (i2s_handle == NULL) {
+    SL_PRINT_STRING_ERROR("sl_si91x_i2s_deinit_v2: handle is NULL,line no : %d\r\n", (int)__LINE__);
     return SL_STATUS_NULL_POINTER;
   }
 
@@ -188,9 +208,15 @@ sl_status_t sl_si91x_i2s_deinit_v2(sl_i2s_handle_t i2s_handle)
     // Call CMSIS uninitialize and convert error code
     error_status = ((sl_i2s_driver_t *)i2s_handle)->Uninitialize();
     status       = convert_arm_to_sl_error_code(error_status);
+    if (status != SL_STATUS_OK) {
+      SL_PRINT_STRING_ERROR("sl_si91x_i2s_deinit_v2: Uninitialize failed st=0x%04lX,line no : %d\r\n",
+                            (unsigned long)status,
+                            (int)__LINE__);
+    }
   } else {
     // Invalid I2S handle
     status = SL_STATUS_INVALID_PARAMETER;
+    SL_PRINT_STRING_ERROR("sl_si91x_i2s_deinit_v2: invalid handle,line no : %d\r\n", (int)__LINE__);
   }
 
   return status;
@@ -211,22 +237,33 @@ sl_status_t sl_si91x_i2s_configure_power_mode(sl_i2s_handle_t i2s_handle, sl_i2s
   do {
     if (i2s_handle == NULL) {
       status = SL_STATUS_NULL_POINTER;
+      SL_PRINT_STRING_ERROR("sl_si91x_i2s_configure_power_mode: handle is NULL,line no : %d\r\n", (int)__LINE__);
       break;
     }
     if ((i2s_handle != &Driver_SAI0) && (i2s_handle != &Driver_SAI1)) {
       //Invalid I2S handle
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR("sl_si91x_i2s_configure_power_mode: invalid handle,line no : %d\r\n", (int)__LINE__);
       break;
     }
     if (state > SL_I2S_FULL_POWER) {
       //Invalid power state
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR("sl_si91x_i2s_configure_power_mode: invalid state %u,line no : %d\r\n",
+                            (unsigned)state,
+                            (int)__LINE__);
       break;
     }
     // CMSIS API for power mode config is called and the arm error code returned from
     // the API is converted to SL error code via convert_arm_to_sl_error_code function.
     error_status = ((sl_i2s_driver_t *)i2s_handle)->PowerControl((ARM_POWER_STATE)state);
     status       = convert_arm_to_sl_error_code(error_status);
+    if (status != SL_STATUS_OK) {
+      SL_PRINT_STRING_ERROR(
+        "sl_si91x_i2s_configure_power_mode: PowerControl failed with status=0x%04lX,line no : %d\r\n",
+        (unsigned long)status,
+        (int)__LINE__);
+    }
   } while (false);
   return status;
 }
@@ -265,33 +302,40 @@ sl_status_t sl_si91x_i2s_config_transmit_receive(sl_i2s_handle_t i2s_handle, sl_
   do {
     if (i2s_handle == NULL) {
       status = SL_STATUS_NULL_POINTER;
+      SL_PRINT_STRING_ERROR("sl_si91x_i2s_config_transmit_receive: handle is NULL,line no : %d\r\n", (int)__LINE__);
       break;
     }
     if ((i2s_handle != &Driver_SAI0) && (i2s_handle != &Driver_SAI1)) {
       //Invalid I2S handle
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR("sl_si91x_i2s_config_transmit_receive: invalid handle,line no : %d\r\n", (int)__LINE__);
       break;
     }
     if ((xfer_config->mode != SL_I2S_MASTER) && (xfer_config->mode != SL_I2S_SLAVE)) {
       //Invalid I2S mode
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR("sl_si91x_i2s_config_transmit_receive: invalid mode,line no : %d\r\n", (int)__LINE__);
       break;
     }
     if ((xfer_config->sync != SL_I2S_SYNC) && (xfer_config->sync != SL_I2S_ASYNC)) {
       //Invalid SYNC mode
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR("sl_si91x_i2s_config_transmit_receive: invalid sync,line no : %d\r\n", (int)__LINE__);
       break;
     }
     if ((xfer_config->data_size != SL_I2S_DATA_SIZE16) && (xfer_config->data_size != SL_I2S_DATA_SIZE32)
         && (xfer_config->data_size != SL_I2S_DATA_SIZE8)) {
       //Invalid data size
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR("sl_si91x_i2s_config_transmit_receive: invalid data_size,line no : %d\r\n", (int)__LINE__);
       break;
     }
     if ((xfer_config->transfer_type != SL_I2S_TRANSMIT) && (xfer_config->transfer_type != SL_I2S_RECEIVE)
         && (xfer_config->transfer_type != SL_MIC_ICS43434_RECEIVE)) {
       //Invalid transfer type
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR("sl_si91x_i2s_config_transmit_receive: invalid transfer_type,line no : %d\r\n",
+                            (int)__LINE__);
       break;
     }
     for (res_validation = 0; res_validation < I2S_RESOLUTION_COUNT; res_validation++) {
@@ -307,18 +351,25 @@ sl_status_t sl_si91x_i2s_config_transmit_receive(sl_i2s_handle_t i2s_handle, sl_
     if ((res_validation == I2S_RESOLUTION_COUNT) || (sampling_validation == I2S_SAMPLING_RATE_COUNT)) {
       //Invalid Resolution/Sampling rate
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR(
+        "sl_si91x_i2s_config_transmit_receive: unsupported resolution/sampling_rate,line no : %d\r\n",
+        (int)__LINE__);
       break;
     }
     if (((xfer_config->resolution == 16) && (xfer_config->data_size == 32))) {
       //Invalid combination of resolution and data size. 16 bit resolution should
       //use uint16_t data types for transfer
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR("sl_si91x_i2s_config_transmit_receive: 16-bit res needs 16-bit data_size,line no : %d\r\n",
+                            (int)__LINE__);
       break;
     }
     if (((xfer_config->resolution > 16) && ((xfer_config->data_size == 16) || (xfer_config->data_size == 8)))) {
       //Invalid combination of resolution and data size. 20 and 24 bit resolutions should
       //use uint32_t data types for transfer
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR("sl_si91x_i2s_config_transmit_receive: >16-bit res needs 32-bit data_size,line no : %d\r\n",
+                            (int)__LINE__);
       break;
     }
 
@@ -394,6 +445,10 @@ sl_status_t sl_si91x_i2s_config_transmit_receive(sl_i2s_handle_t i2s_handle, sl_
                                xfer_config->sampling_rate);
     status = convert_arm_to_sl_error_code(error_status);
     if (status != SL_STATUS_OK) {
+      SL_PRINT_STRING_ERROR(
+        "sl_si91x_i2s_config_transmit_receive: primary Control failed with status=0x%04lX,line no : %d\r\n",
+        (unsigned long)status,
+        (int)__LINE__);
       break;
     }
     if (xfer_config->transfer_type == SL_I2S_TRANSMIT) {
@@ -403,6 +458,12 @@ sl_status_t sl_si91x_i2s_config_transmit_receive(sl_i2s_handle_t i2s_handle, sl_
     }
     error_status = ((sl_i2s_driver_t *)i2s_handle)->Control(transfer_init, 1, 0);
     status       = convert_arm_to_sl_error_code(error_status);
+    if (status != SL_STATUS_OK) {
+      SL_PRINT_STRING_ERROR(
+        "sl_si91x_i2s_config_transmit_receive: enable Control failed with status=0x%04lX,line no : %d\r\n",
+        (unsigned long)status,
+        (int)__LINE__);
+    }
   } while (false);
 
   return status;
@@ -419,16 +480,21 @@ sl_status_t sl_si91x_i2s_transmit_data(sl_i2s_handle_t i2s_handle, const void *d
   do {
     if ((data == NULL) || (i2s_handle == NULL)) {
       status = SL_STATUS_NULL_POINTER;
+      SL_PRINT_STRING_ERROR("sl_si91x_i2s_transmit_data: NULL data or handle,line no : %d\r\n", (int)__LINE__);
       break;
     }
     if ((i2s_handle != &Driver_SAI0) && (i2s_handle != &Driver_SAI1)) {
       //Invalid I2S handle
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR("sl_si91x_i2s_transmit_data: invalid handle,line no : %d\r\n", (int)__LINE__);
       break;
     }
     if ((size % 2) != 0) {
       //Invalid data size. transfer size should be even for I2S transfers
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR("sl_si91x_i2s_transmit_data: size %lu must be even,line no : %d\r\n",
+                            (unsigned long)size,
+                            (int)__LINE__);
       break;
     }
     //fetch the resolution from TCR register
@@ -446,6 +512,9 @@ sl_status_t sl_si91x_i2s_transmit_data(sl_i2s_handle_t i2s_handle, const void *d
       if ((size % 4) != 0) {
         //Invalid data size
         status = SL_STATUS_INVALID_PARAMETER;
+        SL_PRINT_STRING_ERROR("sl_si91x_i2s_transmit_data: size %lu must be x4 for 12/24-bit,line no : %d\r\n",
+                              (unsigned long)size,
+                              (int)__LINE__);
         break;
       }
     }
@@ -453,6 +522,11 @@ sl_status_t sl_si91x_i2s_transmit_data(sl_i2s_handle_t i2s_handle, const void *d
     // the API is converted to SL error code via convert_arm_to_sl_error_code function.
     error_status = ((sl_i2s_driver_t *)i2s_handle)->Send(data, size);
     status       = convert_arm_to_sl_error_code(error_status);
+    if (status != SL_STATUS_OK) {
+      SL_PRINT_STRING_ERROR("sl_si91x_i2s_transmit_data: Send failed with status=0x%04lX,line no : %d\r\n",
+                            (unsigned long)status,
+                            (int)__LINE__);
+    }
   } while (false);
   return status;
 }
@@ -469,16 +543,21 @@ sl_status_t sl_si91x_i2s_receive_data(sl_i2s_handle_t i2s_handle, const void *da
   do {
     if ((data == NULL) || (i2s_handle == NULL)) {
       status = SL_STATUS_NULL_POINTER;
+      SL_PRINT_STRING_ERROR("sl_si91x_i2s_receive_data: NULL data or handle,line no : %d\r\n", (int)__LINE__);
       break;
     }
     if ((i2s_handle != &Driver_SAI0) && (i2s_handle != &Driver_SAI1)) {
       //Invalid I2S handle
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR("sl_si91x_i2s_receive_data: invalid handle,line no : %d\r\n", (int)__LINE__);
       break;
     }
     if ((size % 2) != 0) {
       //Invalid data size. transfer size should be even for I2S transfers
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR("sl_si91x_i2s_receive_data: size %lu must be even,line no : %d\r\n",
+                            (unsigned long)size,
+                            (int)__LINE__);
       break;
     }
     //fetch the resolution from RCR register
@@ -496,6 +575,9 @@ sl_status_t sl_si91x_i2s_receive_data(sl_i2s_handle_t i2s_handle, const void *da
       if ((size % 4) != 0) {
         //Invalid data size
         status = SL_STATUS_INVALID_PARAMETER;
+        SL_PRINT_STRING_ERROR("sl_si91x_i2s_receive_data: size %lu must be x4 for 12/24-bit,line no : %d\r\n",
+                              (unsigned long)size,
+                              (int)__LINE__);
         break;
       }
     }
@@ -520,7 +602,67 @@ sl_status_t sl_si91x_i2s_receive_data(sl_i2s_handle_t i2s_handle, const void *da
   } while (false);
   return status;
 }
+/*******************************************************************************
+ * I2S full duplex transfer. 
+ * It includes both transmit and receive operations.
+ ******************************************************************************/
+sl_status_t sl_si91x_i2s_transfer(sl_i2s_handle_t i2s_handle,
+                                  void *data_in,
+                                  const void *data_out,
+                                  uint32_t data_in_size,
+                                  uint32_t data_out_size)
+{
+  sl_status_t status   = SL_STATUS_OK;
+  int32_t error_status = 0;
 
+  do {
+
+    // Validate input parameters (combined from transmit_data and receive_data)
+    if ((data_out == NULL) || (data_in == NULL) || (i2s_handle == NULL)) {
+      SL_PRINT_STRING_ERROR("sl_si91x_i2s_transfer: data_out or data_in or i2s_handle is NULL,line no : %d\r\n",
+                            (int)__LINE__);
+      status = SL_STATUS_NULL_POINTER;
+      break;
+    }
+
+    // Validate I2S handle (from both transmit_data and receive_data)
+    if ((i2s_handle != &Driver_SAI0) && (i2s_handle != &Driver_SAI1)) {
+      // Invalid I2S handle
+      status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR("sl_si91x_i2s_transfer: i2s_handle is invalid,line no : %d\r\n", (int)__LINE__);
+      break;
+    }
+
+    // Validate data size - transfer size should be even for I2S transfers
+    // (from both transmit_data and receive_data)
+    if ((data_out_size % 2 != 0) || (data_in_size % 2 != 0)) {
+      // Invalid data size. transfer size should be even for I2S transfers
+      status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR("sl_si91x_i2s_transfer: data_out_size or data_in_size is not even,line no : %d\r\n",
+                            (int)__LINE__);
+      break;
+    }
+
+    // CMSIS API for I2S transfer is called and the arm error code returned
+    // from the API is converted to SL error code via
+    // convert_arm_to_sl_error_code function.
+    // This uses Transfer function pointer instead of separate Send and Receive
+
+    if (i2s_handle == &Driver_SAI0) {
+      error_status = I2S_Transfer((void *)data_out, (void *)data_in, data_out_size, data_in_size, I2S0_INSTANCE);
+    } else {
+      error_status = I2S_Transfer((void *)data_out, (void *)data_in, data_out_size, data_in_size, I2S1_INSTANCE);
+    }
+    status = convert_arm_to_sl_error_code(error_status);
+    if (status != SL_STATUS_OK) {
+      SL_PRINT_STRING_ERROR("sl_si91x_i2s_transfer: Transfer failed with status=0x%04lX,line no : %d\r\n",
+                            (unsigned long)status,
+                            (int)__LINE__);
+    }
+  } while (false);
+
+  return status;
+}
 /*******************************************************************************
  * To register the user event callback
  * It registers the callback, i.e., stores the callback function address 
@@ -537,11 +679,13 @@ sl_status_t sl_si91x_i2s_register_event_callback(sl_i2s_handle_t i2s_handle, sl_
     // Validates the null pointer, if true returns error code
     if ((i2s_handle == NULL) || (callback_event == NULL)) {
       status = SL_STATUS_NULL_POINTER;
+      SL_PRINT_STRING_ERROR("sl_si91x_i2s_register_event_callback: NULL handle or cb,line no : %d\r\n", (int)__LINE__);
       break;
     }
     if ((i2s_handle != &Driver_SAI0) && (i2s_handle != &Driver_SAI1)) {
       //Invalid I2S handle
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR("sl_si91x_i2s_register_event_callback: invalid handle,line no : %d\r\n", (int)__LINE__);
       break;
     }
     if (i2s_handle == &Driver_SAI0) {
@@ -549,6 +693,7 @@ sl_status_t sl_si91x_i2s_register_event_callback(sl_i2s_handle_t i2s_handle, sl_
       // returns an error code
       if ((i2s0_user_callback != NULL) || (local_i2s0_handle != NULL)) {
         status = SL_STATUS_BUSY;
+        SL_PRINT_STRING_ERROR("sl_si91x_i2s_register_event_callback: I2S0 busy,line no : %d\r\n", (int)__LINE__);
         break;
       }
       // User callback address is passed to the static variable which is called at the time of
@@ -560,6 +705,8 @@ sl_status_t sl_si91x_i2s_register_event_callback(sl_i2s_handle_t i2s_handle, sl_
       // returns an error code
       if ((i2s1_user_callback != NULL) || (local_i2s1_handle != NULL)) {
         status = SL_STATUS_BUSY;
+        SL_PRINT_STRING_ERROR("sl_si91x_i2s_register_event_callback: I2S1 callback already registered,line no : %d\r\n",
+                              (int)__LINE__);
         break;
       }
       // User callback address is passed to the static variable which is called at the time of
@@ -585,11 +732,13 @@ sl_status_t sl_si91x_i2s_unregister_event_callback(sl_i2s_handle_t i2s_handle)
     // Validates the null pointer, if true returns error code
     if (i2s_handle == NULL) {
       status = SL_STATUS_NULL_POINTER;
+      SL_PRINT_STRING_ERROR("sl_si91x_i2s_unregister_event_callback: handle NULL,line no : %d\r\n", (int)__LINE__);
       break;
     }
     if ((i2s_handle != &Driver_SAI0) && (i2s_handle != &Driver_SAI1)) {
       //Invalid I2S handle
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR("sl_si91x_i2s_unregister_event_callback: invalid handle,line no : %d\r\n", (int)__LINE__);
       break;
     }
     if (i2s_handle == &Driver_SAI0) {
@@ -617,22 +766,32 @@ sl_status_t sl_si91x_i2s_end_transfer(sl_i2s_handle_t i2s_handle, sl_i2s_xfer_ty
     // Validates the null pointer, if true returns error code
     if (i2s_handle == NULL) {
       status = SL_STATUS_NULL_POINTER;
+      SL_PRINT_STRING_ERROR("sl_si91x_i2s_end_transfer: handle NULL,line no : %d\r\n", (int)__LINE__);
       break;
     }
     if ((i2s_handle != &Driver_SAI0) && (i2s_handle != &Driver_SAI1)) {
       //Invalid I2S handle
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR("sl_si91x_i2s_end_transfer: invalid handle,line no : %d\r\n", (int)__LINE__);
       break;
     }
     if ((abort_type != SL_I2S_SEND_ABORT) && (abort_type != SL_I2S_RECEIVE_ABORT)) {
       //Only pass transmit/receive abort to xfer_type
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR("sl_si91x_i2s_end_transfer: bad abort_type %lu,line no : %d\r\n",
+                            (unsigned long)abort_type,
+                            (int)__LINE__);
       break;
     }
     // CMSIS API for Tx/Rx config is called and the arm error code returned from
     // the API is converted to SL error code via convert_arm_to_sl_error_code function.
     error_status = ((sl_i2s_driver_t *)i2s_handle)->Control(abort_type, 1, 0);
     status       = convert_arm_to_sl_error_code(error_status);
+    if (status != SL_STATUS_OK) {
+      SL_PRINT_STRING_ERROR("sl_si91x_i2s_end_transfer: Control failed with status=0x%04lX,line no : %d\r\n",
+                            (unsigned long)status,
+                            (int)__LINE__);
+    }
   } while (false);
   return status;
 }
@@ -761,8 +920,18 @@ static void i2s0_callback_event_handler(uint32_t event)
     }
   }
 #endif
-  //Call the registered application callback
-  i2s0_user_callback(event);
+  if (event == SL_I2S_TX_UNDERFLOW) {
+    SL_PRINT_STRING_ERROR("I2S0 ISR: TX underflow,line no : %d\r\n", (int)__LINE__);
+  } else if (event == SL_I2S_RX_OVERFLOW) {
+    SL_PRINT_STRING_ERROR("I2S0 ISR: RX overflow,line no : %d\r\n", (int)__LINE__);
+  } else if (event == SL_I2S_FRAME_ERROR) {
+    SL_PRINT_STRING_ERROR("I2S0 ISR: frame error,line no : %d\r\n", (int)__LINE__);
+  }
+  if (i2s0_user_callback != NULL) {
+    i2s0_user_callback(event);
+  } else if (event != SL_I2S_SEND_COMPLETE && event != SL_I2S_RECEIVE_COMPLETE) {
+    SL_PRINT_STRING_ERROR("I2S0 ISR: event %lu no app cb,line no : %d\r\n", (unsigned long)event, (int)__LINE__);
+  }
 #ifndef I2S_LOOP_BACK
   //Disable WSCLK
   I2S0->I2S_CER_b.CLKEN = DISABLE;
@@ -789,8 +958,18 @@ static void i2s1_callback_event_handler(uint32_t event)
     }
   }
 #endif
-  //Call the registered application callback
-  i2s1_user_callback(event);
+  if (event == SL_I2S_TX_UNDERFLOW) {
+    SL_PRINT_STRING_ERROR("I2S1 ISR: TX underflow,line no : %d\r\n", (int)__LINE__);
+  } else if (event == SL_I2S_RX_OVERFLOW) {
+    SL_PRINT_STRING_ERROR("I2S1 ISR: RX overflow,line no : %d\r\n", (int)__LINE__);
+  } else if (event == SL_I2S_FRAME_ERROR) {
+    SL_PRINT_STRING_ERROR("I2S1 ISR: frame error,line no : %d\r\n", (int)__LINE__);
+  }
+  if (i2s1_user_callback != NULL) {
+    i2s1_user_callback(event);
+  } else if (event != SL_I2S_SEND_COMPLETE && event != SL_I2S_RECEIVE_COMPLETE) {
+    SL_PRINT_STRING_ERROR("I2S1 ISR: event %lu no app cb,line no : %d\r\n", (unsigned long)event, (int)__LINE__);
+  }
 #ifndef I2S1_LOOP_BACK
   //Disable WSCLK
   I2S1->I2S_CER_b.CLKEN = DISABLE;

@@ -34,6 +34,7 @@
  * sensor data through I2C interface.
  * This sensor will detect the temperature value.
  ============================================================================**/
+#include <inttypes.h>
 #include "lm75.h"
 #include "sensor_hub.h"
 #include "rsi_debug.h"
@@ -77,7 +78,7 @@ sl_lm75_handle_t sl_si91x_lm75_create(sl_sensor_bus_t bus, uint8_t dev_addr)
   while (I2Cdrv->GetStatus().busy)
     ;
   if (sensor->i2c_dev != SL_DRIVER_OK) {
-    DEBUGOUT("lm75 create fail I2C unable to transmit1:%ld\r\n", sensor->i2c_dev);
+    DEBUGOUT("lm75 create fail I2C unable to transmit1:%" PRId32 "\r\n", sensor->i2c_dev);
     return NULL;
   }
 
@@ -87,7 +88,7 @@ sl_lm75_handle_t sl_si91x_lm75_create(sl_sensor_bus_t bus, uint8_t dev_addr)
   while (I2Cdrv->GetStatus().busy)
     ;
   if (sensor->i2c_dev != SL_DRIVER_OK) {
-    DEBUGOUT("lm75 create fail I2C unable to transmit2:%ld\r\n", sensor->i2c_dev);
+    DEBUGOUT("lm75 create fail I2C unable to transmit2:%" PRId32 "\r\n", sensor->i2c_dev);
     return NULL;
   }
 
@@ -173,7 +174,7 @@ sl_lm75_err_t sl_si91x_lm75_power_on(sl_lm75_handle_t sensor)
   a[0] = (uint8_t)(SL_LM75_TEMPERATURE & 0xFF);
   ret  = (uint8_t)I2Cdrv->MasterTransmit(SL_LM75_I2C_ADDRESS_DEFAULT, a, 1, false); //sens->i2c_dev
   if (ret != ARM_DRIVER_OK) {
-    DEBUGOUT("\r\n LM75 Power on command transmit fail %ld \r\n", ret);
+    DEBUGOUT("\r\n LM75 Power on command transmit fail %" PRId32 " \r\n", ret);
     return ret;
   }
   while (I2Cdrv->GetStatus().busy)
@@ -222,7 +223,7 @@ sl_lm75_err_t sl_si91x_lm75_get_data(sl_lm75_handle_t sensor, float *data)
   (void)sens;
   ret = I2Cdrv->MasterReceive(SL_LM75_I2C_ADDRESS_DEFAULT, lm75_data, 4, false);
   if (ret != RSI_OK) {
-    DEBUGOUT("\r\n LM75 Data transmit fail :%ld\r\n", ret);
+    DEBUGOUT("\r\n LM75 Data transmit fail :%" PRId32 "\r\n", ret);
     return ret;
   }
   /* TODO: Add timeout and PASS error*/

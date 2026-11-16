@@ -1,8 +1,8 @@
-# PS2 State With NWP Shutdown
+# SiWx91x Platform PS2 STATE
 
 ## Table of Contents
 
-- [PS2 State With NWP Shutdown](#ps2-state-with-nwp-shutdown)
+- [SiWx91x Platform PS2 STATE](#platform-siwx91x-ps2-state)
   - [Table of Contents](#table-of-contents)
   - [Purpose/Scope](#purposescope)
   - [About Example Code](#about-example-code)
@@ -13,10 +13,13 @@
   - [Getting Started](#getting-started)
   - [Application Build Environment](#application-build-environment)
   - [Test the Application](#test-the-application)
+  - [Troubleshooting](#troubleshooting)
+  - [Resources](#resources)
+  - [Report Bugs/Support](#report-bugssupport)
 
 ## Purpose/Scope
 
-- This application demonstrates the PS2 sleep and active state with RAM retention and NWP shutdown. 
+- This application demonstrates the PS2 sleep and active state with RAM retention and NWP shutdown.
   ```c
   Note: This application is designed to validate the MCU's power consumption values specified in the datasheet, and thus contain meticulous optimizations. This application should not be taken as reference for a real-time use case project bring up. This application does not support wake-up sources.
   ```
@@ -38,7 +41,7 @@
 ### Hardware Requirements
 
 - Windows PC
-- Silicon Labs Si917 Evaluation Kit [[BRD4002](https://www.silabs.com/development-tools/wireless/wireless-pro-kit-mainboard?tab=overview) + [BRD4338A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-rb4338a-wifi-6-bluetooth-le-soc-radio-board?tab=overview) / [BRD4342A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx91x-rb4342a-wifi-6-bluetooth-le-soc-radio-board?tab=overview) / [BRD4343A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4343a-wi-fi-6-bluetooth-le-8mb-flash-radio-board-for-module?tab=overview)]
+- Silicon Labs SiWx91x Evaluation Kit [[BRD4002](https://www.silabs.com/development-tools/wireless/wireless-pro-kit-mainboard?tab=overview) + [BRD4338A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-rb4338a-wifi-6-bluetooth-le-soc-radio-board?tab=overview) / [BRD4342A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx91x-rb4342a-wifi-6-bluetooth-le-soc-radio-board?tab=overview) / [BRD4343A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4343a-wi-fi-6-bluetooth-le-8mb-flash-radio-board-for-module?tab=overview) / [BRD4343C](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4343c-wi-fi-6-bluetooth-le-8mb-flash-radio-board-for-module?tab=overview)]
   - The Serial Console setup instructions are provided below:
 Refer to instructions [here](https://docs.silabs.com/wiseconnect/latest/wiseconnect-developers-guide-developing-for-silabs-hosts/using-the-simplicity-studio-ide#console-input-and-output).
 
@@ -46,7 +49,7 @@ Refer to instructions [here](https://docs.silabs.com/wiseconnect/latest/wiseconn
 
 - Simplicity Studio
 - Embedded Development Environment
-  - For Silicon Labs Si91x, use the latest version of Simplicity Studio (refer **"Download and Install Simplicity Studio"** section in **getting-started-with-siwx917-soc** guide at **release_package/docs/index.html**)
+  - For Silicon Labs SiWx91x, use the latest version of Simplicity Studio (refer **"Download and Install Simplicity Studio"** section in **getting-started-with-siwx917-soc** guide at **release_package/docs/index.html**)
 
 ### Setup Diagram
 
@@ -69,10 +72,12 @@ The application can be configured to suit user requirements and development envi
 
 Configure the following parameters to enable your PS2 Active or sleep state.
 
+- `ACTIVE_STATE`: Selects whether the application enters the PS2 sleep state or remains in the PS2 active state. By default, it is set to 0 (sleep state); set it to 1 to enable the PS2 active state.
+
   - By default, the ACTIVE_STATE macro is set to 0, which means the application will enter the sleep state.
-  
+
     ```c
-    #define ACTIVE_STATE                                      0 
+    #define ACTIVE_STATE                                      0
     ```
 
   - To enable the PS2 active state, configure the ACTIVE_STATE macro to 1.
@@ -88,9 +93,36 @@ Configure the following parameters to enable your PS2 Active or sleep state.
 Refer instructions [here](https://docs.silabs.com/wiseconnect/latest/wiseconnect-getting-started/) for the following tasks:
 
 1. Compile and run the application.
+
+   > **Note:** Use `Log_script.py` from the [SiWx91x Platform Logger example](https://github.com/SiliconLabs/wiseconnect/tree/v4.1.2-content-for-docs/examples/si91x_soc/service/sl_si91x_logger/) (`examples/si91x_soc/service/sl_si91x_logger/`) to decode structured console log output. Run:
+   >
+   > ```bash
+   > python Log_script.py --out firmware.out --port COM5 --max-args 3
+   > ```
+   >
+   > Replace `COM5` with the serial port your board uses on the host PC.
+   >
+   > Refer to the instructions [here](https://github.com/SiliconLabs/wiseconnect/blob/v4.1.2-content-for-docs/examples/si91x_soc/service/sl_si91x_logger/readme.md#test-the-application) to build, flash, and decode logger output.
+
 2. By default it switches the NWP off, add the PS2 requirement and goes to sleep.
 3. After successful program execution, the prints in the serial console look as shown below.
   ![Figure: PS2 Sleep State](resources/readme/ps2_sleep_state.png)
-4. For Active number, please set the ACTIVE_STATE macro as 1. 
+4. For Active number, please set the ACTIVE_STATE macro as 1.
 5. After successful program execution, the prints in the serial console look as shown below.
   ![Figure: PS2 Active State](resources/readme/ps2_active_state.png)
+
+## Troubleshooting
+
+- If the project does not build, ensure Simplicity Studio and the WiSeConnect extension are installed and the board is connected.
+- If the device is not detected, reinstall the connectivity firmware and check USB drivers.
+
+## Resources
+
+- [WiSeConnect Getting Started](https://docs.silabs.com/wiseconnect/latest/wiseconnect-getting-started/)
+- [WiSeConnect Examples](https://docs.silabs.com/wiseconnect/latest/wiseconnect-examples/)
+- [SiWx91x SoC Documentation](https://docs.silabs.com/wiseconnect/latest/)
+
+## Report Bugs/Support
+
+For issues and support, use the Silicon Labs Community or your normal support channel.
+

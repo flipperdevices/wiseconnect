@@ -81,6 +81,17 @@ sl_websocket_error_t sli_websocket_connect_sync(sl_websocket_client_t *client);
  */
 sl_status_t sli_websocket_set_subprotocol(sl_websocket_client_t *client, const char *subprotocol);
 
+/***************************************************************************/ /**
+ * @brief Sets the Origin header value for a WebSocket client.
+ *
+ * @param[in] client Pointer to the WebSocket client instance.
+ * @param[in] origin Null-terminated Origin header value. Must not be NULL or an
+ *   empty string.
+ *
+ * @return @ref SL_WEBSOCKET_SUCCESS on success, or an error code on failure.
+ */
+sl_websocket_error_t sli_websocket_set_origin(sl_websocket_client_t *client, const char *origin);
+
 /***************************************************************************/
 
 #endif // SLI_WEBSOCKET_CLIENT_SYNC_H

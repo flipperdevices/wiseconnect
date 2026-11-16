@@ -351,7 +351,7 @@ rsi_error_t gpdma_setup_channel(RSI_GPDMA_HANDLE_T pHandle, RSI_GPDMA_CHA_CFG_T 
 
   // Parameter checks
   if ((pCfg != NULL) && (pCfg->dmaCh <= GPDMA_CHNL7) && ((pCfg->channelPrio) <= PRIO_LEVEL_4)) {
-    if (RSI_GPDMA_GetChannelActivity(pDrv, ((uint8_t)pCfg->dmaCh) != 1)) {
+    if (RSI_GPDMA_GetChannelActivity(pDrv, (uint8_t)pCfg->dmaCh) == 0) {
       pDrv->baseC->CHANNEL_CONFIG[pCfg->dmaCh].FIFO_CONFIG_REGS_b.FIFO_STRT_ADDR =
         (unsigned int)((8 * pCfg->dmaCh) & 0x3F);
       pDrv->baseC->CHANNEL_CONFIG[pCfg->dmaCh].FIFO_CONFIG_REGS_b.FIFO_SIZE = 8;

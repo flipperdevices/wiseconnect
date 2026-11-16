@@ -34,6 +34,7 @@
 #include "rsi_rom_clks.h"
 #include "sl_si91x_crc.h"
 #include "rsi_rom_crc.h"
+
 /**
  * @brief CRC instance.
  */
@@ -52,41 +53,51 @@ sl_status_t sl_si91x_crc_set_config(sl_crc_params_t *params)
   // Reset all state machines to IDLE state
   status = sl_si91x_crc_set_gen_control();
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si9x_crc_set_config: crc set gen ctl failed,line no : %d\r\n", (int)__LINE__);
     return SL_STATUS_INVALID_STATE;
   }
   // Enable CRC peripheral clock
   status = sl_si91x_crc_enable();
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si9x_crc_set_config: crc clk en st=0x%04lX,line no : %d\r\n",
+                          (unsigned long)status,
+                          (int)__LINE__);
     return SL_STATUS_NOT_READY;
   }
   // Configure CRC polynomial value
   status = sl_si91x_crc_polynomial(params);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si9x_crc_set_config:CRC poly params failed ,line no : %d\r\n", (int)__LINE__);
     return SL_STATUS_INITIALIZATION;
   }
   // Set width of the polynomial
   status = sl_si91x_crc_polynomial_width(params, &reg_status);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si9x_crc_set_config: crc poly w failed,line no : %d\r\n", (int)__LINE__);
     return SL_STATUS_NOT_SUPPORTED;
   }
   // Initialize LFSR with initial value
   status = sl_si91x_crc_lfsr_init(params);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si9x_crc_set_config: crc lfsr failed,line no : %d\r\n", (int)__LINE__);
     return SL_STATUS_NOT_INITIALIZED;
   }
   // Configure bit-swapped initialization if needed
   status = sl_si91x_crc_use_swapped_init(params, &reg_status);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si9x_crc_set_config: crc swap failed,line no : %d\r\n", (int)__LINE__);
     return SL_STATUS_NOT_AVAILABLE;
   }
   // Set data width types for CRC calculation
   status = sl_si91x_crc_set_data_width_type(params, &reg_status);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si9x_crc_set_config: crc data w failed,line no : %d\r\n", (int)__LINE__);
     return SL_STATUS_BUSY;
   }
   // Configure FIFO threshold levels
   status = sl_si91x_crc_set_fifo_thresholds(params, &reg_status);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si9x_crc_set_config: crc fifo th failed,line no : %d\r\n", (int)__LINE__);
     return SL_STATUS_ABORT;
   }
   return SL_STATUS_OK;
@@ -103,8 +114,10 @@ sl_status_t sl_si91x_crc_set_gen_control(void)
   sl_status_t status = SL_STATUS_OK;
   if (pCRC != NULL)
     RSI_CRC_SetGenControl(pCRC);
-  else
+  else {
     status = SL_STATUS_NULL_POINTER;
+    SL_PRINT_STRING_ERROR("sl_si9x_crc_set_gen_control: crc null p,line no : %d\r\n", (int)__LINE__);
+  }
   return status;
 }
 /*******************************************************************************
@@ -117,8 +130,10 @@ sl_status_t sl_si91x_crc_get_general_status(uint32_t *reg_status)
   sl_status_t status = SL_STATUS_OK;
   if ((pCRC != NULL) && (reg_status != NULL)) {
     *reg_status = RSI_CRC_GetGenStatus(pCRC);
-  } else
+  } else {
     status = SL_STATUS_NULL_POINTER;
+    SL_PRINT_STRING_ERROR("sl_si9x_crc_get_general_status: crc gen st null,line no : %d\r\n", (int)__LINE__);
+  }
   return status;
 }
 
@@ -135,6 +150,7 @@ sl_status_t sl_si91x_crc_polynomial(sl_crc_params_t *pCRCParams)
     RSI_CRC_Polynomial(pCRC, pCRCParams);
   } else {
     status = SL_STATUS_NULL_POINTER;
+    SL_PRINT_STRING_ERROR("sl_si9x_crc_polynomial: crc poly null,line no : %d\r\n", (int)__LINE__);
   }
   return status;
 }
@@ -153,8 +169,10 @@ sl_status_t sl_si91x_crc_polynomial_width(sl_crc_params_t *pCRCParams, uint32_t 
   sl_status_t status = SL_STATUS_OK;
   if (pCRC != NULL && pCRCParams != NULL)
     *reg_status = RSI_CRC_Polynomial_Width(pCRC, pCRCParams);
-  else
+  else {
     status = SL_STATUS_NULL_POINTER;
+    SL_PRINT_STRING_ERROR("sl_si9x_crc_polynomial_width: crc poly w null,line no : %d\r\n", (int)__LINE__);
+  }
   return status;
 }
 /*******************************************************************************
@@ -168,8 +186,10 @@ sl_status_t sl_si91x_crc_lfsr_init(sl_crc_params_t *pCRCParams)
   sl_status_t status = SL_STATUS_OK;
   if (pCRC != NULL && pCRCParams != NULL)
     RSI_CRC_LfsrInit(pCRC, pCRCParams);
-  else
+  else {
     status = SL_STATUS_NULL_POINTER;
+    SL_PRINT_STRING_ERROR("sl_si9x_crc_lfsr_init: crc lfsr null,line no : %d\r\n", (int)__LINE__);
+  }
   return status;
 }
 /*******************************************************************************
@@ -185,6 +205,7 @@ sl_status_t sl_si91x_crc_use_swapped_init(sl_crc_params_t *pCRCParams, uint32_t 
     *reg_status = RSI_CRC_Use_Swapped_Init(pCRC, pCRCParams);
   } else {
     status = SL_STATUS_NULL_POINTER;
+    SL_PRINT_STRING_ERROR("sl_si9x_crc_use_swapped_init: crc swap null,line no : %d\r\n", (int)__LINE__);
   }
   return status;
 }
@@ -201,6 +222,7 @@ sl_status_t sl_si91x_crc_set_data_width_type(sl_crc_params_t *pCRCParams, uint32
     *oper_status = RSI_CRC_Set_DataWidthType(pCRC, pCRCParams);
   } else {
     status = SL_STATUS_NULL_POINTER;
+    SL_PRINT_STRING_ERROR("sl_si9x_crc_set_data_width_type: crc dw null,line no : %d\r\n", (int)__LINE__);
   }
   return status;
 }
@@ -216,6 +238,7 @@ sl_status_t sl_si91x_crc_set_fifo_thresholds(sl_crc_params_t *pCRCParams, uint32
     *oper_status = RSI_CRC_SetFifoThresholds(pCRC, pCRCParams);
   } else {
     status = SL_STATUS_NULL_POINTER;
+    SL_PRINT_STRING_ERROR("sl_si9x_crc_set_fifo_thresholds: crc fifo null,line no : %d\r\n", (int)__LINE__);
   }
 
   return status;
@@ -235,6 +258,7 @@ sl_status_t sl_si91x_crc_write_data(sl_crc_params_t *pCRCParams, uint32_t data, 
     *oper_status = RSI_CRC_WriteData(pCRC, pCRCParams, data);
   } else {
     status = SL_STATUS_NULL_POINTER;
+    SL_PRINT_STRING_ERROR("sl_si9x_crc_write_data: crc write data failed,line no : %d\r\n", (int)__LINE__);
   }
   return status;
 }
@@ -252,6 +276,7 @@ sl_status_t sl_si91x_crc_monitor_crc_calc(sl_crc_params_t *pCRCParams, uint32_t 
     *crc = RSI_Monitor_CRCcalc(pCRC, pCRCParams);
   } else {
     status = SL_STATUS_NULL_POINTER;
+    SL_PRINT_STRING_ERROR("sl_si9x_crc_monitor_crc_calc: crc monitor crc calc failed,line no : %d\r\n", (int)__LINE__);
   }
   return status;
 }
@@ -265,8 +290,10 @@ sl_status_t sl_si91x_crc_lfsr_dynamic_write(sl_crc_params_t *pCRCParams)
   sl_status_t status = SL_STATUS_OK;
   if (pCRC != NULL && pCRCParams != NULL)
     RSI_CRC_LfsrDynamicWrite(pCRC, pCRCParams);
-  else
+  else {
     status = SL_STATUS_NULL_POINTER;
+    SL_PRINT_STRING_ERROR("sl_si9x_crc_lfsr_dynamic_write: crc dyn null,line no : %d\r\n", (int)__LINE__);
+  }
   return status;
 }
 /*******************************************************************************
@@ -282,6 +309,7 @@ sl_status_t sl_si91x_crc_reset_fifo(void)
     RSI_CRC_ResetFifo(pCRC);
   } else {
     status = SL_STATUS_NULL_POINTER;
+    SL_PRINT_STRING_ERROR("sl_si9x_crc_reset_fifo: crc rst fifo null,line no : %d\r\n", (int)__LINE__);
   }
   return status;
 }
@@ -297,6 +325,7 @@ sl_status_t sl_si91x_crc_get_fifo_status(uint32_t *reg_status)
     *reg_status = RSI_CRC_GetFifoStatus(pCRC);
   } else {
     status = SL_STATUS_NULL_POINTER;
+    SL_PRINT_STRING_ERROR("sl_si9x_crc_get_fifo_status: crc fifo st null,line no : %d\r\n", (int)__LINE__);
   }
   return status;
 }
@@ -310,6 +339,11 @@ sl_status_t sl_si91x_crc_enable(void)
 {
   sl_status_t status = SL_STATUS_OK;
   status             = RSI_CLK_PeripheralClkEnable1(M4CLK, CRC_CLK_ENABLE_M4);
+  if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si9x_crc_enable: crc en st=0x%04lX,line no : %d\r\n",
+                          (unsigned long)status,
+                          (int)__LINE__);
+  }
   return status;
 }
 
@@ -323,5 +357,10 @@ sl_status_t sl_si91x_crc_disable(void)
 {
   sl_status_t status = SL_STATUS_OK;
   status             = RSI_CLK_PeripheralClkDisable1(M4CLK, CRC_CLK_ENABLE_M4);
+  if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si9x_crc_disable: crc dis st=0x%04lX,line no : %d\r\n",
+                          (unsigned long)status,
+                          (int)__LINE__);
+  }
   return status;
 }

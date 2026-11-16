@@ -70,7 +70,7 @@ enum ble_enum_ids {
   smp_pending_event_id,
   advertisement_restart_event_id,
   scan_restart_event_id,
-  on_data_recieve_event_id,
+  on_data_receive_event_id,
   conn_update_req_event_id,
   set_buffer_config_event_id,
   select_data_transfer_event_id,
@@ -608,7 +608,7 @@ void rsi_ble_event_advertisement_restart_driver_callback(void);
 void rsi_ble_event_scan_restart_driver_callback(void);
 
 /*==============================================*/
-void rsi_ble_event_on_data_recieve_driver_callback(uint8_t *conn_id);
+void rsi_ble_event_on_data_receive_driver_callback(uint8_t *conn_id);
 
 /*==============================================*/
 void rsi_ble_event_conn_update_req_driver_callback(uint8_t *conn_id);
@@ -622,13 +622,13 @@ void rsi_ble_event_select_data_transfer_driver_callback(uint8_t *conn_id);
 /*==============================================*/
 void rsi_ble_event_profile_discovery_driver_callback(uint8_t *conn_id);
 
-void rsi_ble_event_profile_dummy_driver_callback(profile_dummy_data_t *profile_dummy_data);
+void rsi_ble_event_profile_dummy_driver_callback(sli_profile_dummy_data_t *profile_dummy_data);
 
 void rsi_ble_event_data_transmit(uint16_t status, void *event_data);
 void rsi_ble_event_smp_pending(uint16_t status, void *event_data);
 void rsi_ble_event_advertisement_restart(uint16_t status, void *event_data);
 void rsi_ble_event_scan_restart(uint16_t status, void *event_data);
-void rsi_ble_event_on_data_recieve(uint16_t status, void *event_data);
+void rsi_ble_event_on_data_receive(uint16_t status, void *event_data);
 void rsi_ble_event_conn_update_req(uint16_t status, void *event_data);
 void rsi_ble_event_set_buffer_config(uint16_t status, void *event_data);
 void rsi_ble_event_select_data_transfer(uint16_t status, void *event_data);
@@ -640,7 +640,7 @@ extern void rsi_ble_event_data_transmit(uint16_t status, void *event_data);
 extern void rsi_ble_event_smp_pending(uint16_t status, void *event_data);
 extern void rsi_ble_event_advertisement_restart(uint16_t status, void *event_data);
 extern void rsi_ble_event_scan_restart(uint16_t status, void *event_data);
-extern void rsi_ble_event_on_data_recieve(uint16_t status, void *event_data);
+extern void rsi_ble_event_on_data_receive(uint16_t status, void *event_data);
 extern void rsi_ble_event_conn_update_req(uint16_t status, void *event_data);
 extern void rsi_ble_event_set_buffer_config(uint16_t status, void *event_data);
 extern void rsi_ble_event_select_data_transfer(uint16_t status, void *event_data);

@@ -1,10 +1,10 @@
 id: iostream_vuart_si91x
+label: IO Stream VUART
 package: platform_siwx91x
-label: "IO Stream: SI91X VUART"
 description: >
-  Instantiate the driver for using IO Stream over the Virtual UART (VUART) 
-  pseudo-peripheral. VUART is a special interface where RTT is used as 
-  input channel and the Single Wire Output(SWO) is used as output channel.
+  This component instantiates the driver for using IO Stream over the Virtual UART (VUART)
+  pseudo-peripheral on SiWx91x. VUART is a special interface where RTT is used as the
+  input channel and Single Wire Output (SWO) is used as the output channel.
 category: Device|Si91x|MCU|Service
 quality: production
 metadata:

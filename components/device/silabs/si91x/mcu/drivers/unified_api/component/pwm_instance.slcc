@@ -21,7 +21,7 @@ description: >
  Generic channel instances must be named as channel_0, channel_1, channel_2, channel_3.
  Pre-configured LED instances can be named as led0, led1.
  
- Note: The Si91x PWM peripheral has 4 hardware channels (SL_CHANNEL_1 to SL_CHANNEL_4).
+ Note: The SiWx91x PWM peripheral has 4 hardware channels (SL_CHANNEL_1 to SL_CHANNEL_4).
  Multiple instances can be configured, but each must be mapped to one of these 4 physical channels via SL_PWM_<instance>_OUTPUT_CHANNEL configuration.
 category: Device|Si91x|MCU|Peripheral
 quality: production
@@ -56,6 +56,3 @@ template_contribution:
       handler: sl_pwm_init_instances
 requires:
   - name: sl_pwm
-documentation:
-    docset: wiseconnect
-    document: wiseconnect-api-reference-guide-si91x-peripherals/pwm

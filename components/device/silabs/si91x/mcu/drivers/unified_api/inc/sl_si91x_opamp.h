@@ -37,6 +37,7 @@ extern "C" {
 #include "si91x_device.h" // Device-specific definitions
 #include "sl_status.h"    // Status codes
 #include "rsi_opamp.h"    // OPAMP driver functions
+#include "sl_log_helper.h"
 
 /***************************************************************************/
 /**

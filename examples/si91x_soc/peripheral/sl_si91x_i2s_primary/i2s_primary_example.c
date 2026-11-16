@@ -61,31 +61,37 @@ void i2s_example_init(void)
   do {
     //Fetch I2S driver version
     i2s_version = sl_si91x_i2s_get_version();
-    DEBUGOUT("I2S version is fetched successfully \n");
-    DEBUGOUT("API version is %d.%d.%d\n", i2s_version.release, i2s_version.major, i2s_version.minor);
+    /* Note: All status messages in this example — both success and failure — are
+ * intentionally emitted via SL_PRINT_STRING_ERROR so that they remain visible
+ * on the console at the default log level. This is a demonstration choice, not
+ * a recommendation: in production code, ERROR severity should be reserved for
+ * actual failures, with successful operations logged via SL_PRINT_STRING_INFO
+ * (or SL_PRINT_STRING_DEBUG for verbose trace). */
+    SL_PRINT_STRING_ERROR("I2S version is fetched successfully \n");
+    SL_PRINT_STRING_ERROR("API version is %d.%d.%d\n", i2s_version.release, i2s_version.major, i2s_version.minor);
     //Initialize I2S peripheral and store driver handle in i2s_driver_handle
     status = sl_si91x_i2s_init(I2S_INSTANCE, &i2s_driver_handle);
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("I2S Initialization fail\r\n");
+      SL_PRINT_STRING_ERROR("I2S Initialization fail\r\n");
       break;
     } else {
-      DEBUGOUT("I2S Initialization success\r\n");
+      SL_PRINT_STRING_ERROR("I2S Initialization success\r\n");
     }
     //Configure ARM full power mode
     status = sl_si91x_i2s_configure_power_mode(i2s_driver_handle, SL_I2S_FULL_POWER);
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("I2S power mode config fail\r\n");
+      SL_PRINT_STRING_ERROR("I2S power mode config fail\r\n");
       break;
     } else {
-      DEBUGOUT("I2S power mode config success\r\n");
+      SL_PRINT_STRING_ERROR("I2S power mode config success\r\n");
     }
     //Register user callback handler
     status = sl_si91x_i2s_register_event_callback(i2s_driver_handle, callback_event);
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("I2S user callback register fail\r\n");
+      SL_PRINT_STRING_ERROR("I2S user callback register fail\r\n");
       break;
     } else {
-      DEBUGOUT("I2S user callback register success\r\n");
+      SL_PRINT_STRING_ERROR("I2S user callback register success\r\n");
     }
   } while (false);
 }
@@ -108,19 +114,19 @@ void i2s_example_process_action(void)
       do {
         //Configure transmitter parameters for i2s transfer
         if (sl_si91x_i2s_config_transmit_receive(i2s_driver_handle, &i2s_xfer_config)) {
-          DEBUGOUT("I2S transmit config fail\r\n");
+          SL_PRINT_STRING_ERROR("I2S transmit config fail\r\n");
           state = INVALID_STATE;
           break;
         } else {
-          DEBUGOUT("I2S transmit config success\r\n");
+          SL_PRINT_STRING_ERROR("I2S transmit config success\r\n");
         }
         //Configure I2S transmit DMA channel
         if (sl_si91x_i2s_transmit_data(i2s_driver_handle, i2s_primary_data_out, I2S_PRIMARY_BUFFER_SIZE)) {
-          DEBUGOUT("I2S transmit start fail\r\n");
+          SL_PRINT_STRING_ERROR("I2S transmit start fail\r\n");
           state = INVALID_STATE;
           break;
         } else {
-          DEBUGOUT("I2S transmit start success\r\n");
+          SL_PRINT_STRING_ERROR("I2S transmit start success\r\n");
         }
       } while (false);
       state = WAIT_STATE;
@@ -138,19 +144,19 @@ void i2s_example_process_action(void)
       do {
         //Configure receiver parameters for i2s transfer
         if (sl_si91x_i2s_config_transmit_receive(i2s_driver_handle, &i2s_xfer_config)) {
-          DEBUGOUT("I2S receive config fail\r\n");
+          SL_PRINT_STRING_ERROR("I2S receive config fail\r\n");
           state = INVALID_STATE;
           break;
         } else {
-          DEBUGOUT("I2S receive config success\r\n");
+          SL_PRINT_STRING_ERROR("I2S receive config success\r\n");
         }
         //Configure I2S receive DMA channel
         if (sl_si91x_i2s_receive_data(i2s_driver_handle, i2s_primary_data_in, I2S_PRIMARY_BUFFER_SIZE)) {
-          DEBUGOUT("I2S receive start fail\r\n");
+          SL_PRINT_STRING_ERROR("I2S receive start fail\r\n");
           state = INVALID_STATE;
           break;
         } else {
-          DEBUGOUT("I2S receive start success\r\n");
+          SL_PRINT_STRING_ERROR("I2S receive start success\r\n");
         }
       } while (false);
       state = WAIT_STATE;
@@ -158,11 +164,11 @@ void i2s_example_process_action(void)
 
     case WAIT_STATE:
       if (i2s_primary_send_complete) {
-        DEBUGOUT("Data send successfully\r\n");
+        SL_PRINT_STRING_ERROR("Data send successfully\r\n");
         i2s_primary_send_complete = 0;
       }
       if (i2s_primary_receive_complete) {
-        DEBUGOUT("Data received successfully\r\n");
+        SL_PRINT_STRING_ERROR("Data received successfully\r\n");
         compare_loop_back_data();
         i2s_primary_receive_complete = 0;
         state                        = SEND_DATA;
@@ -192,9 +198,9 @@ static void compare_loop_back_data(void)
     }
   }
   if (data_index == I2S_PRIMARY_BUFFER_SIZE) {
-    DEBUGOUT("Data comparison successful\n");
+    SL_PRINT_STRING_ERROR("Data comparison successful\n");
   } else {
-    DEBUGOUT("Data comparison failed\n");
+    SL_PRINT_STRING_ERROR("Data comparison failed\n");
   }
 }
 

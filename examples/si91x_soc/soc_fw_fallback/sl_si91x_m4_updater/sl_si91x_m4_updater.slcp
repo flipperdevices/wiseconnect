@@ -3,7 +3,7 @@ package: platform_siwx91x_app
 description: "This application demonstrates the process of configuring a basic LED blinking functionality. \nIt highlights how to initialize the GPIO peripheral, set the LED pin as an output, \nand toggle its state periodically to achieve a blinking effect.\n"
 category: Example|si91x_soc
 quality: production
-label: sl_si91x_m4_updater
+label: SiWx91x Platform - M4 Updater
 component:
 - id: sl_main
 - id: syscalls
@@ -28,7 +28,9 @@ template_contribution:
   priority: -100
 toolchain_settings:
 - option: gcc_compiler_option
-  value: -Wall -Werror
+  value: -Wall -Werror -Wno-error=deprecated-declarations
+- option: llvm_compiler_option
+  value: -Wall -Werror -Wno-error=deprecated-declarations
 other_file:
 - path: resources/readme/setupdiagram.png
 - path: resources/readme/updater.png
@@ -38,13 +40,26 @@ ui_hints:
     focus: true
 readme:
 - path: readme.md
+filter:
+- name: Device Type
+  value:
+  - SoC
+- name: MCU
+  value:
+  - 32-bit MCU
+- name: Level
+  value:
+  - Advanced
+- name: Wireless Technology
+  value:
+  - Wi-Fi
 post_build:
   profile: wiseconnect_soc
 sdk_extension:
 - id: wiseconnect3_sdk
   vendor: silabs
-  version: 4.0.1
+  version: 4.1.2
 sdk:
   id: simplicity_sdk
   vendor: silabs
-  version: 2025.12.2
+  version: 2026.6.2

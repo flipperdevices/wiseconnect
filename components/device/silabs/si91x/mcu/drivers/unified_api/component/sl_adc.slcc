@@ -32,6 +32,5 @@ requires:
   - name: sl_dma
   - name: romdriver_ulpss
   - name: systemlevel_rtc
-documentation:
-    docset: wiseconnect
-    document: wiseconnect-api-reference-guide-si91x-peripherals/adc
+  - name: log_none
+

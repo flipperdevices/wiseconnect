@@ -114,6 +114,7 @@ static void tcp_remove_sacks_gt(struct tcp_pcb *pcb, u32_t seq);
  * @param p received TCP segment to process (p->payload pointing to the TCP header)
  * @param inp network interface on which this segment was received
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 void
 tcp_input(struct pbuf *p, struct netif *inp)
 {
@@ -603,6 +604,7 @@ dropped:
  * any more.
  * @returns 1 if the pcb has been closed and deallocated, 0 otherwise
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 static int
 tcp_input_delayed_close(struct tcp_pcb *pcb)
 {
@@ -633,6 +635,7 @@ tcp_input_delayed_close(struct tcp_pcb *pcb)
  * @note the segment which arrived is saved in global variables, therefore only the pcb
  *       involved is passed as a parameter to this function
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 static void
 tcp_listen_input(struct tcp_pcb_listen *pcb)
 {
@@ -745,6 +748,7 @@ tcp_listen_input(struct tcp_pcb_listen *pcb)
  * @note the segment which arrived is saved in global variables, therefore only the pcb
  *       involved is passed as a parameter to this function
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 static void
 tcp_timewait_input(struct tcp_pcb *pcb)
 {
@@ -794,6 +798,7 @@ tcp_timewait_input(struct tcp_pcb *pcb)
  * @note the segment which arrived is saved in global variables, therefore only the pcb
  *       involved is passed as a parameter to this function
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 static err_t
 tcp_process(struct tcp_pcb *pcb)
 {
@@ -1067,6 +1072,7 @@ tcp_process(struct tcp_pcb *pcb)
  *
  * Called from tcp_receive()
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 static void
 tcp_oos_insert_segment(struct tcp_seg *cseg, struct tcp_seg *next)
 {
@@ -1104,6 +1110,7 @@ tcp_oos_insert_segment(struct tcp_seg *cseg, struct tcp_seg *next)
 #endif /* TCP_QUEUE_OOSEQ */
 
 /** Remove segments from a list if the incoming ACK acknowledges them */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 static struct tcp_seg *
 tcp_free_acked_segments(struct tcp_pcb *pcb, struct tcp_seg *seg_list, const char *dbg_list_name,
                         struct tcp_seg *dbg_other_seg_list)
@@ -1157,6 +1164,7 @@ tcp_free_acked_segments(struct tcp_pcb *pcb, struct tcp_seg *seg_list, const cha
  *
  * Called from tcp_process().
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 static void
 tcp_receive(struct tcp_pcb *pcb)
 {
@@ -1928,6 +1936,7 @@ tcp_get_next_optbyte(void)
  *
  * @param pcb the tcp_pcb for which a segment arrived
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 static void
 tcp_parseopt(struct tcp_pcb *pcb)
 {

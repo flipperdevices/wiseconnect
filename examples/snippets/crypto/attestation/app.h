@@ -29,8 +29,8 @@ void app_process_action(void);
 /******************************************************
  * *               Function Declarations
  * ******************************************************/
-void application_start();
-void sl_decode();
+void application_start(const void *unused);
+void sl_decode(void);
 
 //! Length of token to be received
 #define LENGTH_OF_TOKEN 500

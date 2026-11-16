@@ -38,7 +38,7 @@ extern "C" {
 #include "sl_status.h"
 #include "sl_si91x_gpdma_config.h"
 #include "rsi_rom_gpdma.h"
-
+#include "sl_log_helper.h"
 #define sl_si91x_gpdma_irq_handler IRQ031_Handler
 
 /***************************************************************************/

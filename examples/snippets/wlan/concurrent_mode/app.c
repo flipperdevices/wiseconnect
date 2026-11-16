@@ -126,7 +126,6 @@ const osThreadAttr_t thread_attributes = {
   .stack_size = 3072,
   .priority   = osPriorityLow,
   .tz_module  = 0,
-  .reserved   = 0,
 };
 
 static const sl_net_wifi_client_profile_t wifi_client_profile = {
@@ -147,8 +146,6 @@ static const sl_net_wifi_client_profile_t wifi_client_profile = {
         .mode = SL_IP_MANAGEMENT_DHCP,
         .type = SL_IPV4,
         .host_name = NULL,
-        .ip = {{{0}}},
-
     }
 };
 
@@ -250,7 +247,7 @@ static void measure_and_print_throughput(uint32_t total_num_of_bytes, uint32_t t
   float duration = ((test_timeout) / 1000);                    // ms to sec
   float result   = ((float)total_num_of_bytes * 8) / duration; // bytes to bps
   result         = (result / 1000000);                         // bps to Mbps
-  printf("\r\nThroughput achieved @ %0.02f Mbps in %0.03f sec successfully\r\n", result, duration);
+  SL_DEBUG_LOG_V2(INFO, "Throughput achieved @ %0.02f Mbps in %0.03f sec successfully\r\n", result, duration);
 }
 
 void data_callback(uint32_t sock_no,
@@ -263,13 +260,16 @@ void data_callback(uint32_t sock_no,
 
   if (first_data_frame) {
     start = osKernelGetTickCount();
-    printf("\r\nClient Socket ID : %ld\r\n", sock_no);
+    SL_DEBUG_LOG_V2(INFO, "Client Socket ID : %ld\r\n", sock_no);
     switch (THROUGHPUT_TYPE) {
       case UDP_RX:
-        printf("\r\nUDP_RX Throughput test start\r\n");
+        SL_DEBUG_LOG_V2(INFO, "UDP_RX Throughput test start\r\n");
         break;
       case TCP_RX:
-        printf("\r\nTCP_RX Throughput test start\r\n");
+        SL_DEBUG_LOG_V2(INFO, "TCP_RX Throughput test start\r\n");
+        break;
+      default:
+        SL_DEBUG_LOG_V2(ERROR, "Invalid Throughput test");
         break;
     }
     first_data_frame = 0;
@@ -290,41 +290,41 @@ static void application_start(void *argument)
 
   status = sl_net_init(SL_NET_WIFI_CLIENT_INTERFACE, &sl_wifi_default_concurrent_configuration, NULL, NULL);
   if (status != SL_STATUS_OK) {
-    printf("\r\nFailed to start Wi-Fi client interface: 0x%lx\r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "Failed to start Wi-Fi client interface: 0x%lx\r\n", status);
     return;
   }
-  printf("\r\nWi-Fi Client interface init\r\n");
+  SL_DEBUG_LOG_V2(INFO, "Wi-Fi Client interface init\r\n");
 
   status = sl_net_set_profile(SL_NET_WIFI_CLIENT_INTERFACE, SL_NET_PROFILE_ID_1, &wifi_client_profile);
   if (status != SL_STATUS_OK) {
-    printf("\r\nFailed to set client profile: 0x%lx\r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "Failed to set client profile: 0x%lx\r\n", status);
     return;
   }
-  printf("\r\nWi-Fi set client profile success\r\n");
+  SL_DEBUG_LOG_V2(INFO, "Wi-Fi set client profile success\r\n");
 
   status = sl_net_set_credential(SL_NET_DEFAULT_WIFI_CLIENT_CREDENTIAL_ID,
                                  wifi_client_credential.type,
                                  &wifi_client_credential.data,
                                  wifi_client_credential.data_length);
   if (status != SL_STATUS_OK) {
-    printf("Failed to set credentials: 0x%lx\r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "Failed to set credentials: 0x%lx\r\n", status);
     return;
   }
-  printf("\nWi-Fi set credential success\n");
+  SL_DEBUG_LOG_V2(INFO, "Wi-Fi set credential success\r\n");
 
   status = sl_net_up(SL_NET_WIFI_CLIENT_INTERFACE, SL_NET_PROFILE_ID_1);
   if (status != SL_STATUS_OK) {
-    printf("Failed to bring Wi-Fi client interface up: 0x%lx\r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "Failed to bring Wi-Fi client interface up: 0x%lx\r\n", status);
     return;
   }
-  printf("\r\nWi-Fi Client interface up\r\n");
+  SL_DEBUG_LOG_V2(INFO, "Wi-Fi Client interface up\r\n");
 
   status = sl_net_get_profile(SL_NET_WIFI_CLIENT_INTERFACE, SL_NET_PROFILE_ID_1, &profile);
   if (status != SL_STATUS_OK) {
-    printf("Failed to get client profile: 0x%lx\r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "Failed to get client profile: 0x%lx\r\n", status);
     return;
   }
-  printf("\r\nSuccess to get client profile\r\n");
+  SL_DEBUG_LOG_V2(INFO, "Success to get client profile\r\n");
 
   ip_address.type = SL_IPV4;
   memcpy(&ip_address.ip.v4.bytes, &profile.ip.ip.v4.ip_address.bytes, sizeof(sl_ipv4_address_t));
@@ -332,33 +332,33 @@ static void application_start(void *argument)
 
   status = sl_net_init(SL_NET_WIFI_AP_INTERFACE, &sl_wifi_default_concurrent_configuration, NULL, NULL);
   if (status != SL_STATUS_OK) {
-    printf("\r\nFailed to start Wi-Fi AP interface: 0x%lx\r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "Failed to start Wi-Fi AP interface: 0x%lx\r\n", status);
     return;
   }
-  printf("\r\nWi-Fi AP interface init\r\n");
+  SL_DEBUG_LOG_V2(INFO, "Wi-Fi AP interface init\r\n");
 
   sl_wifi_set_callback_v2(SL_WIFI_CLIENT_CONNECTED_EVENTS, ap_connected_event_handler, NULL);
   sl_wifi_set_callback_v2(SL_WIFI_CLIENT_DISCONNECTED_EVENTS, ap_disconnected_event_handler, NULL);
 
   status = sl_wifi_get_channel(SL_WIFI_CLIENT_2_4GHZ_INTERFACE, &client_channel);
   if (status != SL_STATUS_OK) {
-    printf("\r\nFailed to get client channel: 0x%lx\r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "Failed to get client channel: 0x%lx\r\n", status);
     return;
   }
-  printf("\r\nSuccess to get client channel\r\n");
+  SL_DEBUG_LOG_V2(INFO, "Success to get client channel\r\n");
 
   wifi_ap_profile.config.channel.channel = client_channel.channel;
   status = sl_net_set_profile(SL_NET_WIFI_AP_INTERFACE, SL_NET_PROFILE_ID_1, &wifi_ap_profile);
   if (status != SL_STATUS_OK) {
-    printf("\r\nFailed to set AP profile: 0x%lx\r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "Failed to set AP profile: 0x%lx\r\n", status);
     return;
   }
-  printf("\r\nSuccess to set AP profile \r\n");
+  SL_DEBUG_LOG_V2(INFO, "Success to set AP profile \r\n");
 
   ip_address.type = SL_IPV4;
   memcpy(&ip_address.ip.v4.bytes, &wifi_ap_profile.ip.ip.v4.ip_address.bytes, sizeof(sl_ipv4_address_t));
 
-  printf("\r\n IP Address of AP:");
+  SL_DEBUG_LOG_V2(INFO, " IP Address of AP:");
   print_sl_ip_address(&ip_address);
 
   status = sl_net_set_credential(SL_NET_DEFAULT_WIFI_AP_CREDENTIAL_ID,
@@ -366,17 +366,17 @@ static void application_start(void *argument)
                                  &wifi_ap_credential.data,
                                  wifi_ap_credential.data_length);
   if (status != SL_STATUS_OK) {
-    printf("Failed to set credentials: 0x%lx\r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "Failed to set credentials: 0x%lx\r\n", status);
     return;
   }
-  printf("\nWi-Fi set credential success\n");
+  SL_DEBUG_LOG_V2(INFO, "Wi-Fi set credential success\r\n");
 
   status = sl_net_up(SL_NET_WIFI_AP_INTERFACE, SL_NET_PROFILE_ID_1);
   if (status != SL_STATUS_OK) {
-    printf("\r\nFailed to bring Wi-Fi AP interface up: 0x%lx\r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "Failed to bring Wi-Fi AP interface up: 0x%lx\r\n", status);
     return;
   }
-  printf("\r\nAP started\r\n");
+  SL_DEBUG_LOG_V2(INFO, "AP started\r\n");
 
 #if SL_WIFI_ENABLE_VENDOR_IE
   // -------------------------------
@@ -398,9 +398,9 @@ static void application_start(void *argument)
 
   status = sl_wifi_add_vendor_ie(&vendor_ie1, &fw_unique_id1);
   if (status == SL_STATUS_OK) {
-    printf("vendor-specific IE added with unique ID: %d\n", fw_unique_id1);
+    SL_DEBUG_LOG_V2(INFO, "vendor-specific IE added with unique ID: %d\r\n", fw_unique_id1);
   } else {
-    printf("Failed to add vendor-specific IE: 0x%lx\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "Failed to add vendor-specific IE: 0x%lx\r\n", status);
   }
 
   uint8_t fw_unique_id2       = 0;
@@ -417,9 +417,9 @@ static void application_start(void *argument)
   vendor_ie2.ie_buffer         = vendor_ie_buffer2;
   status                       = sl_wifi_add_vendor_ie(&vendor_ie2, &fw_unique_id2);
   if (status == SL_STATUS_OK) {
-    printf("vendor-specific IE added with unique ID: %d\n", fw_unique_id2);
+    SL_DEBUG_LOG_V2(INFO, "vendor-specific IE added with unique ID: %d\r\n", fw_unique_id2);
   } else {
-    printf("Failed to add vendor-specific IE: 0x%lx\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "Failed to add vendor-specific IE: 0x%lx\r\n", status);
   }
 
   // -------------------------------
@@ -443,9 +443,9 @@ static void application_start(void *argument)
   status = sl_wifi_add_vendor_ie(&vendor_ie2, &fw_unique_id2);
 
   if (status == SL_STATUS_OK) {
-    printf("vendor-specific IE with unique ID: %d updated.\n", fw_unique_id2);
+    SL_DEBUG_LOG_V2(INFO, "vendor-specific IE with unique ID: %d updated.\r\n", fw_unique_id2);
   } else {
-    printf("Failed to add vendor-specific IE: 0x%lx\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "Failed to add vendor-specific IE: 0x%lx\r\n", status);
   }
 
 #endif
@@ -467,7 +467,7 @@ static void application_start(void *argument)
       send_data_to_udp_server();
       break;
     default:
-      printf("Invalid Throughput test");
+      SL_DEBUG_LOG_V2(ERROR, "Invalid Throughput test");
   }
 
 #if SL_WIFI_ENABLE_VENDOR_IE
@@ -477,9 +477,9 @@ static void application_start(void *argument)
   // Calling sl_wifi_remove_vendor_ie with existing unique ID will remove the existing vendor IE from FW.
   status = sl_wifi_remove_vendor_ie(fw_unique_id1);
   if (status == SL_STATUS_OK) {
-    printf("vendor-specific IE removed successfully.\n");
+    SL_DEBUG_LOG_V2(INFO, "vendor-specific IE removed successfully.\r\n");
   } else {
-    printf("Failed to remove vendor-specific IE: 0x%lx\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "Failed to remove vendor-specific IE: 0x%lx\r\n", status);
   }
 #endif
 
@@ -506,9 +506,9 @@ static sl_status_t ap_connected_event_handler(sl_wifi_event_t event,
     return status_code;
   }
 
-  printf("Remote Client connected: ");
+  SL_DEBUG_LOG_V2(INFO, "Remote Client connected: ");
   print_mac_address((sl_mac_address_t *)data);
-  printf("\n");
+  SL_DEBUG_LOG_V2(INFO, "\r\n");
 
   return SL_STATUS_OK;
 }
@@ -526,9 +526,9 @@ static sl_status_t ap_disconnected_event_handler(sl_wifi_event_t event,
     return status_code;
   }
 
-  printf("Remote Client disconnected: ");
+  SL_DEBUG_LOG_V2(INFO, "Remote Client disconnected: ");
   print_mac_address((sl_mac_address_t *)data);
-  printf("\n");
+  SL_DEBUG_LOG_V2(INFO, "\r\n");
 
 #if SL_WIFI_ENABLE_VENDOR_IE
   // -------------------------------
@@ -536,9 +536,9 @@ static sl_status_t ap_disconnected_event_handler(sl_wifi_event_t event,
   // -------------------------------
   sl_status_t remove_status = sl_wifi_remove_all_vendor_ie();
   if (remove_status == SL_STATUS_OK) {
-    printf("All vendor-specific IEs removed successfully.\n");
+    SL_DEBUG_LOG_V2(INFO, "All vendor-specific IEs removed successfully.\r\n");
   } else {
-    printf("Failed to remove all vendor-specific IEs: 0x%lx\n", remove_status);
+    SL_DEBUG_LOG_V2(ERROR, "Failed to remove all vendor-specific IEs: 0x%lx\r\n", remove_status);
   }
 #endif
 
@@ -559,20 +559,20 @@ void send_data_to_tcp_server(void)
 
   client_socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
   if (client_socket < 0) {
-    printf("\r\nSocket Create failed with bsd error: %d\r\n", errno);
+    SL_DEBUG_LOG_V2(ERROR, "Socket Create failed with bsd error: %d\r\n", errno);
     return;
   }
-  printf("\r\nSocket ID : %d\r\n", client_socket);
+  SL_DEBUG_LOG_V2(INFO, "Socket ID : %d\r\n", client_socket);
 
   socket_return_value = connect(client_socket, (struct sockaddr *)&server_address, socket_length);
   if (socket_return_value < 0) {
-    printf("\r\nSocket Connect failed with bsd error: %d\r\n", errno);
+    SL_DEBUG_LOG_V2(ERROR, "Socket Connect failed with bsd error: %d\r\n", errno);
     close(client_socket);
     return;
   }
-  printf("\r\nSocket connected to TCP server\r\n");
+  SL_DEBUG_LOG_V2(INFO, "Socket connected to TCP server\r\n");
 
-  printf("\r\nTCP_TX Throughput test start\r\n");
+  SL_DEBUG_LOG_V2(INFO, "TCP_TX Throughput test start\r\n");
   start = osKernelGetTickCount();
   while (total_bytes_sent < BYTES_TO_SEND) {
     sent_bytes = send(client_socket, data_buffer, TCP_BUFFER_SIZE, 0);
@@ -581,19 +581,19 @@ void send_data_to_tcp_server(void)
     if (sent_bytes < 0) {
       if (errno == ENOBUFS)
         continue;
-      printf("\r\nSocket send failed with bsd error: %d\r\n", errno);
+      SL_DEBUG_LOG_V2(ERROR, "Socket send failed with bsd error: %d\r\n", errno);
       close(client_socket);
       break;
     }
     total_bytes_sent = total_bytes_sent + sent_bytes;
 
     if ((now - start) > TEST_TIMEOUT) {
-      printf("\r\nTime Out: %ld\r\n", (now - start));
+      SL_DEBUG_LOG_V2(INFO, "Time Out: %ld\r\n", (now - start));
       break;
     }
   }
-  printf("\r\nTCP_TX Throughput test finished\r\n");
-  printf("\r\nTotal bytes sent : %ld\r\n", total_bytes_sent);
+  SL_DEBUG_LOG_V2(INFO, "TCP_TX Throughput test finished\r\n");
+  SL_DEBUG_LOG_V2(INFO, "Total bytes sent : %ld\r\n", total_bytes_sent);
 
   measure_and_print_throughput(total_bytes_sent, (now - start));
 
@@ -610,17 +610,17 @@ void receive_data_from_tcp_client(void)
 
   sl_status_t status = sl_si91x_config_socket(socket_config);
   if (status != SL_STATUS_OK) {
-    printf("Socket config failed: %ld\r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "Socket config failed: %ld\r\n", status);
   }
-  printf("\r\nSocket config Done\r\n");
+  SL_DEBUG_LOG_V2(INFO, "Socket config Done\r\n");
 
 #if SOCKET_ASYNC_FEATURE
   server_socket = sl_si91x_socket_async(AF_INET, SOCK_STREAM, IPPROTO_TCP, &data_callback);
   if (server_socket < 0) {
-    printf("\r\nSocket creation failed with bsd error: %d\r\n", errno);
+    SL_DEBUG_LOG_V2(ERROR, "Socket creation failed with bsd error: %d\r\n", errno);
     return;
   }
-  printf("\r\nServer Socket ID : %d\r\n", server_socket);
+  SL_DEBUG_LOG_V2(INFO, "Server Socket ID : %d\r\n", server_socket);
 
   socket_return_value = sl_si91x_setsockopt(server_socket,
                                             SOL_SOCKET,
@@ -628,7 +628,7 @@ void receive_data_from_tcp_client(void)
                                             &high_performance_socket,
                                             sizeof(high_performance_socket));
   if (socket_return_value < 0) {
-    printf("\r\nSet Socket option failed with bsd error: %d\r\n", errno);
+    SL_DEBUG_LOG_V2(ERROR, "Set Socket option failed with bsd error: %d\r\n", errno);
     close(client_socket);
     return;
   }
@@ -642,22 +642,22 @@ void receive_data_from_tcp_client(void)
 
   socket_return_value = sl_si91x_bind(server_socket, (struct sockaddr *)&server_address, socket_length);
   if (socket_return_value < 0) {
-    printf("\r\nSocket bind failed with bsd error: %d\r\n", errno);
+    SL_DEBUG_LOG_V2(ERROR, "Socket bind failed with bsd error: %d\r\n", errno);
     close(server_socket);
     return;
   }
 
   socket_return_value = sl_si91x_listen(server_socket, BACK_LOG);
   if (socket_return_value < 0) {
-    printf("\r\nSocket listen failed with bsd error: %d\r\n", errno);
+    SL_DEBUG_LOG_V2(ERROR, "Socket listen failed with bsd error: %d\r\n", errno);
     close(server_socket);
     return;
   }
-  printf("\r\nListening on Local Port : %d\r\n", LISTENING_PORT);
+  SL_DEBUG_LOG_V2(INFO, "Listening on Local Port : %d\r\n", LISTENING_PORT);
 
   client_socket = sl_si91x_accept(server_socket, NULL, 0);
   if (client_socket < 0) {
-    printf("\r\nSocket accept failed with bsd error: %d\r\n", errno);
+    SL_DEBUG_LOG_V2(ERROR, "Socket accept failed with bsd error: %d\r\n", errno);
     close(server_socket);
     return;
   }
@@ -668,8 +668,8 @@ void receive_data_from_tcp_client(void)
 
   now = osKernelGetTickCount();
 
-  printf("\r\nTCP_RX Throughput test finished\r\n");
-  printf("\r\nTotal bytes received : %ld\r\n", bytes_read);
+  SL_DEBUG_LOG_V2(INFO, "TCP_RX Throughput test finished\r\n");
+  SL_DEBUG_LOG_V2(INFO, "Total bytes received : %ld\r\n", bytes_read);
 
   close(server_socket);
   close(client_socket);
@@ -680,6 +680,9 @@ void receive_data_from_tcp_client(void)
 
 void send_data_to_udp_server(void)
 {
+#if LISTEN_ON_AP_INTERFACE
+  int socket_return_value = 0;
+#endif
   int client_socket                 = -1;
   uint32_t total_bytes_sent         = 0;
   struct sockaddr_in server_address = { 0 };
@@ -691,37 +694,48 @@ void send_data_to_udp_server(void)
 
   client_socket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
   if (client_socket < 0) {
-    printf("\r\nSocket creation failed with bsd error: %d\r\n", errno);
+    SL_DEBUG_LOG_V2(ERROR, "Socket creation failed with bsd error: %d\r\n", errno);
     return;
   }
-  printf("\r\nSocket ID : %d\r\n", client_socket);
+  SL_DEBUG_LOG_V2(INFO, "Socket ID : %d\r\n", client_socket);
 
-  printf("\r\nUDP_TX Throughput test start\r\n");
+#if LISTEN_ON_AP_INTERFACE
+  socket_return_value =
+    sl_si91x_setsockopt(client_socket, SOL_SOCKET, SL_SI91X_SO_SOCK_VAP_ID, &ap_vap, sizeof(ap_vap));
+  if (socket_return_value < 0) {
+    SL_DEBUG_LOG_V2(ERROR, "Set Socket option failed with bsd error: %d\r\n", errno);
+    close(client_socket);
+    return;
+  }
+#endif
+
+  SL_DEBUG_LOG_V2(INFO, "UDP_TX Throughput test start\r\n");
   start = osKernelGetTickCount();
   while (total_bytes_sent < BYTES_TO_SEND) {
     sent_bytes =
       sendto(client_socket, data_buffer, UDP_BUFFER_SIZE, 0, (struct sockaddr *)&server_address, socket_length);
     now = osKernelGetTickCount();
     if ((now - start) > TEST_TIMEOUT) {
-      printf("\r\nTime Out: %ld\r\n", (now - start));
+      SL_DEBUG_LOG_V2(INFO, "Time Out: %ld\r\n", (now - start));
       break;
     }
     if (sent_bytes < 0) {
       if (errno == ENOBUFS)
         continue;
-      printf("\r\nSocket send failed with bsd error: %d\r\n", errno);
+      SL_DEBUG_LOG_V2(ERROR, "Socket send failed with bsd error: %d\r\n", errno);
       close(client_socket);
       break;
     }
     total_bytes_sent = total_bytes_sent + sent_bytes;
   }
-  printf("\r\nUDP_TX Throughput test finished\r\n");
-  printf("\r\nTotal bytes sent : %ld\r\n", total_bytes_sent);
+  SL_DEBUG_LOG_V2(INFO, "UDP_TX Throughput test finished\r\n");
+  SL_DEBUG_LOG_V2(INFO, "Total bytes sent : %ld\r\n", total_bytes_sent);
 
   measure_and_print_throughput(total_bytes_sent, (now - start));
 
   close(client_socket);
 }
+
 void receive_data_from_udp_client(void)
 {
   int client_socket = -1;
@@ -733,14 +747,19 @@ void receive_data_from_udp_client(void)
 #if SOCKET_ASYNC_FEATURE
   client_socket = sl_si91x_socket_async(AF_INET, SOCK_DGRAM, IPPROTO_UDP, &data_callback);
   if (client_socket < 0) {
-    printf("\r\nSocket creation failed with bsd error: %d\r\n", errno);
+    SL_DEBUG_LOG_V2(ERROR, "Socket creation failed with bsd error: %d\r\n", errno);
     return;
   }
-  printf("\r\nSocket ID : %d\r\n", client_socket);
+  SL_DEBUG_LOG_V2(INFO, "Socket ID : %d\r\n", client_socket);
 
 #if LISTEN_ON_AP_INTERFACE
   socket_return_value =
     sl_si91x_setsockopt(client_socket, SOL_SOCKET, SL_SI91X_SO_SOCK_VAP_ID, &ap_vap, sizeof(ap_vap));
+  if (socket_return_value < 0) {
+    SL_DEBUG_LOG_V2(ERROR, "Set Socket option failed with bsd error: %d\r\n", errno);
+    close(client_socket);
+    return;
+  }
 #endif
 
   server_address.sin_family = AF_INET;
@@ -749,18 +768,18 @@ void receive_data_from_udp_client(void)
   socket_return_value = sl_si91x_bind(client_socket, (struct sockaddr *)&server_address, socket_length);
 
   if (socket_return_value < 0) {
-    printf("\r\nSocket bind failed with bsd error: %d\r\n", errno);
+    SL_DEBUG_LOG_V2(ERROR, "Socket bind failed with bsd error: %d\r\n", errno);
     close(client_socket);
     return;
   }
-  printf("\r\nListening on Local Port %d\r\n", LISTENING_PORT);
+  SL_DEBUG_LOG_V2(INFO, "Listening on Local Port %d\r\n", LISTENING_PORT);
 
   while (!has_data_received) {
     osThreadYield();
   }
   now = osKernelGetTickCount();
-  printf("\r\nUDP_RX Async Throughput test finished\r\n");
-  printf("\r\nTotal bytes received : %ld\r\n", bytes_read);
+  SL_DEBUG_LOG_V2(INFO, "UDP_RX Async Throughput test finished\r\n");
+  SL_DEBUG_LOG_V2(INFO, "Total bytes received : %ld\r\n", bytes_read);
 
   measure_and_print_throughput(bytes_read, (now - start));
 

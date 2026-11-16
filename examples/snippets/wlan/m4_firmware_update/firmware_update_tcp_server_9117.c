@@ -91,7 +91,7 @@ int main(int argc, char **argv)
       return;
     }
     //strcpy(sendip,(const char *)inet_ntop(AF_INET,(void *)&dst_sock.sin_addr,sendip,sizeof(sendip)));
-    //printf("Connect Req from %s accepted\n",sendip);
+    //printf("Connect Req from %s accepted\n", sendip);
 
     if (fork() == 0) {
       close(sock_id);

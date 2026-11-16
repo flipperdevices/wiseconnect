@@ -1,8 +1,8 @@
-# SL ULP DAC
+# SiWx91x Platform ULP DAC
 
 ## Table of Contents
 
-- [SL ULP DAC](#sl-ulp-dac)
+- [SiWx91x Platform ULP DAC](#platform-siwx91x-ulp-dac)
   - [Table of Contents](#table-of-contents)
   - [Purpose/Scope](#purposescope)
   - [Overview](#overview)
@@ -15,6 +15,9 @@
     - [Application Configuration Parameters](#application-configuration-parameters)
     - [Pin Configuration](#pin-configuration)
   - [Test the Application](#test-the-application)
+  - [Troubleshooting](#troubleshooting)
+  - [Resources](#resources)
+  - [Report Bugs/Support](#report-bugssupport)
 
 ## Purpose/Scope
 
@@ -34,12 +37,13 @@
 - DAC will work only in single ended.
 - Monotonic by design - based on input sample it will give equivalent output.
 
+
 ## Prerequisites/Setup Requirements
 
 ### Hardware Requirements
 
 - Windows PC
-- Silicon Labs Si917 Evaluation Kit [[BRD4002](https://www.silabs.com/development-tools/wireless/wireless-pro-kit-mainboard?tab=overview) + [BRD4338A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-rb4338a-wifi-6-bluetooth-le-soc-radio-board?tab=overview) / [BRD4342A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx91x-rb4342a-wifi-6-bluetooth-le-soc-radio-board?tab=overview) / [BRD4343A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4343a-wi-fi-6-bluetooth-le-8mb-flash-radio-board-for-module?tab=overview)]
+- Silicon Labs SiWx91x Evaluation Kit [[BRD4002](https://www.silabs.com/development-tools/wireless/wireless-pro-kit-mainboard?tab=overview) + [BRD4338A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-rb4338a-wifi-6-bluetooth-le-soc-radio-board?tab=overview) / [BRD4342A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx91x-rb4342a-wifi-6-bluetooth-le-soc-radio-board?tab=overview) / [BRD4343A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4343a-wi-fi-6-bluetooth-le-8mb-flash-radio-board-for-module?tab=overview) / [BRD4343C](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4343c-wi-fi-6-bluetooth-le-8mb-flash-radio-board-for-module?tab=overview)]
 - SiWx917 AC1 Module Explorer Kit [BRD2708A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-ek2708a-explorer-kit)
 
 ### Software Requirements
@@ -67,6 +71,38 @@ For details on the project folder structure, see the [WiSeConnect Examples](http
 ## Application Build Environment
 
 ### Application Configuration Parameters
+
+- Configure the following macros in the [`sl_ulp_dac_example.c`](sl_ulp_dac_example.c) file and update/modify following macros, if required.
+
+- `STATIC_MODE`: Selects the DAC operation mode. Set to 1 for Static mode (constant output voltage) or 0 for FIFO mode (continuous waveform output). By default, it is set to 1.
+
+  ```c
+    #define STATIC_MODE           1         // For static mode set this macro value as '1'
+  ```
+
+- `BUFFER_SIZE`: Size of the DAC sample buffer. Use 1 for Static mode and up to 1024 for FIFO mode. By default, it is set to 1024.
+
+  ```c
+    #define BUFFER_SIZE           1024      // For FIFO mode (set to 1 for static mode)
+  ```
+
+- `VREF_VALUE`: DAC reference voltage (in volts) used to compute the analog output for a given digital input sample. By default, it is set to 3.3f.
+
+  ```c
+    #define VREF_VALUE            3.3f      // Reference voltage
+  ```
+
+- `MS_DELAY_COUNTER`: Loop delay count used to generate a short millisecond-level wait inside the example. By default, it is set to 4600.
+
+  ```c
+    #define MS_DELAY_COUNTER      4600      // Delay count
+  ```
+
+- `FIVE_SECOND_DELAY`: Delay, in milliseconds, used between PS4 and PS2 power-state transitions. By default, it is set to 5000.
+
+  ```c
+    #define FIVE_SECOND_DELAY     5000      // 5 seconds delay between state changes
+  ```
 
 - Configure UC from the slcp component.
 - Open **sl_si91x_ulp_dac.slcp** project file select **software component** tab and search for **DAC** in search bar.
@@ -98,6 +134,13 @@ For details on the project folder structure, see the [WiSeConnect Examples](http
 > **Note**: For recommended settings, please refer the [recommendations guide](https://docs.silabs.com/wiseconnect/latest/wiseconnect-developers-guide-prog-recommended-settings/).
 
 ## Test the Application
+
+> **Note:** Use **`Log_script.py`** from the **SiWx91x Platform Logger** example (`examples/si91x_soc/service/sl_si91x_logger/`) to decode structured console log output. Run:
+>
+> `python Log_script.py --out firmware.out --descriptor SYSVIEW_CaptiveCore.txt --port COM5 --max-args 3`
+>
+> Replace **COM5** with the serial port your board uses on the host PC.
+
 
 Refer to the instructions [here](https://docs.silabs.com/wiseconnect/latest/wiseconnect-getting-started/) to:
 
@@ -146,3 +189,18 @@ Refer to the instructions [here](https://docs.silabs.com/wiseconnect/latest/wise
 > **Note:**
 >
 >- This application is intended for demonstration purposes only to showcase the ULP peripheral functionality. It should not be used as a reference for real-time use case project development, because the wireless shutdown scenario is not supported in the current SDK.
+## Troubleshooting
+
+- If the project does not build, ensure Simplicity Studio and the WiSeConnect extension are installed and the board is connected.
+- If the device is not detected, reinstall the connectivity firmware and check USB drivers.
+
+## Resources
+
+- [WiSeConnect Getting Started](https://docs.silabs.com/wiseconnect/latest/wiseconnect-getting-started/)
+- [WiSeConnect Examples](https://docs.silabs.com/wiseconnect/latest/wiseconnect-examples/)
+- [SiWx91x SoC Documentation](https://docs.silabs.com/wiseconnect/latest/)
+
+## Report Bugs/Support
+
+For issues and support, use the Silicon Labs Community or your normal support channel.
+

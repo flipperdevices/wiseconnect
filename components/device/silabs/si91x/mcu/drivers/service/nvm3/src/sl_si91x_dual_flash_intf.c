@@ -139,6 +139,11 @@ sl_status_t rsi_flash_erase_sector(uint32_t *sector_address)
 
   /* The erase function does the erase and takes care of any missing
    * configurations to successfully erase the sector*/
+  if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("rsi_flash_erase_sector: failed st=0x%04lX,line no : %d\r\n",
+                          (unsigned long)status,
+                          (int)__LINE__);
+  }
   return status;
 }
 
@@ -169,6 +174,9 @@ sl_status_t rsi_flash_write(uint32_t *address, unsigned char *data, uint32_t len
                       0,
                       0,
                       0);
+  }
+  if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("rsi_flash_write: failed st=0x%04lX,line no : %d\r\n", (unsigned long)status, (int)__LINE__);
   }
   return status;
 }
@@ -203,6 +211,9 @@ sl_status_t rsi_flash_read(uint32_t *address, unsigned char *data, uint32_t leng
         ;
 #endif
     }
+  }
+  if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("rsi_flash_read: failed st=0x%04lX,line no : %d\r\n", (unsigned long)status, (int)__LINE__);
   }
   return status;
 }

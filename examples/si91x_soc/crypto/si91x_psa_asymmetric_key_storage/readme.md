@@ -1,8 +1,8 @@
-# PSA Asymmetric Key storage for SI91X
+# SiWx91x Platform PSA Asymmetric Key Storage
 
 ## Table of Contents
 
-- [PSA Asymmetric Key storage for SI91X](#psa-asymmetric-key-storage-for-si91x)
+- [SiWx91x Platform PSA Asymmetric Key Storage](#platform-siwx91x-psa-asymmetric-key-storage)
   - [Table of Contents](#table-of-contents)
   - [Purpose/Scope](#purposescope)
   - [Prerequisites/Setup Requirements](#prerequisitessetup-requirements)
@@ -14,6 +14,9 @@
     - [Application Configuration Parameters](#application-configuration-parameters)
   - [Test the Application](#test-the-application)
     - [Expected output](#expected-output)
+  - [Troubleshooting](#troubleshooting)
+  - [Resources](#resources)
+  - [Report Bugs/Support](#report-bugssupport)
 
 ## Purpose/Scope
 
@@ -27,7 +30,7 @@ Before running the application, the user will need the following things to setup
 ### Hardware Requirements
 
   - Windows PC
-  - Silicon Labs Si917 Evaluation Kit [WPK(BRD4002)+ BRD4338A]
+  - Silicon Labs SiWx91x Evaluation Kit [WPK(BRD4002)+ BRD4338A]
 
 ### Software Requirements
 
@@ -51,20 +54,20 @@ For details on the project folder structure, see the [WiSeConnect Examples](http
 
 ## Application Build Environment
 
-- To program the device ,refer **"Burn M4 Binary"** section in **getting-started-with-siwx917-soc** guide at **release_package/docs/index.html** to work with Si91x and Simplicity Studio.
+- To program the device, refer **"Burn M4 Binary"** section in **getting-started-with-siwx917-soc** guide at **release_package/docs/index.html** to work with SiWx91x and Simplicity Studio.
 
 ### Application Configuration Parameters
 
- * PERSISTENT_KEY_ID in [`psa_asymmetric_key_storage_app.c`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.1-content-for-docs/examples/si91x_soc/crypto/si91x_psa_asymmetric_key_storage/psa_asymmetric_key_storage_app.c) file denotes key uid which will be stored in NVM3.
- * KEY_SIZE_BITS macro in [`psa_asymmetric_key_storage_app.c`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.1-content-for-docs/examples/si91x_soc/crypto/si91x_psa_asymmetric_key_storage/psa_asymmetric_key_storage_app.c) file is size of plain private key in bits.
+ * PERSISTENT_KEY_ID in [`psa_asymmetric_key_storage_app.c`](psa_asymmetric_key_storage_app.c) file denotes key uid which will be stored in NVM3.
+ * KEY_SIZE_BITS macro in [`psa_asymmetric_key_storage_app.c`](psa_asymmetric_key_storage_app.c) file is size of plain private key in bits.
  * KEY_MAX_SIZE is the max size of the key buffer used to store the generated public key.
- * Private_key in [`psa_asymmetric_key_storage_app.c`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.1-content-for-docs/examples/si91x_soc/crypto/si91x_psa_asymmetric_key_storage/psa_asymmetric_key_storage_app.c) file is the private key to be imported.
+ * Private_key in [`psa_asymmetric_key_storage_app.c`](psa_asymmetric_key_storage_app.c) file is the private key to be imported.
  * The public key generated will replace the private key in key_attributes.
- * Public_key in [`psa_asymmetric_key_storage_app.c`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.1-content-for-docs/examples/si91x_soc/crypto/si91x_psa_asymmetric_key_storage/psa_asymmetric_key_storage_app.c) is the public key generated and exported.
+ * Public_key in [`psa_asymmetric_key_storage_app.c`](psa_asymmetric_key_storage_app.c) is the public key generated and exported.
  * Default algo for asymmetric key generation is ECDH.
  * Default ecc curve is SEP256R1
  * Default key size is 256 bits - can choose between 192 and 256
- * To change the ecc curve and key size, change the corresponding macro in [`psa_asymmetric_key_storage_app.c`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.1-content-for-docs/examples/si91x_soc/crypto/si91x_psa_asymmetric_key_storage/psa_asymmetric_key_storage_app.c) - psa_set_key_type() and change the KEY_MAX_SIZE to the corresponding length of public key generated.
+ * To change the ecc curve and key size, change the corresponding macro in [`psa_asymmetric_key_storage_app.c`](psa_asymmetric_key_storage_app.c) - psa_set_key_type() and change the KEY_MAX_SIZE to the corresponding length of public key generated.
 
 > **Note**: For recommended settings, please refer the [recommendations guide](https://docs.silabs.com/wiseconnect/latest/wiseconnect-developers-guide-prog-recommended-settings/).
 
@@ -82,3 +85,17 @@ Refer to the instructions [here](https://docs.silabs.com/wiseconnect/latest/wise
 Follow the steps as mentioned for the successful execution of the application:
 
 * [AN1311: Integrating Crypto Functionality Using PSA Crypto Compared to Mbed TLS Guide](https://www.silabs.com/documents/public/application-notes/an1311-mbedtls-psa-crypto-porting-guide.pdf)
+## Troubleshooting
+
+- If the project does not build, ensure Simplicity Studio and the WiSeConnect extension are installed and the board is connected.
+- If the device is not detected, reinstall the connectivity firmware and check USB drivers.
+
+## Resources
+
+- [WiSeConnect Getting Started](https://docs.silabs.com/wiseconnect/latest/wiseconnect-getting-started/)
+- [WiSeConnect Examples](https://docs.silabs.com/wiseconnect/latest/wiseconnect-examples/)
+- [SiWx91x SoC Documentation](https://docs.silabs.com/wiseconnect/latest/)
+
+## Report Bugs/Support
+
+For issues and support, use the Silicon Labs Community or your normal support channel.

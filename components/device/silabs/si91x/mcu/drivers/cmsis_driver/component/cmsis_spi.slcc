@@ -2,7 +2,7 @@ id: cmsis_spi
 label: CMSIS SPI
 package: platform_siwx91x
 description: >
-  Serial Peripheral Interface Driver API's
+  This component provides Serial Peripheral Interface driver APIs for the SiWx91x.
 category: Device|Si91x|MCU|Internal|CMSIS Drivers
 quality: production
 metadata:

@@ -33,6 +33,7 @@
 #include "sl_wifi_types.h"
 #include <string.h>
 #include "sl_wifi.h"
+#include "sl_si91x_driver.h"
 #include "sl_wifi_callback_framework.h"
 #include "firmware_upgradation.h"
 #include "sl_net_dns.h"
@@ -92,7 +93,8 @@
 //! set 1 for selecting SL_SI91X_HTTPS_CERTIFICATE_INDEX_1, set 2 for selecting SL_SI91X_HTTPS_CERTIFICATE_INDEX_2
 #define CERTIFICATE_INDEX 0
 
-#define DNS_TIMEOUT         20000
+#define DNS_TIMEOUT         10
+#define RETRY_COUNT         1
 #define MAX_DNS_RETRY_COUNT 5
 #define OTAF_TIMEOUT        600000
 #ifdef AWS_ENABLE
@@ -170,7 +172,6 @@ const osThreadAttr_t thread_attributes = {
   .stack_size = 3072,
   .priority   = osPriorityLow,
   .tz_module  = 0,
-  .reserved   = 0,
 };
 
 static const sl_wifi_device_configuration_t station_init_configuration = {
@@ -194,10 +195,13 @@ static const sl_wifi_device_configuration_t station_init_configuration = {
                    .bt_feature_bit_map = 0,
                    .ext_tcp_ip_feature_bit_map =
                      (SL_SI91X_EXT_FEAT_HTTP_OTAF_SUPPORT | SL_SI91X_EXT_TCP_IP_SSL_16K_RECORD
-                      | SL_SI91X_CONFIG_FEAT_EXTENTION_VALID),
+                      | SL_SI91X_CONFIG_FEAT_EXTENSION_VALID),
                    .ble_feature_bit_map     = 0,
                    .ble_ext_feature_bit_map = 0,
-                   .config_feature_bit_map  = 0 }
+                   .config_feature_bit_map  = 0 },
+  .ta_pool         = { .tx_ratio_in_buffer_pool = 0, .rx_ratio_in_buffer_pool = 0, .global_ratio_in_buffer_pool = 0 },
+  .efuse_data_type = SL_SI91X_EFUSE_MFG_SW_VERSION,
+  .nwp_fw_image_number = SL_SI91X_NWP_FW_IMAGE_NUMBER_0
 };
 
 //! Enumeration for states in application
@@ -259,9 +263,9 @@ sl_status_t clear_and_load_certificates_in_flash(void)
                                  cert,
                                  cert_length);
   if (status != SL_STATUS_OK) {
-    printf("\r\nLoading TLS CA certificate in to FLASH Failed, Error Code : 0x%lX\r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "Loading TLS CA certificate in to FLASH Failed, Error Code : 0x%lX\r\n", status);
   } else {
-    printf("\r\nLoad TLS CA certificate at index %d Success\r\n", CERTIFICATE_INDEX);
+    SL_DEBUG_LOG_V2(INFO, "Load TLS CA certificate at index %d Success\r\n", CERTIFICATE_INDEX);
   }
 
   return status;
@@ -279,10 +283,10 @@ sl_status_t join_callback_handler(sl_wifi_event_t event,
 
   app_state = WLAN_UNCONNECTED_STATE;
 
-  printf("\r\nIn Join CB\r\n");
+  SL_DEBUG_LOG_V2(INFO, "In Join CB\r\n");
 
   if (SL_WIFI_CHECK_IF_EVENT_FAILED(event)) {
-    printf("F: Initiating rejoin %lu bytes payload\n", result_length);
+    SL_DEBUG_LOG_V2(WARN, "F: Initiating rejoin %lu bytes payload\r\n", result_length);
     return status_code;
   }
   return SL_STATUS_OK;
@@ -302,7 +306,7 @@ void application_start(const void *unused)
   }
 
 #if (FW_UPDATE_TYPE == TA_FW_UPDATE)
-  sl_wifi_firmware_version_t version = { 0 };
+  sl_si91x_firmware_version_t version = { 0 };
 #endif
 #if defined(AWS_ENABLE) || defined(AZURE_ENABLE)
   sl_ip_address_t dns_query_rsp = { 0 };
@@ -316,17 +320,17 @@ void application_start(const void *unused)
         //! Client initialization
         status = sl_net_init(SL_NET_WIFI_CLIENT_INTERFACE, &station_init_configuration, NULL, NULL);
         if (status != SL_STATUS_OK) {
-          printf("\r\nWi-Fi Client initialization failed , Error Code: 0x%lX\r\n", status);
+          SL_DEBUG_LOG_V2(ERROR, "Wi-Fi Client initialization failed , Error Code: 0x%lX\r\n", status);
           return;
         }
-        printf("\r\nWi-Fi Client initialization success\r\n");
+        SL_DEBUG_LOG_V2(INFO, "Wi-Fi Client initialization success\r\n");
 
         //! Load certificate
 #if LOAD_CERTIFICATE
         if (FLAGS & HTTPS_SUPPORT) {
           status = clear_and_load_certificates_in_flash();
           if (status != SL_STATUS_OK) {
-            printf("\r\nUnexpected error while loading certificate: 0x%lX\r\n", status);
+            SL_DEBUG_LOG_V2(ERROR, "Unexpected error while loading certificate: 0x%lX\r\n", status);
             return;
           }
         }
@@ -338,18 +342,26 @@ void application_start(const void *unused)
         //! Bring up client interface
         status = sl_net_up(SL_NET_WIFI_CLIENT_INTERFACE, SL_NET_DEFAULT_WIFI_CLIENT_PROFILE_ID);
         if (status != SL_STATUS_OK && status != SL_STATUS_SI91X_SCAN_ISSUED_IN_ASSOCIATED_STATE) {
-          printf("\r\nFailed to bring Wi-Fi client interface up: 0x%lX\r\n", status);
+          SL_DEBUG_LOG_V2(ERROR, "Failed to bring Wi-Fi client interface up: 0x%lX\r\n", status);
           app_state = WLAN_UNCONNECTED_STATE;
           break;
         }
-        printf("\r\nWi-Fi Client interface up\r\n");
+        SL_DEBUG_LOG_V2(INFO, "Wi-Fi Client interface up\r\n");
         app_state = WLAN_FIRMWARE_UPDATE;
 
       } break;
       case WLAN_FIRMWARE_UPDATE: {
 #if (FW_UPDATE_TYPE == TA_FW_UPDATE)
-        status = sl_wifi_get_firmware_version(&version);
-        print_firmware_version(&version);
+        status = sl_si91x_get_firmware_version(&version);
+        printf("\r\nFirmware version is: %x%x.%d.%d.%d.%d.%d.%d\r\n",
+               version.chip_id,
+               version.rom_id,
+               version.major,
+               version.minor,
+               version.security_version,
+               version.patch_num,
+               version.customer_id,
+               version.build_num);
 #endif
 
         sl_wifi_set_callback_v2(SL_WIFI_HTTP_OTA_FW_UPDATE_EVENTS,
@@ -359,35 +371,39 @@ void application_start(const void *unused)
 #if defined(AWS_ENABLE) || defined(AZURE_ENABLE)
         do {
           //! Getting IP address of the AWS server using DNS request
-          status =
-            sl_net_dns_resolve_hostname((const char *)hostname, DNS_TIMEOUT, SL_NET_DNS_TYPE_IPV4, &dns_query_rsp);
+          status = sl_net_dns_resolve_hostname_v2((const char *)hostname,
+                                                  DNS_TIMEOUT,
+                                                  RETRY_COUNT,
+                                                  SL_NET_DNS_TYPE_IPV4,
+                                                  &dns_query_rsp);
           dns_retry_count--;
         } while ((dns_retry_count != 0) && (status != SL_STATUS_OK));
 
         if (status != SL_STATUS_OK) {
-          printf("\r\nUnexpected error while resolving dns, Error 0x%lX\r\n", status);
+          SL_DEBUG_LOG_V2(ERROR, "Unexpected error while resolving dns, Error 0x%lX\r\n", status);
           return;
         }
-        printf("\r\nResolving dns Success\r\n");
+        SL_DEBUG_LOG_V2(INFO, "Resolving dns Success\r\n");
 
         server_address = dns_query_rsp.ip.v4.value;
         sprintf((char *)server_ip,
-                "%ld.%ld.%ld.%ld",
-                server_address & 0x000000ff,
-                (server_address & 0x0000ff00) >> 8,
-                (server_address & 0x00ff0000) >> 16,
-                (server_address & 0xff000000) >> 24);
+                "%u.%u.%u.%u",
+                (unsigned int)(server_address & 0x000000ff),
+                (unsigned int)((server_address & 0x0000ff00) >> 8),
+                (unsigned int)((server_address & 0x00ff0000) >> 16),
+                (unsigned int)((server_address & 0xff000000) >> 24));
+
 #ifdef AWS_ENABLE
-        printf("\nResolved AWS S3 Bucket IP address = %s\n", server_ip);
+        SL_DEBUG_LOG_V2(INFO, "Resolved AWS S3 Bucket IP address = %s\r\n", (uintptr_t)server_ip);
 #elif AZURE_ENABLE
-        printf("\nResolved AZURE Blob Storage IP address = %s\n", server_ip);
+        SL_DEBUG_LOG_V2(INFO, "Resolved AZURE Blob Storage IP address = %s\r\n", (uintptr_t)server_ip);
 #endif
 
 #else
         strcpy(server_ip, HTTP_SERVER_IP_ADDRESS);
-        printf("\r\n%s IP Address : %s\r\n", SERVER_NAME, HTTP_HOSTNAME);
+        SL_DEBUG_LOG_V2(INFO, "%s IP Address : %s\r\n", (uintptr_t)SERVER_NAME, (uintptr_t)HTTP_HOSTNAME);
 #endif
-        printf("\r\nFirmware download from %s is in progress...\r\n", SERVER_NAME);
+        SL_DEBUG_LOG_V2(INFO, "Firmware download from %s is in progress...\r\n", (uintptr_t)SERVER_NAME);
 
         sl_si91x_http_otaf_params_t http_params = { 0 };
 
@@ -404,12 +420,12 @@ void application_start(const void *unused)
         status = sl_si91x_http_otaf_v2(&http_params);
 
         if (status != SL_STATUS_OK) {
-          printf("\r\n Firmware update status = 0x%lX\r\n", status);
+          SL_DEBUG_LOG_V2(ERROR, " Firmware update status = 0x%lX\r\n", status);
           app_state = WLAN_UNCONNECTED_STATE;
           break;
         } else {
-          printf("\r\nCompleted firmware download using %s\r\n", SERVER_NAME);
-          printf("\r\nUpdating the firmware...\r\n");
+          SL_DEBUG_LOG_V2(INFO, "Completed firmware download using %s\r\n", (uintptr_t)SERVER_NAME);
+          SL_DEBUG_LOG_V2(INFO, "Updating the firmware...\r\n");
         }
         app_state = WLAN_NET_DOWN_STATE;
       } break;
@@ -418,29 +434,37 @@ void application_start(const void *unused)
         //! Client deinitialization
         status = sl_net_deinit(SL_NET_WIFI_CLIENT_INTERFACE);
         if (status != SL_STATUS_OK) {
-          printf("\r\nError while wifi deinit: 0x%lX \r\n", status);
+          SL_DEBUG_LOG_V2(ERROR, "Error while wifi deinit: 0x%lX \r\n", status);
           return;
         }
-        printf("\r\nWi-Fi Deinit is successful\r\n");
+        SL_DEBUG_LOG_V2(INFO, "Wi-Fi Deinit is successful\r\n");
 
 #if SL_NCP_UART_INTERFACE
-        printf("Waiting for firmware upgrade to complete\n");
+        SL_DEBUG_LOG_V2(INFO, "Waiting for firmware upgrade to complete\r\n");
         osDelay(40000);
-        printf("Waiting Done\n");
+        SL_DEBUG_LOG_V2(INFO, "Waiting Done\r\n");
 #endif
         //! Client initialization
         status = sl_net_init(SL_NET_WIFI_CLIENT_INTERFACE, &station_init_configuration, NULL, NULL);
         if (status != SL_STATUS_OK) {
-          printf("Failed to start Wi-Fi client interface: 0x%lX\r\n", status);
+          SL_DEBUG_LOG_V2(ERROR, "Failed to start Wi-Fi client interface: 0x%lX\r\n", status);
           return;
         }
-        printf("\r\nWi-Fi Init success\r\n");
+        SL_DEBUG_LOG_V2(INFO, "Wi-Fi Init success\r\n");
 
         //! Check firmware version
-        status = sl_wifi_get_firmware_version(&version);
-        print_firmware_version(&version);
+        status = sl_si91x_get_firmware_version(&version);
+        printf("\r\nFirmware version is: %x%x.%d.%d.%d.%d.%d.%d\r\n",
+               version.chip_id,
+               version.rom_id,
+               version.major,
+               version.minor,
+               version.security_version,
+               version.patch_num,
+               version.customer_id,
+               version.build_num);
 #else
-        printf("\r\nSoC Soft Reset initiated!\r\n");
+        SL_DEBUG_LOG_V2(INFO, "SoC Soft Reset initiated!\r\n");
         sl_si91x_soc_nvic_reset();
 #endif
         app_state = WLAN_OTA_UPDATE_DONE;

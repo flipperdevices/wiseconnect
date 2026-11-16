@@ -33,6 +33,7 @@
 #include "rsi_rom_clks.h"
 #include "rsi_rom_ulpss_clk.h"
 #include "clock_update.h"
+#include "sl_log_helper.h"
 
 /*******************************************************************************
  ***************************  DEFINES / MACROS   ********************************
@@ -166,11 +167,13 @@ sl_status_t sl_si91x_ulp_timer_configure_clock(ulp_timer_clk_src_config_t *timer
     // will return an error code
     if (timer_clk_ptr == NULL) {
       status = SL_STATUS_NULL_POINTER;
+      SL_PRINT_STRING_ERROR("sl_si91x_ulp_timer_configure_clock: handle NULL,line no : %d\r\n", (int)__LINE__);
       break;
     }
     // To validate the clock-type, if it is not valid type will return an error code
     if (timer_clk_ptr->ulp_timer_clk_type > ENABLE_STATIC_CLK) {
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR("sl_si91x_ulp_timer_configure_clock:clk type is invalid,line no : %d\r\n", (int)__LINE__);
       break;
     }
     // To store input timer input clock source parameter value and validating it.
@@ -178,6 +181,7 @@ sl_status_t sl_si91x_ulp_timer_configure_clock(ulp_timer_clk_src_config_t *timer
     clk_src = timer_clk_ptr->ulp_timer_clk_input_src;
     if (clk_src >= ULP_TIMER_ULP_CLK_SRC_LAST) {
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR("sl_si91x_ulp_timer_configure_clock: clk src is invalid,line no : %d\r\n", (int)__LINE__);
       break;
     }
     // It will store the RSI error code which is returned by the below API and
@@ -189,6 +193,9 @@ sl_status_t sl_si91x_ulp_timer_configure_clock(ulp_timer_clk_src_config_t *timer
                                             (uint8_t)timer_clk_ptr->ulp_timer_skip_switch_time);
     if (error_status != RSI_OK) {
       status = SL_STATUS_INVALID_CONFIGURATION;
+      SL_PRINT_STRING_ERROR("sl_si91x_ulp_timer_configure_clock: error status=0x%04lX,line no : %d\r\n",
+                            (unsigned long)(SL_STATUS_INVALID_CONFIGURATION),
+                            (int)__LINE__);
     }
   } while (false);
   return status;
@@ -225,6 +232,7 @@ sl_status_t sl_si91x_ulp_timer_set_configuration(ulp_timer_config_t *timer_confi
     // will return an error code
     if (timer_config_ptr == NULL) {
       status = SL_STATUS_NULL_POINTER;
+      SL_PRINT_STRING_ERROR("sl_si91x_ulp_timer_set_configuration: handle NULL,line no : %d\r\n", (int)__LINE__);
       break;
     }
     // Setting ulp-timer mode:
@@ -233,10 +241,16 @@ sl_status_t sl_si91x_ulp_timer_set_configuration(ulp_timer_config_t *timer_confi
     error_status = RSI_TIMERS_SetTimerMode(TIMERS, timer_config_ptr->timer_mode, timer_config_ptr->timer_num);
     if (error_status == ERROR_INVAL_TIMER_MODE) {
       status = SL_STATUS_INVALID_MODE;
+      SL_PRINT_STRING_ERROR("sl_si91x_ulp_timer_set_configuration: error status=0x%04lX,line no : %d\r\n",
+                            (unsigned long)(SL_STATUS_INVALID_MODE),
+                            (int)__LINE__);
       break;
     }
     if (error_status == ERROR_INVAL_TIMER_NUM) {
       status = SL_STATUS_INVALID_INDEX;
+      SL_PRINT_STRING_ERROR("sl_si91x_ulp_timer_set_configuration: error status=0x%04lX,line no : %d\r\n",
+                            (unsigned long)(SL_STATUS_INVALID_INDEX),
+                            (int)__LINE__);
       break;
     }
     // Setting ulp-timer type
@@ -245,16 +259,25 @@ sl_status_t sl_si91x_ulp_timer_set_configuration(ulp_timer_config_t *timer_confi
     error_status = RSI_TIMERS_SetTimerType(TIMERS, timer_config_ptr->timer_type, timer_config_ptr->timer_num);
     if (error_status == ERROR_INVAL_TIMERTYPE) {
       status = SL_STATUS_INVALID_TYPE;
+      SL_PRINT_STRING_ERROR("sl_si91x_ulp_timer_set_configuration: error status=0x%04lX,line no : %d\r\n",
+                            (unsigned long)(SL_STATUS_INVALID_TYPE),
+                            (int)__LINE__);
       break;
     }
     if (error_status == ERROR_INVAL_TIMER_NUM) {
       status = SL_STATUS_INVALID_INDEX;
+      SL_PRINT_STRING_ERROR("sl_si91x_ulp_timer_set_configuration: error status=0x%04lX,line no : %d\r\n",
+                            (unsigned long)(SL_STATUS_INVALID_INDEX),
+                            (int)__LINE__);
       break;
     }
     if ((timer_config_ptr->timer_type == ULP_TIMER_TYP_1US) || (timer_config_ptr->timer_type == ULP_TIMER_TYP_256US)) {
       // Updating clock cycles integral and fractional parts variables, as per input clock and type
       status = get_int_frac_parts(timer_config_ptr->timer_type, &integral_part, &fractional_part);
       if (status == SL_STATUS_INVALID_TYPE) {
+        SL_PRINT_STRING_ERROR("sl_si91x_ulp_timer_set_configuration: error status=0x%04lX,line no : %d\r\n",
+                              (unsigned long)(SL_STATUS_INVALID_TYPE),
+                              (int)__LINE__);
         break;
       }
       // Configuring integral and fractional part registers of timer, as per timer
@@ -270,6 +293,8 @@ sl_status_t sl_si91x_ulp_timer_set_configuration(ulp_timer_config_t *timer_confi
       // invalid-mode error for invalid-type
       if (error_status == ERROR_INVAL_TIMER_MODE) {
         status = SL_STATUS_INVALID_TYPE;
+        SL_PRINT_STRING_ERROR("sl_si91x_ulp_timer_set_configuration: timer mode is invalid,line no : %d\r\n",
+                              (int)__LINE__);
         break;
       }
     }
@@ -279,10 +304,14 @@ sl_status_t sl_si91x_ulp_timer_set_configuration(ulp_timer_config_t *timer_confi
     error_status = RSI_TIMERS_SetDirection(TIMERS, timer_config_ptr->timer_num, timer_config_ptr->timer_direction);
     if (error_status == ERROR_INVAL_COUNTER_DIR) {
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR("sl_si91x_ulp_timer_set_configuration: counter direction is invalid,line no : %d\r\n",
+                            (int)__LINE__);
       break;
     }
     if (error_status == ERROR_INVAL_TIMER_NUM) {
       status = SL_STATUS_INVALID_INDEX;
+      SL_PRINT_STRING_ERROR("sl_si91x_ulp_timer_set_configuration: timer number is invalid,line no : %d\r\n",
+                            (int)__LINE__);
       break;
     }
     // Setting ulp-timer match value
@@ -291,6 +320,8 @@ sl_status_t sl_si91x_ulp_timer_set_configuration(ulp_timer_config_t *timer_confi
     error_status = RSI_TIMERS_SetMatch(TIMERS, timer_config_ptr->timer_num, timer_config_ptr->timer_match_value);
     if (error_status == ERROR_INVAL_TIMER_NUM) {
       status = SL_STATUS_INVALID_INDEX;
+      SL_PRINT_STRING_ERROR("sl_si91x_ulp_timer_set_configuration: timer number is invalid,line no : %d\r\n",
+                            (int)__LINE__);
       break;
     }
     // Timer interrupt mapping to ARM
@@ -342,6 +373,8 @@ sl_status_t sl_si91x_ulp_timer_get_match_value(ulp_timer_type_t timer_type, uint
     // Validating timer number parameter
     if (timer_type >= ULP_TIMER_TYP_LAST) {
       status = SL_STATUS_INVALID_TYPE;
+      SL_PRINT_STRING_ERROR("sl_si91x_ulp_timer_get_match_value: timer type is invalid,line no : %d\r\n",
+                            (int)__LINE__);
       break;
     }
     if (timer_type == ULP_TIMER_TYP_DEFAULT) {
@@ -350,6 +383,8 @@ sl_status_t sl_si91x_ulp_timer_get_match_value(ulp_timer_type_t timer_type, uint
     } else if (timer_type == ULP_TIMER_TYP_1US) {
       if (time_us < 1) {
         status = SL_STATUS_INVALID_PARAMETER;
+        SL_PRINT_STRING_ERROR("sl_si91x_ulp_timer_get_match_value: time is less than 1,line no : %d\r\n",
+                              (int)__LINE__);
         break;
       }
       // Match value = number of microseconds
@@ -357,6 +392,8 @@ sl_status_t sl_si91x_ulp_timer_get_match_value(ulp_timer_type_t timer_type, uint
     } else if (timer_type == ULP_TIMER_TYP_256US) {
       if (time_us < 256) {
         status = SL_STATUS_INVALID_PARAMETER;
+        SL_PRINT_STRING_ERROR("sl_si91x_ulp_timer_get_match_value: time is less than 256,line no : %d\r\n",
+                              (int)__LINE__);
         break;
       }
       // Match value = (time in microseconds) / 256
@@ -387,6 +424,7 @@ sl_status_t sl_si91x_ulp_timer_start(ulp_timer_instance_t timer_num)
     // Validating timer number parameter
     if (timer_num >= ULP_TIMER_LAST) {
       status = SL_STATUS_INVALID_INDEX;
+      SL_PRINT_STRING_ERROR("sl_si91x_ulp_timer_start: timer number is invalid,line no : %d\r\n", (int)__LINE__);
       break;
     }
     // Starting the timer instance:
@@ -395,6 +433,9 @@ sl_status_t sl_si91x_ulp_timer_start(ulp_timer_instance_t timer_num)
     error_status = RSI_TIMERS_TimerStart(TIMERS, timer_num);
     if (error_status != RSI_OK) {
       status = SL_STATUS_INVALID_INDEX;
+      SL_PRINT_STRING_ERROR("sl_si91x_ulp_timer_start: error status=0x%04lX,line no : %d\r\n",
+                            (unsigned long)(SL_STATUS_INVALID_INDEX),
+                            (int)__LINE__);
     }
   } while (false);
   return status;
@@ -419,6 +460,7 @@ sl_status_t sl_si91x_ulp_timer_stop(ulp_timer_instance_t timer_num)
     // Validating timer number parameter
     if (timer_num >= ULP_TIMER_LAST) {
       status = SL_STATUS_INVALID_INDEX;
+      SL_PRINT_STRING_ERROR("sl_si91x_ulp_timer_stop: timer number is invalid,line no : %d\r\n", (int)__LINE__);
       break;
     }
     // Stopping the timer instance:
@@ -427,6 +469,9 @@ sl_status_t sl_si91x_ulp_timer_stop(ulp_timer_instance_t timer_num)
     error_status = RSI_TIMERS_TimerStop(TIMERS, timer_num);
     if (error_status != RSI_OK) {
       status = SL_STATUS_INVALID_INDEX;
+      SL_PRINT_STRING_ERROR("sl_si91x_ulp_timer_stop: error status=0x%04lX,line no : %d\r\n",
+                            (unsigned long)(SL_STATUS_INVALID_INDEX),
+                            (int)__LINE__);
     }
   } while (false);
   return status;
@@ -448,11 +493,13 @@ sl_status_t sl_si91x_ulp_timer_restart(ulp_timer_instance_t timer_num)
     // Validating timer number parameter
     if (timer_num >= ULP_TIMER_LAST) {
       status = SL_STATUS_INVALID_INDEX;
+      SL_PRINT_STRING_ERROR("sl_si91x_ulp_timer_restart: timer number is invalid,line no : %d\r\n", (int)__LINE__);
       break;
     }
     // Stopping the timer instance, it will update 'status' with SL API return value
     status = sl_si91x_ulp_timer_stop(timer_num);
     if (status != SL_STATUS_OK) {
+      SL_PRINT_STRING_ERROR("sl_si91x_ulp_timer_restart: timer stop failed,line no : %d\r\n", (int)__LINE__);
       break;
     }
     // Starting the timer instance, it will update 'status 'with SL API return value
@@ -488,6 +535,7 @@ sl_status_t sl_si91x_ulp_timer_set_mode(ulp_timer_instance_t timer_num, ulp_time
     // Validating timer number parameter
     if (timer_num >= ULP_TIMER_LAST) {
       status = SL_STATUS_INVALID_INDEX;
+      SL_PRINT_STRING_ERROR("sl_si91x_ulp_timer_set_mode: timer number is invalid,line no : %d\r\n", (int)__LINE__);
       break;
     }
     // Setting ulp-timer mode
@@ -498,10 +546,12 @@ sl_status_t sl_si91x_ulp_timer_set_mode(ulp_timer_instance_t timer_num, ulp_time
     error_status = RSI_TIMERS_SetTimerMode(TIMERS, timer_mode, timer_num);
     if (error_status == ERROR_INVAL_TIMER_MODE) {
       status = SL_STATUS_INVALID_MODE;
+      SL_PRINT_STRING_ERROR("sl_si91x_ulp_timer_set_mode: timer mode is invalid,line no : %d\r\n", (int)__LINE__);
       break;
     }
     if (error_status == ERROR_INVAL_TIMER_NUM) {
       status = SL_STATUS_INVALID_INDEX;
+      SL_PRINT_STRING_ERROR("sl_si91x_ulp_timer_set_mode: timer number is invalid,line no : %d\r\n", (int)__LINE__);
       break;
     }
   } while (false);
@@ -530,18 +580,21 @@ sl_status_t sl_si91x_ulp_timer_get_mode(ulp_timer_instance_t timer_num, uint32_t
     // Validating timer number parameter
     if (timer_num >= ULP_TIMER_LAST) {
       status = SL_STATUS_INVALID_INDEX;
+      SL_PRINT_STRING_ERROR("sl_si91x_ulp_timer_get_mode: timer number is invalid,line no : %d\r\n", (int)__LINE__);
       break;
     }
     // Validating the 'pointer to count_value' parameter,
     // if it is NULL will return an error code
     if (timer_mode == NULL) {
       status = SL_STATUS_NULL_POINTER;
+      SL_PRINT_STRING_ERROR("sl_si91x_ulp_timer_get_mode: timer mode pointer is NULL,line no : %d\r\n", (int)__LINE__);
       break;
     }
     // Reading timer direction
     *timer_mode = RSI_TIMERS_GetTimerMode(TIMERS, timer_num);
     if (*timer_mode == ERROR_INVAL_TIMER_NUM) {
       status = SL_STATUS_INVALID_INDEX;
+      SL_PRINT_STRING_ERROR("sl_si91x_ulp_timer_get_mode: timer number is invalid,line no : %d\r\n", (int)__LINE__);
       break;
     }
   } while (false);
@@ -568,20 +621,28 @@ sl_status_t sl_si91x_ulp_timer_set_direction(ulp_timer_instance_t timer_num, ulp
     // Validating timer number parameter
     if (timer_num >= ULP_TIMER_LAST) {
       status = SL_STATUS_INVALID_INDEX;
+      SL_PRINT_STRING_ERROR("sl_si91x_ulp_timer_set_direction: timer number is invalid,line no : %d\r\n",
+                            (int)__LINE__);
       break;
     }
     // Validating counter direction parameter
     if (counter_dir >= LAST_DIRECTION) {
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR("sl_si91x_ulp_timer_set_direction: counter direction is invalid,line no : %d\r\n",
+                            (int)__LINE__);
       break;
     }
     error_status = RSI_TIMERS_SetDirection(TIMERS, timer_num, counter_dir);
     if (error_status == ERROR_INVAL_COUNTER_DIR) {
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR("sl_si91x_ulp_timer_set_direction: counter direction is invalid,line no : %d\r\n",
+                            (int)__LINE__);
       break;
     }
     if (error_status == ERROR_INVAL_TIMER_NUM) {
       status = SL_STATUS_INVALID_INDEX;
+      SL_PRINT_STRING_ERROR("sl_si91x_ulp_timer_set_direction: timer number is invalid,line no : %d\r\n",
+                            (int)__LINE__);
       break;
     }
   } while (false);
@@ -605,18 +666,24 @@ sl_status_t sl_si91x_ulp_timer_get_direction(ulp_timer_instance_t timer_num, uin
     // Validating timer number parameter
     if (timer_num >= ULP_TIMER_LAST) {
       status = SL_STATUS_INVALID_INDEX;
+      SL_PRINT_STRING_ERROR("sl_si91x_ulp_timer_get_direction: timer number is invalid,line no : %d\r\n",
+                            (int)__LINE__);
       break;
     }
     // Validating the 'pointer to count_value' parameter,
     // if it is NULL will return an error code
     if (timer_direction == NULL) {
       status = SL_STATUS_NULL_POINTER;
+      SL_PRINT_STRING_ERROR("sl_si91x_ulp_timer_get_direction: timer direction pointer is NULL,line no : %d\r\n",
+                            (int)__LINE__);
       break;
     }
     // Reading timer direction
     *timer_direction = RSI_TIMERS_getDirection(TIMERS, timer_num);
     if (*timer_direction == ERROR_INVAL_TIMER_NUM) {
       status = SL_STATUS_INVALID_INDEX;
+      SL_PRINT_STRING_ERROR("sl_si91x_ulp_timer_get_direction: timer number is invalid,line no : %d\r\n",
+                            (int)__LINE__);
       break;
     }
   } while (false);
@@ -652,6 +719,7 @@ sl_status_t sl_si91x_ulp_timer_set_type(ulp_timer_instance_t timer_num, ulp_time
     // Validating timer number parameter
     if (timer_num >= ULP_TIMER_LAST) {
       status = SL_STATUS_INVALID_INDEX;
+      SL_PRINT_STRING_ERROR("sl_si91x_ulp_timer_set_type: timer number is invalid,line no : %d\r\n", (int)__LINE__);
       break;
     }
     // Setting ulp-timer instance type:
@@ -661,10 +729,12 @@ sl_status_t sl_si91x_ulp_timer_set_type(ulp_timer_instance_t timer_num, ulp_time
     error_status = RSI_TIMERS_SetTimerType(TIMERS, timer_type, timer_num);
     if (error_status == ERROR_INVAL_TIMERTYPE) {
       status = SL_STATUS_INVALID_TYPE;
+      SL_PRINT_STRING_ERROR("sl_si91x_ulp_timer_set_type: timer type is invalid,line no : %d\r\n", (int)__LINE__);
       break;
     }
     if (error_status == ERROR_INVAL_TIMER_NUM) {
       status = SL_STATUS_INVALID_INDEX;
+      SL_PRINT_STRING_ERROR("sl_si91x_ulp_timer_set_type: timer number is invalid,line no : %d\r\n", (int)__LINE__);
       break;
     }
     if ((timer_type == ULP_TIMER_TYP_1US) || (timer_type == ULP_TIMER_TYP_256US)) {
@@ -681,6 +751,7 @@ sl_status_t sl_si91x_ulp_timer_set_type(ulp_timer_instance_t timer_num, ulp_time
       // for invalid-type
       if (error_status == ERROR_INVAL_TIMER_MODE) {
         status = SL_STATUS_INVALID_TYPE;
+        SL_PRINT_STRING_ERROR("sl_si91x_ulp_timer_set_type: timer type is invalid,line no : %d\r\n", (int)__LINE__);
         break;
       }
     }
@@ -708,12 +779,14 @@ sl_status_t sl_si91x_ulp_timer_get_type(ulp_timer_instance_t timer_num, uint32_t
     // Validating timer number parameter
     if (timer_num >= ULP_TIMER_LAST) {
       status = SL_STATUS_INVALID_INDEX;
+      SL_PRINT_STRING_ERROR("sl_si91x_ulp_timer_get_type: timer number is invalid,line no : %d\r\n", (int)__LINE__);
       break;
     }
     // Validating the 'pointer to count_value' parameter,
     // if it is NULL will return an error code
     if (timer_type == NULL) {
       status = SL_STATUS_NULL_POINTER;
+      SL_PRINT_STRING_ERROR("sl_si91x_ulp_timer_get_type: timer type pointer is NULL,line no : %d\r\n", (int)__LINE__);
       break;
     }
     // Reading timer direction
@@ -748,12 +821,15 @@ sl_status_t sl_si91x_ulp_timer_get_count(ulp_timer_instance_t timer_num, uint32_
     // Validating timer number parameter
     if (timer_num >= ULP_TIMER_LAST) {
       status = SL_STATUS_INVALID_INDEX;
+      SL_PRINT_STRING_ERROR("sl_si91x_ulp_timer_get_count: timer number is invalid,line no : %d\r\n", (int)__LINE__);
       break;
     }
     // Validating the 'pointer to count_value' parameter,
     // if it is NULL will return an error code
     if (count_value == NULL) {
       status = SL_STATUS_NULL_POINTER;
+      SL_PRINT_STRING_ERROR("sl_si91x_ulp_timer_get_count: count value pointer is NULL,line no : %d\r\n",
+                            (int)__LINE__);
       break;
     }
     // reading counter current count value
@@ -785,6 +861,7 @@ sl_status_t sl_si91x_ulp_timer_set_count(ulp_timer_instance_t timer_num, uint32_
     // Validating timer number parameter
     if (timer_num >= ULP_TIMER_LAST) {
       status = SL_STATUS_INVALID_INDEX;
+      SL_PRINT_STRING_ERROR("sl_si91x_ulp_timer_set_count: timer number is invalid,line no : %d\r\n", (int)__LINE__);
       break;
     }
     // Setting timer instance match value:
@@ -794,6 +871,7 @@ sl_status_t sl_si91x_ulp_timer_set_count(ulp_timer_instance_t timer_num, uint32_
     error_status = RSI_TIMERS_SetMatch(TIMERS, timer_num, timer_match_value);
     if (error_status == ERROR_INVAL_TIMER_NUM) {
       status = SL_STATUS_INVALID_INDEX;
+      SL_PRINT_STRING_ERROR("sl_si91x_ulp_timer_set_count: timer number is invalid,line no : %d\r\n", (int)__LINE__);
     }
   } while (false);
   return status;
@@ -822,22 +900,32 @@ sl_status_t sl_si91x_ulp_timer_register_timeout_callback(ulp_timer_instance_t ti
     // if they are NULL will return an error code
     if (on_timeout_callback == NULL) {
       status = SL_STATUS_NULL_POINTER;
+      SL_PRINT_STRING_ERROR(
+        "sl_si91x_ulp_timer_register_timeout_callback: on timeout callback pointer is NULL,line no : %d\r\n",
+        (int)__LINE__);
       break;
     }
     // Validating timer number parameter
     if (timer_num >= ULP_TIMER_LAST) {
       status = SL_STATUS_INVALID_INDEX;
+      SL_PRINT_STRING_ERROR("sl_si91x_ulp_timer_register_timeout_callback: timer number is invalid,line no : %d\r\n",
+                            (int)__LINE__);
       break;
     }
     // To validate the function pointer, if the parameters is not NULL then it
     //will return an busy error code
     if (timeout_callback_function_pointers[timer_num] != NULL) {
       status = SL_STATUS_BUSY;
+      SL_PRINT_STRING_ERROR("sl_si91x_ulp_timer_register_timeout_callback: timer is busy,line no : %d\r\n",
+                            (int)__LINE__);
       break;
     }
     // Enabling timer interrupt and validating its return status
     status = ulp_timer_enable_interrupt(timer_num);
     if (status != SL_STATUS_OK) {
+      SL_PRINT_STRING_ERROR(
+        "sl_si91x_ulp_timer_register_timeout_callback: timer interrupt enable failed,line no : %d\r\n",
+        (int)__LINE__);
       break;
     }
     // The function pointer is fed to the static variable, which will be called in the IRQ handler
@@ -864,6 +952,9 @@ sl_status_t sl_si91x_ulp_timer_unregister_timeout_callback(ulp_timer_instance_t 
     // Disabling passed timer instance interrupt
     status = ulp_timer_disable_interrupt(timer_num);
     if (status != SL_STATUS_OK) {
+      SL_PRINT_STRING_ERROR(
+        "sl_si91x_ulp_timer_unregister_timeout_callback: timer interrupt disable failed,line no : %d\r\n",
+        (int)__LINE__);
       break;
     }
     //The callback should be null in the unregister callback api because
@@ -919,6 +1010,8 @@ sl_status_t sl_si91x_ulp_timer_configure_soc_clock(boolean_t div_factor_type, ui
     if (div_factor_type) {
       if (!(div_factor % two)) {
         status = SL_STATUS_INVALID_PARAMETER;
+        SL_PRINT_STRING_ERROR("sl_si91x_ulp_timer_configure_soc_clock: div factor is even,line no : %d\r\n",
+                              (int)__LINE__);
         break;
       }
     }
@@ -926,12 +1019,17 @@ sl_status_t sl_si91x_ulp_timer_configure_soc_clock(boolean_t div_factor_type, ui
     if (!(div_factor_type)) {
       if (div_factor % two) {
         status = SL_STATUS_INVALID_PARAMETER;
+        SL_PRINT_STRING_ERROR("sl_si91x_ulp_timer_configure_soc_clock: div factor is odd,line no : %d\r\n",
+                              (int)__LINE__);
         break;
       }
     }
     error_status = RSI_ULPSS_ClockConfig(M4CLK, true, div_factor, div_factor_type);
     if (error_status == INVALID_PARAMETERS) {
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR("sl_si91x_ulp_timer_configure_soc_clock: div factor is invalid,line no : %d\r\n",
+                            (int)__LINE__);
+      break;
     }
   } while (false);
   return status;
@@ -1008,11 +1106,15 @@ static sl_status_t ulp_timer_get_interrupt_status(ulp_timer_instance_t timer_num
     // Validating timer number parameter
     if (timer_num >= ULP_TIMER_LAST) {
       status = SL_STATUS_INVALID_INDEX;
+      SL_PRINT_STRING_ERROR("ulp_timer_get_interrupt_status: error status=0x%04lX,line no : %d\r\n",
+                            (unsigned long)(SL_STATUS_INVALID_INDEX),
+                            (int)__LINE__);
       break;
     }
     //Validating the 'pointer to int_status' parameter, if it is NULL will return an error code
     if (int_status == NULL) {
       status = SL_STATUS_NULL_POINTER;
+      SL_PRINT_STRING_ERROR("ulp_timer_get_interrupt_status: handle NULL,line no : %d\r\n", (int)__LINE__);
       break;
     }
     // Reading timer instance interrupt status, and store the return value to int_status
@@ -1039,6 +1141,9 @@ static sl_status_t ulp_timer_clear_interrupt(ulp_timer_instance_t timer_num)
     // Validating timer number parameter
     if (timer_num >= ULP_TIMER_LAST) {
       status = SL_STATUS_INVALID_INDEX;
+      SL_PRINT_STRING_ERROR("ulp_timer_clear_interrupt: error status=0x%04lX,line no : %d\r\n",
+                            (unsigned long)(SL_STATUS_INVALID_INDEX),
+                            (int)__LINE__);
       break;
     }
     // Clearing ulp-timer instance interrupt:
@@ -1047,12 +1152,14 @@ static sl_status_t ulp_timer_clear_interrupt(ulp_timer_instance_t timer_num)
     // then no need to update, as it is already initialized with SL_STATUS_OK
     error_status = RSI_TIMERS_InterruptClear(TIMERS, timer_num);
     if (error_status == ERROR_INVAL_TIMER_NUM) {
+      SL_PRINT_STRING_ERROR("ulp_timer_clear_interrupt: timer number is invalid,line no : %d\r\n", (int)__LINE__);
       status = SL_STATUS_INVALID_INDEX;
     }
     // It will validate the register with the appropriate values, if the values are
     // not equal to which we set, it will return an error code
     if (TIMERS->MATCH_CTRL[timer_num].MCUULP_TMR_CNTRL_b.TMR_INTR_CLR != DISABLE) {
       status = SL_STATUS_ALLOCATION_FAILED;
+      SL_PRINT_STRING_ERROR("ulp_timer_clear_interrupt: interrupt clear failed,line no : %d\r\n", (int)__LINE__);
     }
   } while (false);
   return status;
@@ -1077,17 +1184,24 @@ static sl_status_t ulp_timer_enable_interrupt(ulp_timer_instance_t timer_num)
     // Validating timer number parameter
     if (timer_num >= ULP_TIMER_LAST) {
       status = SL_STATUS_INVALID_INDEX;
+      SL_PRINT_STRING_ERROR("ulp_timer_enable_interrupt: error status=0x%04lX,line no : %d\r\n",
+                            (unsigned long)(SL_STATUS_INVALID_INDEX),
+                            (int)__LINE__);
       break;
     }
     // Enabling timer instance interrupt
     error_status = RSI_TIMERS_InterruptEnable(TIMERS, timer_num);
     if (error_status != RSI_OK) {
       status = SL_STATUS_INVALID_INDEX;
+      SL_PRINT_STRING_ERROR("ulp_timer_enable_interrupt: error status=0x%04lX,line no : %d\r\n",
+                            (unsigned long)(SL_STATUS_INVALID_INDEX),
+                            (int)__LINE__);
       break;
     }
     //Validating register value
     if (TIMERS->MATCH_CTRL[timer_num].MCUULP_TMR_CNTRL_b.TMR_INTR_ENABLE != ENABLE) {
       status = SL_STATUS_ALLOCATION_FAILED;
+      SL_PRINT_STRING_ERROR("ulp_timer_enable_interrupt: interrupt enable failed,line no : %d\r\n", (int)__LINE__);
     }
   } while (false);
   return status;
@@ -1111,17 +1225,24 @@ static sl_status_t ulp_timer_disable_interrupt(ulp_timer_instance_t timer_num)
   do {
     if (timer_num >= ULP_TIMER_LAST) {
       status = SL_STATUS_INVALID_INDEX;
+      SL_PRINT_STRING_ERROR("ulp_timer_disable_interrupt: error status=0x%04lX,line no : %d\r\n",
+                            (unsigned long)(SL_STATUS_INVALID_INDEX),
+                            (int)__LINE__);
       break;
     }
     // Disabling timer instance interrupt
     error_status = RSI_TIMERS_InterruptDisable(TIMERS, timer_num);
     if (error_status == ERROR_INVAL_TIMER_NUM) {
       status = SL_STATUS_INVALID_INDEX;
+      SL_PRINT_STRING_ERROR("ulp_timer_disable_interrupt: error status=0x%04lX,line no : %d\r\n",
+                            (unsigned long)(SL_STATUS_INVALID_INDEX),
+                            (int)__LINE__);
       break;
     }
     // Validating register value
     if (TIMERS->MATCH_CTRL[timer_num].MCUULP_TMR_CNTRL_b.TMR_INTR_ENABLE != DISABLE) {
       status = SL_STATUS_ALLOCATION_FAILED;
+      SL_PRINT_STRING_ERROR("ulp_timer_disable_interrupt: interrupt disable failed,line no : %d\r\n", (int)__LINE__);
     }
   } while (false);
   return status;

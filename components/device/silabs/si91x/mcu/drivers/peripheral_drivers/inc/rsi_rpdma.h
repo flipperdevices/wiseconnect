@@ -385,8 +385,8 @@ typedef PRE_PACK struct POST_PACK {
   uint32_t *pNextLink;                             // Pointer to next descriptor link in a chain, NULL to end
   void *src;                                       // source address
   void *dest;                                      // destination address
-  RSI_RPDMA_CHA_CONTROL_T chnlCtrlConfig;          // Channel control register paramter
-  RSI_RPDMA_MISC_CHA_CONTROL_T miscChnlCtrlConfig; // Channel control register paramter
+  RSI_RPDMA_CHA_CONTROL_T chnlCtrlConfig;          // Channel control register parameter
+  RSI_RPDMA_MISC_CHA_CONTROL_T miscChnlCtrlConfig; // Channel control register parameter
 } RSI_RPDMA_DESC_T;
 
 typedef void (*rpdmaTransferCompleteCB)(RSI_RPDMA_HANDLE_T rpdmaHandle, RSI_RPDMA_DESC_T *pTranDesc, uint32_t dmaCh);

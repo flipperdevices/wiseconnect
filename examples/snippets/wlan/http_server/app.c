@@ -57,7 +57,6 @@ const osThreadAttr_t thread_attributes = {
   .stack_size = 3072,
   .priority   = osPriorityLow,
   .tz_module  = 0,
-  .reserved   = 0,
 };
 
 sl_ip_address_t ip_address            = { 0 };
@@ -86,10 +85,13 @@ static const sl_wifi_device_configuration_t http_server_configuration = {
                                                   ),
                    .bt_feature_bit_map = 0,
                    .ext_tcp_ip_feature_bit_map =
-                     (SL_SI91X_EXT_TCP_IP_WINDOW_DIV | SL_SI91X_CONFIG_FEAT_EXTENTION_VALID),
+                     (SL_SI91X_EXT_TCP_IP_WINDOW_DIV | SL_SI91X_CONFIG_FEAT_EXTENSION_VALID),
                    .ble_feature_bit_map     = 0,
                    .ble_ext_feature_bit_map = 0,
-                   .config_feature_bit_map  = SL_SI91X_FEAT_SLEEP_GPIO_SEL_BITMAP }
+                   .config_feature_bit_map  = SL_SI91X_FEAT_SLEEP_GPIO_SEL_BITMAP },
+  .ta_pool         = { .tx_ratio_in_buffer_pool = 0, .rx_ratio_in_buffer_pool = 0, .global_ratio_in_buffer_pool = 0 },
+  .efuse_data_type = SL_SI91X_EFUSE_MFG_SW_VERSION,
+  .nwp_fw_image_number = SL_SI91X_NWP_FW_IMAGE_NUMBER_0
 };
 
 sl_status_t buffered_request_handler(sl_http_server_t *handle, sl_http_server_request_t *req);
@@ -122,10 +124,11 @@ sl_status_t large_response_handler(sl_http_server_t *handle, sl_http_server_requ
   sl_http_header_t header                 = { .key = "Server", .value = "SI917-HTTPServer" };
   uint8_t *large_data                     = (uint8_t *)wifiuser;
 
-  printf("Got request [%s] of type : %s with data length : %lu\n",
-         req->uri.path,
-         request_type[req->type],
-         req->request_data_length);
+  SL_DEBUG_LOG_V2(INFO,
+                  "Got request [%s] of type : %s with data length : %lu",
+                  (uintptr_t)req->uri.path,
+                  (uintptr_t)request_type[req->type],
+                  req->request_data_length);
   if (req->request_data_length > 0) {
     recvData.request       = req;
     recvData.buffer        = (uint8_t *)response;
@@ -133,22 +136,25 @@ sl_status_t large_response_handler(sl_http_server_t *handle, sl_http_server_requ
 
     sl_http_server_read_request_data(handle, &recvData);
     response[recvData.received_data_length] = 0;
-    printf("Got request data as : %s\n", response);
+    SL_DEBUG_LOG_V2(INFO, "Got request data as : %s\r\n", (uintptr_t)response);
   }
 
-  printf("Got request query parameter count : %u\n", req->uri.query_parameter_count);
+  SL_DEBUG_LOG_V2(INFO, "Got request query parameter count : %u\r\n", req->uri.query_parameter_count);
   if (req->uri.query_parameter_count > 0) {
     for (int i = 0; i < req->uri.query_parameter_count; i++) {
-      printf("query: %s, value: %s\n", req->uri.query_parameters[i].query, req->uri.query_parameters[i].value);
+      SL_DEBUG_LOG_V2(INFO,
+                      "query: %s, value: %s",
+                      (uintptr_t)req->uri.query_parameters[i].query,
+                      (uintptr_t)req->uri.query_parameters[i].value);
     }
   }
 
-  printf("Got header count : %u\n", req->request_header_count);
+  SL_DEBUG_LOG_V2(INFO, "Got header count : %u", req->request_header_count);
   sl_http_server_get_request_headers(handle, req, request_headers, 5);
 
   int length = (req->request_header_count > 5) ? 5 : req->request_header_count;
   for (int i = 0; i < length; i++) {
-    printf("Key: %s, Value: %s\n", request_headers[i].key, request_headers[i].value);
+    SL_DEBUG_LOG_V2(INFO, "Key: %s, Value: %s", (uintptr_t)request_headers[i].key, (uintptr_t)request_headers[i].value);
   }
 
   // Set the response code to 200 (OK)
@@ -177,10 +183,11 @@ sl_status_t chunked_large_response_handler(sl_http_server_t *handle, sl_http_ser
   sl_http_header_t header                 = { .key = "Server", .value = "SI917-HTTPServer" };
   uint8_t *large_data                     = (uint8_t *)wifiuser;
 
-  printf("Got request [%s] of type : %s with data length : %lu\n",
-         req->uri.path,
-         request_type[req->type],
-         req->request_data_length);
+  SL_DEBUG_LOG_V2(INFO,
+                  "Got request [%s] of type : %s with data length : %lu",
+                  (uintptr_t)req->uri.path,
+                  (uintptr_t)request_type[req->type],
+                  req->request_data_length);
   if (req->request_data_length > 0) {
     recvData.request       = req;
     recvData.buffer        = (uint8_t *)response;
@@ -188,22 +195,25 @@ sl_status_t chunked_large_response_handler(sl_http_server_t *handle, sl_http_ser
 
     sl_http_server_read_request_data(handle, &recvData);
     response[recvData.received_data_length] = 0;
-    printf("Got request data as : %s\n", response);
+    SL_DEBUG_LOG_V2(INFO, "Got request data as : %s\r\n", (uintptr_t)response);
   }
 
-  printf("Got request query parameter count : %u\n", req->uri.query_parameter_count);
+  SL_DEBUG_LOG_V2(INFO, "Got request query parameter count : %u\r\n", req->uri.query_parameter_count);
   if (req->uri.query_parameter_count > 0) {
     for (int i = 0; i < req->uri.query_parameter_count; i++) {
-      printf("query: %s, value: %s\n", req->uri.query_parameters[i].query, req->uri.query_parameters[i].value);
+      SL_DEBUG_LOG_V2(INFO,
+                      "query: %s, value: %s",
+                      (uintptr_t)req->uri.query_parameters[i].query,
+                      (uintptr_t)req->uri.query_parameters[i].value);
     }
   }
 
-  printf("Got header count : %u\n", req->request_header_count);
+  SL_DEBUG_LOG_V2(INFO, "Got header count : %u", req->request_header_count);
   sl_http_server_get_request_headers(handle, req, request_headers, 5);
 
   int length = (req->request_header_count > 5) ? 5 : req->request_header_count;
   for (int i = 0; i < length; i++) {
-    printf("Key: %s, Value: %s\n", request_headers[i].key, request_headers[i].value);
+    SL_DEBUG_LOG_V2(INFO, "Key: %s, Value: %s", (uintptr_t)request_headers[i].key, (uintptr_t)request_headers[i].value);
   }
 
   // Set the response code to 200 (OK)
@@ -241,10 +251,11 @@ sl_status_t buffered_request_handler(sl_http_server_t *handle, sl_http_server_re
   sl_http_header_t request_headers[5]     = { 0 };
   sl_http_header_t header                 = { .key = "Server", .value = "SI917-HTTPServer" };
 
-  printf("Got request [%s] of type : %s with data length : %lu\n",
-         req->uri.path,
-         request_type[req->type],
-         req->request_data_length);
+  SL_DEBUG_LOG_V2(INFO,
+                  "Got request [%s] of type : %s with data length : %lu",
+                  (uintptr_t)req->uri.path,
+                  (uintptr_t)request_type[req->type],
+                  req->request_data_length);
   if (req->request_data_length > 0) {
     recvData.request       = req;
     recvData.buffer        = (uint8_t *)response;
@@ -252,22 +263,25 @@ sl_status_t buffered_request_handler(sl_http_server_t *handle, sl_http_server_re
 
     sl_http_server_read_request_data(handle, &recvData);
     response[recvData.received_data_length] = 0;
-    printf("Got request data as : %s\n", response);
+    SL_DEBUG_LOG_V2(INFO, "Got request data as : %s\r\n", (uintptr_t)response);
   }
 
-  printf("Got request query parameter count : %u\n", req->uri.query_parameter_count);
+  SL_DEBUG_LOG_V2(INFO, "Got request query parameter count : %u\r\n", req->uri.query_parameter_count);
   if (req->uri.query_parameter_count > 0) {
     for (int i = 0; i < req->uri.query_parameter_count; i++) {
-      printf("query: %s, value: %s\n", req->uri.query_parameters[i].query, req->uri.query_parameters[i].value);
+      SL_DEBUG_LOG_V2(INFO,
+                      "query: %s, value: %s",
+                      (uintptr_t)req->uri.query_parameters[i].query,
+                      (uintptr_t)req->uri.query_parameters[i].value);
     }
   }
 
-  printf("Got header count : %u\n", req->request_header_count);
+  SL_DEBUG_LOG_V2(INFO, "Got header count : %u", req->request_header_count);
   sl_http_server_get_request_headers(handle, req, request_headers, 5);
 
   int length = (req->request_header_count > 5) ? 5 : req->request_header_count;
   for (int i = 0; i < length; i++) {
-    printf("Key: %s, Value: %s\n", request_headers[i].key, request_headers[i].value);
+    SL_DEBUG_LOG_V2(INFO, "Key: %s, Value: %s", (uintptr_t)request_headers[i].key, (uintptr_t)request_headers[i].value);
   }
 
   // Set the response code to 200 (OK)
@@ -294,10 +308,11 @@ sl_status_t large_data_handler(sl_http_server_t *handle, sl_http_server_request_
   sl_http_recv_req_data_t recvData        = { 0 };
   uint32_t data_length                    = 0;
 
-  printf("Got request [%s] of type : %s with data length : %lu\n",
-         req->uri.path,
-         request_type[req->type],
-         req->request_data_length);
+  SL_DEBUG_LOG_V2(INFO,
+                  "Got request [%s] of type : %s with data length : %lu",
+                  (uintptr_t)req->uri.path,
+                  (uintptr_t)request_type[req->type],
+                  req->request_data_length);
   if (req->request_data_length > 0) {
     recvData.request       = req;
     recvData.buffer        = (uint8_t *)response;
@@ -305,9 +320,12 @@ sl_status_t large_data_handler(sl_http_server_t *handle, sl_http_server_request_
     data_length            = req->request_data_length;
 
     while (0 != data_length) {
-      sl_http_server_read_request_data(handle, &recvData);
+      if (sl_http_server_read_request_data(handle, &recvData) != SL_STATUS_OK) {
+        // Peer closed connection or read error; do not send response
+        return SL_STATUS_FAIL;
+      }
       data_length -= recvData.received_data_length;
-      printf("Read %lu bytes, remaining %lu bytes\n", recvData.received_data_length, data_length);
+      SL_DEBUG_LOG_V2(INFO, "Read %lu bytes, remaining %lu bytes\r\n", recvData.received_data_length, data_length);
     }
   }
 
@@ -344,24 +362,24 @@ static void application_start(void *argument)
 
   status = sl_net_init(SL_NET_WIFI_CLIENT_INTERFACE, &http_server_configuration, NULL, NULL);
   if (status != SL_STATUS_OK) {
-    printf("\r\nFailed to start Wi-Fi Client interface: 0x%lx\r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "Failed to start Wi-Fi Client interface: 0x%lx\r\n", status);
     return;
   }
-  printf("\r\nWi-Fi client interface init success\r\n");
+  SL_DEBUG_LOG_V2(INFO, "Wi-Fi client interface init success\r\n");
 
   status = sl_net_up(SL_NET_WIFI_CLIENT_INTERFACE, SL_NET_DEFAULT_WIFI_CLIENT_PROFILE_ID);
   if (status != SL_STATUS_OK) {
-    printf("\r\nFailed to bring Wi-Fi client interface up: 0x%lX\r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "Failed to bring Wi-Fi client interface up: 0x%lX\r\n", status);
     return;
   }
-  printf("\r\nWi-Fi client connected\r\n");
+  SL_DEBUG_LOG_V2(INFO, "Wi-Fi client connected\r\n");
 
   status = sl_net_get_profile(SL_NET_WIFI_CLIENT_INTERFACE, SL_NET_DEFAULT_WIFI_CLIENT_PROFILE_ID, &profile);
   if (status != SL_STATUS_OK) {
-    printf("Failed to get client profile: 0x%lx\r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "Failed to get client profile: 0x%lx\r\n", status);
     return;
   }
-  printf("\r\nSuccess to get client profile\r\n");
+  SL_DEBUG_LOG_V2(INFO, "Success to get client profile\r\n");
 
   ip_address.type = SL_IPV4;
   memcpy(&ip_address.ip.v4.bytes, &profile.ip.ip.v4.ip_address.bytes, sizeof(sl_ipv4_address_t));
@@ -375,17 +393,17 @@ static void application_start(void *argument)
 
   status = sl_http_server_init(&server_handle, &server_config);
   if (status != SL_STATUS_OK) {
-    printf("\r\nHTTP server init failed:%lx\r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "HTTP server init failed:%lx\r\n", status);
     return;
   }
-  printf("\r\n Http Init done\r\n");
+  SL_DEBUG_LOG_V2(INFO, " Http Init done\r\n");
 
   status = sl_http_server_start(&server_handle);
   if (status != SL_STATUS_OK) {
-    printf("\r\n Server start fail:%lx\r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, " Server start fail:%lx\r\n", status);
     return;
   }
-  printf("\r\n Server start done\r\n");
+  SL_DEBUG_LOG_V2(INFO, " Server start done\r\n");
 
   is_server_running = true;
   while (is_server_running) {
@@ -394,15 +412,15 @@ static void application_start(void *argument)
 
   status = sl_http_server_stop(&server_handle);
   if (status != SL_STATUS_OK) {
-    printf("\r\n Server stop fail:%lx\r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, " Server stop fail:%lx\r\n", status);
     return;
   }
-  printf("\r\n Server stop done\r\n");
+  SL_DEBUG_LOG_V2(INFO, " Server stop done\r\n");
 
   status = sl_http_server_deinit(&server_handle);
   if (status != SL_STATUS_OK) {
-    printf("\r\n Server deinit fail:%lx\r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, " Server deinit fail:%lx\r\n", status);
     return;
   }
-  printf("\r\n Server deinit done\r\n");
+  SL_DEBUG_LOG_V2(INFO, " Server deinit done\r\n");
 }

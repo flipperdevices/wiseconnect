@@ -27,6 +27,7 @@
  * 3. This notice may not be removed or altered from any source distribution.
  *
  ******************************************************************************/
+#include "sl_si91x_clock_manager.h"
 #include <sl_si91x_si70xx.h>
 #include "sl_si91x_clock_manager.h"
 
@@ -56,10 +57,14 @@ sl_status_t sl_si91x_si70xx_init(sl_i2c_instance_t i2c_instance, uint8_t addr, s
 {
   // Validate invalid parameters
   if ((i2c_instance >= SL_I2C_LAST) || (eid >= SL_LAST_EID)) {
+    SL_PRINT_STRING_ERROR("sl_si91x_si70xx_init : init invalid parameter, line no : %d \r\n", __LINE__);
     return SL_STATUS_INVALID_PARAMETER;
   }
   // To check EID of sensor before starting measurement
   if (sl_si91x_si70xx_is_present(i2c_instance, addr, eid)) {
+    SL_PRINT_STRING_ERROR("sl_si91x_si70xx_init : sensor not detected or EID "
+                          "check failed, line no : %d \r\n",
+                          __LINE__);
     return SL_STATUS_INITIALIZATION;
   }
   return SL_STATUS_OK;
@@ -82,21 +87,35 @@ sl_status_t sl_si91x_si70xx_get_firmware_revision(sl_i2c_instance_t i2c_instance
   i2c_write_data[1] = SL_FIRMWARE_REV2;
   // Validate invalid parameters
   if (i2c_instance >= SL_I2C_LAST) {
+    SL_PRINT_STRING_ERROR("sl_si91x_si70xx_get_firmware_revision : invalid "
+                          "parameter, line no : %d \r\n",
+                          __LINE__);
     return SL_STATUS_INVALID_PARAMETER;
   }
   // Validate NULL parameters
   if (firmware_revision == NULL) {
+    SL_PRINT_STRING_ERROR("sl_si91x_si70xx_get_firmware_revision : null "
+                          "pointer, line no : %d \r\n",
+                          __LINE__);
     return SL_STATUS_NULL_POINTER;
   }
   // Send firmware command to sensor
   status = sl_i2c_driver_send_data_blocking(i2c_instance, addr, i2c_write_data, write_buffer_size);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si91x_si70xx_get_firmware_revision : send data "
+                          "failed, status=0x%04lX,line no : %d \r\n",
+                          (unsigned long)status,
+                          __LINE__);
     return status;
   }
   wait_till_i2c_gets_idle(i2c_instance);
   // Read firmware command response from sensor
   status = sl_i2c_driver_receive_data_blocking(i2c_instance, addr, i2c_read_data, read_buffer_size);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si91x_si70xx_get_firmware_revision : receive "
+                          "data failed, status=0x%04lX,line no : %d \r\n",
+                          (unsigned long)status,
+                          __LINE__);
     return status;
   }
   wait_till_i2c_gets_idle(i2c_instance);
@@ -118,6 +137,9 @@ sl_status_t sl_si91x_si70xx_start_no_hold_measure_rh_or_temp(sl_i2c_instance_t i
   uint8_t cmd                    = 0;
   // Validate invalid parameters
   if ((i2c_instance >= SL_I2C_LAST) || (type >= SL_LAST_MEASUREMENT)) {
+    SL_PRINT_STRING_ERROR("sl_si91x_si70xx_start_no_hold_measure_rh_or_temp "
+                          ": invalid parameter, line no : %d \r\n",
+                          __LINE__);
     return SL_STATUS_INVALID_PARAMETER;
   }
   // Check if type is selected as humidity measurement
@@ -132,6 +154,10 @@ sl_status_t sl_si91x_si70xx_start_no_hold_measure_rh_or_temp(sl_i2c_instance_t i
   // Send no hold master mode command to sensor
   status = sl_i2c_driver_send_data_blocking(i2c_instance, addr, i2c_write_data, WR_BUF);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si91x_si70xx_start_no_hold_measure_rh_or_temp : send data "
+                          "failed, status=0x%04lX,line no : %d \r\n",
+                          (unsigned long)status,
+                          __LINE__);
     return status;
   }
   wait_till_i2c_gets_idle(i2c_instance);
@@ -140,6 +166,10 @@ sl_status_t sl_si91x_si70xx_start_no_hold_measure_rh_or_temp(sl_i2c_instance_t i
   // Receive no hold master mode response from sensor
   status = sl_i2c_driver_receive_data_blocking(i2c_instance, addr, i2c_read_data, RX_LEN);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si91x_si70xx_start_no_hold_measure_rh_or_temp : receive data "
+                          "failed, status=0x%04lX,line no : %d \r\n",
+                          (unsigned long)status,
+                          __LINE__);
     return status;
   }
   wait_till_i2c_gets_idle(i2c_instance);
@@ -165,15 +195,23 @@ sl_status_t sl_si91x_si70xx_read_temp_from_rh(sl_i2c_instance_t i2c_instance,
   sl_status_t status = SL_STATUS_FAIL;
   // Validate invalid parameters
   if (i2c_instance >= SL_I2C_LAST) {
+    SL_PRINT_STRING_ERROR("sl_si91x_si70xx_read_temp_from_rh : invalid "
+                          "parameter, line no : %d \r\n",
+                          __LINE__);
     return SL_STATUS_INVALID_PARAMETER;
   }
   // Validate NULL parameters
   if ((humid_data == NULL) || (temp_data == NULL)) {
+    SL_PRINT_STRING_ERROR("sl_si91x_si70xx_read_temp_from_rh : null pointer, line no : %d \r\n", __LINE__);
     return SL_STATUS_NULL_POINTER;
   }
   // send humidity hold master mode command and receive response from sensor
   status = si70xx_send_command(i2c_instance, addr, (uint32_t *)humid_data, SL_HUMIDITY_HM);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si91x_si70xx_read_temp_from_rh : send command "
+                          "failed, status=0x%04lX,line no : %d \r\n",
+                          (unsigned long)status,
+                          __LINE__);
     return status;
   }
   // Convert relative humidity measurement to percent relative humidity
@@ -181,6 +219,10 @@ sl_status_t sl_si91x_si70xx_read_temp_from_rh(sl_i2c_instance_t i2c_instance,
   // send temperature command and receive response from sensor from previous RH
   status = si70xx_send_command(i2c_instance, addr, (uint32_t *)temp_data, SL_TEMPERATURE_AH);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si91x_si70xx_read_temp_from_rh : send command "
+                          "failed, status=0x%04lX,line no : %d \r\n",
+                          (unsigned long)status,
+                          __LINE__);
     return status;
   }
   // Convert temperature measurement to temperature in degrees Celcius
@@ -196,15 +238,23 @@ sl_status_t sl_si91x_si70xx_measure_humidity(sl_i2c_instance_t i2c_instance, uin
   sl_status_t status = SL_STATUS_FAIL;
   // Validate invalid parameters
   if (i2c_instance >= SL_I2C_LAST) {
+    SL_PRINT_STRING_ERROR("sl_si91x_si70xx_measure_humidity : invalid "
+                          "parameter, line no : %d \r\n",
+                          __LINE__);
     return SL_STATUS_INVALID_PARAMETER;
   }
   // Validate NULL parameters
   if (humid_data == NULL) {
+    SL_PRINT_STRING_ERROR("sl_si91x_si70xx_measure_humidity : null pointer, line no : %d \r\n", __LINE__);
     return SL_STATUS_NULL_POINTER;
   }
   // send humidity hold master mode command and receive response from sensor
   status = si70xx_send_command(i2c_instance, addr, (uint32_t *)humid_data, SL_HUMIDITY_HM);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si91x_si70xx_measure_humidity : send command "
+                          "failed, status=0x%04lX,line no : %d \r\n",
+                          (unsigned long)status,
+                          __LINE__);
     return status;
   }
   // Convert relative humidity measurement to percent relative humidity
@@ -220,15 +270,25 @@ sl_status_t sl_si91x_si70xx_measure_temperature(sl_i2c_instance_t i2c_instance, 
   sl_status_t status = SL_STATUS_FAIL;
   // Validate invalid parameters
   if (i2c_instance >= SL_I2C_LAST) {
+    SL_PRINT_STRING_ERROR("sl_si91x_si70xx_measure_temperature : invalid "
+                          "parameter, line no : %d \r\n",
+                          __LINE__);
     return SL_STATUS_INVALID_PARAMETER;
   }
   // Validate NULL parameters
   if (temp_data == NULL) {
+    SL_PRINT_STRING_ERROR("sl_si91x_si70xx_measure_temperature : null "
+                          "pointer, line no : %d \r\n",
+                          __LINE__);
     return SL_STATUS_NULL_POINTER;
   }
   // send temperature hold master mode command and receive response from sensor
   status = si70xx_send_command(i2c_instance, addr, (uint32_t *)temp_data, SL_TEMPERATURE_HM);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si91x_si70xx_measure_temperature : send "
+                          "command failed, status=0x%04lX,line no : %d \r\n",
+                          (unsigned long)status,
+                          __LINE__);
     return status;
   }
   // Convert temperature measurement to temperature in degrees Celcius
@@ -249,6 +309,7 @@ sl_status_t sl_si91x_si70xx_is_present(sl_i2c_instance_t i2c_instance, uint8_t a
   uint8_t i2c_write_data[write_buffer_size];
   // Validate invalid parameters
   if ((i2c_instance >= SL_I2C_LAST) || (eid >= SL_LAST_EID)) {
+    SL_PRINT_STRING_ERROR("sl_si91x_si70xx_is_present : invalid parameter, line no : %d \r\n", __LINE__);
     return SL_STATUS_INVALID_PARAMETER;
   }
   // Check if eid is selected as 1st byte
@@ -264,12 +325,20 @@ sl_status_t sl_si91x_si70xx_is_present(sl_i2c_instance_t i2c_instance, uint8_t a
   // Send EID byte command to sensor
   status = sl_i2c_driver_send_data_blocking(i2c_instance, addr, i2c_write_data, write_buffer_size);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si91x_si70xx_is_present : send data failed, "
+                          "status=0x%04lX,line no : %d \r\n",
+                          (unsigned long)status,
+                          __LINE__);
     return status;
   }
   wait_till_i2c_gets_idle(i2c_instance);
   // Receive response on EID byte command from sensor
   status = sl_i2c_driver_receive_data_blocking(i2c_instance, addr, i2c_read_data, read_buffer_size);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si91x_si70xx_is_present : receive data failed, "
+                          "status=0x%04lX,line no : %d \r\n",
+                          (unsigned long)status,
+                          __LINE__);
     return status;
   }
   wait_till_i2c_gets_idle(i2c_instance);
@@ -288,15 +357,25 @@ sl_status_t sl_si91x_si70xx_measure_rh_and_temp(sl_i2c_instance_t i2c_instance,
   sl_status_t status = SL_STATUS_FAIL;
   // Validate invalid parameters
   if (i2c_instance >= SL_I2C_LAST) {
+    SL_PRINT_STRING_ERROR("sl_si91x_si70xx_measure_rh_and_temp : invalid "
+                          "parameter, line no : %d \r\n",
+                          __LINE__);
     return SL_STATUS_INVALID_PARAMETER;
   }
   // Validate NULL parameters
   if ((humid_data == NULL) || (temp_data == NULL)) {
+    SL_PRINT_STRING_ERROR("sl_si91x_si70xx_measure_rh_and_temp : null "
+                          "pointer, line no : %d \r\n",
+                          __LINE__);
     return SL_STATUS_NULL_POINTER;
   }
   // send humidity hold master mode command and receive response from sensor
   status = si70xx_send_command(i2c_instance, addr, (uint32_t *)humid_data, SL_HUMIDITY_HM);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si91x_si70xx_measure_rh_and_temp : send "
+                          "command failed, status=0x%04lX,line no : %d \r\n",
+                          (unsigned long)status,
+                          __LINE__);
     return status;
   }
   // Convert relative humidity measurement to percent relative humidity
@@ -304,6 +383,10 @@ sl_status_t sl_si91x_si70xx_measure_rh_and_temp(sl_i2c_instance_t i2c_instance,
   // send temperature hold master mode command and receive response from sensor
   status = si70xx_send_command(i2c_instance, addr, (uint32_t *)temp_data, SL_TEMPERATURE_HM);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si91x_si70xx_measure_rh_and_temp : send "
+                          "command failed, status=0x%04lX,line no : %d \r\n",
+                          (unsigned long)status,
+                          __LINE__);
     return status;
   }
   // Convert temperature measurement to temperature in degrees Celcius
@@ -329,21 +412,31 @@ static sl_status_t si70xx_send_command(sl_i2c_instance_t i2c_instance, uint8_t a
   i2c_write_data[0] = command;
   // Validate invalid parameters
   if (i2c_instance >= SL_I2C_LAST) {
+    SL_PRINT_STRING_ERROR("si70xx_send_command : invalid parameter, line no : %d \r\n", __LINE__);
     return SL_STATUS_INVALID_PARAMETER;
   }
   // Validate NULL parameters
   if (data == NULL) {
+    SL_PRINT_STRING_ERROR("si70xx_send_command : null pointer, line no : %d \r\n", __LINE__);
     return SL_STATUS_NULL_POINTER;
   }
   // Send command to sensor
   status = sl_i2c_driver_send_data_blocking(i2c_instance, addr, i2c_write_data, write_buffer_size);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("si70xx_send_command : send data failed, "
+                          "status=0x%04lX,line no : %d \r\n",
+                          (unsigned long)status,
+                          __LINE__);
     return status;
   }
   wait_till_i2c_gets_idle(i2c_instance);
   // Receive response from sensor
   status = sl_i2c_driver_receive_data_blocking(i2c_instance, addr, i2c_read_data, read_buffer_size);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("si70xx_send_command : receive data failed, "
+                          "status=0x%04lX,line no : %d \r\n",
+                          (unsigned long)status,
+                          __LINE__);
     return status;
   }
   wait_till_i2c_gets_idle(i2c_instance);
@@ -388,11 +481,16 @@ sl_status_t sl_si91x_si70xx_reset(sl_i2c_instance_t i2c_instance, uint8_t addr)
   i2c_write_data[0] = SL_SI70XX_RESET;
   // Validate invalid parameters
   if (i2c_instance >= SL_I2C_LAST) {
+    SL_PRINT_STRING_ERROR("sl_si91x_si70xx_reset : invalid parameter, line no : %d \r\n", __LINE__);
     return SL_STATUS_INVALID_PARAMETER;
   }
   // Send sensor reset command to sensor
   status = sl_i2c_driver_send_data_blocking(i2c_instance, addr, i2c_write_data, write_buffer_size);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si91x_si70xx_reset : send data failed, "
+                          "status=0x%04lX,line no : %d \r\n",
+                          (unsigned long)status,
+                          __LINE__);
     return status;
   }
   wait_till_i2c_gets_idle(i2c_instance);
@@ -415,10 +513,16 @@ sl_status_t sl_si91x_si70xx_read_control_register(sl_i2c_instance_t i2c_instance
   uint8_t i2c_read_data[read_buffer_size];
   // Validate invalid parameters
   if ((i2c_instance >= SL_I2C_LAST) || (reg >= SL_LAST_CONTROL_REG)) {
+    SL_PRINT_STRING_ERROR("sl_si91x_si70xx_read_control_register : invalid "
+                          "parameter, line no : %d \r\n",
+                          __LINE__);
     return SL_STATUS_INVALID_PARAMETER;
   }
   // Validate NULL parameters
   if (data == NULL) {
+    SL_PRINT_STRING_ERROR("sl_si91x_si70xx_read_control_register : null "
+                          "pointer, line no : %d \r\n",
+                          __LINE__);
     return SL_STATUS_NULL_POINTER;
   }
   // Check if user register 1/ heater control register command is selected
@@ -431,12 +535,20 @@ sl_status_t sl_si91x_si70xx_read_control_register(sl_i2c_instance_t i2c_instance
   // Send user register 1/ heater control register command to sensor
   status = sl_i2c_driver_send_data_blocking(i2c_instance, addr, i2c_write_data, write_buffer_size);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si91x_si70xx_read_control_register : send data "
+                          "failed, status=0x%04lX,line no : %d \r\n",
+                          (unsigned long)status,
+                          __LINE__);
     return status;
   }
   wait_till_i2c_gets_idle(i2c_instance);
   // Receive response for user register 1/ heater control register command from sensor
   status = sl_i2c_driver_receive_data_blocking(i2c_instance, addr, i2c_read_data, read_buffer_size);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si91x_si70xx_read_control_register : receive "
+                          "data failed, status=0x%04lX,line no : %d \r\n",
+                          (unsigned long)status,
+                          __LINE__);
     return status;
   }
   wait_till_i2c_gets_idle(i2c_instance);
@@ -458,6 +570,9 @@ sl_status_t sl_si91x_si70xx_write_control_register(sl_i2c_instance_t i2c_instanc
   uint8_t i2c_write_data[write_buffer_size];
   // Validate invalid parameters
   if ((i2c_instance >= SL_I2C_LAST) || (reg >= SL_LAST_CONTROL_REG)) {
+    SL_PRINT_STRING_ERROR("sl_si91x_si70xx_write_control_register : invalid "
+                          "parameter, line no : %d \r\n",
+                          __LINE__);
     return SL_STATUS_INVALID_PARAMETER;
   }
   // Check if user register 1/ heater control register command is selected
@@ -472,6 +587,10 @@ sl_status_t sl_si91x_si70xx_write_control_register(sl_i2c_instance_t i2c_instanc
   // Send user register 1/ heater control register command to sensor
   status = sl_i2c_driver_send_data_blocking(i2c_instance, addr, i2c_write_data, write_buffer_size);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si91x_si70xx_write_control_register : send "
+                          "data failed, status=0x%04lX,line no : %d \r\n",
+                          (unsigned long)status,
+                          __LINE__);
     return status;
   }
   wait_till_i2c_gets_idle(i2c_instance);

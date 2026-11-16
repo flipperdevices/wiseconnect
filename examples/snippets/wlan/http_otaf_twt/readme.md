@@ -1,9 +1,14 @@
 # Wi-Fi - HTTP/HTTPS OTAF TWT Update
 
+## High-Level Overview
+
+SiWx91x HTTP OTAF with TWT example: Use Target Wake Time power save while downloading firmware over HTTP/HTTPS from a remote server in SoC and NCP modes.
+
 ## Table of Contents
 
 - [Wi-Fi - HTTP/HTTPS OTAF TWT Update](#wi-fi---httphttps-otaf-twt-update)
   - [Table of Contents](#table-of-contents)
+  - [High-Level Overview](#high-level-overview)
   - [Purpose/Scope](#purposescope)
   - [Prerequisites/Setup Requirements](#prerequisitessetup-requirements)
     - [Hardware Requirements](#hardware-requirements)
@@ -19,6 +24,9 @@
     - [Configuring Azure Blob Storage](#configuring-azure-blob-storage)
     - [Configuring and Uploading Firmware on Apache HTTP](#configuring-and-uploading-firmware-on-apache-http)
     - [Configuring and Uploading Firmware on Apache HTTPs](#configuring-and-uploading-firmware-on-apache-https)
+  - [Troubleshooting](#troubleshooting)
+  - [Resources](#resources)
+  - [Report Bugs and Get Support](#report-bugs-and-get-support)
 
 ## Purpose/Scope
 
@@ -39,30 +47,49 @@ The server transferred firmware file gets loaded/updated in the SiWx91x flash me
 - SiWx91x Wi-Fi Evaluation Kit. The SiWx91x supports multiple operating modes. See [Operating Modes]() for details.
 - **SoC Mode**:
   - Standalone
-    - BRD4002A Wireless pro kit mainboard [SI-MB4002A]
+    - BRD4002B Wireless Pro Kit Mainboard [SI-MB4002B](https://www.silabs.com/development-tools/wireless/wireless-pro-kit-mainboard?tab=overview)
     - Radio Boards 
-  	  - BRD4338A [SiWx917-RB4338A]
-  	  - BRD4343A [SiWx917-RB4343A]
+  	  - BRD4338A [SiWx917-RB4338A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-rb4338a-wifi-6-bluetooth-le-soc-radio-board?tab=overview)
+  	  - BRD4342A [SiWx917-RB4342A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx91x-rb4342a-wifi-6-bluetooth-le-soc-radio-board?tab=overview)
+  	  - BRD4339B [SiWx917-RB4339B](https://docs.silabs.com/wiseconnect/latest/wiseconnect-getting-started/getting-started-with-at)
+  	  - BRD4340A [SiWx917-RB4340A](https://docs.silabs.com/wiseconnect/latest/wiseconnect-getting-started/getting-started-with-at)
+  	  - BRD4343A [SiWx917-RB4343A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4343a-wi-fi-6-bluetooth-le-8mb-flash-radio-board-for-module?tab=overview)
+  	  - BRD4343C [SiWx917-RB4343C](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4343c-wi-fi-6-bluetooth-le-8mb-flash-radio-board-for-module?tab=overview)
   - Kits
+  	- SiWG917 Dev Kit [BRD2605A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-dk2605a-wifi-6-bluetooth-le-soc-dev-kit?tab=overview)
+  	- SiWG917 Dev Kit [BRD2605B]
   	- SiWx917 Pro Kit [Si917-PK6031A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-pro-kit?tab=overview)
   	- SiWx917 Pro Kit [Si917-PK6032A]
-    - SiWx917 AC1 Module Explorer Kit (BRD2708A)
+    - SiWx917 AC1 Module Explorer Kit [BRD2708A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-ek2708a-explorer-kit?tab=overview)
   	
-- **NCP Mode**:
-  - Standalone
-    - BRD4002A Wireless Pro Kit Mainboard [SI-MB4002A]
-    - EFR32xG24 Wireless 2.4 GHz +10 dBm Radio Board [xG24-RB4186C](https://www.silabs.com/development-tools/wireless/xg24-rb4186c-efr32xg24-wireless-gecko-radio-board?tab=overview)
+- **NCP Mode** (select either the EFR32 or STM32 host MCU platform; a single platform is sufficient to run the application):
+  - **Option 1: EFR32 host**
+    - Standalone
+      - BRD4002B Wireless Pro Kit Mainboard [SI-MB4002B](https://www.silabs.com/development-tools/wireless/wireless-pro-kit-mainboard?tab=overview)
+      - EFR32xG24 Wireless 2.4 GHz +10 dBm Radio Board [xG24-RB4186C](https://www.silabs.com/development-tools/wireless/xg24-rb4186c-efr32xg24-wireless-gecko-radio-board?tab=overview)
+      - NCP Expansion Kit with NCP Radio Boards
+        - [BRD4346A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-rb4346a-wifi-6-bluetooth-le-soc-4mb-flash-radio-board?tab=overview) + [BRD8045A](https://www.silabs.com/development-tools/wireless/wi-fi/expansion-adapter-board-for-co-processor-radio-boards?tab=overview)
+        - [BRD4357A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4357a-wi-fi-6-bluetooth-le-4mb-flash-radio-board-for-rcp-and-ncp-modules?tab=overview) + [BRD8045A](https://www.silabs.com/development-tools/wireless/wi-fi/expansion-adapter-board-for-co-processor-radio-boards?tab=overview)
+        - [BRD4357C](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4357c-wi-fi-6-bluetooth-le-4mb-flash-radio-board-for-rcp-and-ncp-modules?tab=overview) + [BRD8045A](https://www.silabs.com/development-tools/wireless/wi-fi/expansion-adapter-board-for-co-processor-radio-boards?tab=overview)
+    - Kits
+    	- EFR32xG24 Pro Kit +10 dBm [xG24-PK6009A](https://www.silabs.com/development-tools/wireless/efr32xg24-pro-kit-10-dbm?tab=overview)
+
+  - **Option 2: STM32F411RE host**
+    - [STM32F411RE](https://www.st.com/en/microcontrollers-microprocessors/stm32f411re.html) MCU
     - NCP Expansion Kit with NCP Radio Boards
-      - (BRD4346A + BRD8045A) [SiWx917-EB4346A]
-      - (BRD4357A + BRD8045A) [SiWx917-EB4357A]
-  - Kits
-  	- EFR32xG24 Pro Kit +10 dBm [xG24-PK6009A](https://www.silabs.com/development-tools/wireless/efr32xg24-pro-kit-10-dbm?tab=overview)
-  - Interface and Host MCU Supported
-    - SPI - EFR32 
+      - [BRD4346A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-rb4346a-wifi-6-bluetooth-le-soc-4mb-flash-radio-board?tab=overview) + [BRD8045C](https://www.silabs.com/development-tools/wireless/wi-fi/shield-adapter-board-for-co-processor-radio-boards?tab=overview)
+      - [BRD4357A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4357a-wi-fi-6-bluetooth-le-4mb-flash-radio-board-for-rcp-and-ncp-modules?tab=overview) + [BRD8045C](https://www.silabs.com/development-tools/wireless/wi-fi/shield-adapter-board-for-co-processor-radio-boards?tab=overview)
+      - [BRD4357C](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4357c-wi-fi-6-bluetooth-le-4mb-flash-radio-board-for-rcp-and-ncp-modules?tab=overview) + [BRD8045C](https://www.silabs.com/development-tools/wireless/wi-fi/shield-adapter-board-for-co-processor-radio-boards?tab=overview)
+
+  - Interface and host MCU supported
+    - SPI : EFR32 and STM32
+    - UART : EFR32
 
 ### Software Requirements
 
 - Simplicity Studio
+
+- [Keil IDE](https://www.keil.com/) (to be used with STM32F411RE MCU)
 
 ### Setup Diagram
 
@@ -90,7 +117,7 @@ The application can be configured to suit your requirements and the development 
 
 - STA instance related parameters
 
-  - DEFAULT_WIFI_CLIENT_PROFILE_SSID refers to the name with which the Wi-Fi network shall be advertised and Si91X module is connected to it.
+  - DEFAULT_WIFI_CLIENT_PROFILE_SSID refers to the name with which the Wi-Fi network shall be advertised and SiWx91x module is connected to it.
 
     ```c
     #define DEFAULT_WIFI_CLIENT_PROFILE_SSID               "YOUR_AP_SSID"      
@@ -332,58 +359,37 @@ The application can be configured to suit your requirements and the development 
     - sl_wifi_enable_target_wake_time - This API allows users to manually configure iTWT session parameters and enables the iTWT session. This API is not recommended for users. It is for internal certification purposes only.
     - sl_wifi_disable_target_wake_time - Disables a TWT session.
 
-    **sl_wifi_target_wake_time_auto_selection API**
+    **sl_wifi_target_wake_time_auto_selection_v2 API**
     
     ```c
-      sl_status_t sl_wifi_target_wake_time_auto_selection(sl_wifi_twt_selection_t *twt_auto_request)
+      sl_status_t sl_wifi_target_wake_time_auto_selection_v2(sl_wifi_twt_selection_v2_t *config)
     ```
-    Parameters of this API can be configured in *sl_wifi_twt_selection_t* structure. 
+    Parameters of this API can be configured in *sl_wifi_twt_selection_v2_t* structure.
     This TWT API is recommended because it is designed for maintaining connections, improving throughput, and enhancing power performance.
 
-    
    The following are the parameter descriptions:
     - twt_enable:  1- Setup ; 0 - teardown
+    - avg_tx_throughput:  This is the expected average Tx throughput in Kbps. Value ranges from 0 to 10 Mbps, which is half of the default [device_average_throughput](https://docs.silabs.com/wiseconnect/latest/wiseconnect-api-reference-guide-wi-fi/sl-wifi-twt-selection-v2-t#device-average-throughput) (20 Mbps by default).
     - tx_latency:  The allowed latency, in milliseconds, within which the given Tx operation is expected to be completed. If 0 is configured, the maximum allowed Tx latency is the same as rx_latency. Otherwise, valid values are in the range of [200 ms - 6 hrs].
     - rx_latency: The maximum latency, in milliseconds, for receiving buffered packets from the AP. The device wakes up at least once for a TWT service period within the configured rx_latency if there are any pending packets destined for the device from the AP. If set to 0, the default latency of 2 seconds is used. Valid range is between 2 seconds to 6 hours. Recommended range is 2 seconds to 60 seconds to avoid connection failures with AP due to longer sleep time.
-    - avg_tx_throughput:  This is the expected average Tx throughput in Kbps. Value ranges from 0 to 10 Mbps, which is half of the default [device_average_throughput](https://docs.silabs.com/wiseconnect/latest/wiseconnect-api-reference-guide-wi-fi/sl-wifi-twt-selection-t#device-average-throughput) (20 Mbps by default).
 
-    For more information on parameters, refer to [sl_wifi_twt_selection_t](https://docs.silabs.com/wiseconnect/latest/wiseconnect-api-reference-guide-wi-fi/sl-wifi-twt-selection-t).
+    For more information, refer to [sl_wifi_twt_selection_v2_t](https://docs.silabs.com/wiseconnect/latest/wiseconnect-api-reference-guide-wi-fi/sl-wifi-twt-selection-v2-t).
 
     Enable TWT_AUTO_CONFIG MACRO in the app.c file.
 
    The following are sample configurations.
     ```c
-      sl_wifi_twt_selection_t       default_twt_selection_configuration = {
-        .twt_enable                            = 1,
-        .average_tx_throughput                 = 1000,
-        .tx_latency                            = 0,
-        .rx_latency                            = 5000,
-        .device_average_throughput             = DEVICE_AVERAGE_THROUGHPUT,
-        .estimated_extra_wake_duration_percent = ESTIMATE_EXTRA_WAKE_DURATION_PERCENT,
-        .twt_tolerable_deviation               = TWT_TOLERABLE_DEVIATION,
-        .default_wake_interval_ms              = TWT_DEFAULT_WAKE_INTERVAL_MS,
-        .default_minimum_wake_duration_ms      = TWT_DEFAULT_WAKE_DURATION_MS,
-        .beacon_wake_up_count_after_sp         = MAX_BEACON_WAKE_UP_AFTER_SP
+      sl_wifi_twt_selection_v2_t default_twt_config = {
+        .twt_enable            = 1,
+        .average_tx_throughput = 1000,
+        .tx_latency            = 0,
+        .rx_latency            = 5000,
       };
     ```
 
-    Sample API call is given as below : 
+    Sample API call:
     ```c
-      status                            = sl_wifi_target_wake_time_auto_selection(&performance_profile.twt_selection);
-    ```
-
-    The following are the default macro settings. The user should not change these values as they may affect the algorithm's functioning. 
-
-    Sample Macro Settings : 
-    ```c
-      #define DEVICE_AVG_THROUGHPUT                20000 \\ Kbps
-      #define ESTIMATE_EXTRA_WAKE_DURATION_PERCENT 0 \\ in percentage
-      #define TWT_TOLERABLE_DEVIATION              10 \\ in percentage
-      #define TWT_DEFAULT_WAKE_INTERVAL_MS         1024     // in milli   seconds
-      #define TWT_DEFAULT_WAKE_DURATION_MS         16       // in milli seconds
-      #define MAX_TX_AND_RX_LATENCY_LIMIT          22118400 // 6 hrs in milli seconds
-      #define MAX_BEACON_WAKE_UP_AFTER_SP \
-      2 // The number of beacons after the service period completion for which the module wakes up and listens for any pending RX.
+      status = sl_wifi_target_wake_time_auto_selection_v2(&default_twt_config);
     ```
 
     >Note :  WLAN Keep Alive should not be disabled while using this API.
@@ -464,9 +470,9 @@ The application can be configured to suit your requirements and the development 
   To teardown TWT session, use the matching TWT teardown API corresponding to the TWT setup configuration API:
     1. For TWT parameters Auto Selection API, call the following API to teardown:
     ```c
-        status = sl_wifi_target_wake_time_auto_selection(twt_selection);
+        status = sl_wifi_target_wake_time_auto_selection_v2(&twt_config);
     ```
-    - Set twt_enable parameter to '0' in the **twt_selection** structure. 
+    - Set twt_enable parameter to '0' in the **twt_config** (sl_wifi_twt_selection_v2_t) structure. 
     - The other parameters in the structure are ignored. 
 
     2. For manually configurable TWT parameters API, call the following API to teardown:
@@ -908,3 +914,23 @@ HTTPs server configuration for Apache requires Wamp server. If you have not inst
 
   > **Note:** Make sure to check your HTTPS server from other local machines present in the same network. It should be accessible.
 
+## Troubleshooting
+
+If you encounter issues while running this example, check the following:
+
+- Verify the access point supports Wi-Fi 6 and TWT. Review TWT configuration in the application.
+- Confirm Wi-Fi credentials and OTAF URL settings before you start the download.
+- Ensure the firmware server is reachable and the image is compatible with the target device.
+- Do not disable WLAN Keep Alive when you use TWT with OTAF.
+
+## Resources
+
+- [WiSeConnect Getting Started Guide](https://docs.silabs.com/wiseconnect/latest/wiseconnect-getting-started/)
+- [WiSeConnect Examples](https://docs.silabs.com/wiseconnect/latest/wiseconnect-examples/#example-folder-structure)
+- [WiSeConnect Recommended Settings Guide](https://docs.silabs.com/wiseconnect/latest/wiseconnect-developers-guide-prog-recommended-settings/)
+
+## Report Bugs and Get Support
+
+Report issues and get help from the Silicon Labs community:
+
+- [Silicon Labs Community](https://www.silabs.com/community)

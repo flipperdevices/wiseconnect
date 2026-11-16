@@ -5,7 +5,7 @@ description: 'This example project configures QSPI read and write from flash.
   '
 category: example|Service
 quality: production
-label: SI91x - SL_File_System_Common_Flash
+label: SiWx91x Platform - File System Common Flash
 component:
 - id: sl_main
 - id: freertos
@@ -13,8 +13,16 @@ component:
 - id: status
 - id: syscalls
 - id: si91x_memory_default_config
+- id: si91x_log
+- id: sl_si91x_freertos_heap_4_redirect
+  condition:
+  - toolchain_gcc
+- id: si91x_log_iostream_formatted
+- id: iostream_si91x
+- id: iostream_uart_si91x
+  instance:
+  - vcom
 - id: sl_si91x_internal_stack
-- id: sl_si91x_basic_buffers
 - id: sl_si91x_littlefs_common_flash
 source:
 - path: app.c
@@ -26,7 +34,9 @@ define:
 - name: SLI_SI91X_MCU_CONFIG_RADIO_BOARD_BASE_VER
 toolchain_settings:
 - option: gcc_compiler_option
-  value: -Wall -Werror
+  value: -Wall -Werror -Wno-error=deprecated-declarations
+- option: llvm_compiler_option
+  value: -Wall -Werror -Wno-error=deprecated-declarations
 other_file:
 - path: resources/readme/setupdiagram.png
 - path: resources/readme/file_system_output.png
@@ -36,13 +46,26 @@ ui_hints:
     focus: true
 readme:
 - path: readme.md
+filter:
+- name: Device Type
+  value:
+  - SoC
+- name: MCU
+  value:
+  - 32-bit MCU
+- name: Level
+  value:
+  - Beginner
+- name: Wireless Technology
+  value:
+  - Wi-Fi
 post_build:
   profile: wiseconnect_soc
 sdk_extension:
 - id: wiseconnect3_sdk
   vendor: silabs
-  version: 4.0.1
+  version: 4.1.2
 sdk:
   id: simplicity_sdk
   vendor: silabs
-  version: 2025.12.2
+  version: 2026.6.2

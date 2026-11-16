@@ -1,7 +1,7 @@
 project_name: wifi_commander_soc
 package: wifi_app
 quality: production
-label: wifi_commander_soc
+label: Wi-Fi - Commander (SoC)
 category: Example|Wi-Fi
 description: 'Demonstrates to run all commands individually
 
@@ -81,8 +81,6 @@ include:
   - path: app_xapi_cmd_event.h
   - path: app_xapi_ap.h
 define:
-- name: SLI_SI91X_OFFLOAD_NETWORK_STACK
-  value: 1
 - name: SL_SI91X_PRINT_DBG_LOG
 - name: SLI_SI91X_DBG_MIDDLEWARE_EN
 - name: SLI_SI91X_MCU_INTR_BASED_RX_ON_UART
@@ -101,7 +99,6 @@ component:
 - id: basic_network_config_manager
 - id: device_needs_ram_execution
 - id: iot_socket
-- id: sl_si91x_basic_buffers
 - id: sl_usart
 - id: app_timer
 - id: sl_ulp_uart
@@ -109,7 +106,9 @@ component:
 - id: mqtt
 toolchain_settings:
 - option: gcc_compiler_option
-  value: -Wall -Werror
+  value: -Wall -Werror -Wno-error=deprecated-declarations
+- option: llvm_compiler_option
+  value: -Wall -Werror -Wno-error=deprecated-declarations
 configuration:
 - name: SL_BOARD_ENABLE_VCOM
   value: '1'
@@ -135,8 +134,8 @@ post_build:
 sdk_extension:
 - id: wiseconnect3_sdk
   vendor: silabs
-  version: 4.0.1
+  version: 4.1.2
 sdk:
   id: simplicity_sdk
   vendor: silabs
-  version: 2025.12.2
+  version: 2026.6.2

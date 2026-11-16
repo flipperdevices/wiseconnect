@@ -29,6 +29,7 @@
 //   ! INCLUDES
 /*=======================================================================*/
 #include <stdio.h>
+#include <inttypes.h>
 #include <rsi_common_app.h>
 #include "ble_cmd_hdlr_auto_gen.h"
 #include "event_loop.h"
@@ -65,7 +66,7 @@ void ble_module_req_adv_cmd_handler(generic_command_message_t *generic_command_m
 
       status = rsi_ble_start_advertising_with_values(&change_adv_param);
       if (status != RSI_SUCCESS) {
-        printf("\r\n ble_module_req_adv_cmd_handler : error status 0x%lx \n", status);
+        printf("\r\n ble_module_req_adv_cmd_handler : error status 0x%" PRIx32 "\n", (uint32_t)status);
       } else {
         adv_state_dut = adv_enabled_non_connectable;
         printf("\r\n ble_module_req_adv_cmd_handler : successful \n");
@@ -73,7 +74,7 @@ void ble_module_req_adv_cmd_handler(generic_command_message_t *generic_command_m
     } else if (central_count < RSI_BLE_MAX_NBR_CENTRALS) {
       status = rsi_ble_start_advertising();
       if (status != RSI_SUCCESS) {
-        printf("\r\n ble_module_req_adv_cmd_handler : error status 0x%lx \n", status);
+        printf("\r\n ble_module_req_adv_cmd_handler : error status 0x%" PRIx32 "\n", (uint32_t)status);
       } else {
         adv_state_dut = adv_enabled;
         printf("\r\n ble_module_req_adv_cmd_handler : successful \n");
@@ -113,7 +114,7 @@ void ble_module_req_scan_cmd_handler(generic_command_message_t *generic_command_
 
       status = rsi_ble_start_scanning_with_values(&change_scan_param);
       if (status != RSI_SUCCESS) {
-        printf("\r\n ble_module_req_scan_cmd_handler : error status 0x%lx \n", status);
+        printf("\r\n ble_module_req_scan_cmd_handler : error status 0x%" PRIx32 "\n", (uint32_t)status);
       } else {
         scan_state_dut = non_connectable_scan;
         printf("\r\n ble_module_req_scan_cmd_handler : successful \n");
@@ -121,7 +122,7 @@ void ble_module_req_scan_cmd_handler(generic_command_message_t *generic_command_
     } else if (peripheral_count < RSI_BLE_MAX_NBR_PERIPHERALS) {
       status = rsi_ble_start_scanning();
       if (status != RSI_SUCCESS) {
-        printf("\r\n ble_module_req_scan_cmd_handler : error status 0x%lx \n", status);
+        printf("\r\n ble_module_req_scan_cmd_handler : error status 0x%" PRIx32 "\n", (uint32_t)status);
       } else {
         scan_state_dut = connectable_scan;
         printf("\r\n ble_module_req_scan_cmd_handler : successful \n");
@@ -159,7 +160,7 @@ void ble_module_req_adv_stop_cmd_handler(generic_command_message_t *generic_comm
   } else {
     status = rsi_ble_stop_advertising();
     if (status != RSI_SUCCESS) {
-      printf("\r\n ble_module_req_adv_stop_cmd_handler : error status 0x%lx \n", status);
+      printf("\r\n ble_module_req_adv_stop_cmd_handler : error status 0x%" PRIx32 "\n", (uint32_t)status);
     } else {
       adv_state_dut = adv_disabled;
       printf("\r\n ble_module_req_adv_cmd_stop_handler : successful \n");
@@ -192,7 +193,7 @@ void ble_module_req_scan_stop_cmd_handler(generic_command_message_t *generic_com
   } else {
     status = rsi_ble_stop_scanning();
     if (status != RSI_SUCCESS) {
-      printf("\r\n ble_module_req_scan_stop_cmd_handler : error status 0x%lx \n", status);
+      printf("\r\n ble_module_req_scan_stop_cmd_handler : error status 0x%" PRIx32 "\n", (uint32_t)status);
     } else {
       scan_state_dut = scan_off;
       printf("\r\n ble_module_req_scan_cmd_stop_handler : successful \n");
@@ -230,7 +231,7 @@ void ble_module_req_conn_cmd_handler(generic_command_message_t *generic_command_
   /* generic_command_message->argv[1] is the pointer to the next string */
   status = rsi_ble_connect(dev_addr_type, (int8_t *)dev_addr);
   if (status != RSI_SUCCESS) {
-    printf("\r\n ble_module_req_conn_cmd_handler : error status 0x%lx \n", status);
+    printf("\r\n ble_module_req_conn_cmd_handler : error status 0x%" PRIx32 "\n", (uint32_t)status);
   } else {
 
     printf("\r\n ble_module_req_conn_cmd_handler : successful \n");
@@ -250,7 +251,7 @@ void ble_module_req_conn_cmd_handler(generic_command_message_t *generic_command_
                                     uint16_t supervision_tout)
 
     if (status != RSI_SUCCESS) {
-      printf("\r\n ble_module_req_adv_cmd_handler : error status 0x%lx \n", status);
+      printf("\r\n ble_module_req_adv_cmd_handler : error status 0x%" PRIx32 "\n", (uint32_t)status);
     } else {
     
       printf("\r\n ble_module_req_adv_cmd_handler : successful \n");
@@ -286,7 +287,7 @@ void ble_module_req_disconnect_cmd_handler(generic_command_message_t *generic_co
 
   status = rsi_ble_disconnect((int8_t *)dev_addr);
   if (status != RSI_SUCCESS) {
-    printf("\r\n ble_module_req_disconnect_cmd_handler : error status 0x%lx \n", status);
+    printf("\r\n ble_module_req_disconnect_cmd_handler : error status 0x%" PRIx32 "\n", (uint32_t)status);
   } else {
     if (remote_device_role == PERIPHERAL_ROLE) {
       peripheral_count--;
@@ -326,7 +327,7 @@ void ble_module_cmd_conn_params_update_cmd_handler(generic_command_message_t *ge
 
   status = rsi_ble_conn_params_update(dev_addr, min_int, max_int, latency, timeout);
   if (status != RSI_SUCCESS) {
-    printf("\r\n ble_module_cmd_conn_params_update_cmd_handler : error status 0x%lx \n", status);
+    printf("\r\n ble_module_cmd_conn_params_update_cmd_handler : error status 0x%" PRIx32 "\n", (uint32_t)status);
   } else {
 
     printf("\r\n ble_module_cmd_conn_params_update_cmd_handler : successful \n");
@@ -355,7 +356,7 @@ void ble_module_get_dev_state_cmd_handler(generic_command_message_t *generic_com
     int32_t status;
     status = rsi_ble_get_device_state(uint8_t *resp);
     if (status != RSI_SUCCESS) {
-      printf("\r\n ble_module_get_dev_state_cmd_handler : error status 0x%lx \n", status);
+      printf("\r\n ble_module_get_dev_state_cmd_handler : error status 0x%" PRIx32 "\n", (uint32_t)status);
     } else {
     
       printf("\r\n ble_module_get_dev_state_cmd_handler : successful \n");
@@ -387,7 +388,7 @@ void ble_module_cmd_conn_params_update_cmd_handler(generic_command_message_t *ge
                                    uint16_t latency,
                                    uint16_t timeout);
     if (status != RSI_SUCCESS) {
-      printf("\r\n ble_module_cmd_conn_params_update_cmd_handler : error status 0x%lx \n", status);
+      printf("\r\n ble_module_cmd_conn_params_update_cmd_handler : error status 0x%" PRIx32 "\n", (uint32_t)status);
     } else {
     
       printf("\r\n ble_module_cmd_conn_params_update_cmd_handler : successful \n");
@@ -416,7 +417,7 @@ void ble_module_req_start_encryption_cmd_handler(generic_command_message_t *gene
     int32_t status;
     status = call_api();
     if (status != RSI_SUCCESS) {
-      printf("\r\n ble_module_req_start_encryption_cmd_handler : error status 0x%lx \n", status);
+      printf("\r\n ble_module_req_start_encryption_cmd_handler : error status 0x%" PRIx32 "\n", (uint32_t)status);
     } else {
     
       printf("\r\n ble_module_req_start_encryption_cmd_handler : successful \n");
@@ -444,7 +445,7 @@ void ble_module_req_smp_pair_cmd_handler(generic_command_message_t *generic_comm
     int32_t status;
     status = rsi_ble_smp_pair_request(uint8_t *remote_dev_address, uint8_t io_capability, uint8_t mitm_req);
     if (status != RSI_SUCCESS) {
-      printf("\r\n ble_module_req_smp_pair_cmd_handler : error status 0x%lx \n", status);
+      printf("\r\n ble_module_req_smp_pair_cmd_handler : error status 0x%" PRIx32 "\n", (uint32_t)status);
     } else {
     
       printf("\r\n ble_module_req_smp_pair_cmd_handler : successful \n");
@@ -472,7 +473,7 @@ void ble_module_smp_pair_response_cmd_handler(generic_command_message_t *generic
     int32_t status;
     status =  rsi_ble_smp_pair_response(uint8_t *remote_dev_address, uint8_t io_capability, uint8_t mitm_req);
     if (status != RSI_SUCCESS) {
-      printf("\r\n ble_module_smp_pair_response_cmd_handler : error status 0x%lx \n", status);
+      printf("\r\n ble_module_smp_pair_response_cmd_handler : error status 0x%" PRIx32 "\n", (uint32_t)status);
     } else {
     
       printf("\r\n ble_module_smp_pair_response_cmd_handler : successful \n");
@@ -500,7 +501,7 @@ void ble_module_smp_passkey_cmd_handler(generic_command_message_t *generic_comma
     int32_t status;
     status = rsi_ble_smp_passkey(uint8_t *remote_dev_address, uint32_t passkey);
     if (status != RSI_SUCCESS) {
-      printf("\r\n ble_module_smp_passkey_cmd_handler : error status 0x%lx \n", status);
+      printf("\r\n ble_module_smp_passkey_cmd_handler : error status 0x%" PRIx32 "\n", (uint32_t)status);
     } else {
     
       printf("\r\n ble_module_smp_passkey_cmd_handler : successful \n");
@@ -531,7 +532,7 @@ void ble_module_req_profiles_cmd_handler(generic_command_message_t *generic_comm
                              uint16_t end_handle,
                              rsi_ble_resp_profiles_list_t *p_prof_list);
     if (status != RSI_SUCCESS) {
-      printf("\r\n ble_module_req_profiles_cmd_handler : error status 0x%lx \n", status);
+      printf("\r\n ble_module_req_profiles_cmd_handler : error status 0x%" PRIx32 "\n", (uint32_t)status);
     } else {
     
       printf("\r\n ble_module_req_profiles_cmd_handler : successful \n");
@@ -559,7 +560,7 @@ void ble_module_req_profile_cmd_handler(generic_command_message_t *generic_comma
     int32_t status;
     status = rsi_ble_get_profile(uint8_t *dev_addr, uuid_t profile_uuid, profile_descriptors_t *p_profile);
     if (status != RSI_SUCCESS) {
-      printf("\r\n ble_module_req_profile_cmd_handler : error status 0x%lx \n", status);
+      printf("\r\n ble_module_req_profile_cmd_handler : error status 0x%" PRIx32 "\n", (uint32_t)status);
     } else {
     
       printf("\r\n ble_module_req_profile_cmd_handler : successful \n");
@@ -590,7 +591,7 @@ void ble_module_req_char_services_cmd_handler(generic_command_message_t *generic
                                   uint16_t end_handle,
                                   rsi_ble_resp_char_services_t *p_char_serv_list);
     if (status != RSI_SUCCESS) {
-      printf("\r\n ble_module_req_char_services_cmd_handler : error status 0x%lx \n", status);
+      printf("\r\n ble_module_req_char_services_cmd_handler : error status 0x%" PRIx32 "\n", (uint32_t)status);
     } else {
     
       printf("\r\n ble_module_req_char_services_cmd_handler : successful \n");
@@ -621,7 +622,7 @@ void ble_module_req_inc_services_cmd_handler(generic_command_message_t *generic_
                                  uint16_t end_handle,
                                  rsi_ble_resp_inc_services_t *p_inc_serv_list);
     if (status != RSI_SUCCESS) {
-      printf("\r\n ble_module_req_inc_services_cmd_handler : error status 0x%lx \n", status);
+      printf("\r\n ble_module_req_inc_services_cmd_handler : error status 0x%" PRIx32 "\n", (uint32_t)status);
     } else {
     
       printf("\r\n ble_module_req_inc_services_cmd_handler : successful \n");
@@ -653,7 +654,7 @@ void ble_module_req_read_by_uuid_cmd_handler(generic_command_message_t *generic_
                                        uuid_t char_uuid,
                                        rsi_ble_resp_att_value_t *p_char_val);
     if (status != RSI_SUCCESS) {
-      printf("\r\n ble_module_req_read_by_uuid_cmd_handler : error status 0x%lx \n", status);
+      printf("\r\n ble_module_req_read_by_uuid_cmd_handler : error status 0x%" PRIx32 "\n", (uint32_t)status);
     } else {
     
       printf("\r\n ble_module_req_read_by_uuid_cmd_handler : successful \n");
@@ -684,7 +685,7 @@ void ble_module_req_desc_cmd_handler(generic_command_message_t *generic_command_
                                     uint16_t end_handle,
                                     rsi_ble_resp_att_descs_t *p_att_desc);
     if (status != RSI_SUCCESS) {
-      printf("\r\n ble_module_req_desc_cmd_handler : error status 0x%lx \n", status);
+      printf("\r\n ble_module_req_desc_cmd_handler : error status 0x%" PRIx32 "\n", (uint32_t)status);
     } else {
     
       printf("\r\n ble_module_req_desc_cmd_handler : successful \n");
@@ -712,7 +713,7 @@ void ble_module_req_read_val_cmd_handler(generic_command_message_t *generic_comm
     int32_t status;
     status = rsi_ble_get_att_value(uint8_t *dev_addr, uint16_t handle, rsi_ble_resp_att_value_t *p_att_val);
     if (status != RSI_SUCCESS) {
-      printf("\r\n ble_module_req_read_val_cmd_handler : error status 0x%lx \n", status);
+      printf("\r\n ble_module_req_read_val_cmd_handler : error status 0x%" PRIx32 "\n", (uint32_t)status);
     } else {
     
       printf("\r\n ble_module_req_read_val_cmd_handler : successful \n");
@@ -743,7 +744,7 @@ void ble_module_req_multiple_read_cmd_handler(generic_command_message_t *generic
                                         uint16_t *handles,
                                         rsi_ble_resp_att_value_t *p_att_vals);
     if (status != RSI_SUCCESS) {
-      printf("\r\n ble_module_req_multiple_read_cmd_handler : error status 0x%lx \n", status);
+      printf("\r\n ble_module_req_multiple_read_cmd_handler : error status 0x%" PRIx32 "\n", (uint32_t)status);
     } else {
     
       printf("\r\n ble_module_req_multiple_read_cmd_handler : successful \n");
@@ -774,7 +775,7 @@ void ble_module_req_long_read_cmd_handler(generic_command_message_t *generic_com
                                    uint16_t offset,
                                    rsi_ble_resp_att_value_t *p_att_vals);
     if (status != RSI_SUCCESS) {
-      printf("\r\n ble_module_req_long_read_cmd_handler : error status 0x%lx \n", status);
+      printf("\r\n ble_module_req_long_read_cmd_handler : error status 0x%" PRIx32 "\n", (uint32_t)status);
     } else {
     
       printf("\r\n ble_module_req_long_read_cmd_handler : successful \n");
@@ -802,7 +803,7 @@ void ble_module_req_write_cmd_handler(generic_command_message_t *generic_command
     int32_t status;
     status = rsi_ble_set_att_value(uint8_t *dev_addr, uint16_t handle, uint8_t data_len, uint8_t *p_data);
     if (status != RSI_SUCCESS) {
-      printf("\r\n ble_module_req_write_cmd_handler : error status 0x%lx \n", status);
+      printf("\r\n ble_module_req_write_cmd_handler : error status 0x%" PRIx32 "\n", (uint32_t)status);
     } else {
     
       printf("\r\n ble_module_req_write_cmd_handler : successful \n");
@@ -830,7 +831,7 @@ void ble_module_req_write_no_ack_cmd_handler(generic_command_message_t *generic_
     int32_t status;
     status = rsi_ble_set_att_cmd(uint8_t *dev_addr, uint16_t handle, uint8_t data_len, uint8_t *p_data);
     if (status != RSI_SUCCESS) {
-      printf("\r\n ble_module_req_write_no_ack_cmd_handler : error status 0x%lx \n", status);
+      printf("\r\n ble_module_req_write_no_ack_cmd_handler : error status 0x%" PRIx32 "\n", (uint32_t)status);
     } else {
     
       printf("\r\n ble_module_req_write_no_ack_cmd_handler : successful \n");
@@ -862,7 +863,7 @@ void ble_module_req_long_write_cmd_handler(generic_command_message_t *generic_co
                                    uint8_t data_len,
                                    uint8_t *p_data);
     if (status != RSI_SUCCESS) {
-      printf("\r\n ble_module_req_long_write_cmd_handler : error status 0x%lx \n", status);
+      printf("\r\n ble_module_req_long_write_cmd_handler : error status 0x%" PRIx32 "\n", (uint32_t)status);
     } else {
     
       printf("\r\n ble_module_req_long_write_cmd_handler : successful \n");
@@ -890,7 +891,7 @@ void ble_module_req_prepare_write_cmd_handler(generic_command_message_t *generic
     int32_t status;
     status =  rsi_ble_prepare_write(uint8_t *dev_addr, uint16_t handle, uint16_t offset, uint8_t data_len, uint8_t *p_data);
     if (status != RSI_SUCCESS) {
-      printf("\r\n ble_module_req_prepare_write_cmd_handler : error status 0x%lx \n", status);
+      printf("\r\n ble_module_req_prepare_write_cmd_handler : error status 0x%" PRIx32 "\n", (uint32_t)status);
     } else {
     
       printf("\r\n ble_module_req_prepare_write_cmd_handler : successful \n");
@@ -918,7 +919,7 @@ void ble_module_req_execute_write_cmd_handler(generic_command_message_t *generic
     int32_t status;
     status = rsi_ble_execute_write(uint8_t *dev_addr, uint8_t exe_flag);
     if (status != RSI_SUCCESS) {
-      printf("\r\n ble_module_req_execute_write_cmd_handler : error status 0x%lx \n", status);
+      printf("\r\n ble_module_req_execute_write_cmd_handler : error status 0x%" PRIx32 "\n", (uint32_t)status);
     } else {
     
       printf("\r\n ble_module_req_execute_write_cmd_handler : successful \n");
@@ -946,7 +947,7 @@ void ble_module_add_service_cmd_handler(generic_command_message_t *generic_comma
     int32_t status;
     status = rsi_ble_add_service(uuid_t service_uuid, rsi_ble_resp_add_serv_t *p_resp_serv);
     if (status != RSI_SUCCESS) {
-      printf("\r\n ble_module_add_service_cmd_handler : error status 0x%lx \n", status);
+      printf("\r\n ble_module_add_service_cmd_handler : error status 0x%" PRIx32 "\n", (uint32_t)status);
     } else {
     
       printf("\r\n ble_module_add_service_cmd_handler : successful \n");
@@ -974,7 +975,7 @@ void ble_module_add_attribute_cmd_handler(generic_command_message_t *generic_com
     int32_t status;
     status = rsi_ble_add_attribute(rsi_ble_req_add_att_t *p_attribute);
     if (status != RSI_SUCCESS) {
-      printf("\r\n ble_module_add_attribute_cmd_handler : error status 0x%lx \n", status);
+      printf("\r\n ble_module_add_attribute_cmd_handler : error status 0x%" PRIx32 "\n", (uint32_t)status);
     } else {
     
       printf("\r\n ble_module_add_attribute_cmd_handler : successful \n");
@@ -1002,7 +1003,7 @@ void ble_module_set_local_att_value_cmd_handler(generic_command_message_t *gener
     int32_t status;
     status = rsi_ble_set_local_att_value(uint16_t handle, uint16_t data_len, uint8_t *p_data);
     if (status != RSI_SUCCESS) {
-      printf("\r\n ble_module_set_local_att_value_cmd_handler : error status 0x%lx \n", status);
+      printf("\r\n ble_module_set_local_att_value_cmd_handler : error status 0x%" PRIx32 "\n", (uint32_t)status);
     } else {
     
       printf("\r\n ble_module_set_local_att_value_cmd_handler : successful \n");
@@ -1030,7 +1031,7 @@ void ble_module_get_local_att_value_cmd_handler(generic_command_message_t *gener
     int32_t status;
     status = rsi_ble_get_local_att_value(uint16_t handle, rsi_ble_resp_local_att_value_t *p_resp_local_att_val);
     if (status != RSI_SUCCESS) {
-      printf("\r\n ble_module_get_local_att_value_cmd_handler : error status 0x%lx \n", status);
+      printf("\r\n ble_module_get_local_att_value_cmd_handler : error status 0x%" PRIx32 "\n", (uint32_t)status);
     } else {
     
       printf("\r\n ble_module_get_local_att_value_cmd_handler : successful \n");
@@ -1058,7 +1059,7 @@ void ble_module_cmd_notify_cmd_handler(generic_command_message_t *generic_comman
     int32_t status;
     status =  rsi_ble_notify_value(uint8_t *dev_addr, uint16_t handle, uint16_t data_len, uint8_t *p_data);
     if (status != RSI_SUCCESS) {
-      printf("\r\n ble_module_cmd_notify_cmd_handler : error status 0x%lx \n", status);
+      printf("\r\n ble_module_cmd_notify_cmd_handler : error status 0x%" PRIx32 "\n", (uint32_t)status);
     } else {
     
       printf("\r\n ble_module_cmd_notify_cmd_handler : successful \n");
@@ -1086,7 +1087,7 @@ void ble_module_cmd_indicate_cmd_handler(generic_command_message_t *generic_comm
     int32_t status;
     status = rsi_ble_indicate_value(uint8_t *dev_addr, uint16_t handle, uint16_t data_len, uint8_t *p_data);
     if (status != RSI_SUCCESS) {
-      printf("\r\n ble_module_cmd_indicate_cmd_handler : error status 0x%lx \n", status);
+      printf("\r\n ble_module_cmd_indicate_cmd_handler : error status 0x%" PRIx32 "\n", (uint32_t)status);
     } else {
     
       printf("\r\n ble_module_cmd_indicate_cmd_handler : successful \n");
@@ -1114,7 +1115,7 @@ void ble_module_set_advertise_data_cmd_handler(generic_command_message_t *generi
     int32_t status;
     status = rsi_ble_set_advertise_data(uint8_t *data, uint16_t data_len);
     if (status != RSI_SUCCESS) {
-      printf("\r\n ble_module_set_advertise_data_cmd_handler : error status 0x%lx \n", status);
+      printf("\r\n ble_module_set_advertise_data_cmd_handler : error status 0x%" PRIx32 "\n", (uint32_t)status);
     } else {
 
       printf("\r\n ble_module_set_advertise_data_cmd_handler : successful \n");
@@ -1142,7 +1143,7 @@ void ble_module_get_le_ping_cmd_handler(generic_command_message_t *generic_comma
     int32_t status;
     status =  rsi_ble_get_le_ping_timeout(uint8_t *remote_dev_address, uint16_t *time_out);
     if (status != RSI_SUCCESS) {
-      printf("\r\n ble_module_get_le_ping_cmd_handler : error status 0x%lx \n", status);
+      printf("\r\n ble_module_get_le_ping_cmd_handler : error status 0x%" PRIx32 "\n", (uint32_t)status);
     } else {
     
       printf("\r\n ble_module_get_le_ping_cmd_handler : successful \n");
@@ -1170,7 +1171,7 @@ void ble_module_set_le_ping_cmd_handler(generic_command_message_t *generic_comma
     int32_t status;
     status = rsi_ble_set_le_ping_timeout(uint8_t *remote_dev_address, uint16_t time_out);
     if (status != RSI_SUCCESS) {
-      printf("\r\n ble_module_set_le_ping_cmd_handler : error status 0x%lx \n", status);
+      printf("\r\n ble_module_set_le_ping_cmd_handler : error status 0x%" PRIx32 "\n", (uint32_t)status);
     } else {
     
       printf("\r\n ble_module_set_le_ping_cmd_handler : successful \n");
@@ -1198,7 +1199,7 @@ void ble_module_set_random_address_cmd_handler(generic_command_message_t *generi
     int32_t status;
     status = rsi_ble_set_random_address();
     if (status != RSI_SUCCESS) {
-      printf("\r\n ble_module_set_random_address_cmd_handler : error status 0x%lx \n", status);
+      printf("\r\n ble_module_set_random_address_cmd_handler : error status 0x%" PRIx32 "\n", (uint32_t)status);
     } else {
     
       printf("\r\n ble_module_set_random_address_cmd_handler : successful \n");
@@ -1207,7 +1208,7 @@ void ble_module_set_random_address_cmd_handler(generic_command_message_t *generi
 
  status = rsi_ble_set_random_address_with_value(uint8_t *random_addr);
     if (status != RSI_SUCCESS) {
-      printf("\r\n ble_module_set_random_address_cmd_handler : error status 0x%lx \n", status);
+      printf("\r\n ble_module_set_random_address_cmd_handler : error status 0x%" PRIx32 "\n", (uint32_t)status);
     } else {
     
       printf("\r\n ble_module_set_random_address_cmd_handler : successful \n");
@@ -1236,7 +1237,7 @@ void ble_module_encrypt_cmd_handler(generic_command_message_t *generic_command_m
     int32_t status;
     status = rsi_ble_encrypt(uint8_t *key, uint8_t *data, uint8_t *resp);
     if (status != RSI_SUCCESS) {
-      printf("\r\n ble_module_encrypt_cmd_handler : error status 0x%lx \n", status);
+      printf("\r\n ble_module_encrypt_cmd_handler : error status 0x%" PRIx32 "\n", (uint32_t)status);
     } else {
     
       printf("\r\n ble_module_encrypt_cmd_handler : successful \n");
@@ -1269,7 +1270,7 @@ void ble_module_cmd_read_resp_cmd_handler(generic_command_message_t *generic_com
                                    uint16_t length,
                                    uint8_t *p_data);
     if (status != RSI_SUCCESS) {
-      printf("\r\n ble_module_cmd_read_resp_cmd_handler : error status 0x%lx \n", status);
+      printf("\r\n ble_module_cmd_read_resp_cmd_handler : error status 0x%" PRIx32 "\n", (uint32_t)status);
     } else {
     
       printf("\r\n ble_module_cmd_read_resp_cmd_handler : successful \n");
@@ -1297,7 +1298,7 @@ void ble_module_set_scan_response_data_cmd_handler(generic_command_message_t *ge
     int32_t status;
     status = rsi_ble_set_scan_response_data(uint8_t *data, uint16_t data_len);
     if (status != RSI_SUCCESS) {
-      printf("\r\n ble_module_set_scan_response_data_cmd_handler : error status 0x%lx \n", status);
+      printf("\r\n ble_module_set_scan_response_data_cmd_handler : error status 0x%" PRIx32 "\n", (uint32_t)status);
     } else {
     
       printf("\r\n ble_module_set_scan_response_data_cmd_handler : successful \n");
@@ -1329,7 +1330,7 @@ void ble_module_le_accept_list_cmd_handler(generic_command_message_t *generic_co
 rsi_ble_deletefrom_acceptlist(int8_t *dev_address, uint8_t dev_addr_type)
     */
     if (status != RSI_SUCCESS) {
-      printf("\r\n ble_module_le_accept_list_cmd_handler : error status 0x%lx \n", status);
+      printf("\r\n ble_module_le_accept_list_cmd_handler : error status 0x%" PRIx32 "\n", (uint32_t)status);
     } else {
     
       printf("\r\n ble_module_le_accept_list_cmd_handler : successful \n");
@@ -1358,7 +1359,7 @@ void ble_module_cmd_remove_service_cmd_handler(generic_command_message_t *generi
     int32_t status;
     status = call_api();
     if (status != RSI_SUCCESS) {
-      printf("\r\n ble_module_cmd_remove_service_cmd_handler : error status 0x%lx \n", status);
+      printf("\r\n ble_module_cmd_remove_service_cmd_handler : error status 0x%" PRIx32 "\n", (uint32_t)status);
     } else {
     
       printf("\r\n ble_module_cmd_remove_service_cmd_handler : successful \n");
@@ -1387,7 +1388,7 @@ void ble_module_cmd_remove_attribute_cmd_handler(generic_command_message_t *gene
     int32_t status;
     status = call_api();
     if (status != RSI_SUCCESS) {
-      printf("\r\n ble_module_cmd_remove_attribute_cmd_handler : error status 0x%lx \n", status);
+      printf("\r\n ble_module_cmd_remove_attribute_cmd_handler : error status 0x%" PRIx32 "\n", (uint32_t)status);
     } else {
     
       printf("\r\n ble_module_cmd_remove_attribute_cmd_handler : successful \n");
@@ -1419,7 +1420,7 @@ void ble_module_process_resolv_list_cmd_handler(generic_command_message_t *gener
                            uint8_t *peer_irk,
                            uint8_t *local_irk);
     if (status != RSI_SUCCESS) {
-      printf("\r\n ble_module_process_resolv_list_cmd_handler : error status 0x%lx \n", status);
+      printf("\r\n ble_module_process_resolv_list_cmd_handler : error status 0x%" PRIx32 "\n", (uint32_t)status);
     } else {
     
       printf("\r\n ble_module_process_resolv_list_cmd_handler : successful \n");
@@ -1447,7 +1448,7 @@ void ble_module_get_resolving_list_size_cmd_handler(generic_command_message_t *g
     int32_t status;
     status = rsi_ble_get_resolving_list_size(uint8_t *resp);
     if (status != RSI_SUCCESS) {
-      printf("\r\n ble_module_get_resolving_list_size_cmd_handler : error status 0x%lx \n", status);
+      printf("\r\n ble_module_get_resolving_list_size_cmd_handler : error status 0x%" PRIx32 "\n", (uint32_t)status);
     } else {
     
       printf("\r\n ble_module_get_resolving_list_size_cmd_handler : successful \n");
@@ -1475,7 +1476,7 @@ void ble_module_set_address_resolution_enable_cmd_handler(generic_command_messag
     int32_t status;
     status = crsi_ble_set_addr_resolution_enable(uint8_t enable, uint16_t tout);
     if (status != RSI_SUCCESS) {
-      printf("\r\n ble_module_set_address_resolution_enable_cmd_handler : error status 0x%lx \n", status);
+      printf("\r\n ble_module_set_address_resolution_enable_cmd_handler : error status 0x%" PRIx32 "\n", (uint32_t)status);
     } else {
     
       printf("\r\n ble_module_set_address_resolution_enable_cmd_handler : successful \n");
@@ -1503,7 +1504,7 @@ void ble_module_req_read_phy_cmd_handler(generic_command_message_t *generic_comm
     int32_t status;
     status = rsi_ble_readphy(int8_t *remote_dev_address, rsi_ble_resp_read_phy_t *resp);
     if (status != RSI_SUCCESS) {
-      printf("\r\n ble_module_req_read_phy_cmd_handler : error status 0x%lx \n", status);
+      printf("\r\n ble_module_req_read_phy_cmd_handler : error status 0x%" PRIx32 "\n", (uint32_t)status);
     } else {
     
       printf("\r\n ble_module_req_read_phy_cmd_handler : successful \n");
@@ -1531,7 +1532,7 @@ void ble_module_req_set_phy_cmd_handler(generic_command_message_t *generic_comma
     int32_t status;
     status = rsi_ble_setphy(int8_t *remote_dev_address, uint8_t tx_phy, uint8_t rx_phy, uint16_t coded_phy);
     if (status != RSI_SUCCESS) {
-      printf("\r\n ble_module_req_set_phy_cmd_handler : error status 0x%lx \n", status);
+      printf("\r\n ble_module_req_set_phy_cmd_handler : error status 0x%" PRIx32 "\n", (uint32_t)status);
     } else {
     
       printf("\r\n ble_module_req_set_phy_cmd_handler : successful \n");
@@ -1559,7 +1560,7 @@ void ble_module_set_data_len_cmd_handler(generic_command_message_t *generic_comm
     int32_t status;
     status = rsi_ble_set_data_len(uint8_t *remote_dev_address, uint16_t tx_octets, uint16_t tx_time);
     if (status != RSI_SUCCESS) {
-      printf("\r\n ble_module_set_data_len_cmd_handler : error status 0x%lx \n", status);
+      printf("\r\n ble_module_set_data_len_cmd_handler : error status 0x%" PRIx32 "\n", (uint32_t)status);
     } else {
     
       printf("\r\n ble_module_set_data_len_cmd_handler : successful \n");
@@ -1587,7 +1588,7 @@ void ble_module_read_max_data_len_cmd_handler(generic_command_message_t *generic
     int32_t status;
     status = rsi_ble_read_max_data_len(rsi_ble_read_max_data_length_t *blereaddatalen);
     if (status != RSI_SUCCESS) {
-      printf("\r\n ble_module_read_max_data_len_cmd_handler : error status 0x%lx \n", status);
+      printf("\r\n ble_module_read_max_data_len_cmd_handler : error status 0x%" PRIx32 "\n", (uint32_t)status);
     } else {
     
       printf("\r\n ble_module_read_max_data_len_cmd_handler : successful \n");
@@ -1615,7 +1616,7 @@ void ble_module_set_privacy_mode_cmd_handler(generic_command_message_t *generic_
     int32_t status;
     status = rsi_ble_set_privacy_mode(uint8_t remote_dev_addr_type, uint8_t *remote_dev_address, uint8_t privacy_mode);
     if (status != RSI_SUCCESS) {
-      printf("\r\n ble_module_set_privacy_mode_cmd_handler : error status 0x%lx \n", status);
+      printf("\r\n ble_module_set_privacy_mode_cmd_handler : error status 0x%" PRIx32 "\n", (uint32_t)status);
     } else {
     
       printf("\r\n ble_module_set_privacy_mode_cmd_handler : successful \n");
@@ -1644,7 +1645,7 @@ void ble_module_cbfc_conn_req_cmd_handler(generic_command_message_t *generic_com
       // no def
     status = call_api();
     if (status != RSI_SUCCESS) {
-      printf("\r\n ble_module_cbfc_conn_req_cmd_handler : error status 0x%lx \n", status);
+      printf("\r\n ble_module_cbfc_conn_req_cmd_handler : error status 0x%" PRIx32 "\n", (uint32_t)status);
     } else {
     
       printf("\r\n ble_module_cbfc_conn_req_cmd_handler : successful \n");
@@ -1673,7 +1674,7 @@ void ble_module_cbfc_conn_resp_cmd_handler(generic_command_message_t *generic_co
       // no def
     status = call_api();
     if (status != RSI_SUCCESS) {
-      printf("\r\n ble_module_cbfc_conn_resp_cmd_handler : error status 0x%lx \n", status);
+      printf("\r\n ble_module_cbfc_conn_resp_cmd_handler : error status 0x%" PRIx32 "\n", (uint32_t)status);
     } else {
     
       printf("\r\n ble_module_cbfc_conn_resp_cmd_handler : successful \n");
@@ -1702,7 +1703,7 @@ void ble_module_cbfc_tx_data_cmd_handler(generic_command_message_t *generic_comm
     int32_t status;
     status = call_api();
     if (status != RSI_SUCCESS) {
-      printf("\r\n ble_module_cbfc_tx_data_cmd_handler : error status 0x%lx \n", status);
+      printf("\r\n ble_module_cbfc_tx_data_cmd_handler : error status 0x%" PRIx32 "\n", (uint32_t)status);
     } else {
     
       printf("\r\n ble_module_cbfc_tx_data_cmd_handler : successful \n");
@@ -1731,7 +1732,7 @@ void ble_module_cbfc_disconn_cmd_handler(generic_command_message_t *generic_comm
     int32_t status;
     status = call_api();
     if (status != RSI_SUCCESS) {
-      printf("\r\n ble_module_cbfc_disconn_cmd_handler : error status 0x%lx \n", status);
+      printf("\r\n ble_module_cbfc_disconn_cmd_handler : error status 0x%" PRIx32 "\n", (uint32_t)status);
     } else {
     
       printf("\r\n ble_module_cbfc_disconn_cmd_handler : successful \n");
@@ -1759,7 +1760,7 @@ void ble_module_le_ltk_req_reply_cmd_handler(generic_command_message_t *generic_
     int32_t status;
     status = rsi_ble_ltk_req_reply(uint8_t *remote_dev_address, uint8_t reply_type, uint8_t *ltk);
     if (status != RSI_SUCCESS) {
-      printf("\r\n ble_module_le_ltk_req_reply_cmd_handler : error status 0x%lx \n", status);
+      printf("\r\n ble_module_le_ltk_req_reply_cmd_handler : error status 0x%" PRIx32 "\n", (uint32_t)status);
     } else {
     
       printf("\r\n ble_module_le_ltk_req_reply_cmd_handler : successful \n");
@@ -1787,7 +1788,7 @@ void ble_module_rx_test_mode_cmd_handler(generic_command_message_t *generic_comm
     int32_t status;
     status = rsi_ble_rx_test_mode(uint8_t rx_channel, uint8_t phy, uint8_t modulation);
     if (status != RSI_SUCCESS) {
-      printf("\r\n ble_module_rx_test_mode_cmd_handler : error status 0x%lx \n", status);
+      printf("\r\n ble_module_rx_test_mode_cmd_handler : error status 0x%" PRIx32 "\n", (uint32_t)status);
     } else {
     
       printf("\r\n ble_module_rx_test_mode_cmd_handler : successful \n");
@@ -1815,7 +1816,7 @@ void ble_module_tx_test_mode_cmd_handler(generic_command_message_t *generic_comm
     int32_t status;
     status = rsi_ble_tx_test_mode(uint8_t tx_channel, uint8_t phy, uint8_t tx_len, uint8_t mode);
     if (status != RSI_SUCCESS) {
-      printf("\r\n ble_module_tx_test_mode_cmd_handler : error status 0x%lx \n", status);
+      printf("\r\n ble_module_tx_test_mode_cmd_handler : error status 0x%" PRIx32 "\n", (uint32_t)status);
     } else {
     
       printf("\r\n ble_module_tx_test_mode_cmd_handler : successful \n");
@@ -1843,7 +1844,7 @@ void ble_module_end_test_mode_cmd_handler(generic_command_message_t *generic_com
     int32_t status;
     status = rsi_ble_end_test_mode(uint16_t *num_of_pkts);
     if (status != RSI_SUCCESS) {
-      printf("\r\n ble_module_end_test_mode_cmd_handler : error status 0x%lx \n", status);
+      printf("\r\n ble_module_end_test_mode_cmd_handler : error status 0x%" PRIx32 "\n", (uint32_t)status);
     } else {
     
       printf("\r\n ble_module_end_test_mode_cmd_handler : successful \n");
@@ -1872,7 +1873,7 @@ void ble_module_per_tx_mode_cmd_handler(generic_command_message_t *generic_comma
       //no def
     status = call_api();
     if (status != RSI_SUCCESS) {
-      printf("\r\n ble_module_per_tx_mode_cmd_handler : error status 0x%lx \n", status);
+      printf("\r\n ble_module_per_tx_mode_cmd_handler : error status 0x%" PRIx32 "\n", (uint32_t)status);
     } else {
     
       printf("\r\n ble_module_per_tx_mode_cmd_handler : successful \n");
@@ -1901,7 +1902,7 @@ void ble_module_per_rx_mode_cmd_handler(generic_command_message_t *generic_comma
       // nodef 
     status = call_api();
     if (status != RSI_SUCCESS) {
-      printf("\r\n ble_module_per_rx_mode_cmd_handler : error status 0x%lx \n", status);
+      printf("\r\n ble_module_per_rx_mode_cmd_handler : error status 0x%" PRIx32 "\n", (uint32_t)status);
     } else {
     
       printf("\r\n ble_module_per_rx_mode_cmd_handler : successful \n");
@@ -1929,7 +1930,7 @@ void ble_module_cmd_att_error_cmd_handler(generic_command_message_t *generic_com
     int32_t status;
     status = rsi_ble_att_error_response(uint8_t *dev_addr, uint16_t handle, uint8_t opcode, uint8_t err);
     if (status != RSI_SUCCESS) {
-      printf("\r\n ble_module_cmd_att_error_cmd_handler : error status 0x%lx \n", status);
+      printf("\r\n ble_module_cmd_att_error_cmd_handler : error status 0x%" PRIx32 "\n", (uint32_t)status);
     } else {
     
       printf("\r\n ble_module_cmd_att_error_cmd_handler : successful \n");
@@ -1960,7 +1961,7 @@ void ble_module_req_profiles_async_cmd_handler(generic_command_message_t *generi
                                    uint16_t end_handle,
                                    rsi_ble_resp_profiles_list_t *p_prof_list);
     if (status != RSI_SUCCESS) {
-      printf("\r\n ble_module_req_profiles_async_cmd_handler : error status 0x%lx \n", status);
+      printf("\r\n ble_module_req_profiles_async_cmd_handler : error status 0x%" PRIx32 "\n", (uint32_t)status);
     } else {
     
       printf("\r\n ble_module_req_profiles_async_cmd_handler : successful \n");
@@ -1988,7 +1989,7 @@ void ble_module_req_profile_async_cmd_handler(generic_command_message_t *generic
     int32_t status;
     status = rsi_ble_get_profile_async(uint8_t *dev_addr, uuid_t profile_uuid, profile_descriptors_t *p_profile);
     if (status != RSI_SUCCESS) {
-      printf("\r\n ble_module_req_profile_async_cmd_handler : error status 0x%lx \n", status);
+      printf("\r\n ble_module_req_profile_async_cmd_handler : error status 0x%" PRIx32 "\n", (uint32_t)status);
     } else {
     
       printf("\r\n ble_module_req_profile_async_cmd_handler : successful \n");
@@ -2019,7 +2020,7 @@ void ble_module_get_charservices_async_cmd_handler(generic_command_message_t *ge
                                         uint16_t end_handle,
                                         rsi_ble_resp_char_services_t *p_char_serv_list);
     if (status != RSI_SUCCESS) {
-      printf("\r\n ble_module_get_charservices_async_cmd_handler : error status 0x%lx \n", status);
+      printf("\r\n ble_module_get_charservices_async_cmd_handler : error status 0x%" PRIx32 "\n", (uint32_t)status);
     } else {
     
       printf("\r\n ble_module_get_charservices_async_cmd_handler : successful \n");
@@ -2050,7 +2051,7 @@ void ble_module_get_includeservices_async_cmd_handler(generic_command_message_t 
                                        uint16_t end_handle,
                                        rsi_ble_resp_inc_services_t *p_inc_serv_list);
     if (status != RSI_SUCCESS) {
-      printf("\r\n ble_module_get_includeservices_async_cmd_handler : error status 0x%lx \n", status);
+      printf("\r\n ble_module_get_includeservices_async_cmd_handler : error status 0x%" PRIx32 "\n", (uint32_t)status);
     } else {
     
       printf("\r\n ble_module_get_includeservices_async_cmd_handler : successful \n");
@@ -2082,7 +2083,7 @@ void ble_module_readcharvaluebyuuid_async_cmd_handler(generic_command_message_t 
                                              uuid_t char_uuid,
                                              rsi_ble_resp_att_value_t *p_char_val);
     if (status != RSI_SUCCESS) {
-      printf("\r\n ble_module_readcharvaluebyuuid_async_cmd_handler : error status 0x%lx \n", status);
+      printf("\r\n ble_module_readcharvaluebyuuid_async_cmd_handler : error status 0x%" PRIx32 "\n", (uint32_t)status);
     } else {
     
       printf("\r\n ble_module_readcharvaluebyuuid_async_cmd_handler : successful \n");
@@ -2113,7 +2114,7 @@ void ble_module_get_attribute_async_cmd_handler(generic_command_message_t *gener
                                           uint16_t end_handle,
                                           rsi_ble_resp_att_descs_t *p_att_desc);
     if (status != RSI_SUCCESS) {
-      printf("\r\n ble_module_get_attribute_async_cmd_handler : error status 0x%lx \n", status);
+      printf("\r\n ble_module_get_attribute_async_cmd_handler : error status 0x%" PRIx32 "\n", (uint32_t)status);
     } else {
     
       printf("\r\n ble_module_get_attribute_async_cmd_handler : successful \n");
@@ -2141,7 +2142,7 @@ void ble_module_get_descriptorvalue_async_cmd_handler(generic_command_message_t 
     int32_t status;
     status = rsi_ble_get_att_value_async(uint8_t *dev_addr, uint16_t handle, rsi_ble_resp_att_value_t *p_att_val);
     if (status != RSI_SUCCESS) {
-      printf("\r\n ble_module_get_descriptorvalue_async_cmd_handler : error status 0x%lx \n", status);
+      printf("\r\n ble_module_get_descriptorvalue_async_cmd_handler : error status 0x%" PRIx32 "\n", (uint32_t)status);
     } else {
     
       printf("\r\n ble_module_get_descriptorvalue_async_cmd_handler : successful \n");
@@ -2172,7 +2173,7 @@ void ble_module_get_multiplevalues_async_cmd_handler(generic_command_message_t *
                                               uint16_t *handles,
                                               rsi_ble_resp_att_value_t *p_att_vals);
     if (status != RSI_SUCCESS) {
-      printf("\r\n ble_module_get_multiplevalues_async_cmd_handler : error status 0x%lx \n", status);
+      printf("\r\n ble_module_get_multiplevalues_async_cmd_handler : error status 0x%" PRIx32 "\n", (uint32_t)status);
     } else {
     
       printf("\r\n ble_module_get_multiplevalues_async_cmd_handler : successful \n");
@@ -2203,7 +2204,7 @@ void ble_module_get_longdescvalues_async_cmd_handler(generic_command_message_t *
                                          uint16_t offset,
                                          rsi_ble_resp_att_value_t *p_att_vals);
     if (status != RSI_SUCCESS) {
-      printf("\r\n ble_module_get_longdescvalues_async_cmd_handler : error status 0x%lx \n", status);
+      printf("\r\n ble_module_get_longdescvalues_async_cmd_handler : error status 0x%" PRIx32 "\n", (uint32_t)status);
     } else {
     
       printf("\r\n ble_module_get_longdescvalues_async_cmd_handler : successful \n");
@@ -2231,7 +2232,7 @@ void ble_module_set_descvalue_async_cmd_handler(generic_command_message_t *gener
     int32_t status;
     status = rsi_ble_set_att_value_async(uint8_t *dev_addr, uint16_t handle, uint8_t data_len, uint8_t *p_data);
     if (status != RSI_SUCCESS) {
-      printf("\r\n ble_module_set_descvalue_async_cmd_handler : error status 0x%lx \n", status);
+      printf("\r\n ble_module_set_descvalue_async_cmd_handler : error status 0x%" PRIx32 "\n", (uint32_t)status);
     } else {
     
       printf("\r\n ble_module_set_descvalue_async_cmd_handler : successful \n");
@@ -2263,7 +2264,7 @@ void ble_module_set_preparewrite_async_cmd_handler(generic_command_message_t *ge
                                     uint8_t data_len,
                                     uint8_t *p_data);
     if (status != RSI_SUCCESS) {
-      printf("\r\n ble_module_set_preparewrite_async_cmd_handler : error status 0x%lx \n", status);
+      printf("\r\n ble_module_set_preparewrite_async_cmd_handler : error status 0x%" PRIx32 "\n", (uint32_t)status);
     } else {
     
       printf("\r\n ble_module_set_preparewrite_async_cmd_handler : successful \n");
@@ -2291,7 +2292,7 @@ void ble_module_execute_longdescwrite_async_cmd_handler(generic_command_message_
     int32_t status;
     status = rsi_ble_execute_write_async(uint8_t *dev_addr, uint8_t exe_flag);
     if (status != RSI_SUCCESS) {
-      printf("\r\n ble_module_execute_longdescwrite_async_cmd_handler : error status 0x%lx \n", status);
+      printf("\r\n ble_module_execute_longdescwrite_async_cmd_handler : error status 0x%" PRIx32 "\n", (uint32_t)status);
     } else {
     
       printf("\r\n ble_module_execute_longdescwrite_async_cmd_handler : successful \n");
@@ -2319,7 +2320,7 @@ void ble_module_set_smp_pairing_capability_data_cmd_handler(generic_command_mess
     int32_t status;
     status =  rsi_ble_set_smp_pairing_cap_data(rsi_ble_set_smp_pairing_capabilty_data_t *smp_pair_cap_data);
     if (status != RSI_SUCCESS) {
-      printf("\r\n ble_module_set_smp_pairing_capability_data_cmd_handler : error status 0x%lx \n", status);
+      printf("\r\n ble_module_set_smp_pairing_capability_data_cmd_handler : error status 0x%" PRIx32 "\n", (uint32_t)status);
     } else {
     
       printf("\r\n ble_module_set_smp_pairing_capability_data_cmd_handler : successful \n");
@@ -2347,7 +2348,7 @@ void ble_module_conn_param_resp_cmd_cmd_handler(generic_command_message_t *gener
     int32_t status;
     status = rsi_ble_conn_param_resp(uint8_t *remote_dev_address, uint8_t status);
     if (status != RSI_SUCCESS) {
-      printf("\r\n ble_module_conn_param_resp_cmd_cmd_handler : error status 0x%lx \n", status);
+      printf("\r\n ble_module_conn_param_resp_cmd_cmd_handler : error status 0x%" PRIx32 "\n", (uint32_t)status);
     } else {
     
       printf("\r\n ble_module_conn_param_resp_cmd_cmd_handler : successful \n");
@@ -2375,7 +2376,7 @@ void ble_module_cmd_indicate_confirmation_cmd_handler(generic_command_message_t 
     int32_t status;
     status =  rsi_ble_indicate_confirm(uint8_t *dev_addr);
     if (status != RSI_SUCCESS) {
-      printf("\r\n ble_module_cmd_indicate_confirmation_cmd_handler : error status 0x%lx \n", status);
+      printf("\r\n ble_module_cmd_indicate_confirmation_cmd_handler : error status 0x%" PRIx32 "\n", (uint32_t)status);
     } else {
     
       printf("\r\n ble_module_cmd_indicate_confirmation_cmd_handler : successful \n");
@@ -2403,7 +2404,7 @@ void ble_module_mtu_exchange_request_cmd_handler(generic_command_message_t *gene
     int32_t status;
     status = rsi_ble_mtu_exchange_event(uint8_t *dev_addr, uint8_t mtu_size);
     if (status != RSI_SUCCESS) {
-      printf("\r\n ble_module_mtu_exchange_request_cmd_handler : error status 0x%lx \n", status);
+      printf("\r\n ble_module_mtu_exchange_request_cmd_handler : error status 0x%" PRIx32 "\n", (uint32_t)status);
     } else {
     
       printf("\r\n ble_module_mtu_exchange_request_cmd_handler : successful \n");
@@ -2431,7 +2432,7 @@ void ble_module_cmd_set_wwo_resp_notify_buf_info_cmd_handler(generic_command_mes
     int32_t status;
     status = rsi_ble_set_wo_resp_notify_buf_info(uint8_t *dev_addr, uint8_t buf_mode, uint8_t buf_cnt);
     if (status != RSI_SUCCESS) {
-      printf("\r\n ble_module_cmd_set_wwo_resp_notify_buf_info_cmd_handler : error status 0x%lx \n", status);
+      printf("\r\n ble_module_cmd_set_wwo_resp_notify_buf_info_cmd_handler : error status 0x%" PRIx32 "\n", (uint32_t)status);
     } else {
     
       printf("\r\n ble_module_cmd_set_wwo_resp_notify_buf_info_cmd_handler : successful \n");
@@ -2459,7 +2460,7 @@ void ble_module_cmd_write_resp_cmd_handler(generic_command_message_t *generic_co
     int32_t status;
     status = rsi_ble_gatt_write_response(uint8_t *dev_addr, uint8_t type);
     if (status != RSI_SUCCESS) {
-      printf("\r\n ble_module_cmd_write_resp_cmd_handler : error status 0x%lx \n", status);
+      printf("\r\n ble_module_cmd_write_resp_cmd_handler : error status 0x%" PRIx32 "\n", (uint32_t)status);
     } else {
     
       printf("\r\n ble_module_cmd_write_resp_cmd_handler : successful \n");
@@ -2491,7 +2492,7 @@ void ble_module_cmd_prepare_write_resp_cmd_handler(generic_command_message_t *ge
                                             uint16_t length,
                                             uint8_t *data);
     if (status != RSI_SUCCESS) {
-      printf("\r\n ble_module_cmd_prepare_write_resp_cmd_handler : error status 0x%lx \n", status);
+      printf("\r\n ble_module_cmd_prepare_write_resp_cmd_handler : error status 0x%" PRIx32 "\n", (uint32_t)status);
     } else {
     
       printf("\r\n ble_module_cmd_prepare_write_resp_cmd_handler : successful \n");
@@ -2519,7 +2520,7 @@ void ble_module_cmd_set_local_irk_cmd_handler(generic_command_message_t *generic
     int32_t status;
     status = rsi_ble_set_local_irk_value(uint8_t *l_irk);
     if (status != RSI_SUCCESS) {
-      printf("\r\n ble_module_cmd_set_local_irk_cmd_handler : error status 0x%lx \n", status);
+      printf("\r\n ble_module_cmd_set_local_irk_cmd_handler : error status 0x%" PRIx32 "\n", (uint32_t)status);
     } else {
     
       printf("\r\n ble_module_cmd_set_local_irk_cmd_handler : successful \n");
@@ -2547,7 +2548,7 @@ void ble_module_cmd_set_prop_protocol_ble_bandedge_txpower_cmd_handler(generic_c
     int32_t status;
     status = rsi_ble_set_prop_protocol_ble_bandedge_tx_power(uint8_t protocol, int8_t bandedge_tx_power);
     if (status != RSI_SUCCESS) {
-      printf("\r\n ble_module_cmd_set_prop_protocol_ble_bandedge_txpower_cmd_handler : error status 0x%lx \n", status);
+      printf("\r\n ble_module_cmd_set_prop_protocol_ble_bandedge_txpower_cmd_handler : error status 0x%" PRIx32 "\n", (uint32_t)status);
     } else {
     
       printf("\r\n ble_module_cmd_set_prop_protocol_ble_bandedge_txpower_cmd_handler : successful \n");
@@ -2575,7 +2576,7 @@ void ble_module_cmd_mtu_exchange_resp_cmd_handler(generic_command_message_t *gen
     int32_t status;
     status = rsi_ble_mtu_exchange_resp(uint8_t *dev_addr, uint8_t mtu_size);
     if (status != RSI_SUCCESS) {
-      printf("\r\n ble_module_cmd_mtu_exchange_resp_cmd_handler : error status 0x%lx \n", status);
+      printf("\r\n ble_module_cmd_mtu_exchange_resp_cmd_handler : error status 0x%" PRIx32 "\n", (uint32_t)status);
     } else {
     
       printf("\r\n ble_module_cmd_mtu_exchange_resp_cmd_handler : successful \n");
@@ -2603,7 +2604,7 @@ void ble_module_cmd_set_ble_tx_power_cmd_handler(generic_command_message_t *gene
     int32_t status;
     status = rsi_ble_set_ble_tx_power(int8_t tx_power);
     if (status != RSI_SUCCESS) {
-      printf("\r\n ble_module_cmd_set_ble_tx_power_cmd_handler : error status 0x%lx \n", status);
+      printf("\r\n ble_module_cmd_set_ble_tx_power_cmd_handler : error status 0x%" PRIx32 "\n", (uint32_t)status);
     } else {
     
       printf("\r\n ble_module_cmd_set_ble_tx_power_cmd_handler : successful \n");
@@ -2631,7 +2632,7 @@ void ble_module_cmd_indicate_sync_cmd_handler(generic_command_message_t *generic
     int32_t status;
     status = rsi_ble_indicate_value_sync(uint8_t *dev_addr, uint16_t handle, uint16_t data_len, uint8_t *p_data);
     if (status != RSI_SUCCESS) {
-      printf("\r\n ble_module_cmd_indicate_sync_cmd_handler : error status 0x%lx \n", status);
+      printf("\r\n ble_module_cmd_indicate_sync_cmd_handler : error status 0x%" PRIx32 "\n", (uint32_t)status);
     } else {
     
       printf("\r\n ble_module_cmd_indicate_sync_cmd_handler : successful \n");
@@ -2659,7 +2660,7 @@ void ble_module_prop_protocol_cmd_cmd_handler(generic_command_message_t *generic
     int32_t status;
     status = rsi_ant_send_cmd(void *ant_cmd, void *ant_cmd_resp);
     if (status != RSI_SUCCESS) {
-      printf("\r\n ble_module_prop_protocol_cmd_cmd_handler : error status 0x%lx \n", status);
+      printf("\r\n ble_module_prop_protocol_cmd_cmd_handler : error status 0x%" PRIx32 "\n", (uint32_t)status);
     } else {
     
       printf("\r\n ble_module_prop_protocol_cmd_cmd_handler : successful \n");
@@ -2687,7 +2688,7 @@ void ble_module_prop_protocol_cmd_per_cmd_handler(generic_command_message_t *gen
     int32_t status;
     status = rsi_ant_send_cmd_per(void *ant_cmd, void *ant_cmd_resp);
     if (status != RSI_SUCCESS) {
-      printf("\r\n ble_module_prop_protocol_cmd_per_cmd_handler : error status 0x%lx \n", status);
+      printf("\r\n ble_module_prop_protocol_cmd_per_cmd_handler : error status 0x%" PRIx32 "\n", (uint32_t)status);
     } else {
     
       printf("\r\n ble_module_prop_protocol_cmd_per_cmd_handler : successful \n");

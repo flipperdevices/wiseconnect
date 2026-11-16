@@ -1,8 +1,8 @@
-# SL ULP ADC
+# SiWx91x Platform ULP ADC
 
 ## Table of Contents
 
-- [SL ULP ADC](#sl-ulp-adc)
+- [SiWx91x Platform ULP ADC](#platform-siwx91x-ulp-adc)
   - [Table of Contents](#table-of-contents)
   - [Purpose/Scope](#purposescope)
   - [Overview](#overview)
@@ -14,17 +14,20 @@
   - [Getting Started](#getting-started)
   - [Application Build Environment](#application-build-environment)
     - [Pin Configuration](#pin-configuration)
-      - [Pin Configuration of the WPK\[BRD4002A\] Base Board, and with radio board](#pin-configuration-of-the-wpkbrd4002a-base-board-and-with-radio-board)
+      - [Pin Configuration of the WPK\[BRD4002B\] Base Board, and with radio board](#pin-configuration-of-the-wpkbrd4002b-base-board-and-with-radio-board)
       - [Pin Configuration of the AC1 Module Explorer Kit](#pin-configuration-of-the-ac1-module-explorer-kit)
   - [Test the Application](#test-the-application)
+  - [Troubleshooting](#troubleshooting)
+  - [Resources](#resources)
+  - [Report Bugs/Support](#report-bugssupport)
 
 ## Purpose/Scope
 
 This application demonstrates the ADC peripheral, including:
 
 - Conversion of analog input to 12-bit digital output.
-- Samples the data.
-- Convert data into equivalent input voltage based on operation mode.
+- Sampling the data.
+- Converting data into equivalent input voltage based on operation mode.
 
 This application also switches between PS4 and PS2 power states, samples, collects, and displays ADC data.
 
@@ -46,7 +49,7 @@ This application also switches between PS4 and PS2 power states, samples, collec
 
 - This example demonstrates ADC in FIFO/Static mode of operation. It reads the sampled data and converts it into equivalent input voltage.
 - Various parameters like Number of channel, ADC operation mode, Input Type, Sampling Rate and Sample Length can be configured using UC.
-- The [`sl_si91x_adc_common_config.h`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.1-content-for-docs/components/device/silabs/si91x/mcu/drivers/unified_api/config/sl_si91x_adc_common_config.h) file contains the common configurations for ADC and [`sl_si91x_adc_init_inst_config.h`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.1-content-for-docs/components/device/silabs/si91x/mcu/drivers/unified_api/config/sl_si91x_adc_init_inst_config.h) contains the channel instance configuration.
+- The [`sl_si91x_adc_common_config.h`](https://github.com/SiliconLabs/wiseconnect/blob/v4.1.2-content-for-docs/components/device/silabs/si91x/mcu/drivers/unified_api/config/sl_si91x_adc_common_config.h) file contains the common configurations for ADC and [`sl_si91x_adc_init_inst_config.h`](https://github.com/SiliconLabs/wiseconnect/blob/v4.1.2-content-for-docs/components/device/silabs/si91x/mcu/drivers/unified_api/config/sl_si91x_adc_init_inst_config.h) contains the channel instance configuration.
 - This example is working in both FIFO and static mode of ADC operations.
 
 - The firmware version of API is fetched using [sl_si91x_adc_get_version](https://docs.silabs.com/wiseconnect/latest/wiseconnect-api-reference-guide-si91x-peripherals/adc#sl-si91x-adc-get-version), which includes the release version, major version and minor version [sl_adc_version_t](https://docs.silabs.com/wiseconnect/latest/wiseconnect-api-reference-guide-si91x-peripherals/adc#sl-adc-version-t).
@@ -57,12 +60,13 @@ This application also switches between PS4 and PS2 power states, samples, collec
 - Once sampling is done, the callback will hit and set the true "data_sample_complete_flag" flag to read the sampled data using [sl_si91x_adc_read_data](https://docs.silabs.com/wiseconnect/latest/wiseconnect-api-reference-guide-si91x-peripherals/adc#sl-si91x-adc-read-data) API for FIFO mode of ADC or [sl_si91x_adc_read_data_static](https://docs.silabs.com/wiseconnect/latest/wiseconnect-api-reference-guide-si91x-peripherals/adc#sl-si91x-adc-read-data-static) API for static mode of ADC. This process will run continuously.
 - If ADC is started, it is recommended to stop it before de-initializing. This is general flow of API calls for ADC: [sl_si91x_adc_init](https://docs.silabs.com/wiseconnect/latest/wiseconnect-api-reference-guide-si91x-peripherals/adc#sl-si91x-adc-init) -> [sl_si91x_adc_start](https://docs.silabs.com/wiseconnect/latest/wiseconnect-api-reference-guide-si91x-peripherals/adc#sl-si91x-adc-start) -> [sl_si91x_adc_stop](https://docs.silabs.com/wiseconnect/latest/wiseconnect-api-reference-guide-si91x-peripherals/adc#sl-si91x-adc-stop) -> [sl_si91x_adc_deinit](https://docs.silabs.com/wiseconnect/latest/wiseconnect-api-reference-guide-si91x-peripherals/adc#sl-si91x-adc-deinit).
 
+
 ## Prerequisites/Setup Requirements
 
 ### Hardware Requirements
 
 - Windows PC
-- Silicon Labs Si917 Evaluation Kit [[BRD4002](https://www.silabs.com/development-tools/wireless/wireless-pro-kit-mainboard?tab=overview) + [BRD4338A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-rb4338a-wifi-6-bluetooth-le-soc-radio-board?tab=overview) / [BRD4342A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx91x-rb4342a-wifi-6-bluetooth-le-soc-radio-board?tab=overview) / [BRD4343A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4343a-wi-fi-6-bluetooth-le-8mb-flash-radio-board-for-module?tab=overview)]
+- Silicon Labs SiWx91x Evaluation Kit [[BRD4002](https://www.silabs.com/development-tools/wireless/wireless-pro-kit-mainboard?tab=overview) + [BRD4338A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-rb4338a-wifi-6-bluetooth-le-soc-radio-board?tab=overview) / [BRD4342A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx91x-rb4342a-wifi-6-bluetooth-le-soc-radio-board?tab=overview) / [BRD4343A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4343a-wi-fi-6-bluetooth-le-8mb-flash-radio-board-for-module?tab=overview) / [BRD4343C](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4343c-wi-fi-6-bluetooth-le-8mb-flash-radio-board-for-module?tab=overview)]
 - SiWx917 AC1 Module Explorer Kit [BRD2708A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-ek2708a-explorer-kit)
 
 ### Software Requirements
@@ -108,7 +112,7 @@ Configure UC from the slcp component.
   - **ADC Channel Configuration**
 
     - Input Type: ADC input type can be configured to be either single ended or differential.
-    - Sampling rate: Sample rate can be configurable to ADC channel, sample rate unit is samples/second. The configuration range from 1sps to 2.5 Msps.
+    - Sampling rate: The ADC sampling rate is configurable per channel, which is measured in samples per second. The supported range depends on the operating mode. In FIFO mode, the range is **80 Hz to 2.5 Msps**; in static mode, the range is approximately **39.1 ksps to 2.5 Msps** (determined by the 40 MHz ADC clock and an effective divider range of 16 to 1023).
     - Sample length: Set the length of ADC samples (that is, the number of ADC samples collected for operation). It should be minimum value set to 1 and maximum of 1023.
 
       ![Figure: sl_adc_channel_uc_screen](resources/uc_screen/sl_adc_channel_uc_screen.png)
@@ -118,9 +122,41 @@ Configure UC from the slcp component.
 - Apply the different voltages (1.8V to Vref) to ADC input and observe console outputs as per input.
 - Provided input voltage and console output data should match.
 
+- Configure the following macros in [`sl_ulp_adc_example.c`](sl_ulp_adc_example.c) file, if required:
+
+- `CHANNEL_SAMPLE_LENGTH`: Number of ADC samples collected per channel for one operation. By default, it is set to 1023.
+
+  ```c
+    #define CHANNEL_SAMPLE_LENGTH 1023       // Number of ADC sample collect for operation
+  ```
+
+- `ADC_MAX_OP_VALUE`: Maximum 12-bit raw value that can be read from the ADC data register. By default, it is set to 4095.
+
+  ```c
+    #define ADC_MAX_OP_VALUE      4095       // Maximum output value get from ADC data register
+  ```
+
+- `VREF_VALUE`: ADC reference voltage (in volts) used to compute the equivalent input voltage. By default, it is set to 3.3.
+
+  ```c
+    #define VREF_VALUE            3.3        // Reference voltage
+  ```
+
+- `MS_DELAY_COUNTER`: Loop delay count used to generate a short millisecond-level wait inside the example. By default, it is set to 4600.
+
+  ```c
+    #define MS_DELAY_COUNTER      4600       // Delay count
+  ```
+
+- `FIVE_SECOND_DELAY`: Delay, in milliseconds, used between PS4 and PS2 power-state transitions. By default, it is set to 5000.
+
+  ```c
+    #define FIVE_SECOND_DELAY     5000       // 5 second delay between state changes
+  ```
+
 ### Pin Configuration
 
-#### Pin Configuration of the WPK[BRD4002A] Base Board, and with radio board
+#### Pin Configuration of the WPK[BRD4002B] Base Board, and with radio board
 
 - The following table lists the mentioned pin numbers for radio board. If you want to use different radio board, see the board-specific user guide.
 - The GPIO and ULP GPIO pins listed are capable of supporting ULP ADC capability.
@@ -178,11 +214,18 @@ Configure UC from the slcp component.
 
 ## Test the Application
 
+> **Note:** Use **`Log_script.py`** from the **SiWx91x Platform Logger** example (`examples/si91x_soc/service/sl_si91x_logger/`) to decode structured console log output. Run:
+>
+> `python Log_script.py --out firmware.out --descriptor SYSVIEW_CaptiveCore.txt --port COM5 --max-args 3`
+>
+> Replace **COM5** with the serial port your board uses on the host PC.
+
+
 Refer to the instructions [here](https://docs.silabs.com/wiseconnect/latest/wiseconnect-getting-started/) to:
 
 1. Compile and run the application.
-2. When the project is generated, the ADC channel by default is configured with the channel_1 instance for Si917. For further details, refer to the two sub-points below for the Si917 board.
-   - Single-ended mode: the positive analog input to ULP_GPIO_1 for Si917.
+2. When the project is generated, the ADC channel by default is configured with the channel_1 instance for SiWx91x. For further details, refer to the two sub-points below for the SiWx91x board.
+   - Single-ended mode: the positive analog input to ULP_GPIO_1 for SiWx91x.
    - Differential modeL the positive analog input to ULP_GPIO_1 and the negative input to GPIO_28.
 3. When the application runs, the ADC configures the settings as per the user and starts ADC conversion.
 4. After completion of conversion ADC input, it will print all the captured samples data in console by connecting serial console.
@@ -194,7 +237,7 @@ Refer to the instructions [here](https://docs.silabs.com/wiseconnect/latest/wise
 >
 >- The user can configure the input selection GPIO in the example application if the default GPIO is work around.
 >- ADC input selection rather than GPIO (like OP-AMP, DAC and Temperature sensor) user can create their own instances and configure them as per other input selection.
->- In the [`sl_ulp_adc_example.c`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.1-content-for-docs/examples/si91x_soc/peripheral/sl_si91x_ulp_adc/sl_ulp_adc_example.c) file, update the [sl_adc_channel_config_t](https://docs.silabs.com/wiseconnect/latest/wiseconnect-api-reference-guide-si91x-peripherals/adc#sl-adc-channel-config-t) channel parameter to reflect the installed channel number.
+>- In the [`sl_ulp_adc_example.c`](sl_ulp_adc_example.c) file, update the [sl_adc_channel_config_t](https://docs.silabs.com/wiseconnect/latest/wiseconnect-api-reference-guide-si91x-peripherals/adc#sl-adc-channel-config-t) channel parameter to reflect the installed channel number.
 >
  >Use the following formula to find equivalent input voltage of ADC:
 >
@@ -222,3 +265,19 @@ Refer to the instructions [here](https://docs.silabs.com/wiseconnect/latest/wise
 > **Note:**
 >
 >- This application is intended for demonstration purposes only to showcase the ULP peripheral functionality. It should not be used as a reference for real-time use case project development, because the wireless shutdown scenario is not supported in the current SDK.
+
+## Troubleshooting
+
+- If the project does not build, ensure Simplicity Studio and the WiSeConnect extension are installed and the board is connected.
+- If the device is not detected, reinstall the connectivity firmware and check USB drivers.
+
+## Resources
+
+- [WiSeConnect Getting Started](https://docs.silabs.com/wiseconnect/latest/wiseconnect-getting-started/)
+- [WiSeConnect Examples](https://docs.silabs.com/wiseconnect/latest/wiseconnect-examples/)
+- [SiWx91x SoC Documentation](https://docs.silabs.com/wiseconnect/latest/)
+
+## Report Bugs/Support
+
+For issues and support, use the Silicon Labs Community or your normal support channel.
+

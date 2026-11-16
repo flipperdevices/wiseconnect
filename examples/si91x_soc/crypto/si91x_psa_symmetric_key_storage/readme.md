@@ -1,8 +1,8 @@
-# PSA Symmetric Key Storage for SI91X
+# SiWx91x Platform PSA symmetric key storage
 
 ## Table of Contents
 
-- [PSA Symmetric Key Storage for SI91X](#psa-symmetric-key-storage-for-si91x)
+- [SiWx91x Platform PSA symmetric key storage](#platform-siwx91x-psa-symmetric-key-storage)
   - [Table of Contents](#table-of-contents)
   - [Purpose/Scope](#purposescope)
   - [Prerequisites/Setup Requirements](#prerequisitessetup-requirements)
@@ -14,6 +14,9 @@
     - [Application Configuration Parameters](#application-configuration-parameters)
   - [Test the Application](#test-the-application)
     - [Expected output](#expected-output)
+  - [Troubleshooting](#troubleshooting)
+  - [Resources](#resources)
+  - [Report Bugs/Support](#report-bugssupport)
 
 ## Purpose/Scope
 
@@ -26,7 +29,7 @@ Before running the application, the user will need the following things to setup
 ### Hardware Requirements
 
   - Windows PC
-  - Silicon Labs Si917 Evaluation Kit [WPK(BRD4002)+ BRD4338A]
+  - Silicon Labs SiWx91x Evaluation Kit [WPK(BRD4002)+ BRD4338A]
 
 ### Software Requirements
 
@@ -74,3 +77,17 @@ Refer to the instructions [here](https://docs.silabs.com/wiseconnect/latest/wise
 Follow the steps as mentioned for the successful execution of the application:
 
 * [AN1311: Integrating Crypto Functionality Using PSA Crypto Compared to Mbed TLS Guide](https://www.silabs.com/documents/public/application-notes/an1311-mbedtls-psa-crypto-porting-guide.pdf)
+## Troubleshooting
+
+- If the project does not build, ensure Simplicity Studio and the WiSeConnect extension are installed and the board is connected.
+- If the device is not detected, reinstall the connectivity firmware and check USB drivers.
+
+## Resources
+
+- [WiSeConnect Getting Started](https://docs.silabs.com/wiseconnect/latest/wiseconnect-getting-started/)
+- [WiSeConnect Examples](https://docs.silabs.com/wiseconnect/latest/wiseconnect-examples/)
+- [SiWx91x SoC Documentation](https://docs.silabs.com/wiseconnect/latest/)
+
+## Report Bugs/Support
+
+For issues and support, use the Silicon Labs Community or your normal support channel.

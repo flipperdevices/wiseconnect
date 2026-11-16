@@ -3,7 +3,7 @@ package: wifi_app
 quality: production
 label: Wi-Fi - Powersave Standby Associated (UART NCP)
 category: Example|Wi-Fi
-description: "Start a Wi-Fi client in ASSOCIATED_POWER_SAVE mode and connects to AP and send data to UDP server \n"
+description: "Start a Wi-Fi client in ASSOCIATED_POWER_SAVE mode and connects to AP and send data to UDP server in Low Power mode \n"
 filter:
 - name: Wireless Technology
   value:
@@ -38,10 +38,15 @@ component:
 - id: network_manager
 - id: basic_network_config_manager
 - id: bsd_socket
-- id: sl_si91x_basic_buffers
+- id: log_none
+- id: log_backend_iostream
+- id: log_backend_iostream_formatted
+- id: log_platform_specific
 toolchain_settings:
 - option: gcc_compiler_option
-  value: -Wall -Werror
+  value: -Wall -Werror -Wno-error=deprecated-declarations
+- option: llvm_compiler_option
+  value: -Wall -Werror -Wno-error=deprecated-declarations
 configuration:
 - name: SL_BOARD_ENABLE_VCOM
   value: '1'
@@ -71,6 +76,8 @@ configuration:
   value: '1'
 - name: SL_SI91X_WC_ENABLE_ENHANCED_MAX_PSP
   value: '1'
+- name: SL_LOG_CONFIG_LEVEL_COMPILE_TIME
+  value: SL_LOG_CONFIG_LEVEL_INFO
 readme:
 - path: readme.md
 other_file:
@@ -90,8 +97,8 @@ ui_hints:
 sdk_extension:
 - id: wiseconnect3_sdk
   vendor: silabs
-  version: 4.0.1
+  version: 4.1.2
 sdk:
   id: simplicity_sdk
   vendor: silabs
-  version: 2025.12.2
+  version: 2026.6.2

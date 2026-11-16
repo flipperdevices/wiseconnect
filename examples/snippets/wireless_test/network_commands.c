@@ -103,7 +103,7 @@ sl_status_t net_init_command_handler(console_args_t *arguments)
       break;
 #endif
     default:
-      printf("Unsupported interface\n");
+      SL_DEBUG_LOG_V2(ERROR, "Unsupported interface\r\n");
       return SL_STATUS_FAIL;
   }
 
@@ -128,7 +128,7 @@ sl_status_t net_deinit_command_handler(console_args_t *arguments)
       break;
 #endif
     default:
-      printf("Unsupported interface\n");
+      SL_DEBUG_LOG_V2(ERROR, "Unsupported interface\r\n");
       return SL_STATUS_FAIL;
   }
   return status;
@@ -148,10 +148,10 @@ sl_status_t net_up_command_handler(console_args_t *arguments)
       // Fetch the profile and print some information about it
       status = sl_net_get_profile(SL_NET_WIFI_CLIENT_INTERFACE, profile_id, &profile);
       if (status != SL_STATUS_OK) {
-        printf("Failed to load profile with id: %u\r\n", profile_id);
+        SL_DEBUG_LOG_V2(ERROR, "Failed to load profile with id: %u\r\n", profile_id);
         return status;
       }
-      printf("Connecting to '%s'\r\n", profile.config.ssid.value);
+      SL_DEBUG_LOG_V2(INFO, "Connecting to '%s'\r\n", (uintptr_t)profile.config.ssid.value);
       status = sl_net_wifi_client_up(interface, profile_id);
       VERIFY_STATUS_AND_RETURN(status);
     } break;
@@ -162,16 +162,16 @@ sl_status_t net_up_command_handler(console_args_t *arguments)
       // Fetch the profile and print some information about it
       status = sl_net_get_profile(SL_NET_WIFI_AP_INTERFACE, profile_id, &profile);
       if (status != SL_STATUS_OK) {
-        printf("Failed to load profile with id: %u\r\n", profile_id);
+        SL_DEBUG_LOG_V2(ERROR, "Failed to load profile with id: %u\r\n", profile_id);
         return status;
       }
-      printf("Starting AP with SSID '%s'\r\n", profile.config.ssid.value);
+      SL_DEBUG_LOG_V2(INFO, "Starting AP with SSID '%s'\r\n", (uintptr_t)profile.config.ssid.value);
       status = sl_net_wifi_ap_up(interface, profile_id);
       VERIFY_STATUS_AND_RETURN(status);
     } break;
 #endif
     default:
-      printf("Unsupported interface\n");
+      SL_DEBUG_LOG_V2(ERROR, "Unsupported interface\r\n");
       return SL_STATUS_FAIL;
   }
   return status;
@@ -196,7 +196,7 @@ sl_status_t net_down_command_handler(console_args_t *arguments)
 #endif
 
     default:
-      printf("Unsupported interface\n");
+      SL_DEBUG_LOG_V2(ERROR, "Unsupported interface\r\n");
       return SL_STATUS_FAIL;
   }
 
@@ -237,7 +237,12 @@ sl_status_t set_nvm_profile_command_handler(console_args_t *arguments)
               .mode = SL_IP_MANAGEMENT_DHCP,
               .type = SL_IPV4,
               .host_name = NULL,
-              .ip = {{{0}}},
+              .ip.v4.ip_address.value = 0,
+              .ip.v4.gateway.value = 0,
+              .ip.v4.netmask.value = 0,
+              .ip.v6.link_local_address.value = { 0, 0, 0, 0 },
+              .ip.v6.global_address.value = { 0, 0, 0, 0 },
+              .ip.v6.gateway.value = { 0, 0, 0, 0 },
           }
       };
 
@@ -276,7 +281,12 @@ sl_status_t set_nvm_profile_command_handler(console_args_t *arguments)
     		      .mode = SL_IP_MANAGEMENT_DHCP,
     		      .type = SL_IPV4,
               .host_name = NULL,
-              .ip = {{{0}}},
+              .ip.v4.ip_address.value = 0,
+              .ip.v4.gateway.value = 0,
+              .ip.v4.netmask.value = 0,
+              .ip.v6.link_local_address.value = { 0, 0, 0, 0 },
+              .ip.v6.global_address.value = { 0, 0, 0, 0 },
+              .ip.v6.gateway.value = { 0, 0, 0, 0 },
     		    }
       };
 
@@ -292,25 +302,29 @@ sl_status_t set_nvm_profile_command_handler(console_args_t *arguments)
 #endif
 #endif
     default:
-      printf("Unsupported interface\n");
+      SL_DEBUG_LOG_V2(ERROR, "Unsupported interface\r\n");
       return SL_STATUS_FAIL;
   }
 
   return status;
 }
 
+/* Args: [0] host_name (required); [1] initial_timeout_sec (optional, default 10, console: -t);
+ *       [2] retry_count (optional, default 1, console: -r); [3] dns_resolution_ip_type (optional, default IPv4, console: -i).
+ *       Legacy: -i was ip_type only; add -r for retry so ip_type maps to index 3. */
 sl_status_t sl_dns_hostgetbyname_command_handler(console_args_t *arguments)
 {
 #ifdef SLI_SI91X_OFFLOAD_NETWORK_STACK
   sl_ip_address_t ip_address = { 0 };
   sl_status_t status;
 
-  const char *host_name  = (const char *)arguments->arg[0];
-  const uint32_t timeout = GET_OPTIONAL_COMMAND_ARG(arguments, 1, 20000, const uint32_t);
+  const char *host_name     = (const char *)arguments->arg[0];
+  const uint8_t timeout     = GET_OPTIONAL_COMMAND_ARG(arguments, 1, 10, const uint8_t);
+  const uint8_t retry_count = GET_OPTIONAL_COMMAND_ARG(arguments, 2, 1, const uint8_t);
   sl_net_dns_resolution_ip_type_t ip_type =
-    GET_OPTIONAL_COMMAND_ARG(arguments, 2, SL_NET_DNS_TYPE_IPV4, sl_net_dns_resolution_ip_type_t);
+    GET_OPTIONAL_COMMAND_ARG(arguments, 3, SL_NET_DNS_TYPE_IPV4, sl_net_dns_resolution_ip_type_t);
 
-  status = sl_net_dns_resolve_hostname(host_name, timeout, ip_type, &ip_address);
+  status = sl_net_dns_resolve_hostname_v2(host_name, timeout, retry_count, ip_type, &ip_address);
   if (status == SL_STATUS_IN_PROGRESS) {
     return SL_STATUS_OK;
   }
@@ -331,14 +345,14 @@ sl_status_t ping_response_callback_handler(sl_net_event_t event, sl_status_t sta
 
   if (SL_NET_PING_RESPONSE_EVENT == event) {
     if (status != SL_STATUS_OK) {
-      printf("\n Ping request failed! \n");
+      SL_DEBUG_LOG_V2(ERROR, " Ping request failed! \r\n");
       return status;
     } else {
-      printf(" Ping reply received from %u.%u.%u.%u \n\n",
-             response->ping_address.ipv4_address[0],
-             response->ping_address.ipv4_address[1],
-             response->ping_address.ipv4_address[2],
-             response->ping_address.ipv4_address[3]);
+      SL_DEBUG_LOG_V2(INFO,
+                      " Ping reply received from %u.%u.",
+                      response->ping_address.ipv4_address[0],
+                      response->ping_address.ipv4_address[1]);
+      SL_DEBUG_LOG_V2(INFO, "%u.%u ", response->ping_address.ipv4_address[2], response->ping_address.ipv4_address[3]);
     }
   }
 
@@ -396,39 +410,39 @@ sl_status_t start_dhcp_command_handler(console_args_t *arguments)
     sl_ip_address_t address = { 0 };
     address.type            = ip_address.type;
     memcpy(&address.ip.v4, &ip_address.ip.v4.ip_address, SL_IPV4_ADDRESS_LENGTH);
-    printf("IP Address: ");
+    SL_DEBUG_LOG_V2(INFO, "IP Address: ");
     print_sl_ip_address(&address);
 
     sl_ip_address_t gateway = { 0 };
     gateway.type            = ip_address.type;
     memcpy(&gateway.ip.v4, &ip_address.ip.v4.gateway, SL_IPV4_ADDRESS_LENGTH);
-    printf(" Gateway: ");
+    SL_DEBUG_LOG_V2(INFO, " Gateway: ");
     print_sl_ip_address(&gateway);
 
     sl_ip_address_t netmask = { 0 };
     netmask.type            = ip_address.type;
     memcpy(&netmask.ip.v4, &ip_address.ip.v4.netmask, SL_IPV4_ADDRESS_LENGTH);
-    printf(" Netmask: ");
+    SL_DEBUG_LOG_V2(INFO, " Netmask: ");
     print_sl_ip_address(&netmask);
 
   } else if (ip_address.type == SL_IPV6) {
     sl_ip_address_t link_local_address;
     memcpy(&link_local_address.ip.v6, &ip_address.ip.v6.link_local_address, SL_IPV6_ADDRESS_LENGTH);
     link_local_address.type = SL_IPV6;
-    printf("Link Local Address: ");
+    SL_DEBUG_LOG_V2(INFO, "Link Local Address: ");
     print_sl_ip_address(&link_local_address);
 
     sl_ip_address_t global_address;
     memcpy(&global_address.ip.v6, &ip_address.ip.v6.global_address, SL_IPV6_ADDRESS_LENGTH);
     global_address.type = SL_IPV6;
-    printf("Global Address: ");
+    SL_DEBUG_LOG_V2(INFO, "Global Address: ");
     print_sl_ip_address(&global_address);
 
     sl_ip_address_t gateway;
     gateway.ip.v6 = ip_address.ip.v6.gateway;
     memcpy(&gateway.ip.v6, &ip_address.ip.v6.gateway, SL_IPV6_ADDRESS_LENGTH);
     gateway.type = SL_IPV6;
-    printf("Gateway Address: ");
+    SL_DEBUG_LOG_V2(INFO, "Gateway Address: ");
     print_sl_ip_address(&gateway);
   }
 

@@ -1,23 +1,33 @@
 # BLE - Power Save
 
+## High-Level Overview
+
+SiWx91x BLE Power Save example: configure advertising and connected power save with sleep profiles on SoC, PSRAM, and NCP modes via Simplicity Studio or Keil.
+
 ## Table of Contents
 
 - [BLE - Power Save](#ble---power-save)
+  - [High-Level Overview](#high-level-overview)
   - [Table of Contents](#table-of-contents)
   - [Purpose/Scope](#purposescope)
   - [Prerequisites/Setup Requirements](#prerequisitessetup-requirements)
     - [Hardware Requirements](#hardware-requirements)
     - [Software Requirements](#software-requirements)
+    - [NCP mode: host application and project files](#ncp-mode-host-application-and-project-files)
     - [Setup Diagram](#setup-diagram)
-  - [Getting Started](#getting-started)
-    - [Instructions for Simplicity Studio IDE and Silicon Labs devices (SoC and NCP Modes)](#instructions-for-simplicity-studio-ide-and-silicon-labs-devices-soc-and-ncp-modes)
-    - [Instructions for Keil IDE and STM32F411RE MCU (NCP Mode)](#instructions-for-keil-ide-and-stm32f411re-mcu-ncp-mode)
-  - [Application Build Environment](#application-build-environment)
+  - [Steps to Run Demo](#steps-to-run-demo)
+    - [Getting Started](#getting-started)
+      - [Instructions for Simplicity Studio IDE and Silicon Labs devices (SoC and NCP Modes)](#instructions-for-simplicity-studio-ide-and-silicon-labs-devices-soc-and-ncp-modes)
+      - [Instructions for Keil IDE and STM32F411RE MCU (NCP Mode)](#instructions-for-keil-ide-and-stm32f411re-mcu-ncp-mode)
+    - [Configuration and Setup](#configuration-and-setup)
     - [Power save configuration](#power-save-configuration)
-  - [Test the application](#test-the-application)
-    - [Instructions for Simplicity Studio IDE and Silicon Labs devices (SoC and NCP Modes)](#instructions-for-simplicity-studio-ide-and-silicon-labs-devices-soc-and-ncp-modes-1)
-    - [Instructions for Keil IDE and STM32F411RE MCU](#instructions-for-keil-ide-and-stm32f411re-mcu)
-  - [**Current consumption measurement**](#current-consumption-measurement)
+    - [Steps for Execution](#steps-for-execution)
+      - [Instructions for Simplicity Studio IDE and Silicon Labs devices (SoC and NCP Modes)](#instructions-for-simplicity-studio-ide-and-silicon-labs-devices-soc-and-ncp-modes-1)
+      - [Instructions for Keil IDE and STM32F411RE MCU](#instructions-for-keil-ide-and-stm32f411re-mcu)
+    - [**Current consumption measurement**](#current-consumption-measurement)
+  - [Troubleshooting](#troubleshooting)
+  - [Resources](#resources)
+  - [Report Bugs and Get Support](#report-bugs-and-get-support)
   
 ## Purpose/Scope
 
@@ -30,24 +40,24 @@ This application demonstrates how to configure SiWx91x in power save profile in 
 - Windows PC.
 - SiWx91x Wi-Fi Evaluation Kit.
 - SoC Mode
-  - Silicon Labs [BRD4325A, BRD4325B, BRD4325C, BRD4338A, BRD4339B, BRD4343A ](https://www.silabs.com/)
+  - Silicon Labs [[BRD4002B](https://www.silabs.com/development-tools/wireless/wireless-pro-kit-mainboard?tab=overview) + [BRD4338A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-rb4338a-wifi-6-bluetooth-le-soc-radio-board?tab=overview) / [BRD4343A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4343a-wi-fi-6-bluetooth-le-8mb-flash-radio-board-for-module?tab=overview) / [BRD4343C](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4343c-wi-fi-6-bluetooth-le-8mb-flash-radio-board-for-module?tab=overview)]
   - Kits
-    - SiWx917 AC1 Module Explorer Kit (BRD2708A)
+    - SiWG917 Dev Kit [BRD2605B]
+    - SiWx917 AC1 Module Explorer Kit [BRD2708A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-ek2708a-explorer-kit)
+  - PSRAM Mode:  
+    - Silicon Labs [[BRD4002B](https://www.silabs.com/development-tools/wireless/wireless-pro-kit-mainboard?tab=overview) + [BRD4342A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx91x-rb4342a-wifi-6-bluetooth-le-soc-radio-board?tab=overview)]
 - NCP Mode:
-  - Silicon Labs [BRD4180B](https://www.silabs.com/); **AND**
+  - Silicon Labs [BRD4186C](https://www.silabs.com/development-tools/wireless/xg24-rb4186c-efr32xg24-wireless-gecko-radio-board?tab=overview)
   - Host MCU Eval Kit. This example has been tested with:
   - Silicon Labs [WSTK + EFR32MG21](https://www.silabs.com/development-tools/wireless/efr32xg21-bluetooth-starter-kit)
   - NCP Expansion Kit with NCP Radio boards
-      - (BRD4346A + BRD8045A) [SiWx917-EB4346A]
-      - (BRD4357A + BRD8045A) [SiWx917-EB4357A]
+    - [[BRD8045A](https://www.silabs.com/development-tools/wireless/wi-fi/expansion-adapter-board-for-co-processor-radio-boards?tab=overview) + [BRD4346A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-rb4346a-wifi-6-bluetooth-le-soc-4mb-flash-radio-board?tab=overview) / [BRD4357A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4357a-wi-fi-6-bluetooth-le-4mb-flash-radio-board-for-rcp-and-ncp-modules?tab=overview) / [BRD4357C](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4357c-wi-fi-6-bluetooth-le-4mb-flash-radio-board-for-rcp-and-ncp-modules?tab=overview)]
   - STM32F411RE MCU
      - [STM32F411RE](https://www.st.com/en/microcontrollers-microprocessors/stm32f411re.html) MCU
      - NCP Radio Board (BRD4346A + BRD8045C)
-  - Interface and Host MCU Supported
-    - SPI - EFR32 & STM32
-    - UART - EFR32
-- **PSRAM Mode**:
-    - Silicon Labs [BRD4340A](https://www.silabs.com/)
+  - Interface and host MCU supported
+    - SPI : EFR32 and STM32
+    - UART : EFR32
 - Power Analyzer
 
 ### Software Requirements
@@ -57,13 +67,26 @@ This application demonstrates how to configure SiWx91x in power save profile in 
 - Serial Terminal - [Docklight](https://docklight.de/)/[Tera Term](https://ttssh2.osdn.jp/index.html.en) (to be used with Keil IDE)
 - Download and install the Silicon Labs [Simplicity Connect App(formerly EFR Connect App) or other BLE Central/Peripheral app.](https://www.silabs.com/developers/simplicity-connect-mobile-app ) in the android smart phones for testing BLE applications. Users can also use their choice of BLE apps available in Android/iOS smart phones.
 
+### NCP mode: host application and project files
+
+| Mode       | Host / target                                                                           | Project file (this example folder)   |
+|------------|-----------------------------------------------------------------------------------------|--------------------------------------|
+| SoC        | Application runs on SiWx91x.                                                            | `ble_power_save_soc.slcp`            |
+| PSRAM      | Application runs on SiWx91x with PSRAM-capable radio board.                             | `ble_power_save_psram.slcp`          |
+| NCP (SPI)  | Application runs on **EFR32** host; SiWx917 is the network co-processor over **SPI**.   | `ble_power_save_ncp.slcp`            |
+| NCP (UART) | Application runs on **EFR32** host; SiWx917 NCP over **UART**.                          | `ble_power_save_uart_ncp.slcp`       |
+
+Open the `.slcp` for your kit from `examples/snippets/ble/ble_power_save/` in Simplicity Studio. For NCP, follow [Getting started with NCP mode](https://docs.silabs.com/wiseconnect/latest/wiseconnect-getting-started/getting-started-with-ncp-mode).
+
 ### Setup Diagram
 
   ![Figure: Setup Diagram for Power Save example](resources/readme/ble_power_save_soc_ncp.png)
 
-## Getting Started
+## Steps to Run Demo
 
-### Instructions for Simplicity Studio IDE and Silicon Labs devices (SoC and NCP Modes)
+### Getting Started
+
+#### Instructions for Simplicity Studio IDE and Silicon Labs devices (SoC and NCP Modes)
 
 Refer to the instructions [here](https://docs.silabs.com/wiseconnect/latest/wiseconnect-getting-started/) to:
 
@@ -75,7 +98,7 @@ Refer to the instructions [here](https://docs.silabs.com/wiseconnect/latest/wise
 
 For details on the project folder structure, see the [WiSeConnect Examples](https://docs.silabs.com/wiseconnect/latest/wiseconnect-examples/#example-folder-structure) page.
 
-### Instructions for Keil IDE and STM32F411RE MCU (NCP Mode)
+#### Instructions for Keil IDE and STM32F411RE MCU (NCP Mode)
 
   - Install the [Keil IDE](https://www.keil.com/).
   - Download [WiSeConnect SDK](https://github.com/SiliconLabs/wiseconnect)
@@ -90,7 +113,7 @@ For details on the project folder structure, see the [WiSeConnect Examples](http
   - Connect the setup to the computer.
   - Open the BLE PER µVision project - **ble_power_save.uvprojx** by navigating to **WiSeConnect SDK → examples → snippets → ble → ble_power_save → keil_project**.
 
-## Application Build Environment
+### Configuration and Setup
 
 The application can be configured to suit your requirements and development environment. Read through the following sections and make any changes needed.
 
@@ -102,7 +125,7 @@ The application can be configured to suit your requirements and development envi
     #define BLE_ROLE    PERIPHERAL_ROLE
     ```
    
-  - Remote Peripheral device paramters:
+  - Remote Peripheral device parameters:
     - `RSI_BLE_DEV_ADDR_TYPE` refers to the address type of the remote device to connect.
     - Based on address type of remote device, valid configurations are `LE_RANDOM_ADDRESS` and `LE_PUBLIC_ADDRESS`
       ```c
@@ -118,7 +141,9 @@ The application can be configured to suit your requirements and development envi
       ```
   
     > **Note:** you required to configure either the `RSI_BLE_DEV_ADDR` or `RSI_REMOTE_DEVICE_NAME` of the remote device.
-### Power save configuration
+
+#### Power save configuration
+
   - Configure `ENABLE_NWP_POWER_SAVE` parameter to enable power save mode.  
   
     ```c
@@ -156,15 +181,16 @@ The application can be configured to suit your requirements and development envi
 
 > **Note**: For recommended settings, please refer the [recommendations guide](https://docs.silabs.com/wiseconnect/latest/wiseconnect-developers-guide-prog-recommended-settings/).
 
-## Test the application
+### Steps for Execution
 
-### Instructions for Simplicity Studio IDE and Silicon Labs devices (SoC and NCP Modes)
+#### Instructions for Simplicity Studio IDE and Silicon Labs devices (SoC and NCP Modes)
 
 Refer to the instructions [here](https://docs.silabs.com/wiseconnect/latest/wiseconnect-getting-started/) to:
 
 - Build the application in Studio.
 - Flash, run and debug the application.
-### Instructions for Keil IDE and STM32F411RE MCU
+
+#### Instructions for Keil IDE and STM32F411RE MCU
 
 - Build the application.
 - Set the Docklight up by connecting STM32's Serial COM port. This enables you to view the application prints.
@@ -213,7 +239,7 @@ It will vary based on the traffic.
     ![Application Prints Soc](resources/readme/output1.png)
     ![Application Prints Soc](resources/readme/output2.png)
 
-## **Current consumption measurement**
+### **Current consumption measurement**
 
 - **NCP**      
    - A Power meter can be used to measure the current consumption of SiWx91x NCP module.    
@@ -238,3 +264,27 @@ It will vary based on the traffic.
  
 > **NOTE:** 
 > - The measured current may vary if the scenario is performed in open environment. 
+
+## Troubleshooting
+
+If you encounter issues while running the BLE Power Save example, check the following:
+
+- Ensure the correct radio board is connected and the connectivity firmware is up to date.
+- Verify `ENABLE_NWP_POWER_SAVE` is set to `1` to activate power save.
+- Confirm `BLE_ROLE` matches your test scenario (PERIPHERAL, CENTRAL, or DUAL).
+- For NCP mode using the NCP-EXP-Board, follow the "Powersave functionality with NCP expansion board" section in the *Getting started with SiWx91x NCP* guide.
+- When connecting in CENTRAL role, ensure `RSI_BLE_DEV_ADDR` / `RSI_REMOTE_DEVICE_NAME` and `RSI_BLE_DEV_ADDR_TYPE` match the remote peripheral.
+- `PSP_MODE` must be `RSI_SLEEP_MODE_2` or `RSI_SLEEP_MODE_8`; `RSI_ACTIVE` disables power save entirely.
+- For current-consumption measurements in NCP mode, verify the power meter probes are connected to J2.1 (negative) and J2.2 (positive) and no other loads are powered from the board.
+
+## Resources
+
+- [WiSeConnect Getting Started Guide](https://docs.silabs.com/wiseconnect/latest/wiseconnect-getting-started/)
+- [WiSeConnect API Reference Guide](https://docs.silabs.com/wiseconnect/latest/wiseconnect-api-reference-guide-si91x-driver/)
+- [Simplicity Connect Mobile App](https://www.silabs.com/developers/simplicity-connect-mobile-app)
+
+## Report Bugs and Get Support
+
+Report issues and get help from the Silicon Labs community:
+
+- [Silicon Labs Community](https://www.silabs.com/community)

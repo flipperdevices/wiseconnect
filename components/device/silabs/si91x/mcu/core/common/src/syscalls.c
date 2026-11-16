@@ -27,6 +27,7 @@
 #include <sys/stat.h>
 #include <stdlib.h>
 #include <stdarg.h>
+#include <stdint.h>
 #include "errno.h"
 #include <stdio.h>
 #include <stdbool.h>
@@ -45,6 +46,7 @@
 #endif
 #if defined(SL_CATALOG_KERNEL_PRESENT)
 #include "cmsis_os2.h"
+extern osMutexId_t si91x_sbrk_mutex;
 #endif
 #define IO_MAXLINE 20U //maximun read length
 typedef int (*PUTCHAR_FUNC)(int a);
@@ -142,6 +144,52 @@ int _close(int file)
   (void)file;
   return -1;
 }
+
+#if defined(__GNUC__) || defined(__clang__)
+/***************************************************************************/ /**
+ * Extends the process data space (heap). Used by newlib malloc().
+ *
+ * @param[in]  incr   Number of bytes to increment/decrement
+ * @return Start of the new space if successful; (void *)-1 if no space.
+ ******************************************************************************/
+__attribute__((used, weak)) void *_sbrk(int incr)
+{
+  static char *heap_end = __HeapBase;
+  char *prev_heap_end;
+  char *new_heap_end;
+
+#if defined(SL_CATALOG_KERNEL_PRESENT)
+  if ((osKernelGetState() == osKernelRunning) && (si91x_sbrk_mutex != NULL)) {
+    osMutexAcquire(si91x_sbrk_mutex, osWaitForever);
+  }
+#endif
+  new_heap_end = heap_end + incr;
+  if (new_heap_end > __HeapLimit) {
+#if defined(SL_CATALOG_KERNEL_PRESENT)
+    if ((osKernelGetState() == osKernelRunning) && (si91x_sbrk_mutex != NULL)) {
+      osMutexRelease(si91x_sbrk_mutex);
+    }
+#endif
+    return (void *)-1;
+  }
+  if (new_heap_end < __HeapBase) {
+#if defined(SL_CATALOG_KERNEL_PRESENT)
+    if ((osKernelGetState() == osKernelRunning) && (si91x_sbrk_mutex != NULL)) {
+      osMutexRelease(si91x_sbrk_mutex);
+    }
+#endif
+    return (void *)-1;
+  }
+  prev_heap_end = heap_end;
+  heap_end      = new_heap_end;
+#if defined(SL_CATALOG_KERNEL_PRESENT)
+  if ((osKernelGetState() == osKernelRunning) && (si91x_sbrk_mutex != NULL)) {
+    osMutexRelease(si91x_sbrk_mutex);
+  }
+#endif
+  return (void *)prev_heap_end;
+}
+#endif /* __GNUC__ || __clang__ */
 
 int _fstat(int file, struct stat *st)
 {
@@ -422,6 +470,7 @@ static int scanf_data_format(const char *line_ptr, char *format, va_list args_pt
       }
     }
   }
+  (void)n_decode;
   return (int)nassigned;
 }
 int _read(char *fmt_ptr, ...)

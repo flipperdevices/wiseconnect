@@ -93,6 +93,12 @@ sl_status_t rsi_flash_erase_sector(uint32_t *sector_address)
 #if defined(SL_SI91X_TICKLESS_MODE) && (SL_SI91X_TICKLESS_MODE == 1)
   sl_si91x_power_manager_remove_ps_requirement(SL_SI91X_POWER_MANAGER_PS4);
 #endif
+  if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("rsi_flash_erase_sector: sl_si91x_command_to_write_common_flash(erase) "
+                          "failed st=0x%04lX,line no : %d\r\n",
+                          (unsigned long)status,
+                          (int)__LINE__);
+  }
   return status;
 }
 
@@ -113,6 +119,12 @@ sl_status_t rsi_flash_write(uint32_t *address, unsigned char *data, uint32_t len
 #if defined(SL_SI91X_TICKLESS_MODE) && (SL_SI91X_TICKLESS_MODE == 1)
   sl_si91x_power_manager_remove_ps_requirement(SL_SI91X_POWER_MANAGER_PS4);
 #endif
+  if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("rsi_flash_write: sl_si91x_command_to_write_common_flash failed "
+                          "st=0x%04lX,line no : %d\r\n",
+                          (unsigned long)status,
+                          (int)__LINE__);
+  }
   return status;
 }
 
@@ -135,7 +147,7 @@ sl_status_t rsi_flash_read(uint32_t *address, unsigned char *data, uint32_t leng
  * The implementation of lock-begin based on free RTOs.
  * @note
  * The default NVM3 protection functions can be substituted by the application
- * if other syncronization functions are available and disabling interrupts for
+ * if other synchronization functions are available and disabling interrupts for
  * extended periods is not desired.
  ******************************************************************************/
 void nvm3_lockBegin(void)

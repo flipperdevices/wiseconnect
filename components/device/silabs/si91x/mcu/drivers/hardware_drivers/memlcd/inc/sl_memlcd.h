@@ -20,6 +20,7 @@
 
 #include "rsi_timers.h"
 #include "sl_status.h"
+#include "sl_log_helper.h"
 
 #if !defined(MEMLCD_CUSTOM_DRIVER)
 #include "sl_memlcd_spi.h"

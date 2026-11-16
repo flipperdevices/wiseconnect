@@ -1,6 +1,6 @@
 /***************************************************************************/ /**
  * @file
- * @brief SL_SI91X_IOSTREAM_VUART Config.
+ * @brief IO Stream VUART configuration for SiWx91x.
  *******************************************************************************
  * # License
  * <b>Copyright 2019 Silicon Laboratories Inc. www.silabs.com</b>

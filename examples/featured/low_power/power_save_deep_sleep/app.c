@@ -38,6 +38,8 @@
 
 #ifdef SLI_SI91X_MCU_INTERFACE
 #include "sl_si91x_power_manager.h"
+#include "FreeRTOS.h"
+#include "task.h"
 #endif // SLI_SI91X_MCU_INTERFACE
 
 /******************************************************
@@ -68,7 +70,6 @@ const osThreadAttr_t thread_attributes = {
   .stack_size = 3072,
   .priority   = osPriorityLow,
   .tz_module  = 0,
-  .reserved   = 0,
 };
 
 static const sl_wifi_device_configuration_t station_init_configuration = {
@@ -91,10 +92,13 @@ static const sl_wifi_device_configuration_t station_init_configuration = {
 #endif
                                                   ),
                    .bt_feature_bit_map         = 0,
-                   .ext_tcp_ip_feature_bit_map = SL_SI91X_CONFIG_FEAT_EXTENTION_VALID,
+                   .ext_tcp_ip_feature_bit_map = SL_SI91X_CONFIG_FEAT_EXTENSION_VALID,
                    .ble_feature_bit_map        = 0,
                    .ble_ext_feature_bit_map    = 0,
-                   .config_feature_bit_map     = SL_SI91X_FEAT_SLEEP_GPIO_SEL_BITMAP }
+                   .config_feature_bit_map     = SL_SI91X_FEAT_SLEEP_GPIO_SEL_BITMAP },
+  .ta_pool         = { .tx_ratio_in_buffer_pool = 0, .rx_ratio_in_buffer_pool = 0, .global_ratio_in_buffer_pool = 0 },
+  .efuse_data_type = SL_SI91X_EFUSE_MFG_SW_VERSION,
+  .nwp_fw_image_number = SL_SI91X_NWP_FW_IMAGE_NUMBER_0
 };
 
 /******************************************************
@@ -113,35 +117,37 @@ static void application_start(void *argument)
   // Initialize the Wi-Fi client interface
   status = sl_net_init(SL_NET_WIFI_CLIENT_INTERFACE, &station_init_configuration, NULL, NULL);
   if (status != SL_STATUS_OK) {
-    printf("\r\nFailed to bring Wi-Fi client interface up: 0x%lX\r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "Failed to bring Wi-Fi client interface up: 0x%lX\r\n", status);
     return;
   }
-  printf("\r\nWi-Fi client interface init success\r\n");
+  SL_DEBUG_LOG_V2(INFO, "Wi-Fi client interface init success\r\n");
 
 #ifdef SLI_SI91X_MCU_INTERFACE
   uint8_t xtal_enable = 1;
   // Establish a secure handshake between the M4 core and the NWP
   status = sl_si91x_m4_ta_secure_handshake(SL_SI91X_ENABLE_XTAL, 1, &xtal_enable, 0, NULL);
   if (status != SL_STATUS_OK) {
-    printf("\r\nFailed to bring m4_ta_secure_handshake: 0x%lX\r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "Failed to bring m4_ta_secure_handshake: 0x%lX\r\n", status);
     return;
   }
-  printf("\r\nm4_ta_secure_handshake Success\r\n");
+  SL_DEBUG_LOG_V2(INFO, "m4_ta_secure_handshake Success\r\n");
 #endif
 
   // Enabling low-power standby mode
   enable_standby();
-  printf("\r\nNWP is in power save mode\r\n");
+  SL_DEBUG_LOG_V2(INFO, "NWP is in power save mode\r\n");
 
 #ifdef SLI_SI91X_MCU_INTERFACE
-  printf("\r\nM4 in Sleep\r\n");
+  taskENTER_CRITICAL();
+  SL_DEBUG_LOG_V2(INFO, "M4 in Deep Sleep");
   status = sl_si91x_power_manager_add_ps_requirement(SL_SI91X_POWER_MANAGER_PS0);
   if (status != SL_STATUS_OK) {
     // If status is not OK, return with the error code.
-    printf("\r\nsl_si91x_power_manager_add_ps_requirement failed, Error Code: 0x%lX\r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "sl_si91x_power_manager_add_ps_requirement failed, Error Code: 0x%lX\r\n", status);
   } else {
-    printf("\r\nM4 wake up\r\n");
+    SL_DEBUG_LOG_V2(INFO, "M4 Deep Sleep wake up");
   }
+  taskEXIT_CRITICAL();
 
 #else
   osDelay(30000);
@@ -150,27 +156,27 @@ static void application_start(void *argument)
 
     // Brings the NWP out of power save mode
     enable_high_performance();
-    printf("\r\nNWP comes out of power save mode\r\n");
+    SL_DEBUG_LOG_V2(INFO, "NWP comes out of power save mode\r\n");
 
   } else if (POWER_SAVE_PROFILE == DEEP_SLEEP_WITHOUT_RAM_RETENTION) {
     // Deinitialize the Wi-Fi client interface
     status = sl_net_deinit(SL_NET_WIFI_CLIENT_INTERFACE);
     if (status != SL_STATUS_OK) {
-      printf("\r\nError while wifi deinit: 0x%lX \r\n", status);
+      SL_DEBUG_LOG_V2(ERROR, "Error while wifi deinit: 0x%lX \r\n", status);
       return;
     } else {
-      printf("\r\nWi-Fi client Deinit success\r\n");
+      SL_DEBUG_LOG_V2(INFO, "Wi-Fi client Deinit success\r\n");
     }
     // Initialize the Wi-Fi client interface
     status = sl_net_init(SL_NET_WIFI_CLIENT_INTERFACE, &station_init_configuration, NULL, NULL);
     if (status != SL_STATUS_OK) {
-      printf("\r\nFailed to bring Wi-Fi client interface up: 0x%lX\r\n", status);
+      SL_DEBUG_LOG_V2(ERROR, "Failed to bring Wi-Fi client interface up: 0x%lX\r\n", status);
       return;
     }
-    printf("\r\nWi-Fi client interface init success\r\n");
+    SL_DEBUG_LOG_V2(INFO, "Wi-Fi client interface init success\r\n");
   }
 
-  printf("\r\nExample Demonstration Completed\r\n");
+  SL_DEBUG_LOG_V2(INFO, "Example Demonstration Completed\r\n");
 
 #endif
 }
@@ -181,10 +187,10 @@ static void enable_standby(void)
 
   sl_status_t status = sl_wifi_set_performance_profile_v2(&performance_profile);
   if (status != SL_STATUS_OK) {
-    printf("\r\nPower save profile with deep sleep Failed, Error Code : 0x%lX\r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "Power save profile with deep sleep Failed, Error Code : 0x%lX\r\n", status);
     return;
   }
-  printf("\r\nPower save profile with deep sleep Success \r\n");
+  SL_DEBUG_LOG_V2(INFO, "Power save profile with deep sleep Success \r\n");
 }
 
 #ifndef SLI_SI91X_MCU_INTERFACE
@@ -194,9 +200,9 @@ static void enable_high_performance(void)
 
   sl_status_t status = sl_wifi_set_performance_profile_v2(&performance_profile);
   if (status != SL_STATUS_OK) {
-    printf("\r\nFailed to keep module in HIGH_PERFORMANCE mode, Error Code : 0x%lX\r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "Failed to keep module in HIGH_PERFORMANCE mode, Error Code : 0x%lX\r\n", status);
     return;
   }
-  printf("\r\nModule is in HIGH_PERFORMANCE mode\r\n");
+  SL_DEBUG_LOG_V2(INFO, "Module is in HIGH_PERFORMANCE mode\r\n");
 }
 #endif

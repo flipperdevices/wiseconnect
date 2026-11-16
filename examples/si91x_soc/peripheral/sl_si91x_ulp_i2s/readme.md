@@ -1,8 +1,8 @@
-# SI91x - SL_ULP_I2S
+# SiWx91x Platform ULP I2S
 
 ## Table of Contents
 
-- [SI91x - SL\_ULP\_I2S](#si91x---sl_ulp_i2s)
+- [SiWx91x Platform ULP I2S](#platform-siwx91x-ulp-i2s)
   - [Table of Contents](#table-of-contents)
   - [Purpose/Scope](#purposescope)
   - [Overview](#overview)
@@ -15,6 +15,9 @@
   - [Application Build Environment](#application-build-environment)
     - [Pin Description](#pin-description)
   - [Test the Application](#test-the-application)
+  - [Troubleshooting](#troubleshooting)
+  - [Resources](#resources)
+  - [Report Bugs/Support](#report-bugssupport)
 
 ## Purpose/Scope
 
@@ -65,28 +68,25 @@ The data received should match the transmitted data.
    (g) **transfer_type** - Transfer type (Transmit, Receive, Transmit abort, and Receive abort).
 2. Transfers with 16-bit resolution must use a `uint16_t` data type buffer and pass SL_I2S_DATA_SIZE16 to the data_size parameter in `sl_i2s_xfer_config_t` while configuring the transfer.
 3. Transfers with 24-bit and 32-bit resolutions must use a `uint32_t` data type buffer and pass `SL_I2S_DATA_SIZE32` to the data_size parameter in `sl_i2s_xfer_config_t` while configuring the transfer.
-   - For **24-bit resolution**, only the lower 24 bits of each 32-bit word are valid; the upper 8 bits must be set to **zero**.  
-   - Buffers should be aligned to **32-bit boundaries**.  
-   - **Transfer-size rules:** 24-bit → multiples of 4 (see Point 6); 32-bit → even numbers (see Point 5).  
-   - **Buffer size constraints (example):**  
+   - For **24-bit resolution**, only the lower 24 bits of each 32-bit word are valid; the upper 8 bits must be set to **zero**.
+   - Buffers should be aligned to **32-bit boundaries**.
+   - **Transfer-size rules:** 24-bit → multiples of 4 (see Point 6); 32-bit → even numbers (see Point 5).
+   - **Buffer size constraints (example):**
 
      ```c
      #define I2S_LOWPOWER_BUFFER_SIZE   1024  // Samples per buffer in 16-bit mode (uint16_t)
      #define ULP_I2S_INSTANCE           1     // I2S instance index
-     #define I2S_ULP_BANK_OFFSET        0x800 // 2048 bytes per bank
-     #define I2S_TX_BUF_MEMORY          (ULP_SRAM_START_ADDR + (1 * I2S_ULP_BANK_OFFSET))
-     #define I2S_RX_BUF_MEMORY          (ULP_SRAM_START_ADDR + (2 * I2S_ULP_BANK_OFFSET))
-     // Each bank = 0x800 = 2048 bytes (2 KB)
+     // Each bank = 2048 bytes (2 KB)
      ```
 
-     - With **16-bit** data (2 bytes/sample), one 2 KB bank holds **1024 samples** → `I2S_LOWPOWER_BUFFER_SIZE = 1024`.  
+     - With **16-bit** data (2 bytes/sample), one 2 KB bank holds **1024 samples** → `I2S_LOWPOWER_BUFFER_SIZE = 1024`.
      - With **24/32-bit** data (4 bytes/sample), one **2 KB** bank holds **512 samples** → `I2S_LOWPOWER_BUFFER_SIZE = 512`.
-        - Because the ULP memory is fixed at **4 KB total** in this example (2 KB TX + 2 KB RX), when using 32-bit (or 24-bit packed in 32-bit) **set `I2S_LOWPOWER_BUFFER_SIZE` to 512 samples per buffer**. Do **not** increase the buffer size beyond this under `SL_I2S_DATA_SIZE32`. 
+        - Because the ULP memory is fixed at **4 KB total** in this example (2 KB TX + 2 KB RX), when using 32-bit (or 24-bit packed in 32-bit) **set `I2S_LOWPOWER_BUFFER_SIZE` to 512 samples per buffer**. Do **not** increase the buffer size beyond this under `SL_I2S_DATA_SIZE32`.
 4. Since 8-bit resolution is not supported, a `uint8_t` data type buffer can use 16-bit resolution for transfers and pass SL_I2S_DATA_SIZE8 to the data_size parameter in  `sl_i2s_xfer_config_t` while configuring the transfer. While performing this operation, the data buffer should be typecast to `(uint16_t *)`, and the transfer size should be half of the 8-bit data type buffer. (Refer to the I2S loopback application for more details.) For 8-bit transfers, the transfer size should be multiples of 4 (8,12,16,20...).
 5. Any I2S transfers with 16-bit and 32-bit resolutions should only have an even transfer size (8,10,12,14...).
 6. Any I2S transfers with 24-bit resolution should only have transfer size as multiples of 4 (8,12,16,20...).
 7. The `I2S1_LOOP_BACK` macro is used only for I2S loopback applications to avoid clock generation from the receiver block during transfer.
-8. SCK frequency is calculated using `SCK = 2 * bit_width * sampling rate`. By default, I2S0 uses I2S_PLL_CLK as a clock source. This can generate any frequency range mentioned in section 6.11.7 of the Si91x HRM.
+8. SCK frequency is calculated using `SCK = 2 * bit_width * sampling rate`. By default, I2S0 uses I2S_PLL_CLK as a clock source. This can generate any frequency range mentioned in section 6.11.7 of the SiWx91x HRM.
 
    >**Note:**
    >
@@ -94,12 +94,13 @@ The data received should match the transmitted data.
    >
 9. By default, ULP_I2S/I2S1 uses ULP_I2S_REF_CLK to support I2S operation in low-power states. This limits the maximum supported sampling frequency of ULP_I2S to 48kHz (32 MHz RC trims to 20MHz in  ULP_State).
 
+
 ## Prerequisites/Setup Requirements
 
 ### Hardware Requirements
 
 - Windows PC
-- Silicon Labs Si917 Evaluation Kit [[BRD4002](https://www.silabs.com/development-tools/wireless/wireless-pro-kit-mainboard?tab=overview) + [BRD4338A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-rb4338a-wifi-6-bluetooth-le-soc-radio-board?tab=overview) / [BRD4342A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx91x-rb4342a-wifi-6-bluetooth-le-soc-radio-board?tab=overview) / [BRD4343A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4343a-wi-fi-6-bluetooth-le-8mb-flash-radio-board-for-module?tab=overview)]
+- Silicon Labs SiWx91x Evaluation Kit [[BRD4002](https://www.silabs.com/development-tools/wireless/wireless-pro-kit-mainboard?tab=overview) + [BRD4338A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-rb4338a-wifi-6-bluetooth-le-soc-radio-board?tab=overview) / [BRD4342A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx91x-rb4342a-wifi-6-bluetooth-le-soc-radio-board?tab=overview) / [BRD4343A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4343a-wi-fi-6-bluetooth-le-8mb-flash-radio-board-for-module?tab=overview) / [BRD4343C](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4343c-wi-fi-6-bluetooth-le-8mb-flash-radio-board-for-module?tab=overview)]
 - SiWx917 AC1 Module Explorer Kit [BRD2708A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-ek2708a-explorer-kit)
 
 ### Software Requirements
@@ -138,15 +139,47 @@ For details on the project folder structure, see the [WiSeConnect Examples](http
     - SL_ULP_I2S_RESOLUTION: ULP_I2S resolution can be configured through this macro. Valid resolution values are 16-, 24-, and 32-bit.
     - SL_ULP_I2S_SAMPLING_RATE: ULP_I2S sampling rate can be configured through this macro. Valid sampling rate values are 8kHz, 11.025kHz, 16kHz, 22.05kHz, 24kHz, 32kHz, 44.1kHz, 48kHz, 88.2kHz, 96kHz, and 192kHz.
     - Configuration files are generated in **config folder**. If not changed, the code will run on default UC values.
-    - Configure the following macros in the [`ulp_i2s_example.c`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.1-content-for-docs/examples/si91x_soc/peripheral/sl_si91x_ulp_i2s/ulp_i2s_example.c) file and update/modify following macros, if required.
+    - Configure the following macros in the [`ulp_i2s_example.c`](ulp_i2s_example.c) file and update/modify following macros, if required.
 
-      ```C
-      #define I2S_LOWPOWER_BUFFER_SIZE 1024    ///< Transmit/Receive buffer size
+    - `I2S_ULP_BANK_OFFSET`: Offset (in bytes) between consecutive ULP SRAM banks used by the example. Each bank is 0x800 = 2048 bytes (2 KB). By default, it is set to `0x800`.
+
+      ```c
+      #define I2S_ULP_BANK_OFFSET       0x800 // 2048 bytes per bank
+      ```
+
+    - `I2S_TX_BUF_MEMORY`: Absolute address of the ULP SRAM location used as the I2S transmit buffer. Computed as `ULP_SRAM_START_ADDR + (1 * I2S_ULP_BANK_OFFSET)` so it sits in ULP SRAM bank 1.
+
+      ```c
+      #define I2S_TX_BUF_MEMORY         (ULP_SRAM_START_ADDR + (1 * I2S_ULP_BANK_OFFSET))
+      ```
+
+    - `I2S_RX_BUF_MEMORY`: Absolute address of the ULP SRAM location used as the I2S receive buffer. Computed as `ULP_SRAM_START_ADDR + (2 * I2S_ULP_BANK_OFFSET)` so it sits in ULP SRAM bank 2.
+
+      ```c
+      #define I2S_RX_BUF_MEMORY         (ULP_SRAM_START_ADDR + (2 * I2S_ULP_BANK_OFFSET))
+      ```
+
+    - `I2S_LOWPOWER_BUFFER_SIZE`: Defines the size of the transmit and receive buffers used for the ULP_I2S loopback transfer. By default, it is set to 1024.
+
+      ```c
+      #define I2S_LOWPOWER_BUFFER_SIZE  1024      ///< Transmit/Receive buffer size
+      ```
+
+    - `MS_DELAY_COUNTER`: Defines the loop counter used for producing a millisecond-scale software delay. By default, it is set to 4600.
+
+      ```c
+      #define MS_DELAY_COUNTER          4600      ///< Delay count
+      ```
+
+    - `FIVE_SECOND_DELAY`: Defines the delay count used to wait approximately 5 seconds between power state changes. By default, it is set to 5000.
+
+      ```c
+      #define FIVE_SECOND_DELAY         5000      ///< 5 second delay between state changes
       ```
 
   - **Pin Configuration**
 
-      | Description      | SiWx917 GPIO | WPK [BRD4002A](https://www.silabs.com/development-tools/wireless/wireless-pro-kit-mainboard)           | Explorer Kit [BRD2708A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-ek2708a-explorer-kit)         |
+      | Description      | SiWx917 GPIO | WPK [BRD4002B](https://www.silabs.com/development-tools/wireless/wireless-pro-kit-mainboard)           | Explorer Kit [BRD2708A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-ek2708a-explorer-kit)         |
       | ---------------- | ------------ | ------------------------ | ------------------------------- |
       | I2S DOUT         | ULP_GPIO_1   | P16                      | EXP_HEADER-5                    |
       | I2S DIN          | ULP_GPIO_6   | EXP_HEADER-16            | RX                              |
@@ -158,6 +191,13 @@ For details on the project folder structure, see the [WiSeConnect Examples](http
 > **Note**: For recommended settings, please refer the [recommendations guide](https://docs.silabs.com/wiseconnect/latest/wiseconnect-developers-guide-prog-recommended-settings/).
 
 ## Test the Application
+
+> **Note:** Use **`Log_script.py`** from the **SiWx91x Platform Logger** example (`examples/si91x_soc/service/sl_si91x_logger/`) to decode structured console log output. Run:
+>
+> `python Log_script.py --out firmware.out --descriptor SYSVIEW_CaptiveCore.txt --port COM5 --max-args 3`
+>
+> Replace **COM5** with the serial port your board uses on the host PC.
+
 
 Refer to the instructions [here](https://docs.silabs.com/wiseconnect/latest/wiseconnect-getting-started/) to:
 
@@ -181,3 +221,19 @@ Refer to the instructions [here](https://docs.silabs.com/wiseconnect/latest/wise
 > **Note:**
 >
 >- This application is intended for demonstration purposes only to showcase the ULP peripheral functionality. It should not be used as a reference for real-time use case project development, because the wireless shutdown scenario is not supported in the current SDK.
+
+## Troubleshooting
+
+- If the project does not build, ensure Simplicity Studio and the WiSeConnect extension are installed and the board is connected.
+- If the device is not detected, reinstall the connectivity firmware and check USB drivers.
+
+## Resources
+
+- [WiSeConnect Getting Started](https://docs.silabs.com/wiseconnect/latest/wiseconnect-getting-started/)
+- [WiSeConnect Examples](https://docs.silabs.com/wiseconnect/latest/wiseconnect-examples/)
+- [SiWx91x SoC Documentation](https://docs.silabs.com/wiseconnect/latest/)
+
+## Report Bugs/Support
+
+For issues and support, use the Silicon Labs Community or your normal support channel.
+

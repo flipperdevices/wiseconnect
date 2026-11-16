@@ -247,17 +247,8 @@ void UartIrqHandler(USART_RESOURCES *usart)
   if ((int_status & USART_RX_DATA_AVAILABLE) == USART_RX_DATA_AVAILABLE) {
     // Check if receiver contains at least one char in RBR register
 #ifdef SLI_SI91X_MCU_RS485_DATA_BIT_9
-    static bool is_address_frame = true;
-    if (is_address_frame) {
-      // First frame is an address frame (2 bytes)
-      usart->info->xfer.rx_buf[usart->info->xfer.rx_cnt] = (uint16_t)usart->pREGS->RBR;
-      usart->info->xfer.rx_cnt++; // Increment for address frame
-      is_address_frame = false;   // Switch to data frame for subsequent bytes
-    } else {
-      // Subsequent frames are data frames (1 byte)
-      usart->info->xfer.rx_buf[usart->info->xfer.rx_cnt] = (uint8_t)usart->pREGS->RBR;
-      usart->info->xfer.rx_cnt++; // Increment by 1 for data frame
-    }
+    usart->info->xfer.rx_buf[usart->info->xfer.rx_cnt] = (uint16_t)usart->pREGS->RBR;
+    usart->info->xfer.rx_cnt++;
 #else
     if (usart->pREGS->LSR_b.DR) {
       usart->info->xfer.rx_buf[usart->info->xfer.rx_cnt] = (uint8_t)usart->pREGS->RBR;

@@ -26,4 +26,5 @@ include:
 requires:
 - name: bsd_socket_api
 - name: sl_si91x_socket
+- name: sl_si91x_internal_stack
 

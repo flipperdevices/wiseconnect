@@ -1,8 +1,8 @@
-# SL ADC Static Mode
+# SiWx91x Platform ADC Static Mode
 
 ## Table of Contents
 
-- [SL ADC Static Mode](#sl-adc-static-mode)
+- [SiWx91x Platform ADC Static Mode](#platform-siwx91x-adc-static-mode)
   - [Table of Contents](#table-of-contents)
   - [Purpose/Scope](#purposescope)
   - [Overview](#overview)
@@ -15,9 +15,12 @@
   - [Application Build Environment](#application-build-environment)
     - [Application Configuration Parameters](#application-configuration-parameters)
     - [Pin Configuration](#pin-configuration)
-      - [Pin Configuration of the WPK \[BRD4002A\] Base Board, and with radio board](#pin-configuration-of-the-wpk-brd4002a-base-board-and-with-radio-board)
+      - [Pin Configuration of the WPK \[BRD4002B\] Base Board, and with radio board](#pin-configuration-of-the-wpk-brd4002b-base-board-and-with-radio-board)
       - [Pin Configuration of the AC1 Module Explorer Kit](#pin-configuration-of-the-ac1-module-explorer-kit)
   - [Test the Application](#test-the-application)
+  - [Troubleshooting](#troubleshooting)
+  - [Resources](#resources)
+  - [Report Bugs/Support](#report-bugssupport)
 
 ## Purpose/Scope
 
@@ -64,7 +67,7 @@ This application demonstrates the ADC peripheral, including:
 6. The application reads the latest sample from the active channel.
 
 - Various parameters like Number of Channel, ADC Operation Mode, Input Type, Sampling Rate, and Sample Length can be configured using UC.
-- The [`sl_si91x_adc_common_config.h`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.1-content-for-docs/components/device/silabs/si91x/mcu/drivers/unified_api/config/sl_si91x_adc_common_config.h) file contains the common configurations for ADC and [`sl_si91x_adc_init_inst_config.h`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.1-content-for-docs/components/device/silabs/si91x/mcu/drivers/unified_api/config/sl_si91x_adc_init_inst_config.h) contains channel instance configuration.
+- The [`sl_si91x_adc_common_config.h`](https://github.com/SiliconLabs/wiseconnect/blob/v4.1.2-content-for-docs/components/device/silabs/si91x/mcu/drivers/unified_api/config/sl_si91x_adc_common_config.h) file contains the common configurations for ADC and [`sl_si91x_adc_init_inst_config.h`](https://github.com/SiliconLabs/wiseconnect/blob/v4.1.2-content-for-docs/components/device/silabs/si91x/mcu/drivers/unified_api/config/sl_si91x_adc_init_inst_config.h) contains channel instance configuration.
 - This example is working on ADC static mode and it samples the data with **NON-DMA** mode.
 - **Ping/Pong DMA buffers are NOT used in static mode** - data is read directly from ADC data registers.
 - The firmware version of API is fetched using [sl_si91x_adc_get_version](https://docs.silabs.com/wiseconnect/latest/wiseconnect-api-reference-guide-si91x-peripherals/adc#sl-si91x-adc-get-version) which includes the release version, major version and minor version [sl_adc_version_t](https://docs.silabs.com/wiseconnect/latest/wiseconnect-api-reference-guide-si91x-peripherals/adc#sl-adc-version-t).
@@ -80,7 +83,7 @@ This application demonstrates the ADC peripheral, including:
 ### Hardware Requirements
 
 - Windows PC
-- Silicon Labs Si917 Evaluation Kit [[BRD4002](https://www.silabs.com/development-tools/wireless/wireless-pro-kit-mainboard?tab=overview) + [BRD4338A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-rb4338a-wifi-6-bluetooth-le-soc-radio-board?tab=overview) / [BRD4342A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx91x-rb4342a-wifi-6-bluetooth-le-soc-radio-board?tab=overview) / [BRD4343A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4343a-wi-fi-6-bluetooth-le-8mb-flash-radio-board-for-module?tab=overview)]
+- Silicon Labs SiWx91x Evaluation Kit [[BRD4002](https://www.silabs.com/development-tools/wireless/wireless-pro-kit-mainboard?tab=overview) + [BRD4338A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-rb4338a-wifi-6-bluetooth-le-soc-radio-board?tab=overview) / [BRD4342A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx91x-rb4342a-wifi-6-bluetooth-le-soc-radio-board?tab=overview) / [BRD4343A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4343a-wi-fi-6-bluetooth-le-8mb-flash-radio-board-for-module?tab=overview) / [BRD4343C](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4343c-wi-fi-6-bluetooth-le-8mb-flash-radio-board-for-module?tab=overview)]
 - SiWx917 AC1 Module Explorer Kit [BRD2708A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-ek2708a-explorer-kit)
 
 ### Software Requirements
@@ -136,9 +139,23 @@ For details on the project folder structure, see the [WiSeConnect Examples](http
 - Apply the different voltages (1.8V to Vref) to ADC input and observe console outputs as per input.
 - Provided input voltage and console output data should match.
 
+- Configure the following macros in [`adc_static_mode_example.c`](adc_static_mode_example.c) file, if required:
+
+- `ADC_MAX_OP_VALUE`: Maximum 12-bit output value that can be read from the ADC data register. By default, it is set to 4095.
+
+  ```c
+    #define ADC_MAX_OP_VALUE 4095   // Maximum output value get from adc data register
+  ```
+
+- `VREF_VALUE`: ADC reference voltage (in volts) used to convert the digital sample to an equivalent input voltage. By default, it is set to 3.3.
+
+  ```c
+    #define VREF_VALUE       3.3    // reference voltage
+  ```
+
 ### Pin Configuration
 
-#### Pin Configuration of the WPK [BRD4002A] Base Board, and with radio board
+#### Pin Configuration of the WPK [BRD4002B] Base Board, and with radio board
 
 The following table lists the mentioned pin numbers for the radio board. If you want to use a different radio board, see the board-specific user guide.
 
@@ -197,8 +214,8 @@ The following table lists the mentioned pin numbers for the radio board. If you 
 Refer to the instructions [here](https://docs.silabs.com/wiseconnect/latest/wiseconnect-getting-started/) to:
 
 1. Compile and run the application.
-2. When the project is generated, the ADC channel by default is configured with the channel_1 instance for the Si917 board. Also note the following:
-   - For single-ended mode, the positive analog input is set to ULP_GPIO_1 for Si917.
+2. When the project is generated, the ADC channel by default is configured with the channel_1 instance for the SiWx91x board. Also note the following:
+   - For single-ended mode, the positive analog input is set to ULP_GPIO_1 for SiWx91x.
    - For differential mode, the positive analog input is set to ULP_GPIO_1 and the negative input to GPIO_28.
 3. When the application runs, the ADC configures the settings as per the user and starts ADC conversion.
 4. After completion of the conversion of ADC input, it will print all the captured samples data in console by connecting to the serial console.
@@ -229,3 +246,19 @@ Refer to the instructions [here](https://docs.silabs.com/wiseconnect/latest/wise
 > **Note:**
 >
 > - Interrupt handlers are implemented in the driver layer, and user callbacks are provided for custom code. If you want to write your own interrupt handler instead of using the default one, make the driver interrupt handler a weak handler. Then, copy the necessary code from the driver handler to your custom interrupt handler.
+
+## Troubleshooting
+
+- If the project does not build, ensure Simplicity Studio and the WiSeConnect extension are installed and the board is connected.
+- If the device is not detected, reinstall the connectivity firmware and check USB drivers.
+
+## Resources
+
+- [WiSeConnect Getting Started](https://docs.silabs.com/wiseconnect/latest/wiseconnect-getting-started/)
+- [WiSeConnect Examples](https://docs.silabs.com/wiseconnect/latest/wiseconnect-examples/)
+- [SiWx91x SoC Documentation](https://docs.silabs.com/wiseconnect/latest/)
+
+## Report Bugs/Support
+
+For issues and support, use the Silicon Labs Community or your normal support channel.
+

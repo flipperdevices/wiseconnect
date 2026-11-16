@@ -60,37 +60,43 @@ void efuse_example_init(void)
   do {
     /* Version information of EFUSE */
     version = sl_si91x_efuse_get_version();
-    DEBUGOUT("EFUSE version is fetched successfully \n");
-    DEBUGOUT("API version is %d.%d.%d\n", version.release, version.major, version.minor);
+    /* Note: All status messages in this example — both success and failure — are
+ * intentionally emitted via SL_PRINT_STRING_ERROR so that they remain visible
+ * on the console at the default log level. This is a demonstration choice, not
+ * a recommendation: in production code, ERROR severity should be reserved for
+ * actual failures, with successful operations logged via SL_PRINT_STRING_INFO
+ * (or SL_PRINT_STRING_DEBUG for verbose trace). */
+    SL_PRINT_STRING_ERROR("EFUSE version is fetched successfully \n");
+    SL_PRINT_STRING_ERROR("API version is %d.%d.%d\n", version.release, version.major, version.minor);
 
     /*  Initialize the efuse */
     status = sl_si91x_efuse_init();
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("sl_si91x_efuse_init: Error Code : %lu \n", status);
+      SL_PRINT_STRING_ERROR("sl_si91x_efuse_init: Error Code : %lu \n", status);
       break;
     }
-    DEBUGOUT("Efuse initialization is successful \n");
+    SL_PRINT_STRING_ERROR("Efuse initialization is successful \n");
     /* Set the eFUSE address WRITE_ADD_1 for read and write operations */
     status = sl_si91x_efuse_set_address(WRITE_ADD_1);
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("sl_si91x_efuse_set_address: Error Code : %lu \n", status);
+      SL_PRINT_STRING_ERROR("sl_si91x_efuse_set_address: Error Code : %lu \n", status);
       break;
     }
-    DEBUGOUT("Setting the eFUSE address WRITE_ADD_1 for read and write "
-             "operations is successful \n");
+    SL_PRINT_STRING_ERROR("Setting the eFUSE address WRITE_ADD_1 for read and write "
+                          "operations is successful \n");
     /* Get the eFUSE address WRITE_ADD_1 for read and write operations */
     status = sl_si91x_efuse_get_address(&address_value_1);
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("sl_si91x_efuse_get_address: Error Code : %lu \n", status);
+      SL_PRINT_STRING_ERROR("sl_si91x_efuse_get_address: Error Code : %lu \n", status);
       break;
     }
     if (address_value_1 == WRITE_ADD_1) {
-      DEBUGOUT("MATCH\n");
+      SL_PRINT_STRING_ERROR("MATCH\n");
     } else {
-      DEBUGOUT("UNMATCH\n");
+      SL_PRINT_STRING_ERROR("UNMATCH\n");
     }
-    DEBUGOUT("Getting the eFUSE address WRITE_ADD_1 for read and write "
-             "operations is successful \n");
+    SL_PRINT_STRING_ERROR("Getting the eFUSE address WRITE_ADD_1 for read and write "
+                          "operations is successful \n");
 
 #if defined(WRITE_ENABLE) && (WRITE_ENABLE == 1)
     /*Writing 0X2A Data at address 0x00001*/
@@ -98,51 +104,51 @@ void efuse_example_init(void)
     /* Write WRITE_ADD_1 , bit position 1*/
     status = sl_si91x_efuse_write_bit_v2(WRITE_ADD_1, BIT_POS_1);
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("sl_si91x_efuse_write_bit_v2: Error Code : %lu \n", status);
+      SL_PRINT_STRING_ERROR("sl_si91x_efuse_write_bit_v2: Error Code : %lu \n", status);
       break;
     }
-    DEBUGOUT("Writing on bit position 1 of address WRITE_ADD_1 is "
-             "successful \n");
+    SL_PRINT_STRING_ERROR("Writing on bit position 1 of address WRITE_ADD_1 is "
+                          "successful \n");
     /* Write WRITE_ADD_1 , bit position 3*/
     status = sl_si91x_efuse_write_bit_v2(WRITE_ADD_1, BIT_POS_3);
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("sl_si91x_efuse_write_bit_v2: Error Code : %lu \n", status);
+      SL_PRINT_STRING_ERROR("sl_si91x_efuse_write_bit_v2: Error Code : %lu \n", status);
       break;
     }
-    DEBUGOUT("Writing on bit position 3 of address WRITE_ADD_1 is "
-             "successful \n");
+    SL_PRINT_STRING_ERROR("Writing on bit position 3 of address WRITE_ADD_1 is "
+                          "successful \n");
 
     /* Write WRITE_ADD_1 , bit position 5*/
     status = sl_si91x_efuse_write_bit_v2(WRITE_ADD_1, BIT_POS_5);
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("sl_si91x_efuse_write_bit_v2: Error Code : %lu \n", status);
+      SL_PRINT_STRING_ERROR("sl_si91x_efuse_write_bit_v2: Error Code : %lu \n", status);
       break;
     }
-    DEBUGOUT("Writing on bit position 5 of address WRITE_ADD_1 is "
-             "successful \n");
+    SL_PRINT_STRING_ERROR("Writing on bit position 5 of address WRITE_ADD_1 is "
+                          "successful \n");
 #endif
     /* Set the eFUSE address WRITE_ADD_2 for read and write operations */
     status = sl_si91x_efuse_set_address(WRITE_ADD_2);
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("sl_si91x_efuse_set_address: Error Code : %lu \n", status);
+      SL_PRINT_STRING_ERROR("sl_si91x_efuse_set_address: Error Code : %lu \n", status);
       break;
     }
-    DEBUGOUT("Setting the eFUSE address WRITE_ADD_2 for read and write "
-             "operations is successful \n");
+    SL_PRINT_STRING_ERROR("Setting the eFUSE address WRITE_ADD_2 for read and write "
+                          "operations is successful \n");
 
     /* Get the eFUSE address WRITE_ADD_2 for read and write operations */
     status = sl_si91x_efuse_get_address(&address_value_2);
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("sl_si91x_efuse_get_address: Error Code : %lu \n", status);
+      SL_PRINT_STRING_ERROR("sl_si91x_efuse_get_address: Error Code : %lu \n", status);
       break;
     }
     if (address_value_2 == WRITE_ADD_2) {
-      DEBUGOUT("MATCH\n");
+      SL_PRINT_STRING_ERROR("MATCH\n");
     } else {
-      DEBUGOUT("UNMATCH\n");
+      SL_PRINT_STRING_ERROR("UNMATCH\n");
     }
-    DEBUGOUT("Getting the eFUSE address WRITE_ADD_2 for read and write "
-             "operations is successful \n");
+    SL_PRINT_STRING_ERROR("Getting the eFUSE address WRITE_ADD_2 for read and write "
+                          "operations is successful \n");
 
 #if defined(WRITE_ENABLE) && (WRITE_ENABLE == 1)
     /*Writing 0X02 Data at address 0x00002*/
@@ -150,71 +156,71 @@ void efuse_example_init(void)
     /* Write WRITE_ADD_2 , bit position 0*/
     status = sl_si91x_efuse_write_bit_v2(WRITE_ADD_2, BIT_POS_0);
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("sl_si91x_efuse_write_bit_v2: Error Code : %lu \n", status);
+      SL_PRINT_STRING_ERROR("sl_si91x_efuse_write_bit_v2: Error Code : %lu \n", status);
       break;
     }
-    DEBUGOUT("Writing on bit position 0 of address WRITE_ADD_2 is "
-             "successful \n");
+    SL_PRINT_STRING_ERROR("Writing on bit position 0 of address WRITE_ADD_2 is "
+                          "successful \n");
 
     /* Write WRITE_ADD_2 , bit position 1*/
     status = sl_si91x_efuse_write_bit_v2(WRITE_ADD_2, BIT_POS_1);
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("sl_si91x_efuse_write_bit_v2: Error Code : %lu \n", status);
+      SL_PRINT_STRING_ERROR("sl_si91x_efuse_write_bit_v2: Error Code : %lu \n", status);
       break;
     }
-    DEBUGOUT("Writing on bit position 1 of address WRITE_ADD_2 is "
-             "successful \n");
+    SL_PRINT_STRING_ERROR("Writing on bit position 1 of address WRITE_ADD_2 is "
+                          "successful \n");
 #endif
     /* Read byte from address WRITE_ADD_1 in FSM read mode */
     status = sl_si91x_efuse_fsm_read_byte(WRITE_ADD_1, &fsm_read_byte, CLOCK);
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("sl_si91x_efuse_fsm_read_byte: Error Code : %lu \n", status);
+      SL_PRINT_STRING_ERROR("sl_si91x_efuse_fsm_read_byte: Error Code : %lu \n", status);
       break;
     }
     if (fsm_read_byte == MATCH_BYTE) {
-      DEBUGOUT("MATCH\n");
+      SL_PRINT_STRING_ERROR("MATCH\n");
     } else {
-      DEBUGOUT("UNMATCH\n");
+      SL_PRINT_STRING_ERROR("UNMATCH\n");
     }
-    DEBUGOUT("Reading byte from address WRITE_ADD_1 in FSM read mode is "
-             "successful \n");
+    SL_PRINT_STRING_ERROR("Reading byte from address WRITE_ADD_1 in FSM read mode is "
+                          "successful \n");
 
     /* Read byte from address WRITE_ADD_1 in memory mapped read byte mode */
     status = sl_si91x_efuse_memory_mapped_read_byte(WRITE_ADD_1, &memory_mapped_read_byte, CLOCK);
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("sl_si91x_efuse_memory_mapped_read_byte: Error Code : %lu \n", status);
+      SL_PRINT_STRING_ERROR("sl_si91x_efuse_memory_mapped_read_byte: Error Code : %lu \n", status);
       break;
     }
     if (memory_mapped_read_byte == MATCH_BYTE) {
-      DEBUGOUT("MATCH\n");
+      SL_PRINT_STRING_ERROR("MATCH\n");
     } else {
-      DEBUGOUT("UNMATCH\n");
+      SL_PRINT_STRING_ERROR("UNMATCH\n");
     }
-    DEBUGOUT("Reading byte from address WRITE_ADD_1 in memory mapped read mode "
-             "is successful \n");
+    SL_PRINT_STRING_ERROR("Reading byte from address WRITE_ADD_1 in memory mapped read mode "
+                          "is successful \n");
 
     /* Read word from addresses WRITE_ADD_1 and WRITE_ADD_2 in memory mapped
      * read word mode */
     status = sl_si91x_efuse_memory_mapped_read_word(WRITE_ADD_1, &memory_mapped_read_word, CLOCK);
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("sl_si91x_efuse_memory_mapped_read_word: Error Code : %lu \n", status);
+      SL_PRINT_STRING_ERROR("sl_si91x_efuse_memory_mapped_read_word: Error Code : %lu \n", status);
       break;
     }
     if (memory_mapped_read_word == MATCH_WORD) {
-      DEBUGOUT("MATCH\n");
+      SL_PRINT_STRING_ERROR("MATCH\n");
     } else {
-      DEBUGOUT("UNMATCH\n");
+      SL_PRINT_STRING_ERROR("UNMATCH\n");
     }
-    DEBUGOUT("Reading word from addresses WRITE_ADD_1 and WRITE_ADD_2 in "
-             "memory mapped read mode is successful \n");
+    SL_PRINT_STRING_ERROR("Reading word from addresses WRITE_ADD_1 and WRITE_ADD_2 in "
+                          "memory mapped read mode is successful \n");
 
     /*  Un-Initialize the efuse */
     status = sl_si91x_efuse_deinit();
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("sl_si91x_efuse_deinit: Error Code : %lu \n", status);
+      SL_PRINT_STRING_ERROR("sl_si91x_efuse_deinit: Error Code : %lu \n", status);
       break;
     }
-    DEBUGOUT("Efuse un-initialization is successful \n");
+    SL_PRINT_STRING_ERROR("Efuse un-initialization is successful \n");
   } while (false);
 }
 /*******************************************************************************

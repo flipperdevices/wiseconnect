@@ -19,7 +19,7 @@
 #define SL_SI91X_CPC_SECURITY_H_
 
 #include "cmsis_os2.h"
-
+#include "sl_log_helper.h"
 extern osSemaphoreId_t sl_si91x_cpc_crypto_init_semaphore_id;
 extern osStatus_t sl_si91x_cpc_crypto_init_semaphore_status;
 

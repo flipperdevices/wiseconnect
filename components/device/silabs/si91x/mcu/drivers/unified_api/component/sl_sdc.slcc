@@ -18,11 +18,9 @@ source:
 include:
   - path: "inc"
     file_list:
-    - path: "sl_si91x_sdc.h"
+      - path: "sl_si91x_sdc.h"
 provides:
   - name: sl_sdc
 requires:
   - name: sl_sdc_peripheral
-documentation:
-    docset: wiseconnect
-    document: wiseconnect-api-reference-guide-si91x-peripherals/sdc
+  - name: log_none

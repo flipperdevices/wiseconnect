@@ -1,8 +1,8 @@
-# SL I2S PRIMARY
+# SiWx91x Platform I2S PRIMARY
 
 ## Table of Contents
 
-  - [Purpose/Scope](#purposescope)
+  - [SiWx91x Platform I2S PRIMARY](#platform-siwx91x-i2s-primary)
   - [Overview](#overview)
   - [About Example Code](#about-example-code)
   - [Prerequisites/Setup Requirements](#prerequisitessetup-requirements)
@@ -12,9 +12,11 @@
   - [Getting Started](#getting-started)
   - [Application Build Environment](#application-build-environment)
     - [General Configuration](#general-configuration)
-    - [Pin Configuration](#pin-configuration)
-    - [Pin Description](#pin-description)
+    - [Pin Configuration for I2S primary](#pin-configuration-for-i2s-primary)
   - [Test the Application](#test-the-application)
+  - [Troubleshooting](#troubleshooting)
+  - [Resources](#resources)
+  - [Report Bugs/Support](#report-bugssupport)
 
 ## Purpose/Scope
 
@@ -56,7 +58,7 @@
   - **transfer_type** - Transfer type (Transmit, Receive, Transmit abort, and Receive abort)
 - Transfers with 16-bit resolution must use uint16_t data type buffer and pass SL_I2S_DATA_SIZE16 to data_size parameter in sl_i2s_xfer_config_t while configuring transfer.
 - Transfers with 24-bit and 32-bit resolutions must use uint32_t data type buffer and pass SL_I2S_DATA_SIZE32 to data_size parameter in sl_i2s_xfer_config_t while configuring transfer.
-- Because 8-bit resolution is not supported, use a uint8_t data buffer with 16-bit resolution for the transfer. When configuring the transfer, pass SL_I2S_DATA_SIZE8 to the data_size parameter in sl_i2s_xfer_config_t. Cast the data buffer to (uint16_t *) before the transfer, and set the transfer size to half the size of the 8-bit data type buffer. (Refer to the [I2S loopback](https://github.com/SiliconLabs/wiseconnect/tree/v4.0.1-content-for-docs/examples/si91x_soc/peripheral/sl_si91x_i2s_loopback) application for more details). For 8-bit transfers, the transfer size must be a multiple of four (for example, 8, 12, 16, or 20 bytes).
+- Because 8-bit resolution is not supported, use a uint8_t data buffer with 16-bit resolution for the transfer. When configuring the transfer, pass SL_I2S_DATA_SIZE8 to the data_size parameter in sl_i2s_xfer_config_t. Cast the data buffer to (uint16_t *) before the transfer, and set the transfer size to half the size of the 8-bit data type buffer. (Refer to the [I2S loopback](https://github.com/SiliconLabs/wiseconnect/tree/v4.1.2-content-for-docs/examples/si91x_soc/peripheral/sl_si91x_i2s_loopback) application for more details). For 8-bit transfers, the transfer size must be a multiple of four (for example, 8, 12, 16, or 20 bytes).
 - For I2S transfers with 16-bit or 32-bit resolution, the transfer size must be an even value (8,10,12,14...)
 - For I2S transfers with 24-bit resolution, the transfer size must be a multiple of four (8,12,16,20...)
  - SCK frequency is calculated as SCK = 2 × bit_width × sampling_rate. By default, I2S0 uses I2S_PLL_CLK as the clock source and supports a wide range of audio bit-clock frequencies suitable for common sampling rates.
@@ -67,7 +69,7 @@
 ### Hardware Requirements
 
 - Windows PC
-- Silicon Labs Si917 Evaluation Kit [[BRD4002](https://www.silabs.com/development-tools/wireless/wireless-pro-kit-mainboard?tab=overview) + [BRD4338A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-rb4338a-wifi-6-bluetooth-le-soc-radio-board?tab=overview) / [BRD4342A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx91x-rb4342a-wifi-6-bluetooth-le-soc-radio-board?tab=overview) / [BRD4343A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4343a-wi-fi-6-bluetooth-le-8mb-flash-radio-board-for-module?tab=overview)]
+- Silicon Labs SiWx91x Evaluation Kit [[BRD4002](https://www.silabs.com/development-tools/wireless/wireless-pro-kit-mainboard?tab=overview) + [BRD4338A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-rb4338a-wifi-6-bluetooth-le-soc-radio-board?tab=overview) / [BRD4342A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx91x-rb4342a-wifi-6-bluetooth-le-soc-radio-board?tab=overview) / [BRD4343A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4343a-wi-fi-6-bluetooth-le-8mb-flash-radio-board-for-module?tab=overview) / [BRD4343C](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4343c-wi-fi-6-bluetooth-le-8mb-flash-radio-board-for-module?tab=overview)]
 
 ### Software Requirements
 
@@ -107,17 +109,25 @@ For details on the project folder structure, see the [WiSeConnect Examples](http
 - SL_I2S0_CHANNEL: I2S0 channel number (0-channel no 0, 1-channel no 1)
 - Configuration files are generated in **config folder**, if not changed then the code will run on default UC values.
 
-- Configure the following macros in [`i2s_primary_example.c`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.1-content-for-docs/examples/si91x_soc/peripheral/sl_si91x_i2s_primary/i2s_primary_example.c) file and update/modify following macros if required.
+- Configure the following macros in [`i2s_primary_example.c`](i2s_primary_example.c) file and update/modify following macros if required.
 
-```C
-#define I2S_PRIMARY_BUFFER_SIZE 1024    ///< Transmit/Receive buffer size
-```
+- `I2S_PRIMARY_BUFFER_SIZE`: Defines the size of the transmit and receive buffers used by the I2S primary. By default, it is set to 1024.
+
+  ```c
+  #define I2S_PRIMARY_BUFFER_SIZE 1024    ///< Transmit/Receive buffer size
+  ```
+
+- `I2S_INSTANCE`: Selects the I2S instance used by the application (0 for I2S0, 1 for ULP_I2S). By default, it is set to 0.
+
+  ```c
+  #define I2S_INSTANCE            0       ///< I2S instance
+  ```
 
 ### Pin Configuration for I2S primary
 
 - For BRD4338A
 
-| Si917 GPIO pin | Breakout pin on WPK (4002A baseboard) | Description             |
+| SiWx91x GPIO pin | Breakout pin on WPK (4002A baseboard) | Description             |
 | ---------------| --------------------------------------|------------------------ |
 | GPIO_25        | P25                                   | I2S SCK                 |
 | GPIO_26        | P27                                   | I2S Frame               |
@@ -132,8 +142,8 @@ For details on the project folder structure, see the [WiSeConnect Examples](http
 
 Refer to the instructions [here](https://docs.silabs.com/wiseconnect/latest/wiseconnect-developers-guide-developing-for-silabs-hosts/using-the-simplicity-studio-ide#create-a-project) to:
 
-1. Obtain two Silicon Labs Si917 Evaluation Kits: a [WPK (BRD4002)](https://www.silabs.com/development-tools/wireless/wireless-pro-kit-mainboard?tab=overview) and a [BRD4338A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-rb4338a-wifi-6-bluetooth-le-soc-radio-board?tab=overview).
-2. On one board, build and run the I2S secondary application from the WiseConnect repository: [i2s secondary](https://github.com/SiliconLabs/wiseconnect/tree/v4.0.1-content-for-docs/examples/si91x_soc/peripheral/sl_si91x_i2s_secondary).
+1. Obtain two Silicon Labs SiWx91x Evaluation Kits: a [WPK (BRD4002)](https://www.silabs.com/development-tools/wireless/wireless-pro-kit-mainboard?tab=overview) and a [BRD4338A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-rb4338a-wifi-6-bluetooth-le-soc-radio-board?tab=overview).
+2. On one board, build and run the I2S secondary application from the WiseConnect repository: [i2s secondary](https://github.com/SiliconLabs/wiseconnect/tree/v4.1.2-content-for-docs/examples/si91x_soc/peripheral/sl_si91x_i2s_secondary).
 3. Compile and run this application on the other board.
 4. When the application runs, it receives data from the secondary device and after successful
    comparison, it sends data to the secondary device.
@@ -144,3 +154,19 @@ Refer to the instructions [here](https://docs.silabs.com/wiseconnect/latest/wise
 > **Note:**
 >
 > - Interrupt handlers are implemented in the driver layer, and user callbacks are provided for custom code. If you want to write your own interrupt handler instead of using the default one, make the driver interrupt handler a weak handler. Then, copy the necessary code from the driver handler to your custom interrupt handler.
+
+## Troubleshooting
+
+- If the project does not build, ensure Simplicity Studio and the WiSeConnect extension are installed and the board is connected.
+- If the device is not detected, reinstall the connectivity firmware and check USB drivers.
+
+## Resources
+
+- [WiSeConnect Getting Started](https://docs.silabs.com/wiseconnect/latest/wiseconnect-getting-started/)
+- [WiSeConnect Examples](https://docs.silabs.com/wiseconnect/latest/wiseconnect-examples/)
+- [SiWx91x SoC Documentation](https://docs.silabs.com/wiseconnect/latest/)
+
+## Report Bugs/Support
+
+For issues and support, use the Silicon Labs Community or your normal support channel.
+

@@ -151,6 +151,59 @@ sl_websocket_error_t sl_websocket_close(sl_websocket_client_t *handle);
 sl_websocket_error_t sl_websocket_deinit(sl_websocket_client_t *handle);
 
 /***************************************************************************/ /**
+ * @brief Configures advanced TCP/TLS options for a WebSocket client.
+ *
+ * @details
+ *   This function stores the provided advanced TCP and TLS configuration options in the WebSocket client handle.
+ *   The options are applied automatically when the client connects via @ref sl_websocket_connect.
+ *   Call this function after @ref sl_websocket_init and before connecting.
+ *
+ * @pre
+ *   @ref sl_websocket_init should be called before this function.
+ *
+ * @param[in] handle
+ *   Pointer to the WebSocket client structure. Must not be NULL.
+ *
+ * @param[in] options
+ *   Pointer to an @ref sl_websocket_tcp_tls_advanced_options_t structure containing the TCP/TLS options. Must not be NULL.
+ *
+ * @return
+ *   sl_websocket_error_t - Error code indicating the result of the operation.
+ */
+sl_websocket_error_t sl_websocket_set_tcp_tls_advanced_configuration(
+  sl_websocket_client_t *handle,
+  const sl_websocket_tcp_tls_advanced_options_t *options);
+
+/***************************************************************************/ /**
+ * @brief Sets the Origin header value for a WebSocket client.
+ *
+ * @details
+ *   Stores the Origin header value in the WebSocket client handle. The value is
+ *   sent to the NWP during @ref sl_websocket_connect as part of the HTTP upgrade
+ *   handshake. Call after @ref sl_websocket_init and before connecting.
+ *
+ * @pre
+ *   @ref sl_websocket_init should be called before this function.
+ *
+ * @param[in] handle
+ *   Pointer to the WebSocket client structure. Must not be NULL.
+ *
+ * @param[in] origin
+ *   Null-terminated Origin header value (for example, "https://example.com").
+ *   Must not be NULL or an empty string. Maximum length is
+ *   @ref SL_SI91X_WEBSOCKET_MAX_ORIGIN_LENGTH - 1 characters (excluding the null
+ *   terminator).
+ *
+ * @return
+ *   - @ref SL_WEBSOCKET_SUCCESS on success.
+ *   - @ref SL_WEBSOCKET_ERR_INVALID_PARAMETER if @p handle is NULL, @p origin is
+ *     NULL or empty, or if the client is not in @ref SL_WEBSOCKET_STATE_DISCONNECTED.
+ *   - @ref SL_WEBSOCKET_ERR_MAX_LENGTH_EXCEEDED if @p origin length is greater than
+ *     or equal to @ref SL_SI91X_WEBSOCKET_MAX_ORIGIN_LENGTH.
+ */
+sl_websocket_error_t sl_websocket_set_origin(sl_websocket_client_t *handle, const char *origin);
+
+/***************************************************************************/ /**
  * @brief Extracts the WebSocket opcode from a given socket ID.
  *
  * @details

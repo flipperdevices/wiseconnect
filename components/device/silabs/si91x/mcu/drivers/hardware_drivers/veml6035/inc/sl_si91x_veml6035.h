@@ -33,6 +33,7 @@
 #include "sl_si91x_i2c.h"
 #include "sl_status.h"
 #include "sl_enum.h"
+#include "sl_log_helper.h"
 
 #ifdef __cplusplus
 extern "C" {

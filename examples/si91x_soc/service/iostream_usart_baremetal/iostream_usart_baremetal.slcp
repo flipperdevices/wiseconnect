@@ -5,18 +5,21 @@ description: 'This application demonstrates how to use the I/O Stream service in
   '
 category: example|peripheral
 quality: production
-label: iostream_usart_baremetal
+label: SiWx91x Platform - IOSTREAM USART Baremetal
 component:
 - id: sl_main
 - id: stdio
 - id: atomic
 - id: sl_common
 - id: iostream_retarget_stdio
+- id: sl_usart_iostream
+- id: si91x_log
+- id: syscalls
+- id: si91x_log_iostream_formatted
+- id: iostream_si91x
 - id: iostream_uart_si91x
   instance:
   - vcom
-- id: sl_usart_iostream
-- id: iostream_si91x
 - id: si91x_memory_default_config
 source:
 - path: app.c
@@ -32,7 +35,9 @@ define:
 - name: USART_CONFIG
 toolchain_settings:
 - option: gcc_compiler_option
-  value: -Wall -Werror
+  value: -Wall -Werror -Wno-error=deprecated-declarations
+- option: llvm_compiler_option
+  value: -Wall -Werror -Wno-error=deprecated-declarations
 other_file:
 - path: resources/readme/image501b.png
 - path: resources/readme/image501d.png
@@ -55,13 +60,26 @@ ui_hints:
     focus: true
 readme:
 - path: readme.md
+filter:
+- name: Device Type
+  value:
+  - SoC
+- name: MCU
+  value:
+  - 32-bit MCU
+- name: Level
+  value:
+  - Beginner
+- name: Wireless Technology
+  value:
+  - Wi-Fi
 post_build:
   profile: wiseconnect_soc
 sdk_extension:
 - id: wiseconnect3_sdk
   vendor: silabs
-  version: 4.0.1
+  version: 4.1.2
 sdk:
   id: simplicity_sdk
   vendor: silabs
-  version: 2025.12.2
+  version: 2026.6.2

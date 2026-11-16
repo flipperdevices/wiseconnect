@@ -15,6 +15,7 @@
  *
  ******************************************************************************/
 #include "psa_aes_app.h"
+#include <inttypes.h>
 #include "psa/crypto.h"
 #include <stdio.h>
 
@@ -47,12 +48,12 @@ void test_psa_aes(psa_algorithm_t alg)
   if (status == PSA_SUCCESS) {
     printf("\n PSA crypto library initialization Success \n");
   } else {
-    printf("\n PSA crypto library initialization failed with error: %ld\n", status);
+    printf("\n PSA crypto library initialization failed with error: %" PRId32 "\n", status);
   }
 
   for (int i = 0; i < NB_TESTS; i++) {
 
-    psa_key_id_t key_id;
+    psa_key_id_t key_id = 0;
     psa_key_attributes_t key_attr;
     size_t out_len;
 
@@ -75,7 +76,7 @@ void test_psa_aes(psa_algorithm_t alg)
     if (status == PSA_SUCCESS) {
       printf("\n Key import Success \n");
     } else {
-      printf("\n Key import Failed with error: %ld\n", status);
+      printf("\n Key import Failed with error: %" PRId32 "\n", status);
     }
 
     /* Encryption */
@@ -90,7 +91,7 @@ void test_psa_aes(psa_algorithm_t alg)
     if (status == 0) {
       printf("\n Encryption Success \n");
     } else {
-      printf("\n Encryption Failed with error: %ld\n", status);
+      printf("\n Encryption Failed with error: %" PRId32 "\n", status);
     }
 
     /* Decryption */
@@ -104,13 +105,13 @@ void test_psa_aes(psa_algorithm_t alg)
     if (status == 0) {
       printf("\n Decryption Success \n");
     } else {
-      printf("\n Decryption Failed with error: %ld\n", status);
+      printf("\n Decryption Failed with error: %" PRId32 "\n", status);
     }
 
     /* Destroy a volatile plain key for AES */
     status = psa_destroy_key(key_id);
     if (status != PSA_SUCCESS) {
-      printf("Destroy key failed with error: %ld\n", status);
+      printf("Destroy key failed with error: %" PRId32 "\n", status);
     }
   }
 }

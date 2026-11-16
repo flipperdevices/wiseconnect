@@ -50,8 +50,21 @@
 // <i> Default: USART_ULPREFCLK
 #define SL_USART0_CLOCK_SRC USART_ULPREFCLK
 
+// <o SL_USART0_FRAC_DIV_SEL> USART0 SCLK fractional divider mode
+// <USART_FRACTIONAL_DIVIDER=> Fractional (clk_in / (div + 0.5))
+// <USART_CLOCK_SWALLOW=> Clock swallow (clk_in / div)
+// <i> See USART_SCLK_FRAC_SEL_T in rsi_pll.h
+// <i> Default: USART_FRACTIONAL_DIVIDER (matches typical RTE_Device_917.h; use USART_CLOCK_SWALLOW in UC when needed)
+#define SL_USART0_FRAC_DIV_SEL USART_FRACTIONAL_DIVIDER
+
 // </h>
 // <<< end of configuration section >>>
+
+/* RTE_USART0_FRAC_DIV_SEL follows UC (SL_USART0_FRAC_DIV_SEL); RTE_Device value is not used after this header. */
+#ifdef RTE_USART0_FRAC_DIV_SEL
+#undef RTE_USART0_FRAC_DIV_SEL
+#endif
+#define RTE_USART0_FRAC_DIV_SEL SL_USART0_FRAC_DIV_SEL
 
 // <<< sl:start pin_tool >>>
 // <usart0 signal=(CLK),TX,RX,(CTS),(RTS)> SL_USART0

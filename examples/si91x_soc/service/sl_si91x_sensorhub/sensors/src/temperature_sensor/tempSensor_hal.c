@@ -111,7 +111,7 @@ static const sl_temp_sensor_impl_t *find_implementation(int id)
   int count                                  = sizeof(temp_sensor_implementations) / sizeof(sl_temp_sensor_impl_t);
 
   for (int i = 0; i < count; i++) {
-    if (temp_sensor_implementations[i].id == id) {
+    if ((int)temp_sensor_implementations[i].id == id) {
       active_driver = &temp_sensor_implementations[i];
       break;
     }

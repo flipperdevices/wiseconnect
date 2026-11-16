@@ -37,6 +37,7 @@
 #include "rsi_bt_common_apis.h"
 #include "rsi_common_utils.h"
 #include "assert.h"
+#include "sl_constants.h"
 #ifdef MXRT_595s
 #include "sl_hal_mcu_uart.h"
 
@@ -77,7 +78,7 @@ int32_t sl_handle_received_data_wrapper(sl_flexcomm_uart_cb_t *sl_flexcomm_uart_
  * @param[in]  evevnt_map_mutex, Mutex for accesing event_map.
  * @return     none.
  * @section description
- * This function is used during application task intialilzation
+ * This function is used during application task initialization
  */
 void rsi_app_init_event_parameters(uint32_t *async_event_map,
                                    uint32_t *async_event_map_mask,
@@ -620,7 +621,8 @@ void rsi_app_init_queue(rsi_app_queue_t *queue)
 }
 void _assert(uint8_t *msg, uint16_t line_number)
 {
-  LOG_PRINT("\r\n %s %u \n", msg, line_number);
+  SL_DEBUG_LOG_V2(INFO, "%s", (uintptr_t)(msg));
+  SL_DEBUG_LOG_V2(INFO, "%u ", line_number);
   while (1)
     ;
 }

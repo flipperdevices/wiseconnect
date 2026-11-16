@@ -1,8 +1,8 @@
-# SL LITTLEFS BASED COMMON FLASH FILE SYSTEM
+# SiWx91x Platform File System Common Flash
 
 ## Table of Contents
 
-- [SL FILE SYSTEM FOR COMMON FLASH](#sl-file-system-for-common-flash)
+- [SiWx91x Platform File System Common Flash](#platform-siwx91x-file-system-common-flash)
   - [Table of Contents](#table-of-contents)
   - [Purpose/Scope](#purposescope)
   - [Overview](#overview)
@@ -12,12 +12,14 @@
     - [Software Requirements](#software-requirements)
     - [Setup Diagram](#setup-diagram)
   - [Getting Started](#getting-started)
-  - [Application Build Environment](#application-build-environment)
   - [Test the Application](#test-the-application)
+  - [Troubleshooting](#troubleshooting)
+  - [Resources](#resources)
+  - [Report Bugs/Support](#report-bugssupport)
 
 ## Purpose/Scope
 
-This example demonstrates a simple persistent **file system** on **Si91x common flash** using **LittleFS**.  
+This example demonstrates a simple persistent **file system** on **SiWx91x common flash** using **LittleFS**.
 On each boot, the application mounts LittleFS, reads a stored counter from the file `boot_count`, increments it, writes it back, and prints the value to the console.
 
 **Key Features:**
@@ -47,10 +49,11 @@ On each boot, the application mounts LittleFS, reads a stored counter from the f
 ### Hardware Requirements
 
 - Windows PC
-- Silicon Labs Si917 Evaluation Kit 
+- Silicon Labs SiWx91x Evaluation Kit [[BRD4002](https://www.silabs.com/development-tools/wireless/wireless-pro-kit-mainboard?tab=overview) + [BRD4338A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-rb4338a-wifi-6-bluetooth-le-soc-radio-board?tab=overview) / [BRD4342A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx91x-rb4342a-wifi-6-bluetooth-le-soc-radio-board?tab=overview) / [BRD4343A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4343a-wi-fi-6-bluetooth-le-8mb-flash-radio-board-for-module?tab=overview) / [BRD4343C](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4343c-wi-fi-6-bluetooth-le-8mb-flash-radio-board-for-module?tab=overview)]
+
 
 **Note:**
->- For detailed information about pinset configurations, refer to the Flash and PSRAM Combinations section in the [Software Reference Manual](https://github.com/SiliconLabs/wiseconnect/blob/release/v3.5.2/docs/software-reference/manuals/siwx91x-software-reference-manual.md).
+>- For detailed information about pinset configurations, refer to the Flash and PSRAM Combinations section in the [Software Reference Manual](https://github.com/SiliconLabs/wiseconnect/blob/v4.1.2-content-for-docs/docs/software-reference/manuals/siwx91x-software-reference-manual.md).
 
 ### Software Requirements
 
@@ -72,7 +75,6 @@ Refer to the instructions [here](https://docs.silabs.com/wiseconnect/latest/wise
 - [Upgrade your connectivity firmware](https://docs.silabs.com/wiseconnect/latest/wiseconnect-developers-guide-developing-for-silabs-hosts/using-the-simplicity-studio-ide#update-siwx91x-connectivity-firmware)
 - [Create a Studio project](https://docs.silabs.com/wiseconnect/latest/wiseconnect-developers-guide-developing-for-silabs-hosts/using-the-simplicity-studio-ide#create-a-project)
 
-
 ## Test the Application
 
 1. Run the application
@@ -84,7 +86,7 @@ Refer to the instructions [here](https://docs.silabs.com/wiseconnect/latest/wise
 >- When we run the littlefs example first time, after flash erase we see the errors **(error: Corrupted dir pair at {0x0, 0x1})** because flash is not yet formatted for littlefs. So ignore the error when its run first time.
 
 > - **Resetting `boot_count`**
->   - *Using LittleFS APIs:*  
+>   - *Using LittleFS APIs:*
 >     Call the LittleFS API to re-format the filesystem region:
 >     ```c
 >     lfs_unmount(&lfs);
@@ -93,13 +95,29 @@ Refer to the instructions [here](https://docs.silabs.com/wiseconnect/latest/wise
 >     ```
 >     This clears all files and re-initializes the LittleFS volume without erasing the entire chip.
 >
->   - *Alternative (Using Studio tools/Simplicity Commander):*  
+>   - *Alternative (Using Studio tools/Simplicity Commander):*
 >     Perform a chip or flash-region erase, then re-program the image.
->     - **Simplicity Studio:**  
->       From Tools, Open **Flash Programmer → Erase Chip**, then **Program** and **Run** the application again.  
->     - **Simplicity Commander CLI:**  
+>     - **Simplicity Studio:**
+>       From Tools, Open **Flash Programmer → Erase Chip**, then **Program** and **Run** the application again.
+>     - **Simplicity Commander CLI:**
 >       ```bash
 >       commander device masserase
 >       ```
 >
 > - **Reminder:** A mass erase removes the application too. Re-flash the binary after erasing.
+
+## Troubleshooting
+
+- If the project does not build, ensure Simplicity Studio and the WiSeConnect extension are installed and the board is connected.
+- If the device is not detected, reinstall the connectivity firmware and check USB drivers.
+
+## Resources
+
+- [WiSeConnect Getting Started](https://docs.silabs.com/wiseconnect/latest/wiseconnect-getting-started/)
+- [WiSeConnect Examples](https://docs.silabs.com/wiseconnect/latest/wiseconnect-examples/)
+- [SiWx91x SoC Documentation](https://docs.silabs.com/wiseconnect/latest/)
+
+## Report Bugs/Support
+
+For issues and support, use the Silicon Labs Community or your normal support channel.
+

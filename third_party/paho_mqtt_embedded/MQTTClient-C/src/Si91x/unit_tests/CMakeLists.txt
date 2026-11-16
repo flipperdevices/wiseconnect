@@ -19,6 +19,13 @@ include_directories(./inc
                     ../../../../../../components/device/silabs/si91x/wireless/sl_net/inc
                     ../../../../../../components/sli_wifi/inc
                     ../../../../../../components/service/mdns/inc
+                    ../../../../../../components/sli_queue_manager/inc
+                    ../../../../../../components/sli_buffer_manager/inc
+                    ../../../../../../components/gsdk/service/mem_pool/inc
+                    ../../../../../../components/sli_routing_utility/inc
+                    ../../../../../../components/sli_command_engine/inc
+                     ../../../../../../components/sli_event_engine/inc
+                    ../../../../../../components/device/silabs/si91x/wireless/unit_tests/inc
 )
 
 # Add unit test cpp here

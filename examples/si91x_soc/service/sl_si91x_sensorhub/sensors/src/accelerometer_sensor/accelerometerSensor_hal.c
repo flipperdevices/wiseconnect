@@ -33,6 +33,7 @@
  * This example file uses simple communication APIs between sensor hub and
  * Accelerometer HAL.
  ============================================================================**/
+#include <inttypes.h>
 #include <stdio.h>
 #include "rsi_debug.h"
 #include "sensor_hub.h"
@@ -89,7 +90,7 @@ static const sl_accelerometer_sensor_impl_t *find_implementation(int id)
   const sl_accelerometer_sensor_impl_t *active_driver = NULL;
   int count = sizeof(accelerometer_sensor_implementations) / sizeof(sl_accelerometer_sensor_impl_t);
   for (int i = 0; i < count; i++) {
-    if (accelerometer_sensor_implementations[i].id == id) {
+    if ((int)accelerometer_sensor_implementations[i].id == id) {
       active_driver = &accelerometer_sensor_implementations[i];
       break;
     }
@@ -128,7 +129,7 @@ sl_sensor_accelerometer_handle_t sl_si91x_accelerometer_sensor_create(sl_sensor_
   sl_acceleromerter_error_t ret = p_sensor->impl->init(bus);
   if (ret != RSI_OK) {
     free(p_sensor);
-    DEBUGOUT("accelerometer sensor init failed:%lu", ret);
+    DEBUGOUT("accelerometer sensor init failed:%" PRId32, ret);
     return NULL;
   }
   p_sensor->sl_acceleromerter_is_init = true;

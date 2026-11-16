@@ -28,6 +28,7 @@
  ******************************************************************************/
 #pragma once
 #include "stdint.h"
+#include "sl_constants.h"
 
 /******************************************************
  * *                      Macros
@@ -41,6 +42,9 @@
 #define SLI_SI91X_SNTP_CLIENT_GET_SERVER_INFO   6
 #define SLI_SI91X_SNTP_CLIENT_SERVER_ASYNC_RSP  7
 
+/// Size in bytes of the SNTP timeout field (2 bytes).
+#define SLI_SNTP_TIMEOUT_FIELD_SIZE 2
+
 /******************************************************
  * *                 Type Definitions
  * ******************************************************/
@@ -50,19 +54,19 @@ typedef struct {
   uint8_t command_type;
   uint8_t ip_version;
   union {
-    uint8_t ipv4_address[4];
-    uint8_t ipv6_address[16];
+    uint8_t ipv4_address[SL_IPV4_ADDRESS_LENGTH];
+    uint8_t ipv6_address[SL_IPV6_ADDRESS_LENGTH];
   } server_ip_address;
   uint8_t sntp_method;
-  uint8_t sntp_timeout[2];
+  uint8_t sntp_timeout[SLI_SNTP_TIMEOUT_FIELD_SIZE];
 } sli_si91x_sntp_client_t;
 
 typedef struct {
   uint8_t command_type;
   uint8_t ip_version;
   union {
-    uint8_t ipv4_address[4];
-    uint8_t ipv6_address[16];
+    uint8_t ipv4_address[SL_IPV4_ADDRESS_LENGTH];
+    uint8_t ipv6_address[SL_IPV6_ADDRESS_LENGTH];
   } server_ip_address;
   uint8_t sntp_method;
 } sli_si91x_sntp_server_info_rsp_t;
@@ -70,8 +74,8 @@ typedef struct {
 typedef struct {
   uint8_t ip_version;
   union {
-    uint8_t ipv4_address[4];
-    uint8_t ipv6_address[16];
+    uint8_t ipv4_address[SL_IPV4_ADDRESS_LENGTH];
+    uint8_t ipv6_address[SL_IPV6_ADDRESS_LENGTH];
   } server_ip_address;
   uint8_t sntp_method;
 } sli_si91x_sntp_server_rsp_t;

@@ -1,9 +1,9 @@
 project_name: wifi_station_ble_provisioning_aws_soc
 package: multi_protocol_siwx91x_app
 quality: production
-label: wifi_station_ble_provisioning_aws_soc
+label: Wi-Fi Coex - Wi-Fi Client BLE Provisioning with AWS (SoC)
 category: Example|Wi-Fi_BLE
-description: 'This application explains how to connect to a Wi-Fi access point using BLE provisioning functionality and then communicates with an AWS server using MQTT. Data will be continuously published until the device is disconnected from the access point
+description: 'This application explains how to connect to a Wi-Fi access point using BLE provisioning functionality and then communicates with an AWS server using MQTT. Data will be continuously published until the device is disconnected from the access point. Optional dynamic BLE enable disable; see readme.md.
 
   '
 filter:
@@ -47,18 +47,26 @@ component:
 - id: basic_network_config_manager
 - id: sl_si91x_asynchronous_socket
 - id: aws_sdk
-- id: sl_si91x_basic_buffers
 - id: sl_power_manager
 - id: gpio_npss_component
 - id: wireless_wakeup_ulp_component
 - id: calendar_ulp_component
+- id: log_none
+- id: si91x_log
+- id: si91x_log_iostream_formatted
+- id: iostream_si91x
+- id: iostream_uart_si91x
+  instance:
+  - vcom
 requires:
 - name: device_needs_ram_execution
   condition:
   - si91x_common_flash
 toolchain_settings:
 - option: gcc_compiler_option
-  value: -Wall -Werror
+  value: -Wall -Werror -Wno-error=deprecated-declarations
+- option: llvm_compiler_option
+  value: -Wall -Werror -Wno-error=deprecated-declarations
 configuration:
 - name: SL_BOARD_ENABLE_VCOM
   value: '1'
@@ -116,8 +124,8 @@ post_build:
 sdk_extension:
 - id: wiseconnect3_sdk
   vendor: silabs
-  version: 4.0.1
+  version: 4.1.2
 sdk:
   id: simplicity_sdk
   vendor: silabs
-  version: 2025.12.2
+  version: 2026.6.2

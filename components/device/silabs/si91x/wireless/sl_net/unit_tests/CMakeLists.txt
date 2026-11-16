@@ -13,6 +13,7 @@ include_directories(./inc
                     ../../../../../../protocol/wifi/inc
                     ../../../../../../../third_party/fff
                     ../../../../../../device/silabs/si91x/wireless/inc
+                    ../../../../../../device/silabs/si91x/wireless/sli_si91x_wifi_command_engine/inc
                     ../../../../../../gsdk/cmsis/RTOS2/Include
                     ../../../../../../freertos/cmsis/Include
                     ../../../../third_party/googletest/googlemock/include
@@ -21,6 +22,15 @@ include_directories(./inc
                     ../../../../../../sli_wifi/inc
                     ../../../../../../sli_wifi_per_mode/inc
                     ../../../../../../service/mdns/inc/
+                    ../../../../../../sli_queue_manager/inc/
+                    ../../../../../../sli_buffer_manager/inc/
+                    ../../../../../../sli_routing_utility/inc/
+                    ../../../../../../gsdk/service/mem_pool/inc
+                    ../../../../../../sli_command_engine/inc
+                    ../../../../../../sli_event_engine/inc
+                    ../../sli_hal_si91x/inc
+                    ../../../../../../device/silabs/si91x/mcu/drivers/service/sl_log/inc
+                    ../../unit_tests/inc
 )
 # Add unit test cpp here
 add_executable(${PROJECT_NAME}

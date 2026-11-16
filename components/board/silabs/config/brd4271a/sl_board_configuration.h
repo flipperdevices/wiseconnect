@@ -53,8 +53,15 @@ typedef struct {
 #define SPI_MISO_PIN  PIN(C, 1)
 #define SPI_CS_PIN    PIN(B, 4)
 
+#if !defined(SL_DMA_SIGNAL_EUSART1_TXFL) && defined(ldmaPeripheralSignal_EUSART1_TXFL)
+#define SL_DMA_SIGNAL_EUSART1_TXFL ldmaPeripheralSignal_EUSART1_TXFL
+#endif
+#if !defined(SL_DMA_SIGNAL_EUSART1_RXFL) && defined(ldmaPeripheralSignal_EUSART1_RXFL)
+#define SL_DMA_SIGNAL_EUSART1_RXFL ldmaPeripheralSignal_EUSART1_RXFL
+#endif
+
 #define SPI_EUSART             EUSART1
 #define SPI_EUSART_CMU_CLOCK   cmuClock_EUSART1
-#define SPI_EUSART_LDMA_TX     ldmaPeripheralSignal_EUSART1_TXFL
-#define SPI_EUSART_LDMA_RX     ldmaPeripheralSignal_EUSART1_RXFL
+#define SPI_EUSART_LDMA_TX     SL_DMA_SIGNAL_EUSART1_TXFL
+#define SPI_EUSART_LDMA_RX     SL_DMA_SIGNAL_EUSART1_RXFL
 #define SPI_EUSART_ROUTE_INDEX 1

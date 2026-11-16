@@ -24,9 +24,18 @@ include:
           - sl_power_manager
 provides:
   - name: sl_clock_manager
+define:
+  - name: SL_CODE_COMPONENT_SL_CLOCK_MANAGER
+    value: sl_clock_manager
 requires:
   - name: status
+  - name: log_none
+  - name: code_classification
+    condition: [psram_core]
 template_contribution:
+  - name: code_classification_components
+    value: sl_clock_manager
+    condition: [psram_core]
   - name: event_handler
     value:
       event: platform_init

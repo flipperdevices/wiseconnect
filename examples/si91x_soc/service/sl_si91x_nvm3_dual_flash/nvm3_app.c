@@ -14,6 +14,7 @@
  * sections of the MSLA applicable to Source Code.
  *
  ******************************************************************************/
+#include <inttypes.h>
 #include <stdio.h>
 #include <string.h>
 #include "sl_component_catalog.h"
@@ -64,16 +65,10 @@ static char buffer[NVM3_DEFAULT_MAX_OBJECT_SIZE];
 unsigned char newString[CMD_INPUT][NVM3_DEFAULT_MAX_OBJECT_SIZE];
 
 #if defined(SL_CATALOG_KERNEL_PRESENT)
-const osThreadAttr_t thread_attributes = {
+static const osThreadAttr_t thread_attributes = {
   .name       = "app",
-  .attr_bits  = 0,
-  .cb_mem     = 0,
-  .cb_size    = 0,
-  .stack_mem  = 0,
   .stack_size = 3072,
   .priority   = osPriorityLow,
-  .tz_module  = 0,
-  .reserved   = 0,
 };
 #endif
 
@@ -133,7 +128,7 @@ static void nvm3_app_write(uint32_t key, unsigned char *data)
     }
     // check for NVM3 write success or not
     if (ECODE_NVM3_OK == nvm3_writeData(NVM3_DEFAULT_HANDLE, key, (unsigned char *)data, len)) {
-      printf("Stored data at key %lu\r\n", key);
+      printf("Stored data at key %" PRIu32 "\r\n", key);
       // Track number of writes in counter object
       nvm3_incrementCounter(NVM3_DEFAULT_HANDLE, WRITE_COUNTER_KEY, NULL);
     } else {
@@ -159,7 +154,7 @@ static void nvm3_app_delete(uint32_t key)
   } else {
     // check for NVM3 delete object success or not
     if (ECODE_NVM3_OK == nvm3_deleteObject(NVM3_DEFAULT_HANDLE, key)) {
-      printf("Deleted data at key %lu\r\n", key);
+      printf("Deleted data at key %" PRIu32 "\r\n", key);
       // Track number or deletes in counter object
       nvm3_incrementCounter(NVM3_DEFAULT_HANDLE, DELETE_COUNTER_KEY, NULL);
     } else {
@@ -197,10 +192,10 @@ static void nvm3_app_read(nvm3_ObjectKey_t key)
     // check for error code
     if (ECODE_NVM3_OK == err) {
       buffer[len] = '\0';
-      printf("Read data from key %lu:\r\n", key);
+      printf("Read data from key %" PRIu32 ":\r\n", key);
       printf("%s\r\n", buffer);
     } else {
-      printf("Error reading data from key %lu\r\n", key);
+      printf("Error reading data from key %" PRIu32 "\r\n", key);
     }
   } while (false);
 
@@ -239,7 +234,7 @@ static void nvm3_app_display(void)
   } else {
     printf("Keys of objects deleted from NVM3:\r\n");
     for (i = 0; i < objects_count; i++) {
-      printf("> %lu\r\n", keys[i]);
+      printf("> %" PRIu32 "\r\n", keys[i]);
     }
   }
 
@@ -258,19 +253,19 @@ static void nvm3_app_display(void)
         err = nvm3_readData(NVM3_DEFAULT_HANDLE, keys[i], buffer, len);
         EFM_ASSERT(ECODE_NVM3_OK == err);
         buffer[len] = '\0';
-        printf("> %lu: %s\r\n", keys[i], buffer);
+        printf("> %" PRIu32 ": %s\r\n", keys[i], buffer);
       }
     }
   }
   // Display and reset counters
   err = nvm3_readCounter(NVM3_DEFAULT_HANDLE, DELETE_COUNTER_KEY, &counter);
   if (ECODE_NVM3_OK == err) {
-    printf("%lu objects have been deleted since last display\r\n", counter);
+    printf("%" PRIu32 " objects have been deleted since last display\r\n", counter);
   }
   nvm3_writeCounter(NVM3_DEFAULT_HANDLE, DELETE_COUNTER_KEY, 0);
   err = nvm3_readCounter(NVM3_DEFAULT_HANDLE, WRITE_COUNTER_KEY, &counter);
   if (ECODE_NVM3_OK == err) {
-    printf("%lu objects have been written since last display\r\n", counter);
+    printf("%" PRIu32 " objects have been written since last display\r\n", counter);
   }
   nvm3_writeCounter(NVM3_DEFAULT_HANDLE, WRITE_COUNTER_KEY, 0);
 }

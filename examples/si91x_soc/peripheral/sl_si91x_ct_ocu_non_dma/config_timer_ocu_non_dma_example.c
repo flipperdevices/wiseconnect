@@ -94,29 +94,35 @@ void config_timer_example_init(void)
 
   //Version information of config timer
   version = sl_si91x_config_timer_get_version();
-  DEBUGOUT("\r\n API version is %d.%d.%d\r\n", version.release, version.major, version.minor);
+  /* Note: All status messages in this example — both success and failure — are
+ * intentionally emitted via SL_PRINT_STRING_ERROR so that they remain visible
+ * on the console at the default log level. This is a demonstration choice, not
+ * a recommendation: in production code, ERROR severity should be reserved for
+ * actual failures, with successful operations logged via SL_PRINT_STRING_INFO
+ * (or SL_PRINT_STRING_DEBUG for verbose trace). */
+  SL_PRINT_STRING_ERROR("API version is %d.%d.%d\r\n", version.release, version.major, version.minor);
   do {
     // Initializing CT
     sl_si91x_config_timer_init();
-    DEBUGOUT("\r\n CT initialized successfully \r\n");
+    SL_PRINT_STRING_ERROR("CT initialized successfully\r\n");
     // Configuring CT parameters from UC values
     status = sl_si91x_config_timer_set_configuration(&ct_config);
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("\r\n sl_si91x_config_timer_set_configuration, Error code: %lu\r\n", status);
+      SL_PRINT_STRING_ERROR("sl_si91x_config_timer_set_configuration, Error code: %lu\r\n", status);
       break;
     }
-    DEBUGOUT("\r\n CT configuration is set successfully \r\n");
+    SL_PRINT_STRING_ERROR("CT configuration is set successfully\r\n");
     // Get the match value of the timer
     status = sl_si91x_config_timer_get_match_value(TIME_PERIOD_VALUE, &match_value);
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("\r\n sl_si91x_config_timer_get_match_value, Error code: %lu\r\n", status);
+      SL_PRINT_STRING_ERROR("sl_si91x_config_timer_get_match_value, Error code: %lu\r\n", status);
       break;
     }
-    DEBUGOUT("\r\n CT match value get is successful \r\n");
+    SL_PRINT_STRING_ERROR("CT match value get is successful\r\n");
     // Enabling interrupt at match value for counter-used
 
 #if (CT_COUNTER_MODE_USECASE == SET && CT_PWM_MODE_USECASE == SET)
-    DEBUGOUT("\r\n Set Any One Usecase \r\n");
+    SL_PRINT_STRING_ERROR("Set Any One Usecase\r\n");
     break;
 #endif
 
@@ -128,26 +134,26 @@ void config_timer_example_init(void)
     // Registering callback
     status = sl_si91x_config_timer_register_callback(on_config_timer_callback, callback_flag_data, &ct_interrupt_flags);
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("\r\n sl_si91x_config_timer_register_callback, Error code: %lu\r\n", status);
+      SL_PRINT_STRING_ERROR("sl_si91x_config_timer_register_callback, Error code: %lu\r\n", status);
       break;
     }
-    DEBUGOUT("\r\n CT callback registered successfully \r\n");
+    SL_PRINT_STRING_ERROR("CT callback registered successfully\r\n");
 
 #if (CT_COUNTER_MODE_USECASE == SET)
     // Setting match value
     status = sl_si91x_config_timer_set_match_count(SL_COUNTER_16BIT, CT_COUNTER_USED, match_value);
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("\r\n sl_si91x_config_timer_set_match_count, Error code: %lu\r\n", status);
+      SL_PRINT_STRING_ERROR("sl_si91x_config_timer_set_match_count, Error code: %lu\r\n", status);
       break;
     }
-    DEBUGOUT("\r\n CT Match Count is set successfully\r\n");
+    SL_PRINT_STRING_ERROR("CT Match Count is set successfully\r\n");
     // Starting CT_COUNTER_USED on software trigger
     status = sl_si91x_config_timer_start_on_software_trigger(CT_COUNTER_USED);
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("\r\n sl_si91x_config_timer_start_on_software_trigger, Error code: %lu\r\n", status);
+      SL_PRINT_STRING_ERROR("sl_si91x_config_timer_start_on_software_trigger, Error code: %lu\r\n", status);
       break;
     }
-    DEBUGOUT("\r\n CT started successfully on software trigger \r\n");
+    SL_PRINT_STRING_ERROR("CT started successfully on software trigger\r\n");
 #endif
 
 #if (CT_PWM_MODE_USECASE == SET)
@@ -166,10 +172,10 @@ void config_timer_example_init(void)
     // Setting OCU configurations
     status = sl_si91x_config_timer_set_ocu_configuration(&ct_ocu_config);
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("\r\n sl_si91x_config_timer_set_ocu_configuration, Error code: %lu\r\n", status);
+      SL_PRINT_STRING_ERROR("sl_si91x_config_timer_set_ocu_configuration, Error code: %lu\r\n", status);
       break;
     }
-    DEBUGOUT("\r\n CT OCU configuration is set successfully \r\n");
+    SL_PRINT_STRING_ERROR("CT OCU configuration is set successfully\r\n");
 
     vsOCUparams.CompareVal1_0 = INITIAL_VALUE;
     vsOCUparams.CompareVal1_1 = (uint16_t)(match_value / DIV_FACTOR);
@@ -180,48 +186,48 @@ void config_timer_example_init(void)
     ocu_params0.callback             = &pwm_callback;
     status                           = sl_si91x_config_timer_set_ocu_control(&ocu_params0);
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("\r\n sl_si91x_config_timer_set_ocu_compare_values, Error code: %lu\r\n", status);
+      SL_PRINT_STRING_ERROR("sl_si91x_config_timer_set_ocu_compare_values, Error code: %lu\r\n", status);
       break;
     }
-    DEBUGOUT("\r\n CT OCU Counter0 configuration is set successfully \r\n");
+    SL_PRINT_STRING_ERROR("CT OCU Counter0 configuration is set successfully\r\n");
     ocu_params1.is_counter_number_1  = SL_COUNTER_1;
     ocu_params1.is_dma_state_enabled = false;
     ocu_params1.params               = &vsOCUparams;
     ocu_params1.callback             = &pwm_callback;
     status                           = sl_si91x_config_timer_set_ocu_control(&ocu_params1);
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("\r\n sl_si91x_config_timer_set_ocu_compare_values, Error code: %lu\r\n", status);
+      SL_PRINT_STRING_ERROR("sl_si91x_config_timer_set_ocu_compare_values, Error code: %lu\r\n", status);
       break;
     }
-    DEBUGOUT("\r\n CT OCU Counter1 configuration is set successfully \r\n");
+    SL_PRINT_STRING_ERROR("CT OCU Counter1 configuration is set successfully\r\n");
     // Setting match value for counter 0
     status = sl_si91x_config_timer_set_match_count(SL_COUNTER_16BIT, SL_COUNTER_0, match_value);
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("\r\n sl_si91x_config_timer_set_match_count, Error code: %lu\r\n", status);
+      SL_PRINT_STRING_ERROR("sl_si91x_config_timer_set_match_count, Error code: %lu\r\n", status);
       break;
     }
-    DEBUGOUT("\r\n Counter0 Match Count is set successfully \r\n");
+    SL_PRINT_STRING_ERROR("Counter0 Match Count is set successfully\r\n");
     // Setting match value for counter 1
     status = sl_si91x_config_timer_set_match_count(SL_COUNTER_16BIT, SL_COUNTER_1, match_value);
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("\r\n sl_si91x_config_timer_set_match_count, Error code: %lu\r\n", status);
+      SL_PRINT_STRING_ERROR("sl_si91x_config_timer_set_match_count, Error code: %lu\r\n", status);
       break;
     }
-    DEBUGOUT("\r\n Counter1 Match Count is set successfully \r\n");
+    SL_PRINT_STRING_ERROR("Counter1 Match Count is set successfully\r\n");
     // Starting CT counter0 on software trigger
     status = sl_si91x_config_timer_start_on_software_trigger(SL_COUNTER_0);
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("\r\n sl_si91x_config_timer_start_on_software_trigger, Error code: %lu\r\n", status);
+      SL_PRINT_STRING_ERROR("sl_si91x_config_timer_start_on_software_trigger, Error code: %lu\r\n", status);
       break;
     }
-    DEBUGOUT("\r\n CT Counter0 started successfully on software trigger \r\n");
+    SL_PRINT_STRING_ERROR("CT Counter0 started successfully on software trigger\r\n");
     // Starting CT counter1 on software trigger
     status = sl_si91x_config_timer_start_on_software_trigger(SL_COUNTER_1);
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("\r\n sl_si91x_config_timer_start_on_software_trigger, Error code: %lu\r\n", status);
+      SL_PRINT_STRING_ERROR("sl_si91x_config_timer_start_on_software_trigger, Error code: %lu\r\n", status);
       break;
     }
-    DEBUGOUT("\r\n CT Counter1 started successfully on software trigger \r\n");
+    SL_PRINT_STRING_ERROR("CT Counter1 started successfully on software trigger\r\n");
 #endif
   } while (false);
 }
@@ -235,8 +241,8 @@ void config_timer_example_process_action(void)
   // interrupt_flag is set when interrupt count is greater than TENTH_INTERRUPT_COUNT
   if (interrupt_flag) {
     interrupt_flag = 0;
-    DEBUGOUT("\r\n Config timer Counter Peak Reached \r\n");
-    DEBUGOUT("\r\n Config timer unregistered & de-inits callback \r\n");
+    SL_PRINT_STRING_ERROR("Config timer Counter Peak Reached\r\n");
+    SL_PRINT_STRING_ERROR("Config timer unregistered & de-inits callback\r\n");
   }
 #endif
 #if (CT_PWM_MODE_USECASE == SET)
@@ -256,7 +262,7 @@ void config_timer_example_process_action(void)
     ocu_params0.params        = &vsOCUparams;
     status                    = sl_si91x_config_timer_set_ocu_control(&ocu_params0);
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("\r\nsl_si91x_config_timer_set_ocu_compare_values, Error code: %lu\r\n", status);
+      SL_PRINT_STRING_ERROR("sl_si91x_config_timer_set_ocu_compare_values, Error code: %lu\r\n", status);
     }
   }
   pwm_flag = INITIAL_VALUE;

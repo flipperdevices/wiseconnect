@@ -45,7 +45,6 @@ const osThreadAttr_t thread_attributes = {
   .stack_size = 3072,
   .priority   = osPriorityLow,
   .tz_module  = 0,
-  .reserved   = 0,
 };
 
 /******************************************************
@@ -85,7 +84,7 @@ static void application_start(void *argument)
 
   status = sl_net_init(SL_NET_WIFI_AP_INTERFACE, NULL, NULL, NULL);
   if (status != SL_STATUS_OK) {
-    printf("\r\nFailed to start Wi-Fi AP interface: 0x%lx\r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "Failed to start Wi-Fi AP interface: 0x%lx\r\n", status);
     return;
   }
 
@@ -93,13 +92,13 @@ static void application_start(void *argument)
   sl_wifi_set_callback_v2(SL_WIFI_CLIENT_DISCONNECTED_EVENTS, ap_disconnected_event_handler, NULL);
   sl_wifi_set_callback_v2(SL_WIFI_COMMAND_ENGINE_STATUS_EVENTS, wifi_command_engine_status_handler, NULL);
 
-  printf("\r\nWi-Fi AP interface init Success");
+  SL_DEBUG_LOG_V2(INFO, "Wi-Fi AP interface init Success");
   status = sl_net_up(SL_NET_WIFI_AP_INTERFACE, SL_NET_DEFAULT_WIFI_AP_PROFILE_ID);
   if (status != SL_STATUS_OK) {
-    printf("\r\nFailed to bring Wi-Fi AP interface up: 0x%lx\r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "Failed to bring Wi-Fi AP interface up: 0x%lx\r\n", status);
     return;
   }
-  printf("\r\nAP started\r\n");
+  SL_DEBUG_LOG_V2(INFO, "AP started\r\n");
 
   while (1) {
 #if defined(SL_CATALOG_POWER_MANAGER_PRESENT)
@@ -124,9 +123,9 @@ static sl_status_t ap_connected_event_handler(sl_wifi_event_t event,
     return status_code;
   }
 
-  printf("Remote Client connected: ");
+  SL_DEBUG_LOG_V2(INFO, "Remote Client connected: ");
   print_mac_address((sl_mac_address_t *)data);
-  printf("\n");
+  SL_DEBUG_LOG_V2(INFO, "\r\n");
 
   return SL_STATUS_OK;
 }
@@ -144,9 +143,9 @@ static sl_status_t ap_disconnected_event_handler(sl_wifi_event_t event,
     return status_code;
   }
 
-  printf("Remote Client disconnected: ");
+  SL_DEBUG_LOG_V2(INFO, "Remote Client disconnected: ");
   print_mac_address((sl_mac_address_t *)data);
-  printf("\n");
+  SL_DEBUG_LOG_V2(INFO, "\r\n");
 
   return SL_STATUS_OK;
 }
@@ -161,12 +160,12 @@ static sl_status_t wifi_command_engine_status_handler(sl_wifi_event_t event,
   UNUSED_PARAMETER(optional_arg);
   UNUSED_PARAMETER(data);
 
-  printf("Event: 0x%llx\r\n", event);
+  SL_DEBUG_LOG_V2(DEBUG, "Event: 0x%llx\r\n", event);
 
   if (SL_WIFI_CHECK_IF_EVENT_FAILED(event)) {
-    printf("Command engine status: FAILURE 0x%lx\r\n", status_code);
+    SL_DEBUG_LOG_V2(ERROR, "Command engine status: FAILURE 0x%lx\r\n", status_code);
   } else {
-    printf("Command engine status: SUCCESS 0x%lx\r\n", status_code);
+    SL_DEBUG_LOG_V2(INFO, "Command engine status: SUCCESS 0x%lx\r\n", status_code);
   }
 
   return SL_STATUS_OK;

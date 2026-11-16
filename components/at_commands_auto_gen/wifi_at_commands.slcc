@@ -11,6 +11,9 @@ component_root_path: ./components/at_commands_auto_gen
 provides:
   - name: wifi_at_commands
 
+source:
+  - path: wifi_at_commands_default_handlers.c
+
 include:
   - path: .
     file_list:
@@ -172,7 +175,7 @@ template_contribution:
       wifi-perf-prof?:
         handler: wifi_get_performance_profile_command_handler
       wifi-per-cnf-gen:
-        handler: wifi_per_cnf_gen_command_handler
+        handler: wifi_peripherals_cnf_gen_command_handler
         arguments:
           - "uint8"   # interface
           - "uint16"  # power
@@ -187,7 +190,7 @@ template_contribution:
           - "uint16"  # pkt-count
           - "uint32"  # delay
       wifi-per-cnf-axppdu:
-        handler: wifi_per_cnf_axppdu_command_handler
+        handler: wifi_peripherals_cnf_axppdu_command_handler
         arguments:
           - "uint8"   # interface
           - "uint8"   # enable-11ax
@@ -199,7 +202,7 @@ template_contribution:
           - "uint8"   # nominal-pe
           - "uint8"   # bss-color
       wifi-per-cnf-axsiga:
-        handler: wifi_per_cnf_axsiga_command_handler
+        handler: wifi_peripherals_cnf_axsiga_command_handler
         arguments:
           - "uint8"   # interface
           - "uint8"   # gi-ltf
@@ -212,7 +215,7 @@ template_contribution:
           - "uint8"   # stbc
           - "uint8"   # tx-bf
       wifi-per-cnf-axsigb:
-        handler: wifi_per_cnf_axsigb_command_handler
+        handler: wifi_peripherals_cnf_axsigb_command_handler
         arguments:
           - "uint8"   # interface
           - "uint8"   # sigb-compression-field
@@ -221,12 +224,12 @@ template_contribution:
           - "uint8"   # user-idx
           - "uint16"  # user-sta-id
       wifi-per-start:
-        handler: wifi_per_start_command_handler
+        handler: wifi_peripherals_start_command_handler
         arguments:
           - "uint8"   # interface
           - "uint8"   # enable
       wifi-per-stop:
-        handler: wifi_per_stop_command_handler
+        handler: wifi_peripherals_stop_command_handler
         arguments:
           - "uint8"   # interface
       wifi-stats-start:

@@ -22,6 +22,7 @@
 #define SL_SI91x_DUAL_FLASH_INTF_H_
 
 #include "sl_status.h"
+#include "sl_log_helper.h"
 
 #ifdef __cplusplus
 extern "C" {

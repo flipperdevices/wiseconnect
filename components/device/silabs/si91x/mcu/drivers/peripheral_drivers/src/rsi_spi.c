@@ -920,47 +920,30 @@ set_speed:
       case ARM_SPI_SS_MASTER_SW: // SPI Slave Select when Master: Software controlled
         spi->info->mode &= ~ARM_SPI_SS_MASTER_MODE_Msk;
 
-        switch (slavenumber) {
-          case SPI_CS0:
-            cs_pin = spi->io.cs0->pin;
-            if (spi->io.cs0->pad_sel != 0) {
-              RSI_EGPIO_PadSelectionEnable(spi->io.cs0->pad_sel);
-            }
-            break;
-          case SPI_CS1:
-            cs_pin = spi->io.cs1->pin;
-            if (spi->io.cs1->pad_sel != 0) {
-              RSI_EGPIO_PadSelectionEnable(spi->io.cs1->pad_sel);
-            }
-            break;
-          case SPI_CS2:
-            cs_pin = spi->io.cs2->pin;
-            if (spi->io.cs2->pad_sel != 0) {
-              RSI_EGPIO_PadSelectionEnable(spi->io.cs2->pad_sel);
-            }
-            break;
-          case SPI_CS3:
-            cs_pin = spi->io.cs3->pin;
-            if (spi->io.cs3->pad_sel != 0) {
-              RSI_EGPIO_PadSelectionEnable(spi->io.cs3->pad_sel);
-            }
-            break;
-        }
-        if (cs_pin != (int)NULL) {
+        // Initialize every configured CS pin as a software-driven slave-select.
+        const SPI_PIN *cs_pins[]     = { spi->io.cs0, spi->io.cs1, spi->io.cs2, spi->io.cs3 };
+        uint8_t initialized_cs_count = 0;
+        for (uint8_t i = 0; i < (sizeof(cs_pins) / sizeof(cs_pins[0])); i++) {
+          if ((cs_pins[i] == NULL) || (cs_pins[i]->pin == (int)NULL)) {
+            continue;
+          }
+          cs_pin = cs_pins[i]->pin;
+          if (cs_pins[i]->pad_sel != 0) {
+            RSI_EGPIO_PadSelectionEnable(cs_pins[i]->pad_sel);
+          }
           if (cs_pin > 64) {
             RSI_EGPIO_SetPinMux(EGPIO1, 0, (cs_pin - 64), EGPIO_PIN_MUX_MODE6);
           }
           RSI_EGPIO_SetPinMux(EGPIO, 0, cs_pin, 0);
-
           RSI_EGPIO_SetDir(EGPIO, 0, cs_pin, 0);
           RSI_EGPIO_SetPin(EGPIO, 0, cs_pin, 1);
-
-          spi->info->mode |= ARM_SPI_SS_MASTER_SW;
-        } else {
+          initialized_cs_count++;
+        }
+        if (initialized_cs_count == 0) {
           return ARM_SPI_ERROR_SS_MODE;
         }
+        spi->info->mode |= ARM_SPI_SS_MASTER_SW;
         break;
-
       case ARM_SPI_SS_MASTER_HW_OUTPUT: // SPI Slave Select when Master: Hardware controlled Output
         spi->info->mode &= ~ARM_SPI_SS_MASTER_MODE_Msk;
         if ((spi->io.cs0->pin != (int)NULL) || (spi->io.cs1->pin != (int)NULL) || (spi->io.cs2->pin != (int)NULL)

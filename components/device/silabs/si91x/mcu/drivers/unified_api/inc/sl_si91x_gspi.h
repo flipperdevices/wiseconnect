@@ -38,6 +38,7 @@ extern "C" {
 #include "sl_status.h"
 #include "GSPI.h"
 #include "base_types.h"
+#include "sl_log_helper.h"
 
 /***************************************************************************/
 /**

@@ -37,12 +37,51 @@
 #ifdef DEBUG_UART
 #include "rsi_debug.h"
 #endif
+#include "sl_component_catalog.h"
 
 #if defined(SLI_WIRELESS_COMPONENT_PRESENT) && (SLI_WIRELESS_COMPONENT_PRESENT == 1)
 #include "rsi_m4.h"
 #endif
 
+#include "cmsis_version.h"
+#include "sli_code_classification.h"
+
 void fpuInit(void);
+
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_RSILIB_CHIP, SL_CODE_CLASS_TIME_CRITICAL)
+void RSI_Save_Context(void);
+
+#if defined(__CC_ARM)
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_RSILIB_CHIP, SL_CODE_CLASS_TIME_CRITICAL)
+__asm void RSI_PS_SaveCpuContext(void);
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_RSILIB_CHIP, SL_CODE_CLASS_TIME_CRITICAL)
+__asm void RSI_PS_RestoreCpuContext(void);
+#endif
+
+#if defined(__GNUC__)
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_RSILIB_CHIP, SL_CODE_CLASS_TIME_CRITICAL)
+void RSI_PS_SaveCpuContext(void);
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_RSILIB_CHIP, SL_CODE_CLASS_TIME_CRITICAL)
+void RSI_PS_RestoreCpuContext(void);
+#endif
+
+#if defined(__ICCARM__)
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_RSILIB_CHIP, SL_CODE_CLASS_TIME_CRITICAL)
+void RSI_PS_SaveCpuContext(void);
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_RSILIB_CHIP, SL_CODE_CLASS_TIME_CRITICAL)
+void RSI_PS_RestoreCpuContext(void);
+#endif
+
+#ifdef SLI_SI91X_MCU_COMMON_FLASH_MODE
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_RSILIB_CHIP, SL_CODE_CLASS_TIME_CRITICAL)
+void RSI_Set_Cntrls_To_M4(void);
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_RSILIB_CHIP, SL_CODE_CLASS_TIME_CRITICAL)
+void RSI_Set_Cntrls_To_TA(void);
+#endif
+
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_RSILIB_CHIP, SL_CODE_CLASS_TIME_CRITICAL)
+rsi_error_t RSI_PS_EnterDeepSleep(SLEEP_TYPE_T sleepType, uint8_t lf_clk_mode);
+
 #define NWPAON_MEM_HOST_ACCESS_CTRL_CLEAR_1 (*(volatile uint32_t *)(0x41300000 + 0x4))
 #define NWPAON_MEM_HOST_ACCESS_CTRL_SET_1   (*(volatile uint32_t *)(0x41300000 + 0x0))
 #define M4SS_TASS_CTRL_SET_REG              (*(volatile uint32_t *)(0x24048400 + 0x34))
@@ -98,7 +137,8 @@ volatile uint32_t control_reg_val;
 uint32_t npss_gpio_config = 0;
 
 #if defined(SLI_SI91X_MCU_ENABLE_RAM_BASED_EXECUTION)
-extern char ram_vector[SI91X_VECTOR_TABLE_ENTRIES];
+// RAM vector table entry pointer
+extern char ram_vector[];
 #endif
 
 /**
@@ -118,7 +158,8 @@ void RSI_Save_Context(void)
  *
  */
 #ifdef SLI_SI91X_ENABLE_OS
-STATIC INLINE void RSI_Restore_Context(void)
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_RSILIB_CHIP, SL_CODE_CLASS_TIME_CRITICAL)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_Restore_Context(void)
 {
   __set_CONTROL(control_reg_val);
   __set_PSP(psp_value);
@@ -191,24 +232,24 @@ __asm void RSI_PS_RestoreCpuContext(void)
  */
 void RSI_PS_SaveCpuContext(void)
 {
-  __asm("push {r0}");
-  __asm("push {r1}");
-  __asm("push {r2}");
-  __asm("push {r3}");
-  __asm("push {r4}");
-  __asm("push {r5}");
-  __asm("push {r6}");
-  __asm("push {r7}");
-  __asm("push {r8}");
-  __asm("push {r9}");
-  __asm("push {r10}");
-  __asm("push {r11}");
-  __asm("push {r12}");
-  __asm("push {r14}");
+  __asm("push {r0}");  // Push the r0 register onto the stack
+  __asm("push {r1}");  // Push the r1 register onto the stack
+  __asm("push {r2}");  // Push the r2 register onto the stack
+  __asm("push {r3}");  // Push the r3 register onto the stack
+  __asm("push {r4}");  // Push the r4 register onto the stack
+  __asm("push {r5}");  // Push the r5 register onto the stack
+  __asm("push {r6}");  // Push the r6 register onto the stack
+  __asm("push {r7}");  // Push the r7 register onto the stack
+  __asm("push {r8}");  // Push the r8 register onto the stack
+  __asm("push {r9}");  // Push the r9 register onto the stack
+  __asm("push {r10}"); // Push the r10 register onto the stack
+  __asm("push {r11}"); // Push the r11 register onto the stack
+  __asm("push {r12}"); // Push the r12 register onto the stack
+  __asm("push {r14}"); // Push the r14 register onto the stack
 
   /*R13 Stack pointer */
-  __asm("mov %0, sp\n\t" : "=r"(__sp));
-  __asm("WFI");
+  __asm("mov %0, sp\n\t" : "=r"(__sp)); // Move the stack pointer value into the __sp variable
+  __asm("WFI");                         // Wait for interrupt
 }
 
 /**
@@ -218,26 +259,24 @@ void RSI_PS_SaveCpuContext(void)
  */
 void RSI_PS_RestoreCpuContext(void)
 {
-#ifdef SL_SI91X_ENABLE_GCC_LTO
-  __asm__ volatile("ldr r0, %[sym]\n" : : [sym] "m"(__sp) : "r0");
-#else
-  __asm("ldr r0 , =__sp");
-#endif
-  __asm("ldr sp , [r0 , #0]");
-  __asm("pop {r14}");
-  __asm("pop {r12}");
-  __asm("pop {r11}");
-  __asm("pop {r10}");
-  __asm("pop {r9}");
-  __asm("pop {r8}");
-  __asm("pop {r7}");
-  __asm("pop {r6}");
-  __asm("pop {r5}");
-  __asm("pop {r4}");
-  __asm("pop {r3}");
-  __asm("pop {r2}");
-  __asm("pop {r1}");
-  __asm("pop {r0}");
+  // LTO-safe: use memory constraint so the compiler emits the reference to __sp.
+  // This loads sp from the memory at __sp; the compiler handles addressing for
+  // both LTO and non-LTO, avoiding reliance on &__sp or a literal symbol.
+  __asm__ volatile("ldr sp, %0" : : "m"(__sp));
+  __asm("pop {r14}"); // Pop the return address (r14 register)
+  __asm("pop {r12}"); // Pop the r12 register
+  __asm("pop {r11}"); // Pop the r11 register
+  __asm("pop {r10}"); // Pop the r10 register
+  __asm("pop {r9}");  // Pop the r9 register
+  __asm("pop {r8}");  // Pop the r8 register
+  __asm("pop {r7}");  // Pop the r7 register
+  __asm("pop {r6}");  // Pop the r6 register
+  __asm("pop {r5}");  // Pop the r5 register
+  __asm("pop {r4}");  // Pop the r4 register
+  __asm("pop {r3}");  // Pop the r3 register
+  __asm("pop {r2}");  // Pop the r2 register
+  __asm("pop {r1}");  // Pop the r1 register
+  __asm("pop {r0}");  // Pop the r0 register
 }
 #endif /*------------------ GNU Compiler ---------------------*/
 
@@ -319,7 +358,7 @@ void RSI_Set_Cntrls_To_M4(void)
   BATT_FF->M4SS_TASS_CTRL_SET_REG_b.M4SS_CTRL_TASS_AON_DISABLE_ISOLATION_BYPASS = ENABLE;
   /* M4SS controlling Power supply for TASS AON domains reset pin in bypass mode. */
   M4SS_TASS_CTRL_CLR_REG = M4SS_CTRL_TASS_AON_PWR_DMN_RST_BYPASS_BIT;
-  for (volatile uint8_t delay = 0; delay < 10; delay++) {
+  for (uint8_t delay = 0; delay < 10; delay++) {
     __ASM("NOP");
   }
 }
@@ -345,7 +384,8 @@ void RSI_Set_Cntrls_To_TA(void)
  * @brief       to request NWP to program flash
  * @return      none
  */
-STATIC INLINE void request_nwp_to_program_flash(uint8_t in_ps2_state)
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_RSILIB_CHIP, SL_CODE_CLASS_TIME_CRITICAL)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void request_nwp_to_program_flash(uint8_t in_ps2_state)
 {
   if (!in_ps2_state && !(M4SS_P2P_INTR_SET_REG & M4_USING_FLASH)) {
     //! check NWP wokeup or not
@@ -388,12 +428,12 @@ STATIC INLINE void request_nwp_to_program_flash(uint8_t in_ps2_state)
  */
 rsi_error_t RSI_PS_EnterDeepSleep(SLEEP_TYPE_T sleepType, uint8_t lf_clk_mode)
 {
-  volatile int var                       = 0;
-  volatile int enable_sdcss_based_wakeup = 0;
-  volatile int enable_m4ulp_retention    = 0;
-  volatile int Temp;
+  int var                       = 0;
+  int enable_sdcss_based_wakeup = 0;
+  int enable_m4ulp_retention    = 0;
+  int Temp;
 
-  volatile uint8_t in_ps2_state = 0;
+  uint8_t in_ps2_state = 0;
 
   uint32_t ipmuDummyRead         = 0;
   uint32_t m4ulp_ram_core_status = 0;
@@ -406,10 +446,18 @@ rsi_error_t RSI_PS_EnterDeepSleep(SLEEP_TYPE_T sleepType, uint8_t lf_clk_mode)
   COPY_CONFIG_REGS(nvic_enable, NVIC->ISER, MAX_NVIC_REGS);
 
   /* Save the Interrupt Priority Register */
+#if __CM_CMSIS_VERSION_MAIN >= 6
+  COPY_CONFIG_REGS(nvic_ip_reg, NVIC->IPR, MAX_IPS);
+#else
   COPY_CONFIG_REGS(nvic_ip_reg, NVIC->IP, MAX_IPS);
+#endif
 
   /* Save the System Handlers Priority Registers */
+#if __CM_CMSIS_VERSION_MAIN >= 6
+  COPY_CONFIG_REGS(scs_shp_reg, SCB->SHPR, MAX_SHP);
+#else
   COPY_CONFIG_REGS(scs_shp_reg, SCB->SHP, MAX_SHP);
+#endif
 
   /*store the NPSS interrupt mask clear status*/
   npssIntrState = NPSS_INTR_MASK_CLR_REG;
@@ -475,10 +523,10 @@ rsi_error_t RSI_PS_EnterDeepSleep(SLEEP_TYPE_T sleepType, uint8_t lf_clk_mode)
       RSI_Periodic_TempUpdate(TIME_PERIOD, 1, 0);
       /*read the temperature*/
       Temp = (int)RSI_TS_ReadTemp(MCU_TEMP);
-      if (Temp > 45) {
-        // disable the XTAL CAP mode
-        RSI_IPMU_ProgramConfigData(lp_scdc_extcapmode);
-      }
+    }
+    if ((lf_clk_mode & BIT(4)) && (Temp > 45)) {
+      // disable the XTAL CAP mode
+      RSI_IPMU_ProgramConfigData(lp_scdc_extcapmode);
     }
 #endif
   }
@@ -624,7 +672,7 @@ rsi_error_t RSI_PS_EnterDeepSleep(SLEEP_TYPE_T sleepType, uint8_t lf_clk_mode)
   NPSS_GPIO_CONFIG_REG = npss_gpio_config;
 #endif
   /* After wake-up, Set the SCDC voltage to the actual value*/
-  /* As this function is located in flash accessing this fucntion only after getting controls*/
+  /* As this function is located in flash accessing this function only after getting controls*/
   set_scdc(SL_SCDC_ACTIVE);
 
   /*Update the REG Access SPI division factor to increase the SPI read/write speed*/
@@ -658,13 +706,13 @@ rsi_error_t RSI_PS_EnterDeepSleep(SLEEP_TYPE_T sleepType, uint8_t lf_clk_mode)
       RSI_Periodic_TempUpdate(TIME_PERIOD, 1, 0);
       /*read the temperature*/
       Temp = (int)RSI_TS_ReadTemp(MCU_TEMP);
-      if (Temp > 45) {
-        //SCDC0
-        RSI_IPMU_ProgramConfigData(scdc_volt_sel1);
-        RSI_IPMU_ProgramConfigData(scdc_volt_trim_efuse);
-        //SCDC0_1
-        RSI_IPMU_ProgramConfigData(scdc_volt_sel2);
-      }
+    }
+    if ((lf_clk_mode & BIT(4)) && (Temp > 45)) {
+      //SCDC0
+      RSI_IPMU_ProgramConfigData(scdc_volt_sel1);
+      RSI_IPMU_ProgramConfigData(scdc_volt_trim_efuse);
+      //SCDC0_1
+      RSI_IPMU_ProgramConfigData(scdc_volt_sel2);
     }
 #endif
   }
@@ -714,10 +762,18 @@ rsi_error_t RSI_PS_EnterDeepSleep(SLEEP_TYPE_T sleepType, uint8_t lf_clk_mode)
   M4SS_P2P_INTR_SET_REG  = p2p_intr_status_bkp.m4ss_p2p_intr_set_reg_bkp;
 
   /* Restore the Interrupt Priority Register  */
+#if __CM_CMSIS_VERSION_MAIN >= 6
+  COPY_CONFIG_REGS(NVIC->IPR, nvic_ip_reg, MAX_IPS);
+#else
   COPY_CONFIG_REGS(NVIC->IP, nvic_ip_reg, MAX_IPS);
+#endif
 
   /* Restore the System Handlers Priority Registers */
+#if __CM_CMSIS_VERSION_MAIN >= 6
+  COPY_CONFIG_REGS(SCB->SHPR, scs_shp_reg, MAX_SHP);
+#else
   COPY_CONFIG_REGS(SCB->SHP, scs_shp_reg, MAX_SHP);
+#endif
 
   /* Restore the NVIC registers */
   COPY_CONFIG_REGS(NVIC->ISER, nvic_enable, MAX_NVIC_REGS);

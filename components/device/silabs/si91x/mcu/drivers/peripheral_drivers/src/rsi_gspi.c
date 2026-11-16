@@ -38,12 +38,13 @@
 #ifndef SL_SI91X_GSPI_DMA
 #include "rsi_rom_udma_wrapper.h"
 #endif
+#include "sl_si91x_gspi_common_config.h"
+#include "rsi_gspi.h"
 #ifdef SL_SI91X_GSPI_DMA
 #include "sl_si91x_dma.h"
 #include "rsi_gspi.h"
 #define DMA_INSTANCE 0
 #endif
-#include "rsi_gspi.h"
 
 #define MAX_BAUDRATE_FOR_DYNAMIC_CLOCK   116000000 // Maximum baudrate for dynamic clock division factor
 #define MAX_BAUDRATE_FOR_POS_EDGE_SAMPLE 40000000  // Maximum baudrate for positive edge sample
@@ -54,10 +55,45 @@
 #define DATA_WIDTH_8                     8  // Data width 8 for differentiating DMA Transfers
 #define DATA_WIDTH_16                    16 // Data width 16 for differentiating DMA Transfers
 
+#define GSPI_CONFIGURE_EGPIO_PIN(pin_info)                                           \
+  do {                                                                               \
+    if ((pin_info)->pin > 63) {                                                      \
+      RSI_EGPIO_UlpPadReceiverEnable((uint8_t)((pin_info)->pin - 64));               \
+      RSI_EGPIO_SetPinMux(EGPIO1, 0, (uint8_t)((pin_info)->pin - 64), 6);            \
+    }                                                                                \
+    if ((pin_info)->pad_sel != 0) {                                                  \
+      RSI_EGPIO_PadSelectionEnable((pin_info)->pad_sel);                             \
+    }                                                                                \
+    if ((pin_info)->pin >= 25 && (pin_info)->pin <= 30) {                            \
+      RSI_EGPIO_HostPadsGpioModeEnable((pin_info)->pin);                             \
+    }                                                                                \
+    RSI_EGPIO_PadReceiverEnable((pin_info)->pin);                                    \
+    RSI_EGPIO_SetPinMux(EGPIO, (pin_info)->port, (pin_info)->pin, (pin_info)->mode); \
+  } while (0)
+
 typedef uint32_t __attribute__((__may_alias__)) aliased_uint32_t;
 
 static uint8_t data_width_in_bytes = 0; // variable to store data width in bytes for current transfer
 static void GSPI_Convert_Data_Width_To_Bytes(uint16_t data_width);
+
+/* Prepare the GSPI software state for a new transfer: mark the driver busy,
+ * clear the data-lost / mode-fault flags, install the caller's TX/RX buffer
+ * pointers and reset the byte counters. Used by GSPI_Send, GSPI_Receive and
+ * GSPI_Transfer to factor out their common bookkeeping. Either buffer may be
+ * NULL for half-duplex directions. */
+static inline void sli_gspi_begin_transfer(const GSPI_RESOURCES *gspi, const void *tx_buf, void *rx_buf)
+{
+  gspi->info->status.busy       = 1U;
+  gspi->info->status.data_lost  = 0U;
+  gspi->info->status.mode_fault = 0U;
+
+  gspi->xfer->tx_buf = (uint8_t *)tx_buf;
+  gspi->xfer->rx_buf = (uint8_t *)rx_buf;
+
+  gspi->xfer->tx_cnt = 0U;
+  gspi->xfer->rx_cnt = 0U;
+}
+
 /*==============================================*/
 /**
  * @fn          int32_t GSPI_Initialize(ARM_SPI_SignalEvent_t cb_event,
@@ -120,101 +156,27 @@ int32_t GSPI_Initialize(ARM_SPI_SignalEvent_t cb_event,
   RSI_CLK_GspiClkConfig(M4CLK, gspi->clock_source);
 
   // Pin Mux
-  if ((gspi->reg == GSPI0)) {
-    //Configure clock pin
-    if (gspi->io.clock->pin > 63) {
-      RSI_EGPIO_UlpPadReceiverEnable((uint8_t)(gspi->io.clock->pin - 64));
-      RSI_EGPIO_SetPinMux(EGPIO1, 0, (uint8_t)(gspi->io.clock->pin - 64), 6);
-    }
-    if (gspi->io.clock->pad_sel != 0) {
-      RSI_EGPIO_PadSelectionEnable(gspi->io.clock->pad_sel);
-    }
-    if (gspi->io.clock->pin >= 25 && gspi->io.clock->pin <= 30) {
-      RSI_EGPIO_HostPadsGpioModeEnable(gspi->io.clock->pin);
-    }
-    RSI_EGPIO_PadReceiverEnable(gspi->io.clock->pin);
-    RSI_EGPIO_SetPinMux(EGPIO, gspi->io.clock->port, gspi->io.clock->pin, gspi->io.clock->mode);
-
+  if (gspi->reg == GSPI0) {
+    // Configure GSPI pins.
+    GSPI_CONFIGURE_EGPIO_PIN(gspi->io.clock);
     if (gspi->io.cs0 != NULL) {
-      //configure cs0 pin
-      if (gspi->io.cs0->pin > 63) {
-        RSI_EGPIO_UlpPadReceiverEnable((uint8_t)(gspi->io.cs0->pin - 64));
-        RSI_EGPIO_SetPinMux(EGPIO1, 0, (uint8_t)(gspi->io.cs0->pin - 64), 6);
-      }
-      if (gspi->io.cs0->pad_sel != 0) {
-        RSI_EGPIO_PadSelectionEnable(gspi->io.cs0->pad_sel);
-      }
-      if (gspi->io.cs0->pin >= 25 && gspi->io.cs0->pin <= 30) {
-        RSI_EGPIO_HostPadsGpioModeEnable(gspi->io.cs0->pin);
-      }
-      RSI_EGPIO_PadReceiverEnable(gspi->io.cs0->pin);
-      RSI_EGPIO_SetPinMux(EGPIO, gspi->io.cs0->port, gspi->io.cs0->pin, gspi->io.cs0->mode);
+      GSPI_CONFIGURE_EGPIO_PIN(gspi->io.cs0);
     }
     if (gspi->io.cs1 != NULL) {
-      //configure cs1 pin
-      if (gspi->io.cs1->pin > 63) {
-        RSI_EGPIO_UlpPadReceiverEnable((uint8_t)(gspi->io.cs1->pin - 64));
-        RSI_EGPIO_SetPinMux(EGPIO1, 0, (uint8_t)(gspi->io.cs1->pin - 64), 6);
-      }
-      if (gspi->io.cs1->pad_sel != 0) {
-        RSI_EGPIO_PadSelectionEnable(gspi->io.cs1->pad_sel);
-      }
-      if (gspi->io.cs1->pin >= 25 && gspi->io.cs1->pin <= 30) {
-        RSI_EGPIO_HostPadsGpioModeEnable(gspi->io.cs1->pin);
-      }
-      RSI_EGPIO_PadReceiverEnable(gspi->io.cs1->pin);
-      RSI_EGPIO_SetPinMux(EGPIO, gspi->io.cs1->port, gspi->io.cs1->pin, gspi->io.cs1->mode);
+      GSPI_CONFIGURE_EGPIO_PIN(gspi->io.cs1);
     }
 
     if (gspi->io.cs2 != NULL) {
-      //configure cs2 pin
-      if (gspi->io.cs2->pin > 63) {
-        RSI_EGPIO_UlpPadReceiverEnable((uint8_t)(gspi->io.cs2->pin - 64));
-        RSI_EGPIO_SetPinMux(EGPIO1, 0, (uint8_t)(gspi->io.cs2->pin - 64), 6);
-      }
-      if (gspi->io.cs2->pad_sel != 0) {
-        RSI_EGPIO_PadSelectionEnable(gspi->io.cs2->pad_sel);
-      }
-      if (gspi->io.cs2->pin >= 25 && gspi->io.cs2->pin <= 30) {
-        RSI_EGPIO_HostPadsGpioModeEnable(gspi->io.cs2->pin);
-      }
-      RSI_EGPIO_PadReceiverEnable(gspi->io.cs2->pin);
-      RSI_EGPIO_SetPinMux(EGPIO, gspi->io.cs2->port, gspi->io.cs2->pin, gspi->io.cs2->mode);
+      GSPI_CONFIGURE_EGPIO_PIN(gspi->io.cs2);
     }
-
-    //configure MOSI pin
-    if (gspi->io.mosi->pin > 63) {
-      RSI_EGPIO_UlpPadReceiverEnable((uint8_t)(gspi->io.mosi->pin - 64));
-      RSI_EGPIO_SetPinMux(EGPIO1, 0, (uint8_t)(gspi->io.mosi->pin - 64), 6);
-    }
-    if (gspi->io.mosi->pad_sel != 0) {
-      RSI_EGPIO_PadSelectionEnable(gspi->io.mosi->pad_sel);
-    }
-    if (gspi->io.mosi->pin >= 25 && gspi->io.mosi->pin <= 30) {
-      RSI_EGPIO_HostPadsGpioModeEnable(gspi->io.mosi->pin);
-    }
-    RSI_EGPIO_PadReceiverEnable(gspi->io.mosi->pin);
-    RSI_EGPIO_SetPinMux(EGPIO, gspi->io.mosi->port, gspi->io.mosi->pin, gspi->io.mosi->mode);
-
-    //configure MISO pin
-    if (gspi->io.miso->pin > 63) {
-      RSI_EGPIO_UlpPadReceiverEnable((uint8_t)(gspi->io.miso->pin - 64));
-      RSI_EGPIO_SetPinMux(EGPIO1, 0, (uint8_t)(gspi->io.miso->pin - 64), 6);
-    }
-    if (gspi->io.miso->pad_sel != 0) {
-      RSI_EGPIO_PadSelectionEnable(gspi->io.miso->pad_sel);
-    }
-    if (gspi->io.miso->pin >= 25 && gspi->io.miso->pin <= 30) {
-      RSI_EGPIO_HostPadsGpioModeEnable(gspi->io.miso->pin);
-    }
-    RSI_EGPIO_PadReceiverEnable(gspi->io.miso->pin);
-    RSI_EGPIO_SetPinMux(EGPIO, gspi->io.miso->port, gspi->io.miso->pin, gspi->io.miso->mode);
+    GSPI_CONFIGURE_EGPIO_PIN(gspi->io.mosi);
+    GSPI_CONFIGURE_EGPIO_PIN(gspi->io.miso);
   }
   // DMA Initialize
   if (gspi->tx_dma || gspi->rx_dma) {
     if ((gspi->rx_dma != NULL) || (gspi->tx_dma != NULL)) {
       // Enable DMA instance
-      if ((gspi->reg == GSPI0)) {
+      if (gspi->reg == GSPI0) {
 #ifdef SL_SI91X_GSPI_DMA
         sl_dma_init_t dma_init;
         dma_init.dma_number = DMA_INSTANCE;
@@ -255,7 +217,7 @@ int32_t GSPI_Uninitialize(const GSPI_RESOURCES *gspi, UDMA_RESOURCES *udma)
 
   if ((gspi->rx_dma != NULL) || (gspi->tx_dma != NULL)) {
     // Diasable DMA instance
-    if ((gspi->reg == GSPI0)) {
+    if (gspi->reg == GSPI0) {
 #ifdef SL_SI91X_GSPI_DMA
       if (sl_si91x_dma_unregister_callbacks(DMA_INSTANCE,
                                             (gspi->tx_dma->channel + 1),
@@ -755,13 +717,7 @@ int32_t GSPI_Send(const void *data,
   if (gspi->info->status.busy) {
     return ARM_DRIVER_ERROR_BUSY;
   }
-  gspi->info->status.busy       = 1U;
-  gspi->info->status.data_lost  = 0U;
-  gspi->info->status.mode_fault = 0U;
-  gspi->xfer->rx_buf            = NULL;
-  gspi->xfer->rx_cnt            = 0U;
-  gspi->xfer->tx_cnt            = 0U;
-  gspi->xfer->tx_buf            = (uint8_t *)data;
+  sli_gspi_begin_transfer(gspi, data, NULL);
 
   // Read the number of data bits; if the value is 0, it means 16 bits are valid
   data_bits = gspi->reg->GSPI_WRITE_DATA2_b.GSPI_MANUAL_WRITE_DATA2;
@@ -922,15 +878,7 @@ int32_t GSPI_Receive(void *data,
   if (gspi->info->status.busy) {
     return ARM_DRIVER_ERROR_BUSY;
   }
-  gspi->info->status.busy       = 1U;
-  gspi->info->status.data_lost  = 0U;
-  gspi->info->status.mode_fault = 0U;
-
-  gspi->xfer->rx_buf = (uint8_t *)data;
-  gspi->xfer->tx_buf = NULL;
-
-  gspi->xfer->rx_cnt = 0U;
-  gspi->xfer->tx_cnt = 0U;
+  sli_gspi_begin_transfer(gspi, NULL, data);
 
   // Read the number of data bits; if the value is 0, it means 16 bits are valid
   data_bits = gspi->reg->GSPI_WRITE_DATA2_b.GSPI_MANUAL_WRITE_DATA2;
@@ -1175,15 +1123,7 @@ int32_t GSPI_Transfer(const void *data_out,
     return ARM_DRIVER_ERROR_BUSY;
   }
 
-  gspi->info->status.busy       = 1U;
-  gspi->info->status.data_lost  = 0U;
-  gspi->info->status.mode_fault = 0U;
-
-  gspi->xfer->rx_buf = (uint8_t *)data_in;
-  gspi->xfer->tx_buf = (uint8_t *)data_out;
-
-  gspi->xfer->rx_cnt = 0U;
-  gspi->xfer->tx_cnt = 0U;
+  sli_gspi_begin_transfer(gspi, data_out, data_in);
 
   // Read the number of data bits; if the value is 0, it means 16 bits are valid
   data_bits = gspi->reg->GSPI_WRITE_DATA2_b.GSPI_MANUAL_WRITE_DATA2;

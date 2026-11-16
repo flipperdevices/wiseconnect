@@ -97,6 +97,10 @@ int si91x_block_device_prog(const struct lfs_config *cfg,
     //Write to flash
     status = sl_si91x_command_to_write_common_flash(flash_prog_addr, buffer, (uint16_t)size, FLASH_WRITE);
     if (status != LITTLE_FS_OK) {
+      SL_PRINT_STRING_ERROR("si91x_block_device_prog: sl_si91x_command_to_write_common_flash "
+                            "failed st=0x%04lX,line no : %d\r\n",
+                            (unsigned long)status,
+                            (int)__LINE__);
       status = LFS_ERR_IO;
     }
   }
@@ -121,6 +125,10 @@ int si91x_block_device_erase(const struct lfs_config *cfg, lfs_block_t block)
     //Erase sector
     status = sl_si91x_command_to_write_common_flash(flash_erase_addr, dummy_buff, SECTOR_SIZE, FLASH_ERASE);
     if (status != LITTLE_FS_OK) {
+      SL_PRINT_STRING_ERROR("si91x_block_device_erase: sl_si91x_command_to_write_common_flash "
+                            "failed st=0x%04lX,line no : %d\r\n",
+                            (unsigned long)status,
+                            (int)__LINE__);
       status = LFS_ERR_IO;
     }
   }
@@ -176,14 +184,19 @@ sl_status_t sl_si91x_littefs_dir_list(lfs_t *lfs,
   struct lfs_info info;
   int i = 0;
 
-  if (entries == NULL || entries_count == NULL || path == NULL)
+  if (entries == NULL || entries_count == NULL || path == NULL) {
+    SL_PRINT_STRING_ERROR("sl_si91x_littefs_dir_list: null pointer,line no : %d\r\n", (int)__LINE__);
     return SL_STATUS_NULL_POINTER;
-
+  }
   *entries_count = 0;
 
   // Open the directory
   int err = lfs_dir_open(lfs, &dir, path);
   if (err) {
+    SL_PRINT_STRING_ERROR("sl_si91x_littefs_dir_list: lfs_dir_open failed "
+                          "st=0x%04lX,line no : %d\r\n",
+                          (unsigned long)SL_STATUS_NOT_AVAILABLE,
+                          (int)__LINE__);
     return SL_STATUS_NOT_AVAILABLE;
   }
 
@@ -192,6 +205,10 @@ sl_status_t sl_si91x_littefs_dir_list(lfs_t *lfs,
     err = lfs_dir_read(lfs, &dir, &info);
     if (err < 0) {
       lfs_dir_close(lfs, &dir);
+      SL_PRINT_STRING_ERROR("sl_si91x_littefs_dir_list: lfs_dir_read failed "
+                            "st=0x%04lX,line no : %d\r\n",
+                            (unsigned long)SL_STATUS_FAIL,
+                            (int)__LINE__);
       return SL_STATUS_FAIL;
     }
 
@@ -202,6 +219,9 @@ sl_status_t sl_si91x_littefs_dir_list(lfs_t *lfs,
 
     if (*entries_count >= entries_buffer_array_size) {
       lfs_dir_close(lfs, &dir);
+      SL_PRINT_STRING_ERROR("sl_si91x_littefs_dir_list: buffer full st=0x%04lX,line no : %d\r\n",
+                            (unsigned long)SL_STATUS_FAIL,
+                            (int)__LINE__);
       return SL_STATUS_FAIL;
     }
 

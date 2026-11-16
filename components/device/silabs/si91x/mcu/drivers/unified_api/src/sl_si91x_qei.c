@@ -30,6 +30,7 @@
 #include "sl_si91x_qei.h"
 #include "sl_si91x_driver_gpio.h"
 #include "sl_gpio_board.h"
+
 /*******************************************************************************
 ****************************  DEFINES / MACROS   ********************************
 *******************************************************************************/
@@ -73,6 +74,9 @@ sl_status_t sl_si91x_qei_start_velocity(uint32_t period)
   if (period > MAX_DELTA_TIME) {
     // Set status to invalid parameter
     status = SL_STATUS_INVALID_PARAMETER;
+    SL_PRINT_STRING_ERROR("sl_si91x_qei_start_velocity: error status=0x%04lX,line no : %d\r\n",
+                          (unsigned long)(SL_STATUS_INVALID_PARAMETER),
+                          (int)__LINE__);
   } else {
     // Set delta time
     RSI_QEI_SetDeltaTime(QEI, period);
@@ -93,6 +97,9 @@ sl_status_t sl_si91x_qei_set_position_counter(uint32_t pos_cnt_value)
   if (pos_cnt_value > MAX_REG_VALUE) {
     // Set status to invalid parameter
     status = SL_STATUS_INVALID_PARAMETER;
+    SL_PRINT_STRING_ERROR("sl_si91x_qei_set_position_counter: error status=0x%04lX,line no : %d\r\n",
+                          (unsigned long)(SL_STATUS_INVALID_PARAMETER),
+                          (int)__LINE__);
   } else {
     // Set the position counter to the specified value
     RSI_QEI_SetPosition(QEI, pos_cnt_value);
@@ -111,6 +118,9 @@ sl_status_t sl_si91x_qei_set_encoding_mode(sl_qei_encoding_mode_t mode)
   if (mode >= SL_QEI_ENCODE_MODE_LAST) {
     // Set status to invalid parameter
     status = SL_STATUS_INVALID_PARAMETER;
+    SL_PRINT_STRING_ERROR("sl_si91x_qei_set_encoding_mode: error status=0x%04lX,line no : %d\r\n",
+                          (unsigned long)(SL_STATUS_INVALID_PARAMETER),
+                          (int)__LINE__);
   } else {
     // Set the encoding mode
     RSI_QEI_SetMode(QEI, mode);
@@ -129,6 +139,9 @@ sl_status_t sl_si91x_qei_set_pos_direction(sl_qei_direction_t direction)
   if (direction >= SL_QEI_DIRECTION_LAST) {
     // Set status to invalid parameter
     status = SL_STATUS_INVALID_PARAMETER;
+    SL_PRINT_STRING_ERROR("sl_si91x_qei_set_pos_direction: error status=0x%04lX,line no : %d\r\n",
+                          (unsigned long)(SL_STATUS_INVALID_PARAMETER),
+                          (int)__LINE__);
   } else {
     // Set the direction
     RSI_QEI_SetDirection(QEI, direction);
@@ -147,6 +160,9 @@ sl_status_t sl_si91x_qei_set_index_counter(uint32_t index_count)
   if (index_count > MAX_REG_VALUE) {
     // Set status to invalid parameter
     status = SL_STATUS_INVALID_PARAMETER;
+    SL_PRINT_STRING_ERROR("sl_si91x_qei_set_index_counter: error status=0x%04lX,line no : %d\r\n",
+                          (unsigned long)(SL_STATUS_INVALID_PARAMETER),
+                          (int)__LINE__);
   } else {
     // Set the index counter to the specified value
     RSI_QEI_SetIndex(QEI, index_count);
@@ -165,6 +181,9 @@ sl_status_t sl_si91x_qei_configure_delta_time_frequency(uint32_t freq, uint32_t 
   if (period > MAX_DELTA_TIME) {
     // Set status to invalid parameter
     status = SL_STATUS_INVALID_PARAMETER;
+    SL_PRINT_STRING_ERROR("sl_si91x_qei_configure_delta_time_frequency: error status=0x%04lX,line no : %d\r\n",
+                          (unsigned long)(SL_STATUS_INVALID_PARAMETER),
+                          (int)__LINE__);
   } else {
     // Configure delta time and frequency
     RSI_QEI_ConfigureDeltaTimeAndFreq(QEI, freq, period);
@@ -183,6 +202,9 @@ sl_status_t sl_si91x_qei_set_delta_time(uint32_t delta_time)
   if (delta_time > MAX_DELTA_TIME) {
     // Set status to invalid parameter
     status = SL_STATUS_INVALID_PARAMETER;
+    SL_PRINT_STRING_ERROR("sl_si91x_qei_set_delta_time: error status=0x%04lX,line no : %d\r\n",
+                          (unsigned long)(SL_STATUS_INVALID_PARAMETER),
+                          (int)__LINE__);
   } else {
     // Set the delta time
     RSI_QEI_SetDeltaTime(QEI, delta_time);
@@ -201,6 +223,9 @@ sl_status_t sl_si91x_qei_set_position_match(uint32_t pos_match)
   if (pos_match > MAX_REG_VALUE) {
     // Set status to invalid parameter
     status = SL_STATUS_INVALID_PARAMETER;
+    SL_PRINT_STRING_ERROR("sl_si91x_qei_set_position_match: error status=0x%04lX,line no : %d\r\n",
+                          (unsigned long)(SL_STATUS_INVALID_PARAMETER),
+                          (int)__LINE__);
   } else {
     // Set the position match value
     RSI_QEI_SetPosMatch(QEI, pos_match);
@@ -219,6 +244,9 @@ sl_status_t sl_si91x_qei_set_velocity_value_to_compare(uint32_t velocity_value)
   if (velocity_value > MAX_REG_VALUE) {
     // Set status to invalid parameter
     status = SL_STATUS_INVALID_PARAMETER;
+    SL_PRINT_STRING_ERROR("sl_si91x_qei_set_velocity_value_to_compare: error status=0x%04lX,line no : %d\r\n",
+                          (unsigned long)(SL_STATUS_INVALID_PARAMETER),
+                          (int)__LINE__);
   } else {
     // Set the velocity value for comparison
     RSI_QEI_VelocityValueToCompare(QEI, velocity_value);
@@ -236,6 +264,9 @@ sl_status_t sl_si91x_qei_set_index_maximum_counter(uint32_t max_index)
   // Check if the max_index exceeds the allowed maximum value
   if (max_index > MAX_REG_VALUE) {
     status = SL_STATUS_INVALID_PARAMETER;
+    SL_PRINT_STRING_ERROR("sl_si91x_qei_set_index_maximum_counter: error status=0x%04lX,line no : %d\r\n",
+                          (unsigned long)(SL_STATUS_INVALID_PARAMETER),
+                          (int)__LINE__);
   } else {
     // Set the maximum index
     RSI_QEI_SetMaxIndex(QEI, max_index);
@@ -253,6 +284,9 @@ sl_status_t sl_si91x_qei_swap_a_b(sl_qei_swap_ab_t swap_select)
   // Check if the provided selection is valid
   if (swap_select >= SL_QEI_SWAP_LAST) {
     status = SL_STATUS_INVALID_PARAMETER;
+    SL_PRINT_STRING_ERROR("sl_si91x_qei_swap_a_b: error status=0x%04lX,line no : %d\r\n",
+                          (unsigned long)(SL_STATUS_INVALID_PARAMETER),
+                          (int)__LINE__);
   } else {
     // Perform the swap
     RSI_QEI_Swap_PhaseAB(QEI, swap_select);
@@ -270,6 +304,9 @@ sl_status_t sl_si91x_qei_configure_timer_mode(sl_qei_timer_mode_t timer_mode)
   // Check if the provided timer mode is valid
   if (timer_mode >= SL_QEI_MODE_LAST) {
     status = SL_STATUS_INVALID_PARAMETER;
+    SL_PRINT_STRING_ERROR("sl_si91x_qei_configure_timer_mode: error status=0x%04lX,line no : %d\r\n",
+                          (unsigned long)(SL_STATUS_INVALID_PARAMETER),
+                          (int)__LINE__);
   } else {
     // Configure the timer mode
     RSI_QEI_ConfigureTimerMode(QEI, timer_mode);
@@ -288,6 +325,7 @@ static sl_status_t configure_gpio_pin(sl_gpio_pin_config_t *pin_config)
     // Validates the null pointer, if true returns error code
     if (pin_config == NULL) {
       status = SL_STATUS_NULL_POINTER;
+      SL_PRINT_STRING_ERROR("configure_gpio_pin: handle NULL,line no : %d\r\n", (int)__LINE__);
       break;
     }
     if ((pin_config->pin == SL_SI91X_GPIO_31_PIN) || (pin_config->pin == SL_SI91X_GPIO_32_PIN)
@@ -326,18 +364,30 @@ sl_status_t sl_si91x_qei_init(sl_qei_init_t *qei_init)
     // Configure QEI pins
     status = configure_gpio_pin(&qei_init->dir); // QEI dir pin mux
     if (status != SL_STATUS_OK) {
+      SL_PRINT_STRING_ERROR("sl_si91x_qei_init: error status=0x%04lX,line no : %d\r\n",
+                            (unsigned long)(status),
+                            (int)__LINE__);
       return status;
     }
     status = configure_gpio_pin(&qei_init->idx); // QEI idx pin mux
     if (status != SL_STATUS_OK) {
+      SL_PRINT_STRING_ERROR("sl_si91x_qei_init: error status=0x%04lX,line no : %d\r\n",
+                            (unsigned long)(status),
+                            (int)__LINE__);
       return status;
     }
     status = configure_gpio_pin(&qei_init->phasea); // QEI phasea pin mux
     if (status != SL_STATUS_OK) {
+      SL_PRINT_STRING_ERROR("sl_si91x_qei_init: error status=0x%04lX,line no : %d\r\n",
+                            (unsigned long)(status),
+                            (int)__LINE__);
       return status;
     }
     status = configure_gpio_pin(&qei_init->phaseb); // QEI phaseb pin mux
     if (status != SL_STATUS_OK) {
+      SL_PRINT_STRING_ERROR("sl_si91x_qei_init: error status=0x%04lX,line no : %d\r\n",
+                            (unsigned long)(status),
+                            (int)__LINE__);
       return status;
     }
     // QEI clock enable
@@ -381,6 +431,9 @@ sl_status_t sl_si91x_qei_set_digital_filter_clock_division(sl_qei_clk_div_t cloc
   if (clock_division >= SL_QEI_CLK_DIV_LAST) {
     // Set status to invalid parameter
     status = SL_STATUS_INVALID_PARAMETER;
+    SL_PRINT_STRING_ERROR("sl_si91x_qei_set_digital_filter_clock_division: clock division exceeds the maximum allowed "
+                          "value,line no : %d\r\n",
+                          (int)__LINE__);
   } else {
     // Set the clock division
     RSI_QEI_SetDigitalFilterClkDiv(QEI, clock_division);
@@ -403,15 +456,20 @@ sl_status_t sl_si91x_qei_register_callback(sl_qei_callback_t callback,
     // Validate null pointers
     if ((callback == NULL) || (intr_flags == NULL)) {
       status = SL_STATUS_NULL_POINTER; // Set status to null pointer error
+      SL_PRINT_STRING_ERROR("sl_si91x_qei_register_callback: handle NULL,line no : %d\r\n", (int)__LINE__);
       break;
     }
     if (!(validate_intr_unmask_config(intr_flags))) {
       // Set status to invalid parameter
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR("sl_si91x_qei_register_callback: intr flags are not valid ,line no : %d\r\n",
+                            (int)__LINE__);
     }
     // Check if a callback is already registered
     if (callback_func_ptr != NULL) {
       status = SL_STATUS_BUSY; // Set status to busy
+      SL_PRINT_STRING_ERROR("sl_si91x_qei_register_callback: callback is already registered,line no : %d\r\n",
+                            (int)__LINE__);
       break;
     }
     // Evaluate and set unmasked interrupt flags
@@ -453,11 +511,15 @@ sl_status_t sl_si91x_qei_unregister_callback(sl_qei_intr_mask_t *intr_mask)
     if (intr_mask == NULL) {
       // Set status to null pointer error
       status = SL_STATUS_NULL_POINTER;
+      SL_PRINT_STRING_ERROR("sl_si91x_qei_unregister_callback: handle NULL,line no : %d\r\n", (int)__LINE__);
       break;
     }
     // Check if a callback is not registered
     if (callback_func_ptr == NULL) {
       status = SL_STATUS_FAIL;
+      SL_PRINT_STRING_ERROR("sl_si91x_qei_unregister_callback: error status=0x%04lX,line no : %d\r\n",
+                            (unsigned long)(SL_STATUS_FAIL),
+                            (int)__LINE__);
       break;
     }
     // Evaluate and set masked interrupt flags
@@ -513,14 +575,18 @@ sl_status_t sl_si91x_qei_set_configuration(sl_qei_control_t state, sl_qei_config
 {
   sl_status_t status;
   do {
-    if ((config == NULL)) {
+    if (config == NULL) {
       // Set status to null pointer error
       status = SL_STATUS_NULL_POINTER;
+      SL_PRINT_STRING_ERROR("sl_si91x_qei_set_configuration: handle NULL,line no : %d\r\n", (int)__LINE__);
       break;
     }
     if (state >= SL_QEI_STATE_LAST) {
       // Set status to invalid parameter
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR("sl_si91x_qei_set_configuration: error status=0x%04lX,line no : %d\r\n",
+                            (unsigned long)(SL_STATUS_INVALID_PARAMETER),
+                            (int)__LINE__);
       break;
     }
     // Set or clear the configuration based on the state
@@ -550,11 +616,15 @@ sl_status_t sl_si91x_qei_get_configuration(sl_qei_control_t state, sl_qei_config
     // Check for NULL pointer
     if (config == NULL) {
       status = SL_STATUS_NULL_POINTER;
+      SL_PRINT_STRING_ERROR("sl_si91x_qei_get_configuration: handle NULL,line no : %d\r\n", (int)__LINE__);
       break;
     }
     // Check for valid state
     if (state >= SL_QEI_STATE_LAST) {
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR("sl_si91x_qei_get_configuration: error status=0x%04lX,line no : %d\r\n",
+                            (unsigned long)(SL_STATUS_INVALID_PARAMETER),
+                            (int)__LINE__);
       break;
     }
     // Get the current configuration based on the state
@@ -643,6 +713,7 @@ sl_status_t sl_si91x_qei_clear_interrupt(uint32_t int_mask)
   if (!(validate_intr_clr_config(int_mask))) {
     // Set status to invalid parameter
     status = SL_STATUS_INVALID_PARAMETER;
+    SL_PRINT_STRING_ERROR("sl_si91x_qei_clear_interrupt: interrupt mask is not valid,line no : %d\r\n", (int)__LINE__);
   } else {
     // Clear the specified interrupt(s)
     RSI_QEI_ClrIntrStatus(QEI, int_mask);

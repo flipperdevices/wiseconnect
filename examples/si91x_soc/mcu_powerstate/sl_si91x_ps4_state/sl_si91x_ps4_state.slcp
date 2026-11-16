@@ -5,7 +5,7 @@ description: 'This application demonstrates the PS4 sleep and active state with 
   '
 category: example|mcu powerstate
 quality: production
-label: SI91x - SL_SI91X_PS4_STATE
+label: SiWx91x Platform - PS4 STATE
 component:
 - id: sl_main
 - id: status
@@ -14,6 +14,12 @@ component:
 - id: sl_power_manager
 - id: debug_ulp_component
 - id: pm_ps2_component
+- id: si91x_log
+- id: si91x_log_iostream_compact
+- id: iostream_si91x
+- id: iostream_uart_si91x
+  instance:
+  - vcom
 template_contribution:
 - name: user_files_ps2
   value: ps4_state.*
@@ -38,7 +44,9 @@ include:
   - path: ps4_state.h
 toolchain_settings:
 - option: gcc_compiler_option
-  value: -Wall -Werror
+  value: -Wall -Werror -Wno-error=deprecated-declarations
+- option: llvm_compiler_option
+  value: -Wall -Werror -Wno-error=deprecated-declarations
 other_file:
 - path: resources/readme/ps4_active_state.png
 - path: resources/readme/ps4_sleep_state.png
@@ -49,13 +57,26 @@ ui_hints:
     focus: true
 readme:
 - path: readme.md
+filter:
+- name: Device Type
+  value:
+  - SoC
+- name: MCU
+  value:
+  - 32-bit MCU
+- name: Level
+  value:
+  - Beginner
+- name: Wireless Technology
+  value:
+  - Wi-Fi
 post_build:
   profile: wiseconnect_soc
 sdk_extension:
 - id: wiseconnect3_sdk
   vendor: silabs
-  version: 4.0.1
+  version: 4.1.2
 sdk:
   id: simplicity_sdk
   vendor: silabs
-  version: 2025.12.2
+  version: 2026.6.2

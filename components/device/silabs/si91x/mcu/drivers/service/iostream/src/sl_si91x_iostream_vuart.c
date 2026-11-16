@@ -1,6 +1,6 @@
 /***************************************************************************/ /**
  * @file
- * @brief SI91x IO Stream VUART Component.
+ * @brief SiWx91x IO Stream VUART component.
  *******************************************************************************
  * # License
  * <b>Copyright 2019 Silicon Laboratories Inc. www.silabs.com</b>

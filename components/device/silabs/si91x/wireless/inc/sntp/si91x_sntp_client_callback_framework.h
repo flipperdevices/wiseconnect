@@ -30,4 +30,4 @@
 
 #include "sl_si91x_types.h"
 
-sl_status_t sli_si91x_sntp_event_handler(sli_si91x_queue_packet_t *data);
+sl_status_t sli_si91x_sntp_event_handler(sli_command_engine_response_t *command_engine_response);

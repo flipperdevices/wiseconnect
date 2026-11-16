@@ -20,14 +20,24 @@
  *
  *  @brief : This file contains user configurable details to configure the device
  *
- *  @section Description  This file contains user configurable details to configure the device
- *
+ *  @section Description
+ *  Wi-Fi/BLE example configuration, application state enum, and (when
+ *  SL_BLE_DYNAMIC_ENABLE_DISABLE_DEMO is 1) 16k SSL demo server macros plus
+ *  externs for ble_disable_done_queue, ble_enable_done_queue, and
+ *  rsi_wlan_init_wifi. Full behavior is documented in readme.md under
+ *  "Optional: Dynamic BLE enable/disable and 16k SSL demo".
  *
  */
 #ifndef WIFI_CONFIG_H
 #define WIFI_CONFIG_H
 
 #define RSI_APP_BUF_SIZE 1600
+
+/* 0: standard path — load AWS TLS creds in rsi_wlan_mqtt_certs_init(), MQTT after DHCP.
+ * 1: after DHCP — BLE disable, 16k TLS demo (SSL_16K_DEMO_*), sl_wifi_disconnect,
+ *    BLE enable, wifi_app_init_and_reconnect(), load_certificates_in_flash(), MQTT.
+ * Failures skip MQTT; see readme "Optional: Dynamic BLE enable/disable and 16k SSL demo". */
+#define SL_BLE_DYNAMIC_ENABLE_DISABLE_DEMO 0
 
 //! Enumeration for states in application
 typedef enum wifi_app_state_e {
@@ -67,7 +77,31 @@ typedef enum rsi_app_cmd_e {
   WIFI_APP_CONNECTION_STATUS    = 2,
   WIFI_APP_DISCONNECTION_STATUS = 3,
   WIFI_APP_DISCONNECTION_NOTIFY = 4,
-  WIFI_APP_TIMEOUT_NOTIFY       = 5
+  WIFI_APP_TIMEOUT_NOTIFY       = 5,
+#if SL_BLE_DYNAMIC_ENABLE_DISABLE_DEMO
+  WIFI_APP_BLE_ENABLE_REQUEST = 6
+#endif
 } rsi_app_cmd_t;
+
+#if SL_BLE_DYNAMIC_ENABLE_DISABLE_DEMO
+/*
+ * 16k-record TLS lab demo: two TLS 1.2 clients to the same host, different ports.
+ * These values must match your test setup — they are not chosen for any network by default.
+ *
+ * - SSL_16K_DEMO_SERVER_IP: IPv4 of the machine running the OpenSSL servers (often your PC;
+ *   use an address on the same subnet as the module after Wi-Fi connect).
+ * - PORT_1 / PORT_2: Each must match one listening openssl s_server -accept <port> instance.
+ * See readme.md "Optional: Dynamic BLE enable/disable and 16k SSL demo" and
+ * "Lab TLS server (OpenSSL example)".
+ */
+#define SSL_16K_DEMO_SERVER_IP     "192.168.0.100"
+#define SSL_16K_DEMO_SERVER_PORT_1 4443
+#define SSL_16K_DEMO_SERVER_PORT_2 4444
+
+#include "cmsis_os2.h"
+extern osMessageQueueId_t ble_disable_done_queue;
+extern osMessageQueueId_t ble_enable_done_queue;
+extern void rsi_wlan_init_wifi(void);
+#endif
 
 #endif

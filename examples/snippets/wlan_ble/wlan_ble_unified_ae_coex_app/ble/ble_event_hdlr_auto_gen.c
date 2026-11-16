@@ -54,7 +54,7 @@ generic_event_handler_lut_entry_t ble_events_lut[] = { { rsi_ble_event_adv_repor
                                                        { rsi_ble_event_smp_pending },
                                                        { rsi_ble_event_advertisement_restart },
                                                        { rsi_ble_event_scan_restart },
-                                                       { rsi_ble_event_on_data_recieve },
+                                                       { rsi_ble_event_on_data_receive },
                                                        { rsi_ble_event_conn_update_req },
                                                        { rsi_ble_event_set_buffer_config },
                                                        { rsi_ble_event_select_data_transfer },
@@ -1892,7 +1892,7 @@ APP_WEAK void rsi_ble_event_scan_restart_driver_callback(void)
 /*==============================================*/
 /**
 
- * @fn          void rsi_ble_event_on_data_recieve_driver_callback(uint8_t conn_id)
+ * @fn          void rsi_ble_event_on_data_receive_driver_callback(uint8_t conn_id)
  * @brief       function enqueues received event data in driver context to ble_generic_cb.event_queues to be processed in ble task context
  * @param[in]   uint8_t conn_id
  * @param[out]  None
@@ -1903,9 +1903,9 @@ APP_WEAK void rsi_ble_event_scan_restart_driver_callback(void)
  *
  */
 
-APP_WEAK void rsi_ble_event_on_data_recieve_driver_callback(uint8_t conn_id)
+APP_WEAK void rsi_ble_event_on_data_receive_driver_callback(uint8_t conn_id)
 {
-  LOG_PRINT_D("\n in rsi_ble_on_data_recieve_driver_callback \n");
+  LOG_PRINT_D("\n in rsi_ble_event_on_data_receive_driver_callback \n");
   generic_event_message_t *msg;
   UNUSED_PARAMETER(conn_id);
 
@@ -1920,7 +1920,7 @@ APP_WEAK void rsi_ble_event_on_data_recieve_driver_callback(uint8_t conn_id)
   }
   //! init messag details
   msg->next     = NULL;
-  msg->event_id = on_data_recieve_event_id;
+  msg->event_id = on_data_receive_event_id;
   //! function to be called to free this message
   msg->free_callback = free;
   //msg->status = status;
@@ -2101,7 +2101,7 @@ APP_WEAK void rsi_ble_event_profile_discovery_driver_callback(uint8_t *conn_id)
 /*==============================================*/
 /**
 
- * @fn          void rsi_ble_event_profile_dummy_driver_callback(profile_dummy_data_t *profile_dummy_data)
+ * @fn          void rsi_ble_event_profile_dummy_driver_callback(sli_profile_dummy_data_t *profile_dummy_data)
  * @brief       function enqueues received event data in driver context to ble_generic_cb.event_queues to be processed in ble task context
  * @param[in]   uint8_t *conn_id, event_data
  * @param[out]  None
@@ -2112,14 +2112,14 @@ APP_WEAK void rsi_ble_event_profile_discovery_driver_callback(uint8_t *conn_id)
  *
  */
 
-APP_WEAK void rsi_ble_event_profile_dummy_driver_callback(profile_dummy_data_t *profile_dummy_data)
+APP_WEAK void rsi_ble_event_profile_dummy_driver_callback(sli_profile_dummy_data_t *profile_dummy_data)
 {
   LOG_PRINT_D("\n in rsi_ble_profile_dummy_driver_callback \n");
   generic_event_message_t *msg;
 
   //! allocate message
 
-  msg = malloc(sizeof(generic_event_message_t) + sizeof(profile_dummy_data_t));
+  msg = malloc(sizeof(generic_event_message_t) + sizeof(sli_profile_dummy_data_t));
   if (msg == NULL) {
     printf("Out of Memory assert\n");
     _assert((uint8_t *)"Out Of Memory\n", __LINE__);
@@ -2134,7 +2134,7 @@ APP_WEAK void rsi_ble_event_profile_dummy_driver_callback(profile_dummy_data_t *
   //msg->status = status;
 
   //! copy event data to msg
-  memcpy((void *)&msg->event_data[0], (void *)profile_dummy_data, sizeof(profile_dummy_data_t));
+  memcpy((void *)&msg->event_data[0], (void *)profile_dummy_data, sizeof(sli_profile_dummy_data_t));
   //! enqueue message to ble_generic_cb.event_queues[0]
   rsi_app_enqueue_pkt_with_mutex(&ble_generic_cb.event_queues[0], (rsi_app_pkt_t *)msg, &ble_generic_cb.event_mutex);
   osSemaphoreRelease(ble_generic_cb.semaphore);
@@ -2946,17 +2946,17 @@ APP_WEAK void rsi_ble_event_scan_restart(uint16_t __attribute__((unused)) status
 
 /*==============================================*/
 /**
- * @fn          void rsi_ble_event_on_data_recieve(uint16_t __attribute__((unused))status, void __attribute__((unused))*event_data)
- * @brief       handler for on_data_recieve to be executed in ble task context
+ * @fn          void rsi_ble_event_on_data_receive(uint16_t __attribute__((unused))status, void __attribute__((unused))*event_data)
+ * @brief       handler for on_data_receive to be executed in ble task context
  * @param[in]   uint16_t , event_status 
  * @param[in]   void, event_data
  * @return      None
  *
  * @section description
- * handler for on_data_recieve to be executed in ble task context
+ * handler for on_data_receive to be executed in ble task context
  *
  */
-APP_WEAK void rsi_ble_event_on_data_recieve(uint16_t __attribute__((unused)) status,
+APP_WEAK void rsi_ble_event_on_data_receive(uint16_t __attribute__((unused)) status,
                                             void __attribute__((unused)) * event_data)
 {
   //! Add handling here

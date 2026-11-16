@@ -1,6 +1,6 @@
 /***************************************************************************/ /**
  * @file
- * @brief SI91x IO Stream debug Component header.
+ * @brief SiWx91x IO Stream debug component header.
  *******************************************************************************
  * # License
  * <b>Copyright 2019 Silicon Laboratories Inc. www.silabs.com</b>
@@ -42,7 +42,7 @@ extern "C" {
 ****************************  DEFINES / MACROS   ********************************
 *******************************************************************************/
 
-#define SL_SI91X_IOSTREAM_TYPE_DEBUG_OUTPUT 10 //IOstream Type Si91x Debug
+#define SL_SI91X_IOSTREAM_TYPE_DEBUG_OUTPUT 10 // IOSTREAM type: SiWx91x debug
 
 /*******************************************************************************
  *************************** GLOBAL VARIABLES   *******************************
@@ -66,7 +66,7 @@ extern sl_iostream_instance_info_t sl_si91x_iostream_instance_debug_info; ///< s
  * 
  * @return sl_status_t Status code indicating the result:
  *         - SL_STATUS_OK                 - Success.
- *         - SK_STATUS_FAIL               - fail
+ *         - SL_STATUS_FAIL               - fail
  *
  * For more information on status codes, see [SL STATUS DOCUMENTATION](https://docs.silabs.com/gecko-platform/latest/platform-common/status).
  ******************************************************************************/
@@ -87,4 +87,4 @@ void sl_si91x_iostream_set_debug_type(sl_si91x_iostream_swo_itm_8_msg_type_t typ
 }
 #endif
 
-#endif /* SL_SI91X_IOSTREAM_debug_H */
+#endif /* SL_SI91X_IOSTREAM_DEBUG_H */

@@ -28,13 +28,14 @@
  *
  ******************************************************************************/
 #include <string.h>
+#include <stdio.h>
 #include <stdint.h>
+#include <inttypes.h>
 #include "errno.h"
 #include "sl_wifi_callback_framework.h"
 #include "sl_status.h"
 #include "sl_board_configuration.h"
 #include "cmsis_os2.h"
-#include "string.h"
 #include "sl_wifi.h"
 #include "socket.h"
 #include "sl_utility.h"
@@ -78,16 +79,14 @@
 #define TWT_SCAN_TIMEOUT             10000
 #define ENABLE_NWP_POWER_SAVE        1
 
-// Use case based TWT selection params
-#define TWT_RX_LATENCY                       5000
-#define DEVICE_AVG_THROUGHPUT                20000
-#define ESTIMATE_EXTRA_WAKE_DURATION_PERCENT 0
-#define TWT_TOLERABLE_DEVIATION              10
-#define TWT_DEFAULT_WAKE_INTERVAL_MS         1024     // in milli seconds
-#define TWT_DEFAULT_WAKE_DURATION_MS         8        // in milli seconds
-#define MAX_TX_AND_RX_LATENCY_LIMIT          22118400 // 6hrs in milli seconds
-#define MAX_BEACON_WAKE_UP_AFTER_SP \
-  2 // The number of beacons after the service period completion for which the module wakes up and listens for any pending RX.
+/* Defaults migrated from sl_wifi_filter_broadcast(5000, 1, 1). */
+#define BCAST_FILTER_ENABLE      (1U)
+#define MCAST_FILTER_ENABLE      (1U)
+#define FILTER_MODE              (0U)
+#define BEACON_DROP_THRESHOLD_MS (5000U)
+
+#define TWT_RX_LATENCY              5000
+#define MAX_TX_AND_RX_LATENCY_LIMIT 22118400 // 6hrs in milli seconds
 
 #define KEEP_ALIVE_TIMEOUT        SL_WIFI_DEFAULT_KEEP_ALIVE_TIMEOUT
 #define AUTH_ASSOCIATION_TIMEOUT  SL_WIFI_DEFAULT_AUTH_ASSOCIATION_TIMEOUT
@@ -117,11 +116,14 @@ static const sl_wifi_device_configuration_t twt_client_configuration = {
                                                   ),
                    .bt_feature_bit_map = SL_SI91X_BT_RF_TYPE,
                    .ext_tcp_ip_feature_bit_map =
-                     SL_SI91X_CONFIG_FEAT_EXTENTION_VALID
+                     SL_SI91X_CONFIG_FEAT_EXTENSION_VALID
                      | (SL_SI91X_EXT_FEAT_HTTP_OTAF_SUPPORT | SL_SI91X_EXT_TCP_IP_SSL_16K_RECORD),
                    .ble_feature_bit_map     = 0,
                    .ble_ext_feature_bit_map = 0,
-                   .config_feature_bit_map  = (SL_SI91X_FEAT_SLEEP_GPIO_SEL_BITMAP | SL_WIFI_ENABLE_ENHANCED_MAX_PSP) }
+                   .config_feature_bit_map  = (SL_SI91X_FEAT_SLEEP_GPIO_SEL_BITMAP | SL_WIFI_ENABLE_ENHANCED_MAX_PSP) },
+  .ta_pool         = { .tx_ratio_in_buffer_pool = 0, .rx_ratio_in_buffer_pool = 0, .global_ratio_in_buffer_pool = 0 },
+  .efuse_data_type = SL_SI91X_EFUSE_MFG_SW_VERSION,
+  .nwp_fw_image_number = SL_SI91X_NWP_FW_IMAGE_NUMBER_0
 };
 
 /******************************************************
@@ -136,7 +138,6 @@ const osThreadAttr_t thread_attributes = {
   .stack_size = 3072,
   .priority   = 0,
   .tz_module  = 0,
-  .reserved   = 0,
 };
 
 sl_ip_address_t ip_address           = { 0 };
@@ -174,17 +175,11 @@ sl_wifi_twt_request_t default_twt_setup_configuration = {
   .negotiation_type        = 0,
 };
 
-sl_wifi_twt_selection_t default_twt_selection_configuration = {
-  .twt_enable                            = 1,
-  .average_tx_throughput                 = EXCPECTED_TX_THROUGHPUT_KBPS,
-  .tx_latency                            = 0,
-  .rx_latency                            = TWT_RX_LATENCY,
-  .device_average_throughput             = DEVICE_AVG_THROUGHPUT,
-  .estimated_extra_wake_duration_percent = ESTIMATE_EXTRA_WAKE_DURATION_PERCENT,
-  .twt_tolerable_deviation               = TWT_TOLERABLE_DEVIATION,
-  .default_wake_interval_ms              = TWT_DEFAULT_WAKE_INTERVAL_MS,
-  .default_minimum_wake_duration_ms      = TWT_DEFAULT_WAKE_DURATION_MS,
-  .beacon_wake_up_count_after_sp         = MAX_BEACON_WAKE_UP_AFTER_SP
+sl_wifi_twt_selection_v2_t default_twt_config = {
+  .twt_enable            = 1,
+  .average_tx_throughput = EXCPECTED_TX_THROUGHPUT_KBPS,
+  .tx_latency            = 0,
+  .rx_latency            = TWT_RX_LATENCY,
 };
 
 sl_wifi_timeout_t timeout_configuration = { .keep_alive_timeout_value       = KEEP_ALIVE_TIMEOUT,
@@ -220,13 +215,13 @@ void data_callback(uint32_t sock_no,
   UNUSED_PARAMETER(sock_no);
   uint32_t i;
 
-  printf("Command length : %ld\r\n", length);
-  printf("Command Received from remote app is:\r\n");
-  printf("\"");
+  SL_DEBUG_LOG_V2(DEBUG, "Command length : %ld\r\n", length);
+  SL_DEBUG_LOG_V2(DEBUG, "Command Received from remote app is:\r\n");
+  SL_DEBUG_LOG_V2(DEBUG, "\"\r\n");
   for (i = 0; i < length; i++) {
-    printf("%c", buffer[i]);
+    SL_DEBUG_LOG_V2(DEBUG, "%c", buffer[i]);
   }
-  printf("\"\r\n");
+  SL_DEBUG_LOG_V2(DEBUG, "\"\r\n");
   data_received_flag = true;
   osSemaphoreRelease(data_semaphore);
 }
@@ -240,62 +235,74 @@ void application_start()
 {
   sl_status_t status;
   sl_wifi_performance_profile_v2_t performance_profile = { 0 };
-  sl_wifi_firmware_version_t version                   = { 0 };
+  sl_si91x_firmware_version_t version                  = { 0 };
   sl_mac_address_t mac_addr                            = { 0 };
   data_semaphore                                       = osSemaphoreNew(1, 0, NULL);
 
   sl_si91x_set_timeout(&timeout_configuration);
   status = sl_net_init(SL_NET_WIFI_CLIENT_INTERFACE, &twt_client_configuration, NULL, NULL);
   if (status != SL_STATUS_OK) {
-    printf("Failed to start Wi-Fi client interface: 0x%lx\r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "Failed to start Wi-Fi client interface: 0x%" PRIx32, (uint32_t)status);
     return;
   }
-  printf("Wi-Fi Init Done\r\n");
+  SL_DEBUG_LOG_V2(INFO, "Wi-Fi Init Done\r\n");
 
 #ifdef SLI_SI91X_MCU_INTERFACE
   uint8_t xtal_enable = 1;
   status              = sl_si91x_m4_ta_secure_handshake(SL_SI91X_ENABLE_XTAL, 1, &xtal_enable, 0, NULL);
   if (status != SL_STATUS_OK) {
-    printf("Failed to bring m4_ta_secure_handshake: 0x%lx\r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "Failed to bring m4_ta_secure_handshake: 0x%" PRIx32, (uint32_t)status);
     return;
   }
-  printf("m4_ta_secure_handshake Success\r\n");
+  SL_DEBUG_LOG_V2(INFO, "m4_ta_secure_handshake Success\r\n");
 #endif
 
-  status = sl_wifi_get_firmware_version(&version);
+  status = sl_si91x_get_firmware_version(&version);
   if (status != SL_STATUS_OK) {
-    printf("Failed to bring m4_ta_secure_handshake: 0x%lx\r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "Failed to bring m4_ta_secure_handshake: 0x%" PRIx32, (uint32_t)status);
     return;
   } else {
-    print_firmware_version(&version);
+    printf("\r\nFirmware version is: %x%x.%d.%d.%d.%d.%d.%d\r\n",
+           version.chip_id,
+           version.rom_id,
+           version.major,
+           version.minor,
+           version.security_version,
+           version.patch_num,
+           version.customer_id,
+           version.build_num);
   }
 
   status = sl_net_up(SL_NET_WIFI_CLIENT_INTERFACE, 0);
   if (status != SL_STATUS_OK) {
-    printf("Failed to bring Wi-Fi client interface up: 0x%lx\r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "Failed to bring Wi-Fi client interface up: 0x%" PRIx32, (uint32_t)status);
     return;
   }
-  printf("Wi-Fi Client Connected\r\n");
+  SL_DEBUG_LOG_V2(INFO, "Wi-Fi Client Connected\r\n");
 
   status = sl_wifi_get_mac_address(SL_WIFI_CLIENT_INTERFACE, &mac_addr);
   if (status != SL_STATUS_OK) {
-    printf("Failed to get MAC address: 0x%lx\r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "Failed to get MAC address: 0x%" PRIx32, (uint32_t)status);
     return;
   }
-  printf("MAC Address: %x:%x:%x:%x:%x:%x\r\n",
-         mac_addr.octet[0],
-         mac_addr.octet[1],
-         mac_addr.octet[2],
-         mac_addr.octet[3],
-         mac_addr.octet[4],
-         mac_addr.octet[5]);
+  char twt_mac_log[80];
+  snprintf(twt_mac_log,
+           sizeof(twt_mac_log),
+           "MAC Address: %x:%x:%x:%x:%x:%x",
+           mac_addr.octet[0],
+           mac_addr.octet[1],
+           mac_addr.octet[2],
+           mac_addr.octet[3],
+           mac_addr.octet[4],
+           mac_addr.octet[5]);
+  SL_DEBUG_LOG_V2(INFO, "%s", (uintptr_t)twt_mac_log);
 
   status = sl_net_get_profile(SL_NET_WIFI_CLIENT_INTERFACE, SL_NET_DEFAULT_WIFI_CLIENT_PROFILE_ID, &profile);
   if (status != SL_STATUS_OK) {
-    printf("Failed to get firmware version: 0x%lx\r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "Failed to get firmware version: 0x%" PRIx32, (uint32_t)status);
     return;
   }
-  printf("\r\nSuccess to get client profile\r\n");
+  SL_DEBUG_LOG_V2(INFO, "Success to get client profile\r\n");
 
   ip_address.type = SL_IPV4;
   memcpy(&ip_address.ip.v4.bytes, &profile.ip.ip.v4.ip_address.bytes, sizeof(sl_ipv4_address_t));
@@ -304,54 +311,63 @@ void application_start()
 #if !DOOR_LOCK_SIMULATION
   status = send_udp_data();
   if (status != SL_STATUS_OK) {
-    printf("\r\nError while doing UDP TX: 0x%lx \r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "Error while doing UDP TX: 0x%" PRIx32 " ", (uint32_t)status);
     return;
   }
-  printf("\r\nUDP TX complete\r\n");
+  SL_DEBUG_LOG_V2(INFO, "UDP TX complete\r\n");
 #endif
 
   status = create_tcp_socket();
   if (status != SL_STATUS_OK) {
-    printf("\r\nError while creating TCP Socket: 0x%lx \r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "Error while creating TCP Socket: 0x%" PRIx32 " ", (uint32_t)status);
     return;
   }
-  printf("TCP Socket Creation done\r\n");
+  SL_DEBUG_LOG_V2(INFO, "TCP Socket Creation done\r\n");
 
   sl_wifi_set_twt_config_callback_v2(twt_callback_handler, NULL);
   if (TWT_AUTO_CONFIG == 1) {
-    performance_profile.twt_selection = default_twt_selection_configuration;
-    status                            = sl_wifi_target_wake_time_auto_selection(&performance_profile.twt_selection);
+    status = sl_wifi_target_wake_time_auto_selection_v2(&default_twt_config);
   } else {
     performance_profile.twt_request = default_twt_setup_configuration;
     status                          = sl_wifi_enable_target_wake_time(&performance_profile.twt_request);
   }
   if (status != SL_STATUS_OK) {
-    printf("\r\nError while configuring TWT: 0x%lx \r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "Error while configuring TWT: 0x%" PRIx32 " ", (uint32_t)status);
     return;
   }
   // A small delay is added so that the asynchronous response from TWT is printed in correct format.
   osDelay(100);
 
-  status = sl_wifi_filter_broadcast(5000, 1, 1);
+  sl_wifi_groupcast_filter_config_t groupcast_filter_config = { 0 };
+  groupcast_filter_config.enable_bcast_filter               = (uint8_t)BCAST_FILTER_ENABLE;
+  groupcast_filter_config.enable_mcast_filter               = (uint8_t)MCAST_FILTER_ENABLE;
+  groupcast_filter_config.filter_mode                       = (uint8_t)FILTER_MODE;
+
+  status = sl_wifi_set_groupcast_filter_config(&groupcast_filter_config);
   if (status != SL_STATUS_OK) {
-    printf("\r\nBroadcast Data Filter Failed: 0x%lx \r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "sl_wifi_set_groupcast_filter_config failed: 0x%" PRIx32 " ", (uint32_t)status);
     return;
   }
-  printf("Enabled Broadcast Data Filter\r\n");
+  status = sl_wifi_set_beacon_drop_threshold(SL_WIFI_CLIENT_INTERFACE, (uint16_t)BEACON_DROP_THRESHOLD_MS);
+  if (status != SL_STATUS_OK) {
+    SL_DEBUG_LOG_V2(ERROR, "sl_wifi_set_beacon_drop_threshold failed: 0x%" PRIx32 " ", (uint32_t)status);
+    return;
+  }
+  SL_DEBUG_LOG_V2(INFO, "Enabled Broadcast Data Filter");
 
 #if ENABLE_NWP_POWER_SAVE
   performance_profile.profile = ASSOCIATED_POWER_SAVE_LOW_LATENCY;
   status                      = sl_wifi_set_performance_profile_v2(&performance_profile);
   if (status != SL_STATUS_OK) {
-    printf("\r\nPowersave Configuration Failed, Error Code : 0x%lX\r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "Powersave Configuration Failed, Error Code : 0x%" PRIx32, (uint32_t)status);
     return;
   }
-  printf("Associated Power Save Enabled\r\n");
+  SL_DEBUG_LOG_V2(INFO, "Associated Power Save Enabled");
 #endif
 
   status = receive_and_send_data();
   if (status != SL_STATUS_OK) {
-    printf("Send and Receive Data fail: 0x%lx \r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "Send and Receive Data fail: 0x%" PRIx32 " ", (uint32_t)status);
     return;
   }
 }
@@ -369,12 +385,12 @@ sl_status_t send_udp_data(void)
 
   udp_client_socket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
   if (udp_client_socket < 0) {
-    printf("\r\nSocket creation failed with BSD error: %d\r\n", errno);
+    SL_DEBUG_LOG_V2(ERROR, "Socket creation failed with BSD error: %d\r\n", errno);
     return SL_STATUS_FAIL;
   }
-  printf("Socket ID : %d\r\n", udp_client_socket);
+  SL_DEBUG_LOG_V2(INFO, "Socket ID : %d\r\n", udp_client_socket);
 
-  printf("Sending a UDP packet\r\n");
+  SL_DEBUG_LOG_V2(INFO, "Sending a UDP packet\r\n");
   while (packet_count < NUMBER_OF_PACKETS) {
     status = sendto(udp_client_socket,
                     (int8_t *)"Hello from UDP client!!!",
@@ -385,7 +401,7 @@ sl_status_t send_udp_data(void)
     if (status < 0) {
       if (errno == ENOBUFS)
         continue;
-      printf("\r\nFailed to send data to UDP Server, Error Code : 0x%lX\r\n", status);
+      SL_DEBUG_LOG_V2(ERROR, "Failed to send data to UDP Server, Error Code : 0x%" PRIx32, (uint32_t)status);
       close(udp_client_socket);
     }
     packet_count++;
@@ -403,10 +419,10 @@ sl_status_t create_tcp_socket(void)
 
   tcp_client_socket = sl_si91x_socket_async(AF_INET, SOCK_STREAM, IPPROTO_TCP, &data_callback);
   if (tcp_client_socket < 0) {
-    printf("\r\nTCP Socket creation failed with BSD error: %d\r\n", errno);
+    SL_DEBUG_LOG_V2(ERROR, "TCP Socket creation failed with BSD error: %d\r\n", errno);
     return SL_STATUS_FAIL;
   }
-  printf("\r\nTCP Client Socket ID : %d\r\n", tcp_client_socket);
+  SL_DEBUG_LOG_V2(INFO, "TCP Client Socket ID : %d\r\n", tcp_client_socket);
 
   socket_return_value = sl_si91x_setsockopt(tcp_client_socket,
                                             SOL_SOCKET,
@@ -414,11 +430,11 @@ sl_status_t create_tcp_socket(void)
                                             &high_performance_socket,
                                             sizeof(high_performance_socket));
   if (socket_return_value < 0) {
-    printf("\r\nTCP Set Socket option failed with BSD error: %d\r\n", errno);
+    SL_DEBUG_LOG_V2(ERROR, "TCP Set Socket option failed with BSD error: %d\r\n", errno);
     close(tcp_client_socket);
     return SL_STATUS_FAIL;
   }
-  printf("Set Socket Option Success\r\n");
+  SL_DEBUG_LOG_V2(INFO, "Set Socket Option Success\r\n");
 
   server_address.sin_family = AF_INET;
   server_address.sin_port   = TCP_SERVER_PORT;
@@ -426,11 +442,11 @@ sl_status_t create_tcp_socket(void)
 
   socket_return_value = connect(tcp_client_socket, (struct sockaddr *)&server_address, sizeof(struct sockaddr_in));
   if (socket_return_value < 0) {
-    printf("\r\nSocket Connect failed with BSD error: %d\r\n", errno);
+    SL_DEBUG_LOG_V2(ERROR, "Socket Connect failed with BSD error: %d\r\n", errno);
     close(tcp_client_socket);
     return SL_STATUS_FAIL;
   }
-  printf("Socket connected to TCP server\r\n");
+  SL_DEBUG_LOG_V2(INFO, "Socket connected to TCP server\r\n");
 
   return SL_STATUS_OK;
 }
@@ -450,65 +466,65 @@ static sl_status_t twt_callback_handler(sl_wifi_event_t event,
 
   switch (event) {
     case SL_WIFI_TWT_RESPONSE_EVENT:
-      printf("\r\nTWT Setup success");
+      SL_DEBUG_LOG_V2(INFO, "TWT Setup success");
       break;
     case SL_WIFI_TWT_UNSOLICITED_SESSION_SUCCESS_EVENT:
-      printf("\r\nUnsolicited TWT Setup success");
+      SL_DEBUG_LOG_V2(INFO, "Unsolicited TWT Setup success");
       break;
     case SL_WIFI_TWT_AP_REJECTED_EVENT:
-      printf("\r\nTWT Setup Failed. TWT Setup rejected by AP");
+      SL_DEBUG_LOG_V2(ERROR, "TWT Setup Failed. TWT Setup rejected by AP");
       break;
     case SL_WIFI_TWT_OUT_OF_TOLERANCE_EVENT:
-      printf("\r\nTWT Setup Failed. TWT response out of tolerance limits");
+      SL_DEBUG_LOG_V2(ERROR, "TWT Setup Failed. TWT response out of tolerance limits");
       break;
     case SL_WIFI_TWT_RESPONSE_NOT_MATCHED_EVENT:
-      printf("\r\nTWT Setup Failed. TWT Response not matched with the request parameters");
+      SL_DEBUG_LOG_V2(ERROR, "TWT Setup Failed. TWT Response not matched with the request parameters");
       break;
     case SL_WIFI_TWT_UNSUPPORTED_RESPONSE_EVENT:
-      printf("\r\nTWT Setup Failed. TWT Response Unsupported");
+      SL_DEBUG_LOG_V2(ERROR, "TWT Setup Failed. TWT Response Unsupported");
       break;
     case SL_WIFI_TWT_FAIL_MAX_RETRIES_REACHED_EVENT:
-      printf("\r\nTWT Setup Failed. Max retries reached");
+      SL_DEBUG_LOG_V2(ERROR, "TWT Setup Failed. Max retries reached");
       break;
     case SL_WIFI_TWT_INACTIVE_DUE_TO_ROAMING_EVENT:
-      printf("\r\nTWT session inactive due to roaming");
+      SL_DEBUG_LOG_V2(WARN, "TWT session inactive due to roaming");
       break;
     case SL_WIFI_TWT_INACTIVE_DUE_TO_DISCONNECT_EVENT:
-      printf("\r\nTWT session inactive due to wlan disconnection");
+      SL_DEBUG_LOG_V2(WARN, "TWT session inactive due to wlan disconnection");
       break;
     case SL_WIFI_TWT_TEARDOWN_SUCCESS_EVENT:
-      printf("\r\nTWT session teardown success");
+      SL_DEBUG_LOG_V2(INFO, "TWT session teardown success");
       break;
     case SL_WIFI_TWT_AP_TEARDOWN_SUCCESS_EVENT:
-      printf("\r\nTWT session teardown from AP");
+      SL_DEBUG_LOG_V2(INFO, "TWT session teardown from AP");
       break;
     case SL_WIFI_TWT_INACTIVE_NO_AP_SUPPORT_EVENT:
-      printf("\r\nConnected AP Does not support TWT");
+      SL_DEBUG_LOG_V2(WARN, "Connected AP Does not support TWT");
       break;
     case SL_WIFI_RESCHEDULE_TWT_SUCCESS_EVENT:
-      printf("\r\nTWT rescheduled");
+      SL_DEBUG_LOG_V2(INFO, "TWT rescheduled");
       break;
     case SL_WIFI_TWT_INFO_FRAME_EXCHANGE_FAILED_EVENT:
-      printf("\r\nTWT rescheduling failed due to a failure in the exchange of TWT information frames.");
+      SL_DEBUG_LOG_V2(ERROR, "TWT rescheduling failed due to a failure in the exchange of TWT information frames.");
       break;
     default:
-      printf("TWT Setup Failed.");
+      SL_DEBUG_LOG_V2(ERROR, "TWT Setup Failed.");
   }
   if (event < SL_WIFI_TWT_TEARDOWN_SUCCESS_EVENT) {
-    printf("\r\n wake duration : 0x%X", result->wake_duration);
-    printf("\r\n wake_duration_unit: 0x%X", result->wake_duration_unit);
-    printf("\r\n wake_int_exp : 0x%X", result->wake_int_exp);
-    printf("\r\n negotiation_type : 0x%X", result->negotiation_type);
-    printf("\r\n wake_int_mantissa : 0x%X", result->wake_int_mantissa);
-    printf("\r\n implicit_twt : 0x%X", result->implicit_twt);
-    printf("\r\n un_announced_twt : 0x%X", result->un_announced_twt);
-    printf("\r\n triggered_twt : 0x%X", result->triggered_twt);
-    printf("\r\n twt_channel : 0x%X", result->twt_channel);
-    printf("\r\n twt_protection : 0x%X", result->twt_protection);
-    printf("\r\n twt_flow_id : 0x%X\r\n", result->twt_flow_id);
+    SL_DEBUG_LOG_V2(DEBUG, " wake duration : 0x%X", result->wake_duration);
+    SL_DEBUG_LOG_V2(DEBUG, " wake_duration_unit: 0x%X", result->wake_duration_unit);
+    SL_DEBUG_LOG_V2(DEBUG, " wake_int_exp : 0x%X", result->wake_int_exp);
+    SL_DEBUG_LOG_V2(DEBUG, " negotiation_type : 0x%X\r\n", result->negotiation_type);
+    SL_DEBUG_LOG_V2(DEBUG, " wake_int_mantissa : 0x%X", result->wake_int_mantissa);
+    SL_DEBUG_LOG_V2(DEBUG, " implicit_twt : 0x%X", result->implicit_twt);
+    SL_DEBUG_LOG_V2(DEBUG, " un_announced_twt : 0x%X", result->un_announced_twt);
+    SL_DEBUG_LOG_V2(DEBUG, " triggered_twt : 0x%X", result->triggered_twt);
+    SL_DEBUG_LOG_V2(DEBUG, " twt_channel : 0x%X", result->twt_channel);
+    SL_DEBUG_LOG_V2(DEBUG, " twt_protection : 0x%X", result->twt_protection);
+    SL_DEBUG_LOG_V2(DEBUG, " twt_flow_id : 0x%X\r\n", result->twt_flow_id);
   } else if (event < SL_WIFI_TWT_EVENTS_END) {
-    printf("\r\n twt_flow_id : 0x%X", result->twt_flow_id);
-    printf("\r\n negotiation_type : 0x%X\r\n", result->negotiation_type);
+    SL_DEBUG_LOG_V2(DEBUG, " twt_flow_id : 0x%X\r\n", result->twt_flow_id);
+    SL_DEBUG_LOG_V2(DEBUG, " negotiation_type : 0x%X\r\n", result->negotiation_type);
   }
   return SL_STATUS_OK;
 }
@@ -520,7 +536,7 @@ sl_status_t receive_and_send_data(void)
   for (uint16_t i = 0; i < BUF_SIZE; i++) {
     send_buf[i] = i;
   }
-  printf("\r\nListening for command\r\n");
+  SL_DEBUG_LOG_V2(INFO, "Listening for command\r\n");
   while (1) {
     if (osSemaphoreAcquire(data_semaphore, osWaitForever) == osOK) {
       if (data_received_flag) {
@@ -530,7 +546,7 @@ sl_status_t receive_and_send_data(void)
         server_address.sin_port           = UDP_SERVER_PORT;
         sl_net_inet_addr(SERVER_IP_UDP, &server_address.sin_addr.s_addr);
         packet_count = 0;
-        printf("Sending UDP Data\r\n");
+        SL_DEBUG_LOG_V2(INFO, "Sending UDP Data\r\n");
 
         while (packet_count < NUMBER_OF_PACKETS) {
           status = sendto(udp_client_socket,
@@ -542,7 +558,7 @@ sl_status_t receive_and_send_data(void)
           if (status < 0) {
             if (errno == ENOBUFS)
               continue;
-            printf("\r\nFailed to send data to UDP Server, Error Code : 0x%lX\r\n", status);
+            SL_DEBUG_LOG_V2(ERROR, "Failed to send data to UDP Server, Error Code : 0x%" PRIx32, (uint32_t)status);
             close(udp_client_socket);
           }
           packet_count++;
@@ -554,23 +570,16 @@ sl_status_t receive_and_send_data(void)
           if (status < 0) {
             if (errno == ENOBUFS)
               continue;
-            printf("\r\nFailed to send data to TCP Server, Error Code : 0x%lX\r\n", status);
+            SL_DEBUG_LOG_V2(ERROR, "Failed to send data to TCP Server, Error Code : 0x%" PRIx32, (uint32_t)status);
             close(tcp_client_socket);
           }
           packet_count++;
         }
-        printf("\r\nTCP TX completed \r\n");
+        SL_DEBUG_LOG_V2(INFO, "TCP TX completed \r\n");
 #endif
         data_received_flag = false;
       }
     }
-#ifdef SLI_SI91X_MCU_INTERFACE
-#if (SL_SI91X_TICKLESS_MODE == 0)
-    printf("M4 in Sleep\r\n");
-    sl_si91x_power_manager_sleep();
-    printf("M4 wake up\r\n");
-#endif
-#endif
   }
   return SL_STATUS_OK;
 }

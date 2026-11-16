@@ -38,6 +38,7 @@ extern "C" {
 //// Includes
 #include "sl_status.h"
 #include "base_types.h"
+#include "sl_log_helper.h"
 
 /***************************************************************************/
 /**

@@ -1,9 +1,14 @@
 # Wi-Fi - Multithread sockets
 
+## High-Level Overview
+
+SiWx91x multithreaded sockets example: Run multiple concurrent TCP/UDP socket operations across RTOS threads after connecting to Wi-Fi in SoC and NCP modes.
+
 ## Table of Contents
 
 - [Wi-Fi - Multithread sockets](#wi-fi---Multithread sockets)
   - [Table of Contents](#table-of-contents)
+  - [High-Level Overview](#high-level-overview)
   - [Purpose/Scope](#purposescope)
   - [Prerequisites/Setup Requirements](#prerequisitessetup-requirements)
     - [Hardware Requirements](#hardware-requirements)
@@ -22,8 +27,11 @@
       - [TCP Tx Throughput](#tcp-tx-throughput)
       - [TCP Rx Throughput](#tcp-rx-throughput)
       - [TLS Tx Throughput](#tls-tx-throughput)
-      - [TLS Rx Throughput](#tls-rx-throughput)
-  
+      - [TLS Rx Throughput](#tls-rx-throughput)  
+  - [Troubleshooting](#troubleshooting)
+  - [Resources](#resources)
+  - [Report Bugs and Get Support](#report-bugs-and-get-support)
+
 ## Purpose/Scope
 
 This application demonstrates the procedure to measure WLAN UDP/TCP/TLS throughput by configuring the SiWx91x in client/server role. In this application, the SiWx91x connects to a Wi-Fi access point, obtains an IP address, and connects to an iPerf server/client or Python-based TLS scripts running on a remote PC. It then measures Tx/Rx throughput transmitted/received from the remote PC. Additionally, the application supports multithreaded operations, enabling simultaneous measurement of throughput across multiple connections or roles. This feature allows the SiWx91x to efficiently handle concurrent Tx and Rx streams or multiple client/server instances, thereby maximizing performance.
@@ -36,32 +44,48 @@ This application demonstrates the procedure to measure WLAN UDP/TCP/TLS throughp
 - Wireless Access Point
 - **SoC Mode**:
   - Standalone
-    - BRD4002A Wireless pro kit mainboard [SI-MB4002A]
+    - BRD4002B Wireless Pro Kit Mainboard [SI-MB4002B](https://www.silabs.com/development-tools/wireless/wireless-pro-kit-mainboard?tab=overview)
     - Radio Boards
-      - BRD4338A [SiWx917-RB4338A]
-      - BRD4342A [SiWx917-RB4342A]
-      - BRD4343A [SiWx917-RB4343A]
+      - BRD4338A [SiWx917-RB4338A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-rb4338a-wifi-6-bluetooth-le-soc-radio-board?tab=overview)
+      - BRD4342A [SiWx917-RB4342A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx91x-rb4342a-wifi-6-bluetooth-le-soc-radio-board?tab=overview)
+      - BRD4339B [SiWx917-RB4339B](https://docs.silabs.com/wiseconnect/latest/wiseconnect-getting-started/getting-started-with-at)
+      - BRD4340A [SiWx917-RB4340A](https://docs.silabs.com/wiseconnect/latest/wiseconnect-getting-started/getting-started-with-at)
+      - BRD4343A [SiWx917-RB4343A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4343a-wi-fi-6-bluetooth-le-8mb-flash-radio-board-for-module?tab=overview)
+      - BRD4343C [SiWx917-RB4343C](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4343c-wi-fi-6-bluetooth-le-8mb-flash-radio-board-for-module?tab=overview)
   - Kits
+    - SiWG917 Dev Kit [BRD2605A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-dk2605a-wifi-6-bluetooth-le-soc-dev-kit?tab=overview)
+    - SiWG917 Dev Kit [BRD2605B]
     - SiWx917 Pro Kit [Si917-PK6031A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-pro-kit?tab=overview)
     - SiWx917 Pro Kit [Si917-PK6032A]
-    - SiWx917 AC1 Module Explorer Kit (BRD2708A)
+    - SiWx917 AC1 Module Explorer Kit [BRD2708A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-ek2708a-explorer-kit?tab=overview)
 
-- **NCP Mode**:
-  - Standalone
-    - BRD4002A Wireless pro kit mainboard [SI-MB4002A]
-    - EFR32xG24 Wireless 2.4 GHz +10 dBm Radio Board [xG24-RB4186C](https://www.silabs.com/development-tools/wireless/xg24-rb4186c-efr32xg24-wireless-gecko-radio-board?tab=overview)
-    - NCP Expansion Kit with NCP Radio boards
-      - (BRD4346A + BRD8045A) [SiWx917-EB4346A]
-      - (BRD4357A + BRD8045A) [SiWx917-EB4357A]
-  - Kits
-    - EFR32xG24 Pro Kit +10 dBm [xG24-PK6009A](https://www.silabs.com/development-tools/wireless/efr32xg24-pro-kit-10-dbm?tab=overview)
+- **NCP Mode** (select either the EFR32 or STM32 host MCU platform; a single platform is sufficient to run the application):
+  - **Option 1: EFR32 host**
+    - Standalone
+      - BRD4002B Wireless Pro Kit Mainboard [SI-MB4002B](https://www.silabs.com/development-tools/wireless/wireless-pro-kit-mainboard?tab=overview)
+      - EFR32xG24 Wireless 2.4 GHz +10 dBm Radio Board [xG24-RB4186C](https://www.silabs.com/development-tools/wireless/xg24-rb4186c-efr32xg24-wireless-gecko-radio-board?tab=overview)
+      - NCP Expansion Kit with NCP Radio Boards
+        - [BRD4346A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-rb4346a-wifi-6-bluetooth-le-soc-4mb-flash-radio-board?tab=overview) + [BRD8045A](https://www.silabs.com/development-tools/wireless/wi-fi/expansion-adapter-board-for-co-processor-radio-boards?tab=overview)
+        - [BRD4357A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4357a-wi-fi-6-bluetooth-le-4mb-flash-radio-board-for-rcp-and-ncp-modules?tab=overview) + [BRD8045A](https://www.silabs.com/development-tools/wireless/wi-fi/expansion-adapter-board-for-co-processor-radio-boards?tab=overview)
+        - [BRD4357C](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4357c-wi-fi-6-bluetooth-le-4mb-flash-radio-board-for-rcp-and-ncp-modules?tab=overview) + [BRD8045A](https://www.silabs.com/development-tools/wireless/wi-fi/expansion-adapter-board-for-co-processor-radio-boards?tab=overview)
+    - Kits
+      - EFR32xG24 Pro Kit +10 dBm [xG24-PK6009A](https://www.silabs.com/development-tools/wireless/efr32xg24-pro-kit-10-dbm?tab=overview)
 
-  - Interface and Host MCU Supported
-    - SPI - EFR32
+  - **Option 2: STM32F411RE host**
+    - [STM32F411RE](https://www.st.com/en/microcontrollers-microprocessors/stm32f411re.html) MCU
+    - NCP Expansion Kit with NCP Radio Boards
+      - [BRD4346A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-rb4346a-wifi-6-bluetooth-le-soc-4mb-flash-radio-board?tab=overview) + [BRD8045C](https://www.silabs.com/development-tools/wireless/wi-fi/shield-adapter-board-for-co-processor-radio-boards?tab=overview)
+      - [BRD4357A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4357a-wi-fi-6-bluetooth-le-4mb-flash-radio-board-for-rcp-and-ncp-modules?tab=overview) + [BRD8045C](https://www.silabs.com/development-tools/wireless/wi-fi/shield-adapter-board-for-co-processor-radio-boards?tab=overview)
+      - [BRD4357C](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4357c-wi-fi-6-bluetooth-le-4mb-flash-radio-board-for-rcp-and-ncp-modules?tab=overview) + [BRD8045C](https://www.silabs.com/development-tools/wireless/wi-fi/shield-adapter-board-for-co-processor-radio-boards?tab=overview)
+
+  - Interface and host MCU supported
+    - SPI : EFR32 and STM32
+    - UART : EFR32
 
 ### Software Requirements
 
 - Simplicity Studio IDE (to be used with Silicon Labs MCU)
+- [Keil IDE](https://www.keil.com/) (to be used with STM32F411RE MCU)
 - [iPerf Application](https://sourceforge.net/projects/iperf2/files/iperf-2.0.8-win.zip/download). iPerf is a tool for active measurements of the maximum achievable bandwidth on IP networks. It supports tuning of various parameters related to timing, buffers and protocols (TCP and UDP with IPv4 and IPv6).
 - [Python Environment](https://www.python.org/downloads/)
 - Serial Terminal - [Docklight](https://docklight.de/)/[Tera Term](https://ttssh2.osdn.jp/index.html.en) (to be used with Keil IDE)
@@ -104,7 +128,7 @@ The application can be configured to suit user requirements and development envi
 
    - STA instance related parameters
 
-     - DEFAULT_WIFI_CLIENT_PROFILE_SSID refers to the name with which Wi-Fi network that shall be advertised and Si91X module is connected to it.
+     - DEFAULT_WIFI_CLIENT_PROFILE_SSID refers to the name with which Wi-Fi network that shall be advertised and SiWx91x module is connected to it.
 
         ```c
         #define DEFAULT_WIFI_CLIENT_PROFILE_SSID               "YOUR_AP_SSID"      
@@ -126,7 +150,7 @@ The application can be configured to suit user requirements and development envi
 
 **Path for app.c in Simplicity Studio IDE:**
 
-- The `app.c` file will be located at **wifi_wlan_throughput_soc**.
+- The `app.c` file will be located at **wifi_multithread_sockets_soc**.
 
 Configure the following parameters in `app.c` to test throughput app as per requirements.
 
@@ -199,27 +223,27 @@ The following macros are used to define the type of sockets in the application:
 
 ### Macros
 
-- **`NONE` (Value: `0`)**
+- **`SOCKET_TYPE_NONE` (Value: `0`)**
   - Indicates that the socket does not require synchronization or asynchronous handling.
   - **Usage:** This is recommended for **TX sockets** as they do not require sync or async functionality.
 
-- **`ASYNC_SOCKET` (Value: `1`)**
+- **`SOCKET_TYPE_ASYNC` (Value: `1`)**
   - Represents an asynchronous socket type.
   - **Usage:** This macro is used for **RX sockets** when the user specifies asynchronous behavior.
 
-- **`SYNC_SOCKET` (Value: `2`)**
+- **`SOCKET_TYPE_SYNC` (Value: `2`)**
   - Represents a synchronous socket type.
   - **Usage:** This macro is used for **RX sockets** when the user specifies synchronous behavior.
 
 ### Guidelines for Socket Usage
 
 - **TX Sockets:**  
-  Always use the `NONE` macro for TX sockets as synchronization is not required.
+  Always use the `SOCKET_TYPE_NONE` macro for TX sockets as synchronization is not required.
   
 - **RX Sockets:**  
-  Depending on the user requirement, use either `ASYNC_SOCKET` or `SYNC_SOCKET`:
-  - Use `ASYNC_SOCKET` for non-blocking operations where data is received asynchronously.
-  - Use `SYNC_SOCKET` for blocking operations where data is received synchronously.
+  Depending on the user requirement, use either `SOCKET_TYPE_ASYNC` or `SOCKET_TYPE_SYNC`:
+  - Use `SOCKET_TYPE_ASYNC` for non-blocking operations where data is received asynchronously.
+  - Use `SOCKET_TYPE_SYNC` for blocking operations where data is received synchronously.
 
 ### create_newsocket_with_new_osthread API
 
@@ -231,12 +255,12 @@ This API creates a new socket and spawns an associated OS thread to handle the s
 
 ```c
 osThreadId_t create_newsocket_with_new_osthread(socket_handler sock_handler,
-                                                uint32_t Portnumber,
+                                                uint32_t port_number,
                                                 char *ip_address,
                                                 char *thread_name,
                                                 uint8_t thread_priority,
                                                 uint32_t thread_size,
-                                                uint8_t flag);
+                                                uint8_t socket_type);
 ```
 
 #### Parameters
@@ -244,12 +268,12 @@ osThreadId_t create_newsocket_with_new_osthread(socket_handler sock_handler,
 | **Parameter**       | **Type**             | **Description**                                                                                             |
 |---------------------|----------------------|-------------------------------------------------------------------------------------------------------------|
 | `sock_handler`      | `socket_handler`    | A callback function pointer for handling the socket operations (for example, sending or receiving data).           |
-| `Portnumber`        | `uint32_t`          | The port number on which the socket will operate.                                                          |
-| `ip_address`        | `char *`            | The IP address for the socket connection (use `NULL` for server-side sockets that don't require an address).|
+| `port_number`       | `uint32_t`          | The port number on which the socket will operate.                                                          |
+| `ip_address`        | `char *`            | The IP address for the socket connection (use `""` for server-side sockets that don't require an address).  |
 | `thread_name`       | `char *`            | The name of the OS thread that will be created for this socket.                                            |
 | `thread_priority`   | `uint8_t`           | The priority of the OS thread (for example, `osPriorityLow`).                                                     |
 | `thread_size`       | `uint32_t`          | The stack size of the OS thread in bytes (for example, `1024 * 4`).                                               |
-| `flag`              | `uint8_t`           | The socket type or behavior flag (for example, `SYNC_SOCKET` for synchronized operations or `ASYNC_SOCKET` for asynchronous). |
+| `socket_type`       | `uint8_t`           | The socket type or behavior flag (for example, `SOCKET_TYPE_SYNC` for synchronized operations or `SOCKET_TYPE_ASYNC` for asynchronous). |
 
 #### **Return Value**  
 
@@ -272,11 +296,11 @@ Creates a socket to send data to a TCP server running on `192.168.0.156` at port
 ```c
 create_newsocket_with_new_osthread(send_data_to_tcp_server,
                                    5001,
-                                   "192.168.0.156", // Server IP
-                                   "TCP_TX",        // Thread name
-                                   osPriorityLow,   // Thread priority
-                                   (1024 * 4),      // Thread stack size
-                                   NONE);           // NONE
+                                   "192.168.0.156",    // Server IP
+                                   "TCP_TX",           // Thread name
+                                   osPriorityLow,      // Thread priority
+                                   (1024 * 4),         // Thread stack size
+                                   SOCKET_TYPE_NONE);  // TX does not need sync/async
 ```
 
 ##### **Creating a TCP Receiver Socket**
@@ -286,11 +310,11 @@ Creates a socket to receive data from a TCP client on port `5004`.
 ```c
 create_newsocket_with_new_osthread(receive_data_from_tcp_client,
                                    5004,
-                                   NULL,            // NULL for server-side
-                                   "TCP_RX",        // Thread name
-                                   osPriorityLow,   // Thread priority
-                                   (1024 * 4),      // Thread stack size
-                                   SYNC_SOCKET);    // Synchronous socket
+                                   "",                  // Empty for server-side
+                                   "TCP_RX",           // Thread name
+                                   osPriorityLow,      // Thread priority
+                                   (1024 * 4),         // Thread stack size
+                                   SOCKET_TYPE_SYNC);  // Synchronous socket
 ```
 
 ##### **Creating Another TCP Receiver Socket**
@@ -558,4 +582,24 @@ To measure TLS RX throughput, configure the SiWx91x as a TLS client and open a T
 
 > **Note:**
 > The captured reference images are measured in an isolated chamber. However, variations can be observed if Throughputs measured in dense environments that is, in a dense environment we can observe less throughput.
+## Troubleshooting
 
+If you encounter issues while running this example, check the following:
+
+- Verify Wi-Fi credentials and socket IP/port settings in `app.c` for each thread.
+- Ensure that socket pool macros match the number of concurrent sockets you open.
+- Start remote servers before the DUT threads connect.
+- If connections fail under load, review thread priorities and stack sizes.
+
+
+## Resources
+
+- [WiSeConnect Getting Started Guide](https://docs.silabs.com/wiseconnect/latest/wiseconnect-getting-started/)
+- [WiSeConnect Examples](https://docs.silabs.com/wiseconnect/latest/wiseconnect-examples/#example-folder-structure)
+- [WiSeConnect Recommended Settings Guide](https://docs.silabs.com/wiseconnect/latest/wiseconnect-developers-guide-prog-recommended-settings/)
+
+## Report Bugs and Get Support
+
+Report issues and get help from the Silicon Labs community:
+
+- [Silicon Labs Community](https://www.silabs.com/community)

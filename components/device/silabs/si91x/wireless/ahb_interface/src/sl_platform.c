@@ -39,13 +39,13 @@
 #endif /* SL_COMPONENT_CATALOG_PRESENT */
 #include "sl_board_configuration.h"
 #include "rsi_rom_clks.h"
+#include "sl_si91x_os.h"
 
 #if defined(SL_CATALOG_KERNEL_PRESENT)
 #include "cmsis_os2.h"
-#include "sl_si91x_os.h"
 #endif
 
-sl_status_t sli_si91x_submit_rx_pkt(void);
+sl_status_t sli_si91x_submit_rx_pkt(uint32_t timeout);
 void sl_board_enable_vcom(void);
 sl_status_t sli_si91x_bootup_firmware(const uint8_t select_option, uint8_t image_number);
 
@@ -117,12 +117,6 @@ sl_status_t sli_si91x_bootup_firmware(const uint8_t select_option, uint8_t image
 #endif
 
   sli_m4_ta_interrupt_init();
-  if (!(M4SS_P2P_INTR_SET_REG & RX_BUFFER_VALID)) {
-    sl_status_t rx_status = sli_si91x_submit_rx_pkt();
-    if (rx_status != SL_STATUS_OK) {
-      return rx_status;
-    }
-  }
 
 #if defined(SL_CATALOG_KERNEL_PRESENT)
   osKernelInitialize();

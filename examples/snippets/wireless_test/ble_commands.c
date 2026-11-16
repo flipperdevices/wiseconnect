@@ -156,10 +156,10 @@ const sl_wifi_device_configuration_t sl_wifi_ble_configuration_cli = {
 #endif
                                           ),
 #ifdef RSI_PROCESS_MAX_RX_DATA
-                   .ext_tcp_ip_feature_bit_map = (RSI_EXT_TCPIP_FEATURE_BITMAP | SL_SI91X_CONFIG_FEAT_EXTENTION_VALID
+                   .ext_tcp_ip_feature_bit_map = (RSI_EXT_TCPIP_FEATURE_BITMAP | SL_SI91X_CONFIG_FEAT_EXTENSION_VALID
                                                   | SL_SI91X_EXT_TCP_MAX_RECV_LENGTH),
 #else
-                   .ext_tcp_ip_feature_bit_map = (RSI_EXT_TCPIP_FEATURE_BITMAP | SL_SI91X_CONFIG_FEAT_EXTENTION_VALID),
+                   .ext_tcp_ip_feature_bit_map = (RSI_EXT_TCPIP_FEATURE_BITMAP | SL_SI91X_CONFIG_FEAT_EXTENSION_VALID),
 #endif
                    //!ENABLE_BLE_PROTOCOL in bt_feature_bit_map
                    .ble_feature_bit_map =
@@ -167,7 +167,7 @@ const sl_wifi_device_configuration_t sl_wifi_ble_configuration_cli = {
                        | SL_SI91X_BLE_MAX_NBR_CENTRALS(RSI_BLE_MAX_NBR_CENTRALS)
                        | SL_SI91X_BLE_MAX_NBR_ATT_SERV(RSI_BLE_MAX_NBR_ATT_SERV)
                        | SL_SI91X_BLE_MAX_NBR_ATT_REC(RSI_BLE_MAX_NBR_ATT_REC))
-                      | SL_SI91X_FEAT_BLE_CUSTOM_FEAT_EXTENTION_VALID | SL_SI91X_BLE_PWR_INX(RSI_BLE_PWR_INX)
+                      | SL_SI91X_FEAT_BLE_CUSTOM_FEAT_EXTENSION_VALID | SL_SI91X_BLE_PWR_INX(RSI_BLE_PWR_INX)
                       | SL_SI91X_BLE_PWR_SAVE_OPTIONS(RSI_BLE_PWR_SAVE_OPTIONS)
                       | SL_SI91X_916_BLE_COMPATIBLE_FEAT_ENABLE
 #if RSI_BLE_GATT_ASYNC_ENABLE
@@ -194,7 +194,10 @@ const sl_wifi_device_configuration_t sl_wifi_ble_configuration_cli = {
                       | SL_SI91X_BLE_GATT_INIT
 #endif
                       ),
-                   .config_feature_bit_map = 0 }
+                   .config_feature_bit_map = 0 },
+  .ta_pool         = { .tx_ratio_in_buffer_pool = 0, .rx_ratio_in_buffer_pool = 0, .global_ratio_in_buffer_pool = 0 },
+  .efuse_data_type = SL_SI91X_EFUSE_MFG_SW_VERSION,
+  .nwp_fw_image_number = SL_SI91X_NWP_FW_IMAGE_NUMBER_0
 };
 
 static rsi_ble_per_transmit_t rsi_ble_per_tx;
@@ -761,18 +764,20 @@ sl_status_t rsi_bt_per_stats_command_handler(console_args_t *arguments)
     VERIFY_STATUS_AND_RETURN(status);
     osDelay(1000);
 
-    printf("\r\n{\r\n"
-           "\t\"crc_fail_cnt\": %u\r\n"
-           "\t\"crc_pass_cnt\": %u\r\n"
-           "\t\"tx_dones\": %u\r\n"
-           "\t\"rssi\": %d\r\n"
-           "\t\"id_pkts_rcvd\":%u\r\n"
-           "}\r\n",
-           per_stats.crc_fail_cnt,
-           per_stats.crc_pass_cnt,
-           per_stats.tx_dones,
-           per_stats.rssi,
-           per_stats.id_pkts_rcvd);
+    SL_DEBUG_LOG_V2(DEBUG,
+                    "{"
+                    "\t\"crc_fail_cnt\": %u"
+                    "\t\"crc_pass_cnt\": %u"
+                    "\t\"tx_dones\": %u",
+                    per_stats.crc_fail_cnt,
+                    per_stats.crc_pass_cnt,
+                    per_stats.tx_dones);
+    SL_DEBUG_LOG_V2(DEBUG,
+                    "\t\"rssi\": %d"
+                    "\t\"id_pkts_rcvd\":%u"
+                    "}",
+                    per_stats.rssi,
+                    per_stats.id_pkts_rcvd);
   }
   return SL_STATUS_OK;
 }
@@ -793,7 +798,7 @@ sl_status_t rsi_bt_get_local_name_command_handler(console_args_t *arguments)
   status             = rsi_bt_get_local_name(&rsi_app_resp_get_local_name);
   VERIFY_STATUS_AND_RETURN(status);
 
-  printf("\r\n%s\r\n", rsi_app_resp_get_local_name.name);
+  SL_DEBUG_LOG_V2(INFO, "%s\r\n", (uintptr_t)rsi_app_resp_get_local_name.name);
   return status;
 }
 
@@ -805,7 +810,7 @@ sl_status_t rsi_bt_get_local_device_address_command_handler(console_args_t *argu
   VERIFY_STATUS_AND_RETURN(status);
 
   rsi_6byte_dev_address_to_ascii(local_dev_addr, (uint8_t *)rsi_app_resp_get_dev_addr);
-  printf("\r\n%s\r\n", local_dev_addr);
+  SL_DEBUG_LOG_V2(INFO, "%s\r\n", (uintptr_t)local_dev_addr);
   return status;
 }
 
@@ -829,7 +834,7 @@ void rsi_ble_simple_peripheral_on_conn_status_event(rsi_ble_event_conn_status_t 
   static uint8_t str_remote_address[18]                       = { '\0' };
   memcpy(&rsi_app_connected_device, resp_conn, sizeof(rsi_ble_event_conn_status_t));
   rsi_6byte_dev_address_to_ascii(str_remote_address, rsi_app_connected_device.dev_addr);
-  printf("\r\n Module connected to address : %s \r\n", str_remote_address);
+  SL_DEBUG_LOG_V2(INFO, " Module connected to address : %s \r\n", (uintptr_t)str_remote_address);
 }
 
 void rsi_ble_simple_peripheral_on_disconnect_event(rsi_ble_event_disconnect_t *resp_disconnect, uint16_t reason)
@@ -839,7 +844,7 @@ void rsi_ble_simple_peripheral_on_disconnect_event(rsi_ble_event_disconnect_t *r
   static uint8_t str_remote_address[18]                         = { '\0' };
   memcpy(&rsi_app_disconnected_device, resp_disconnect, sizeof(rsi_ble_event_disconnect_t));
   rsi_6byte_dev_address_to_ascii(str_remote_address, rsi_app_disconnected_device.dev_addr);
-  printf("\r\n Module disconnected to address : %s \r\n", str_remote_address);
+  SL_DEBUG_LOG_V2(INFO, " Module disconnected to address : %s \r\n", (uintptr_t)str_remote_address);
 }
 void rsi_ble_simple_peripheral_on_enhance_conn_status_event(rsi_ble_event_enhance_conn_status_t *resp_enh_conn)
 {
@@ -847,7 +852,7 @@ void rsi_ble_simple_peripheral_on_enhance_conn_status_event(rsi_ble_event_enhanc
   static uint8_t str_remote_address[18] = { '\0' };
   memcpy(&rsi_app_connected_device, resp_enh_conn, sizeof(rsi_ble_event_enhance_conn_status_t));
   rsi_6byte_dev_address_to_ascii(str_remote_address, rsi_app_connected_device.dev_addr);
-  printf("\r\n Module connected to address : %s \r\n", str_remote_address);
+  SL_DEBUG_LOG_V2(INFO, " Module connected to address : %s \r\n", (uintptr_t)str_remote_address);
 }
 sl_status_t rsi_ble_start_advertising_command_handler(console_args_t *arguments)
 {
@@ -884,6 +889,6 @@ sl_status_t ble_end_test_command_handler(console_args_t *arguments)
   sl_status_t status = SL_STATUS_OK;
   status             = rsi_ble_end_test_mode(&testmodes_num_of_packets);
   VERIFY_STATUS_AND_RETURN(status);
-  printf("\r\nNum of packets:%d\r\n", testmodes_num_of_packets);
+  SL_DEBUG_LOG_V2(INFO, "Num of packets:%d\r\n", testmodes_num_of_packets);
   return SL_STATUS_OK;
 }

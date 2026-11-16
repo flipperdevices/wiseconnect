@@ -70,6 +70,7 @@
 #define MQTT_CLIENT_TX_BUFFER_SIZE 1500
 #define MQTT_CONNECT_TIME_OUT      20000
 #define KEEP_ALIVE_PERIOD          100
+#define MQTT_LOG_PAYLOAD_MAX       256
 
 // Global variables
 volatile int halt         = 0;
@@ -90,7 +91,6 @@ const osThreadAttr_t thread_attributes = {
   .stack_size = 3072,
   .priority   = osPriorityNormal,
   .tz_module  = 0,
-  .reserved   = 0,
 };
 
 static const sl_wifi_device_configuration_t wifi_mqtt_client_configuration = {
@@ -119,7 +119,10 @@ static const sl_wifi_device_configuration_t wifi_mqtt_client_configuration = {
                       | SL_SI91X_EXT_TCP_IP_FEAT_SSL_THREE_SOCKETS | SL_SI91X_EXT_TCP_IP_FEAT_SSL_MEMORY_CLOUD),
                    .ble_feature_bit_map     = 0,
                    .ble_ext_feature_bit_map = 0,
-                   .config_feature_bit_map  = 0 }
+                   .config_feature_bit_map  = 0 },
+  .ta_pool         = { .tx_ratio_in_buffer_pool = 0, .rx_ratio_in_buffer_pool = 0, .global_ratio_in_buffer_pool = 0 },
+  .efuse_data_type = SL_SI91X_EFUSE_MFG_SW_VERSION,
+  .nwp_fw_image_number = SL_SI91X_NWP_FW_IMAGE_NUMBER_0
 };
 
 typedef struct mqtt_client_s {
@@ -136,6 +139,7 @@ typedef struct mqtt_client_s {
  *               Function Declarations
 ******************************************************/
 static void application_start(void *argument);
+static int mqtt_demo_cleanup(mqtt_client_t *mqtt_client, bool topic_subscribed, bool mqtt_connected, int app_status);
 
 int paho_mqtt_over_websocket_demo();
 
@@ -147,14 +151,49 @@ void app_init(void)
   osThreadNew((osThreadFunc_t)application_start, NULL, &thread_attributes);
 }
 
+static int mqtt_demo_cleanup(mqtt_client_t *mqtt_client, bool topic_subscribed, bool mqtt_connected, int app_status)
+{
+  int status = 0;
+
+  if (topic_subscribed) {
+    status = MQTTUnsubscribe(&mqtt_client->client, (const char *)TOPIC_TO_BE_SUBSCRIBED);
+    if (status != SL_STATUS_OK && app_status == 0) {
+      SL_DEBUG_LOG_V2(ERROR, "Unsubscription Failed: 0x%X", status);
+      app_status = status;
+    }
+  }
+
+  if (mqtt_connected) {
+    status = MQTTDisconnect(&mqtt_client->client);
+    if (status != SL_STATUS_OK && app_status == 0) {
+      SL_DEBUG_LOG_V2(ERROR, "Disconnect Failed: 0x%X", status);
+      app_status = status;
+    }
+  }
+
+  if (mqtt_client != NULL && mqtt_client->client.ipstack != NULL) {
+    NetworkDisconnect(mqtt_client->client.ipstack);
+  }
+
+  SL_DEBUG_LOG_V2(INFO, "Execution completed!");
+  return app_status;
+}
+
 // Message arrival callback
 void message_arrived(MessageData *md)
 {
   if (md == NULL || md->message == NULL) {
-    printf("\nReceived NULL message!\n");
+    SL_DEBUG_LOG_V2(ERROR, "Received NULL message!");
     return;
   }
-  printf("\r\nMessage: %.*s\r\n", md->message->payloadlen, (char *)md->message->payload);
+  char payload_log[MQTT_LOG_PAYLOAD_MAX];
+  size_t payload_len = (size_t)md->message->payloadlen;
+  if (payload_len >= sizeof(payload_log)) {
+    payload_len = sizeof(payload_log) - 1;
+  }
+  memcpy(payload_log, md->message->payload, payload_len);
+  payload_log[payload_len] = '\0';
+  SL_DEBUG_LOG_V2(INFO, "Message: %s", (uintptr_t)payload_log);
   halt = 1;
 }
 
@@ -167,65 +206,65 @@ static void application_start(void *argument)
 
   status = sl_net_init(SL_NET_WIFI_CLIENT_INTERFACE, &wifi_mqtt_client_configuration, NULL, NULL);
   if (status != SL_STATUS_OK && status != SL_STATUS_ALREADY_INITIALIZED) {
-    printf("Failed to start Wi-Fi client interface: 0x%lx\r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "Failed to start Wi-Fi client interface: 0x%lx\r\n", status);
     return;
   }
-  printf("\r\nWi-Fi client interface up Success\r\n");
+  SL_DEBUG_LOG_V2(INFO, "Wi-Fi client interface up Success\r\n");
   status = sl_net_up(SL_NET_WIFI_CLIENT_INTERFACE, SL_NET_DEFAULT_WIFI_CLIENT_PROFILE_ID);
   if (status != SL_STATUS_OK) {
-    printf("\r\nFailed to bring Wi-Fi client interface up: 0x%lX\r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "Failed to bring Wi-Fi client interface up: 0x%lX\r\n", status);
     return;
   }
-  printf("\r\nWi-Fi client connected\r\n");
+  SL_DEBUG_LOG_V2(INFO, "Wi-Fi client connected\r\n");
 
   status = sl_net_get_profile(SL_NET_WIFI_CLIENT_INTERFACE, SL_NET_DEFAULT_WIFI_CLIENT_PROFILE_ID, &profile);
   if (status != SL_STATUS_OK) {
-    printf("Failed to get client profile: 0x%lx\r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "Failed to get client profile: 0x%lx\r\n", status);
     return;
   }
-  printf("\r\nSuccess to get client profile\r\n");
+  SL_DEBUG_LOG_V2(INFO, "Success to get client profile\r\n");
 
   // Load SSL CA certificate
   if (enable_ssl) {
     status =
       sl_net_set_credential(SL_NET_TLS_SERVER_CREDENTIAL_ID(0), SL_NET_SIGNING_CERTIFICATE, cacert, sizeof(cacert) - 1);
     if (status != SL_STATUS_OK) {
-      printf("\r\nLoading TLS CA certificate in to FLASH Failed, Error Code : 0x%lX\r\n", status);
+      SL_DEBUG_LOG_V2(ERROR, "Loading TLS CA certificate in to FLASH Failed, Error Code : 0x%lX\r\n", status);
       return;
     }
-    printf("\r\nLoad SSL CA certificate at index %d Success\r\n", 0);
+    SL_DEBUG_LOG_V2(INFO, "Load SSL CA certificate at index %d Success\r\n", 0);
   }
 
   if (profile.ip.type == SL_IPV4) {
     ip_address.type = SL_IPV4;
     memcpy(&ip_address.ip.v4.bytes, &profile.ip.ip.v4.ip_address.bytes, sizeof(sl_ipv4_address_t));
-    printf("\r\nIP address is ");
+    SL_DEBUG_LOG_V2(INFO, "IP address is ");
     print_sl_ip_address(&ip_address);
   } else if (profile.ip.type == SL_IPV6) {
     sl_ip_address_t link_local_address = { 0 };
     memcpy(&link_local_address.ip.v6, &profile.ip.ip.v6.link_local_address, SL_IPV6_ADDRESS_LENGTH);
     link_local_address.type = SL_IPV6;
-    printf("Link Local Address: ");
+    SL_DEBUG_LOG_V2(INFO, "Link Local Address: ");
     print_sl_ip_address(&link_local_address);
 
     sl_ip_address_t global_address = { 0 };
     memcpy(&global_address.ip.v6, &profile.ip.ip.v6.global_address, SL_IPV6_ADDRESS_LENGTH);
     global_address.type = SL_IPV6;
-    printf("Global Address: ");
+    SL_DEBUG_LOG_V2(INFO, "Global Address: ");
     print_sl_ip_address(&global_address);
 
     sl_ip_address_t gateway = { 0 };
     memcpy(&gateway.ip.v6, &profile.ip.ip.v6.gateway, SL_IPV6_ADDRESS_LENGTH);
     gateway.type = SL_IPV6;
-    printf("Gateway Address: ");
+    SL_DEBUG_LOG_V2(INFO, "Gateway Address: ");
     print_sl_ip_address(&gateway);
   }
 
   int result = paho_mqtt_over_websocket_demo();
   if (result == 0) {
-    printf("Paho MQTT over WebSocket demo executed successfully.\n");
+    SL_DEBUG_LOG_V2(INFO, "Paho MQTT over WebSocket demo executed successfully.\r\n");
   } else {
-    printf("Paho MQTT over WebSocket demo failed with error code: %d\n", result);
+    SL_DEBUG_LOG_V2(ERROR, "Paho MQTT over WebSocket demo failed with error code: %d\r\n", result);
   }
 }
 
@@ -233,6 +272,9 @@ static void application_start(void *argument)
 int paho_mqtt_over_websocket_demo()
 {
   int status;
+  int app_status             = 0;
+  bool mqtt_connected        = false;
+  bool topic_subscribed      = false;
   uint16_t flags             = 0;
   mqtt_client_t *mqtt_client = NULL;
   MQTTMessage publish_msg;
@@ -276,17 +318,21 @@ int paho_mqtt_over_websocket_demo()
                           enable_ssl);
 
   if (status == NETWORK_ERROR_NULL_STRUCTURE) {
-    printf("\r\nError: Network structure is NULL.\r\n");
-    return status;
+    SL_DEBUG_LOG_V2(ERROR, "Error: Network structure is NULL.\r\n");
+    app_status = status;
+    return mqtt_demo_cleanup(mqtt_client, topic_subscribed, mqtt_connected, app_status);
   } else if (status == NETWORK_ERROR_NULL_ADDRESS) {
-    printf("\r\nError: Address is NULL.\r\n");
-    return status;
+    SL_DEBUG_LOG_V2(ERROR, "Error: Address is NULL.\r\n");
+    app_status = status;
+    return mqtt_demo_cleanup(mqtt_client, topic_subscribed, mqtt_connected, app_status);
   } else if (status == NETWORK_ERROR_INVALID_TYPE) {
-    printf("\r\nError: Invalid transport type.\r\n");
-    return status;
+    SL_DEBUG_LOG_V2(ERROR, "Error: Invalid transport type.\r\n");
+    app_status = status;
+    return mqtt_demo_cleanup(mqtt_client, topic_subscribed, mqtt_connected, app_status);
   } else if (status != 0) {
-    printf("\r\nWebSocket Connection Failed: %d\r\n", status);
-    return status;
+    SL_DEBUG_LOG_V2(ERROR, "WebSocket Connection Failed: %d\r\n", status);
+    app_status = status;
+    return mqtt_demo_cleanup(mqtt_client, topic_subscribed, mqtt_connected, app_status);
   }
 
   // Set up MQTT connection parameters
@@ -302,18 +348,22 @@ int paho_mqtt_over_websocket_demo()
   // Connect to MQTT broker
   status = MQTTConnect(&mqtt_client->client, &connectData);
   if (status != 0) {
-    printf("\r\nMQTT Connection Failed: %d\r\n", status);
-    return status;
+    SL_DEBUG_LOG_V2(ERROR, "MQTT Connection Failed: %d\r\n", status);
+    app_status = status;
+    return mqtt_demo_cleanup(mqtt_client, topic_subscribed, mqtt_connected, app_status);
   }
-  printf("\r\nMQTT Connected Successfully!\r\n");
+  mqtt_connected = true;
+  SL_DEBUG_LOG_V2(INFO, "MQTT Connected Successfully!\r\n");
 
   // Subscribe to topic
   status = MQTTSubscribe(&mqtt_client->client, (char *)TOPIC_TO_BE_SUBSCRIBED, (enum QoS)QOS, message_arrived);
   if (status != 0) {
-    printf("\r\nSubscription Failed: %d\r\n", status);
-    return status;
+    SL_DEBUG_LOG_V2(ERROR, "Subscription Failed: %d\r\n", status);
+    app_status = status;
+    return mqtt_demo_cleanup(mqtt_client, topic_subscribed, mqtt_connected, app_status);
   }
-  printf("\r\nSubscribed to topic: %s\r\n", TOPIC_TO_BE_SUBSCRIBED);
+  topic_subscribed = true;
+  SL_DEBUG_LOG_V2(INFO, "Subscribed to topic: %s\r\n", (uintptr_t)TOPIC_TO_BE_SUBSCRIBED);
 
   // Prepare publish message
   publish_msg.dup = 0;
@@ -331,39 +381,22 @@ int paho_mqtt_over_websocket_demo()
   // Publish message
   status = MQTTPublish(&mqtt_client->client, (const char *)TOPIC_TO_BE_SUBSCRIBED, &publish_msg);
   if (status != 0) {
-    printf("\r\nMQTT Publish Failed: %d\r\n", status);
-    return status;
+    SL_DEBUG_LOG_V2(ERROR, "MQTT Publish Failed: %d\r\n", status);
+    app_status = status;
+    return mqtt_demo_cleanup(mqtt_client, topic_subscribed, mqtt_connected, app_status);
   }
-  printf("\r\nPublished to Topic successfully\r\n");
+  SL_DEBUG_LOG_V2(INFO, "Published to Topic successfully\r\n");
 
   // Main message loop
   while (!halt) {
     status = MQTTYield(&mqtt_client->client, 60000);
     if (status != SL_STATUS_OK) {
-      printf("\r\nReceive Data Failed, Error Code: 0x%X\r\n", status);
-      return status;
+      SL_DEBUG_LOG_V2(ERROR, "Receive Data Failed, Error Code: 0x%X\r\n", status);
+      app_status = status;
+      return mqtt_demo_cleanup(mqtt_client, topic_subscribed, mqtt_connected, app_status);
     } else {
-      printf("\r\nReceive Data Success\r\n");
+      SL_DEBUG_LOG_V2(DEBUG, "Receive Data Success\r\n");
     }
   }
-
-  // Cleanup
-  status = MQTTUnsubscribe(&mqtt_client->client, (const char *)TOPIC_TO_BE_SUBSCRIBED);
-  if (status != SL_STATUS_OK) {
-    printf("\r\nUnsubscription Failed: 0x%X\r\n", status);
-    return status;
-  }
-
-  status = MQTTDisconnect(&mqtt_client->client);
-  if (status != SL_STATUS_OK) {
-    printf("\r\nDisconnect Failed: 0x%X\r\n", status);
-    return status;
-  }
-
-  if (mqtt_client->client.ipstack) {
-    NetworkDisconnect(mqtt_client->client.ipstack);
-  }
-
-  printf("\r\nExecution completed!\r\n");
-  return 0;
+  return mqtt_demo_cleanup(mqtt_client, topic_subscribed, mqtt_connected, app_status);
 }

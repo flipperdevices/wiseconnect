@@ -122,7 +122,7 @@ err_t          dns_local_addhost(const char *hostname, const ip_addr_t *addr);
 #endif /* DNS_LOCAL_HOSTLIST_IS_DYNAMIC */
 #endif /* DNS_LOCAL_HOSTLIST */
 
-#if SL_LWIP_DNS_ONDEMAND_TIMER && defined(LWIP_TESTMODE)
+#if SL_LWIP_DNS_ONDEMAND_TIMER && LWIP_TESTMODE
 /* Test helper functions - only available in test mode */
 struct dns_table_entry;  /* Forward declaration */
 

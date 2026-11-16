@@ -1,23 +1,36 @@
-#BLE - iBeacon
+# BLE - iBeacon
 
-##Table of Contents
+## High-Level Overview
 
-    - [BLE - iBeacon](#ble-- - ibeacon) - [Table of Contents](#table - of - contents) - [Purpose / Scope](#purposescope)
-    - [iBeacon Overview](#ibeacon - overview) - [Prerequisites / Setup Requirements](#prerequisitessetup - requirements)
-    - [Hardware Requirements](#hardware - requirements) - [Software Requirements](#software - requirements)
-    - [Setup Diagram](#setup - diagram) - [Getting Started](#getting - started)
-    - [Application Build Environment](#application - build - environment)
-    - [Test the Application](#test - the - application)
+SiWx91x BLE iBeacon example: configure the iBeacon advertising data format (UUID, major, minor, TX power) in BLE peripheral mode using Simplicity Studio on SoC, PSRAM, and NCP modes.
 
-          ##Purpose
-        / Scope
+## Table of Contents
 
-          This application demonstrates how to set the iBeacon data format in advertising parameters in BLE
-          peripheral mode.
+- [BLE - iBeacon](#ble---ibeacon)
+  - [High-Level Overview](#high-level-overview)
+  - [Table of Contents](#table-of-contents)
+  - [Purpose/Scope](#purposescope)
+  - [iBeacon Overview](#ibeacon-overview)
+  - [Prerequisites/Setup Requirements](#prerequisitessetup-requirements)
+    - [Hardware Requirements](#hardware-requirements)
+    - [Software Requirements](#software-requirements)
+    - [NCP mode: host application and project files](#ncp-mode-host-application-and-project-files)
+    - [Setup Diagram](#setup-diagram)
+  - [Steps to Run Demo](#steps-to-run-demo)
+    - [Getting Started](#getting-started)
+    - [Configuration and Setup](#configuration-and-setup)
+    - [Steps for Execution](#steps-for-execution)
+  - [Troubleshooting](#troubleshooting)
+  - [Resources](#resources)
+  - [Report Bugs and Get Support](#report-bugs-and-get-support)
 
-          ##iBeacon Overview
+## Purpose/Scope
 
-          The iBeacon advertise data format is as follows :
+This application demonstrates how to set the iBeacon data format in advertising parameters in BLE peripheral mode.
+
+## iBeacon Overview
+
+The iBeacon advertise data format is as follows :
 
   | iBeacon prefix | UUID | Major Number | Minor | Number | TX Power |
   | -- -- -- | -- - | -- -- -- | -- -- -- | -- -- -- | -- -- -- | | 1 | 9Bytes | 16bytes | 2Bytes | 2 Bytes | 1bytes |
@@ -55,31 +68,28 @@
 - SiWx91x Wi-Fi Evaluation Kit. The SiWx91x supports multiple operating modes. See [Operating Modes]() for details.
 - **SoC Mode**:
   - Standalone
-    - BRD4002A Wireless pro kit mainboard [SI-MB4002A]
+    - [BRD4002B](https://www.silabs.com/development-tools/wireless/wireless-pro-kit-mainboard?tab=overview) Wireless Pro Kit Mainboard [SI-MB4002B]
     - Radio Boards 
-  	  - BRD4338A [SiWx917-RB4338A]
-      - BRD4339B [SiWx917-RB4339B]
-  	  - BRD4340A [SiWx917-RB4340A]
-      - BRD4343A [SiWx917-RB4343A]
+  	  - [BRD4338A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-rb4338a-wifi-6-bluetooth-le-soc-radio-board?tab=overview) [SiWx917-RB4338A]
+      - [BRD4343A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4343a-wi-fi-6-bluetooth-le-8mb-flash-radio-board-for-module?tab=overview) [SiWx917-RB4343A]
+      - [BRD4343C](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4343c-wi-fi-6-bluetooth-le-8mb-flash-radio-board-for-module?tab=overview) [SiWx917-RB4343C]
   - Kits
+  	- SiWG917 Dev Kit [BRD2605B]
   	- SiWx917 Pro Kit [Si917-PK6031A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-pro-kit?tab=overview)
   	- SiWx917 Pro Kit [Si917-PK6032A]
-    - SiWx917 AC1 Module Explorer Kit (BRD2708A)
-- **PSRAM Mode**:
-  - Standalone
-    - BRD4002A Wireless pro kit mainboard [SI-MB4002A]  
-    - Radio Boards [BRD4340A, BRD4342A, BRD4325G]  	
+    - SiWx917 AC1 Module Explorer Kit [BRD2708A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-ek2708a-explorer-kit)
+ - PSRAM Mode:  
+    - Silicon Labs [[BRD4342A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx91x-rb4342a-wifi-6-bluetooth-le-soc-radio-board?tab=overview)]	
 - **NCP Mode**:
   - Standalone
-    - BRD4002A Wireless pro kit mainboard [SI-MB4002A]
+    - [BRD4002B](https://www.silabs.com/development-tools/wireless/wireless-pro-kit-mainboard?tab=overview) Wireless Pro Kit Mainboard [SI-MB4002B]
     - EFR32xG24 Wireless 2.4 GHz +10 dBm Radio Board [xG24-RB4186C](https://www.silabs.com/development-tools/wireless/xg24-rb4186c-efr32xg24-wireless-gecko-radio-board?tab=overview)
-    - NCP Expansion Kit with NCP Radio boards
-      - (BRD4346A + BRD8045A) [SiWx917-EB4346A]
-      - (BRD4357A + BRD8045A) [SiWx917-EB4357A]
+  - NCP Expansion Kit with NCP Radio boards
+      - [[BRD8045A](https://www.silabs.com/development-tools/wireless/wi-fi/expansion-adapter-board-for-co-processor-radio-boards?tab=overview) + [BRD4346A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-rb4346a-wifi-6-bluetooth-le-soc-4mb-flash-radio-board?tab=overview) / [BRD4357A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4357a-wi-fi-6-bluetooth-le-4mb-flash-radio-board-for-rcp-and-ncp-modules?tab=overview) / [BRD4357C](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4357c-wi-fi-6-bluetooth-le-4mb-flash-radio-board-for-rcp-and-ncp-modules?tab=overview)]
   - Kits
   	- EFR32xG24 Pro Kit +10 dBm [xG24-PK6009A](https://www.silabs.com/development-tools/wireless/efr32xg24-pro-kit-10-dbm?tab=overview)
-  - Interface and Host MCU Supported
-    - SPI - EFR32 
+  - Interface and host MCU supported
+    - SPI : EFR32
 
 - Smart phone with Simplicity Connect App(formerly EFR Connect App) mobile app
 
@@ -92,11 +102,23 @@
 
 > **Note:** The provided mobile screenshots are from the 2.8.1 version of the Simplicity Connect App(formerly EFR Connect App), it is recommended to use the latest version.
 
+### NCP mode: host application and project files
+
+| Mode      | Host / target                                                                           | Project file (this example folder) |
+|-----------|-----------------------------------------------------------------------------------------|------------------------------------|
+| SoC       | Application runs on SiWx91x.                                                            | `ble_ibeacon_soc.slcp`             |
+| PSRAM     | Application runs on SiWx91x with PSRAM-capable radio board.                             | `ble_ibeacon_psram.slcp`           |
+| NCP (SPI) | Application runs on **EFR32** host; SiWx917 is the network co-processor over **SPI**.   | `ble_ibeacon_ncp.slcp`             |
+
+Open the `.slcp` for your kit from `examples/snippets/ble/ble_ibeacon/` in Simplicity Studio. For NCP, follow [Getting started with NCP mode](https://docs.silabs.com/wiseconnect/latest/wiseconnect-getting-started/getting-started-with-ncp-mode).
+
 ### Setup Diagram
 
 ![](resources/readme/ble_ibeacon_soc_ncp.png)
   
-## Getting Started
+## Steps to Run Demo
+
+### Getting Started
 
 Refer to the instructions [here](https://docs.silabs.com/wiseconnect/latest/wiseconnect-getting-started/) to:
 
@@ -108,7 +130,7 @@ Refer to the instructions [here](https://docs.silabs.com/wiseconnect/latest/wise
 
 For details on the project folder structure, see the [WiSeConnect Examples](https://docs.silabs.com/wiseconnect/latest/wiseconnect-examples/#example-folder-structure) page.
 
-## Application Build Environment
+### Configuration and Setup
 
 The application can be configured to suit your requirements and development environment. Read through the following sections and make any changes needed.
 
@@ -146,7 +168,7 @@ The application can be configured to suit your requirements and development envi
 
 > **Note**: For recommended settings, please refer the [recommendations guide](https://docs.silabs.com/wiseconnect/latest/wiseconnect-developers-guide-prog-recommended-settings/).
 
-## Test the Application
+### Steps for Execution
 
 Refer to the instructions [here](https://docs.silabs.com/wiseconnect/latest/wiseconnect-getting-started/) to:
 
@@ -179,3 +201,20 @@ Follow the steps for the successful execution of the program:
 6. Refer the following images for console prints:
 
     ![](resources/readme/output1.png)
+
+## Troubleshooting
+
+- **Build, flash, or debug issues:** Verify the WiseConnect / SiSDK version matches this example's requirements and the correct board target is selected in Simplicity Studio.
+- **Device connection and firmware:** Confirm the connection and firmware update steps in [Getting Started](#getting-started) completed successfully.
+
+## Resources
+
+1. [WiSeConnect getting started](https://docs.silabs.com/wiseconnect/latest/wiseconnect-getting-started/)
+2. [Developing for Silicon Labs hosts (install Studio, extension, device, firmware, project)](https://docs.silabs.com/wiseconnect/latest/wiseconnect-developers-guide-developing-for-silabs-hosts/)
+3. [WiSeConnect examples (folder structure)](https://docs.silabs.com/wiseconnect/latest/wiseconnect-examples/#example-folder-structure)
+
+## Report Bugs and Get Support
+
+Report issues and get help from the Silicon Labs community:
+
+- [Silicon Labs Community](https://www.silabs.com/community)

@@ -1,8 +1,8 @@
-# SL FILE SYSTEM
+# SiWx91x Platform QSPI
 
 ## Table of Contents
 
-- [SL FILE SYSTEM](#sl-file-system)
+- [SiWx91x Platform QSPI](#platform-siwx91x-qspi)
   - [Table of Contents](#table-of-contents)
   - [Purpose/Scope](#purposescope)
   - [Overview](#overview)
@@ -13,6 +13,9 @@
     - [Setup Diagram](#setup-diagram)
   - [Getting Started](#getting-started)
   - [Test the Application](#test-the-application)
+  - [Troubleshooting](#troubleshooting)
+  - [Resources](#resources)
+  - [Report Bugs/Support](#report-bugssupport)
 
 ## Purpose/Scope
 
@@ -27,7 +30,7 @@ When flashed with this example the boot count get updated in the "boot_count" fi
 
 ## About Example Code
 
-- The example code in [`file_system_example.c`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.1-content-for-docs/examples/si91x_soc/service/sl_si91x_littlefs/file_system_example.c) shows how to set up QSPI to access flash memory for a file system using the LittleFS library.
+- The example code in [`file_system_example.c`](file_system_example.c) shows how to set up QSPI to access flash memory for a file system using the LittleFS library.
 - Initialize QSPI for LittleFS using `sl_si91x_littlefs_qspi_init()`.
 - To use the file system, call `lfs_mount()`.
 - Open a file and read the current boot count  `lfs_file_read()`.
@@ -39,11 +42,12 @@ When flashed with this example the boot count get updated in the "boot_count" fi
 ### Hardware Requirements
 
 - Windows PC
-- Silicon Labs Si917 Evaluation Kit + External Flash
+- Silicon Labs SiWx91x Evaluation Kit [[BRD4002](https://www.silabs.com/development-tools/wireless/wireless-pro-kit-mainboard?tab=overview) + [BRD4338A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-rb4338a-wifi-6-bluetooth-le-soc-radio-board?tab=overview) / [BRD4342A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx91x-rb4342a-wifi-6-bluetooth-le-soc-radio-board?tab=overview) / [BRD4343A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4343a-wi-fi-6-bluetooth-le-8mb-flash-radio-board-for-module?tab=overview) / [BRD4343C](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4343c-wi-fi-6-bluetooth-le-8mb-flash-radio-board-for-module?tab=overview)]
+- SiWx917 AC1 Module Explorer Kit [BRD2708A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-ek2708a-explorer-kit)
 
 >**Note:**
->- LittleFS service is not supported on stacked flash boards. However, if the board supports external flash, users can connect external flash to access the LittleFS service. 
->- For detailed information about pinset configurations, refer to the **Flash and PSRAM Combinations** section in the [Software Reference Manual](https://github.com/SiliconLabs/wiseconnect/blob/release/v3.4.2/docs/software-reference/manuals/siwx91x-software-reference-manual.md).
+>- LittleFS service is not supported on stacked flash boards. However, if the board supports external flash, users can connect external flash to access the LittleFS service.
+>- For detailed information about pinset configurations, refer to the **Flash and PSRAM Combinations** section in the [Software Reference Manual](https://github.com/SiliconLabs/wiseconnect/blob/v4.1.2-content-for-docs/docs/software-reference/manuals/siwx91x-software-reference-manual.md).
 
 ### Software Requirements
 
@@ -76,3 +80,18 @@ Refer to the instructions [here](https://docs.silabs.com/wiseconnect/latest/wise
 > **Note**:
 >
 >- When you run the littlefs example the first time, after flash erase you see the error `(error: Corrupted dir pair at {0x0, 0x1})` because flash is not yet formatted for littlefs. Ignore the error when running the example the first time.
+
+## Troubleshooting
+
+- If the project does not build, ensure Simplicity Studio and the WiSeConnect extension are installed and the board is connected.
+- If the device is not detected, reinstall the connectivity firmware and check USB drivers.
+
+## Resources
+
+- [WiSeConnect Getting Started](https://docs.silabs.com/wiseconnect/latest/wiseconnect-getting-started/)
+- [WiSeConnect Examples](https://docs.silabs.com/wiseconnect/latest/wiseconnect-examples/)
+- [SiWx91x SoC Documentation](https://docs.silabs.com/wiseconnect/latest/)
+
+## Report Bugs/Support
+
+For issues and support, use the Silicon Labs Community or your normal support channel.

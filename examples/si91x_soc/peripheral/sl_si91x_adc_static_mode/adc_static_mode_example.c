@@ -33,6 +33,7 @@
  ******************************************************************************/
 static float vref_value                    = (float)VREF_VALUE;
 static boolean_t data_sample_complete_flag = false;
+static uint8_t adc_static_channel_index    = 0;
 static int16_t adc_output[1];
 
 /*******************************************************************************
@@ -55,38 +56,44 @@ void adc_static_mode_example_init(void)
   do {
     // Version information of ADC driver
     version = sl_si91x_adc_get_version();
-    DEBUGOUT("ADC version is fetched successfully \n");
-    DEBUGOUT("API version is %d.%d.%d\n", version.release, version.major, version.minor);
+    /* Note: All status messages in this example — both success and failure — are
+ * intentionally emitted via SL_PRINT_STRING_ERROR so that they remain visible
+ * on the console at the default log level. This is a demonstration choice, not
+ * a recommendation: in production code, ERROR severity should be reserved for
+ * actual failures, with successful operations logged via SL_PRINT_STRING_INFO
+ * (or SL_PRINT_STRING_DEBUG for verbose trace). */
+    SL_PRINT_STRING_ERROR("ADC version is fetched successfully \n");
+    SL_PRINT_STRING_ERROR("API version is %d.%d.%d\n", version.release, version.major, version.minor);
     status = sl_si91x_adc_init(sl_adc_channel_config, sl_adc_config, vref_value);
     /* Due to calling trim_efuse API on ADC init in driver it will change the
       clock frequency, if we are not initialize the debug again it will print
       the garbage data in console output. */
     DEBUGINIT();
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("sl_si91x_adc_init: Error Code : %lu \n", status);
+      SL_PRINT_STRING_ERROR("sl_si91x_adc_init: Error Code : %lu \n", status);
       break;
     }
-    DEBUGOUT("ADC Initialization Success\n");
+    SL_PRINT_STRING_ERROR("ADC Initialization Success\n");
     // Configure ADC channel.
     status = sl_si91x_adc_set_channel_configuration(sl_adc_channel_config, sl_adc_config);
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("sl_si91x_adc_channel_set_configuration: Error Code : %lu \n", status);
+      SL_PRINT_STRING_ERROR("sl_si91x_adc_channel_set_configuration: Error Code : %lu \n", status);
       break;
     }
-    DEBUGOUT("ADC Channel Configuration Successfully \n");
+    SL_PRINT_STRING_ERROR("ADC Channel Configuration Successfully \n");
     // Register user callback function
     status = sl_si91x_adc_register_event_callback(callback_event);
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("sl_si91x_adc_register_event_callback: Error Code : %lu \n", status);
+      SL_PRINT_STRING_ERROR("sl_si91x_adc_register_event_callback: Error Code : %lu \n", status);
       break;
     }
-    DEBUGOUT("ADC user event callback registered successfully \n");
+    SL_PRINT_STRING_ERROR("ADC user event callback registered successfully \n");
     status = sl_si91x_adc_start(sl_adc_config);
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("sl_si91x_adc_start: Error Code : %lu \n", status);
+      SL_PRINT_STRING_ERROR("sl_si91x_adc_start: Error Code : %lu \n", status);
       break;
     }
-    DEBUGOUT("ADC started Successfully\n");
+    SL_PRINT_STRING_ERROR("ADC started Successfully\n");
   } while (false);
 }
 
@@ -97,39 +104,46 @@ void adc_static_mode_example_process_action(void)
 {
   sl_status_t status;
   uint16_t adc_value;
-  uint8_t channel_num;
   float vout = 0.0f;
-  for (channel_num = 0; channel_num < sl_adc_config.num_of_channel_enable; channel_num++) {
-    if (data_sample_complete_flag) {
-      data_sample_complete_flag = false;
-      status                    = sl_si91x_adc_read_data_static(sl_adc_channel_config, sl_adc_config, &adc_value);
-      if (status != SL_STATUS_OK) {
-        DEBUGOUT("sl_si91x_adc_read_data_static: Error Code : %lu \n", status);
-      }
-      // Read the data from register and store it in variable.
-      adc_output[0] = (int16_t)adc_value;
-      /* In two’s complement format, the MSb (11th bit) of the conversion result
-         determines the polarity, when the MSb = ‘0’, the result is positive,
-         and when the MSb = ‘1’, the result is negative*/
-      if (adc_output[0] & SIGN_BIT) {
-        // Full-scale would be represented by a hexadecimal value, full-scale
-        // range of ADC result values in two’s complement.
-        adc_output[0] = (int16_t)(adc_output[0] & (ADC_DATA_CLEAR));
-      } else { // set the MSb bit.
-        adc_output[0] = adc_output[0] | SIGN_BIT;
-      }
-      vout = (((float)adc_output[0] / (float)ADC_MAX_OP_VALUE) * vref_value);
-      // For differential type it will give vout.
-      if (sl_adc_channel_config.input_type[channel_num]) {
+
+  if (data_sample_complete_flag) {
+    data_sample_complete_flag = false;
+    status                    = sl_si91x_adc_read_data_static(sl_adc_channel_config, sl_adc_config, &adc_value);
+    if (status != SL_STATUS_OK) {
+      SL_PRINT_STRING_ERROR("sl_si91x_adc_read_data_static: Error Code : %lu \n", status);
+      return;
+    }
+    adc_output[0] = (int16_t)adc_value;
+    if (adc_output[0] & SIGN_BIT) {
+      adc_output[0] = (int16_t)(adc_output[0] & (ADC_DATA_CLEAR));
+    } else {
+      adc_output[0] = adc_output[0] | SIGN_BIT;
+    }
+    vout = (((float)adc_output[0] / (float)ADC_MAX_OP_VALUE) * vref_value);
+    if (sl_adc_config.num_of_channel_enable > 1) {
+      if (sl_adc_channel_config.input_type[adc_static_channel_index]) {
         vout = vout - (vref_value / 2);
-        DEBUGOUT("Differential ended input  :%lf\n", (double)vout);
+        SL_PRINT_STRING_ERROR("Differential ended input  :%ldmV\n", (int32_t)(vout * 1000.0f));
       } else {
-        DEBUGOUT("ADC Channel[%d] Measured input :%lf\n", channel_num, (double)vout);
+        SL_PRINT_STRING_ERROR("ADC Channel[%d] Measured input :%ldmV\n",
+                              adc_static_channel_index,
+                              (int32_t)(vout * 1000.0f));
       }
-      if (sl_adc_config.num_of_channel_enable > 1) {
-        if (channel_num >= (sl_adc_config.num_of_channel_enable - 1)) {
-          DEBUGOUT("\n\n");
-        }
+      if (adc_static_channel_index >= (sl_adc_config.num_of_channel_enable - 1)) {
+        SL_PRINT_STRING_ERROR("\n\n");
+      }
+      adc_static_channel_index++;
+      if (adc_static_channel_index >= sl_adc_config.num_of_channel_enable) {
+        adc_static_channel_index = 0;
+      }
+    } else {
+      if (sl_adc_channel_config.input_type[sl_adc_channel_config.channel]) {
+        vout = vout - (vref_value / 2);
+        SL_PRINT_STRING_ERROR("Differential ended input  :%ldmV\n", (int32_t)(vout * 1000.0f));
+      } else {
+        SL_PRINT_STRING_ERROR("ADC Channel[%d] Measured input :%ldmV\n",
+                              sl_adc_channel_config.channel,
+                              (int32_t)(vout * 1000.0f));
       }
     }
   }

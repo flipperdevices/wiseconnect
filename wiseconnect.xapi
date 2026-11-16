@@ -1328,7 +1328,7 @@
                 </param>
                 <param name="ap_beacon_interval" type="uint16">
                     <description>
-                        Beacon interval of the access point in milliseconds and defaut value is 100 ms.
+                        Beacon interval of the access point in time units (1 TU = 1024 microseconds) and default value is 100 TU.
                     </description>
                 </param>
                 <param name="ap_client_idle_timeout" type="uint32">
@@ -1548,7 +1548,7 @@
                 </param>
                 <param name="ap_beacon_interval" type="uint16">
                     <description>
-                        Beacon interval of the access point in milliseconds; default is 100 ms.
+                        Beacon interval of the access point in time units (1 TU = 1024 microseconds); default is 100 TU.
                     </description>
                 </param>
                 <param name="ap_client_idle_timeout" type="uint32">
@@ -2496,11 +2496,6 @@
                         Wi-Fi interface to perform the scan on (e.g., Client Interface, Access Point Interface).
                     </description>
                 </param>
-                <param name="ssid" type="api_ssid">
-                    <description>
-                        SSID to scan for. This is the identifier of the wireless network to be used in the scan.
-                    </description>
-                </param>
                 <param name="mode" type="uint8" enum="scan_mode">
                     <description>
                         Type of scan to perform (e.g., Active Scan, Passive Scan, Extended Active Scan).
@@ -2519,6 +2514,11 @@
                 <param name="lp_mode" type="uint8">
                     <description>
                         Low Power (LP) mode setting. Set to 1 to enable LP mode, or 0 to disable LP mode. Enabling LP mode can reduce power consumption during passive scans.
+                    </description>
+                </param>
+                <param name="ssid" type="api_ssid">
+                    <description>
+                        SSID to scan for. This is the identifier of the wireless network to be used in the scan.
                     </description>
                 </param>
             </params>
@@ -2978,7 +2978,7 @@
                 </param>
                 <param name="version" type="uint32" enum="mqtt_client_mqtt_version">
                     <description>
-                        MQTT protocol version used by the client.
+                        MQTT protocol version used by the client. Only MQTT version 3.1.1 is supported by the Network Wireless Processor (NWP).
                     </description>
                 </param>
                 <param name="client_port" type="uint16">
@@ -3045,12 +3045,17 @@
         <enums name="mqtt_version" title="mqtt_version">
             <enum name="mqtt_version_v3" value="0x00">
                 <description>
-                    MQTT protocol version 3.0.
+                    MQTT protocol version 3.0 (currently not supported).
                 </description>
             </enum>
             <enum name="mqtt_version_v3_1" value="0x01">
                 <description>
-                    PMQTT protocol version 3.1.
+                    MQTT protocol version 3.1 (currently not supported).
+                </description>
+            </enum>
+            <enum name="mqtt_version_v3_1_1" value="0x02">
+                <description>
+                    MQTT protocol version 3.1.1.
                 </description>
             </enum>
         </enums>

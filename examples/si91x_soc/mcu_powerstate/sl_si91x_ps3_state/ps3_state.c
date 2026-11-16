@@ -39,20 +39,29 @@ void ps3_state_init(void)
   low_power_configuration();
   // Shutdown Wireless NWP.
   ps_wireless_shutdown();
-  DEBUGOUT("Current State: PS%d \n", sl_si91x_power_manager_get_current_state());
+  sl_log_post_sleep_process(NULL);
+
+  /* Note: All status messages in this example — both success and failure — are
+ * intentionally emitted via SL_PRINT_STRING_ERROR so that they remain visible
+ * on the console at the default log level. This is a demonstration choice, not
+ * a recommendation: in production code, ERROR severity should be reserved for
+ * actual failures, with successful operations logged via SL_PRINT_STRING_INFO
+ * (or SL_PRINT_STRING_DEBUG for verbose trace). */
+
+  SL_PRINT_STRING_ERROR("Current State: PS%d \n", sl_si91x_power_manager_get_current_state());
   // Change the clock mode to performace mode(In ps3 clk frequency is 80MHz).
   sl_si91x_power_manager_set_clock_scaling(SL_SI91X_POWER_MANAGER_PERFORMANCE);
 
 #if ACTIVE_STATE
-  DEBUGOUT("PS%d Active State  \n", sl_si91x_power_manager_get_current_state());
+  SL_PRINT_STRING_ERROR("PS%d Active State  \n", sl_si91x_power_manager_get_current_state());
   while (1) {
     // Idle loop to measure active current consumption
   }
 #endif
-  DEBUGOUT("PS%d Sleep State\n", sl_si91x_power_manager_get_current_state());
+  SL_PRINT_STRING_ERROR("PS%d Sleep State\n", sl_si91x_power_manager_get_current_state());
 
   // Call the sleep function, it goes to PS3 sleep as current state is PS3.
-  sl_si91x_power_manager_sleep();
+  sli_si91x_power_manager_sleep();
 }
 
 /******************************************************************************

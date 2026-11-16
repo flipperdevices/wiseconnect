@@ -38,6 +38,7 @@ extern "C" {
 #include "sl_si91x_si70xx_config.h"
 #include "sl_status.h"
 #include "sl_si91x_i2c.h"
+#include "sl_log_helper.h"
 
 /***************************************************************************/
 /**
@@ -51,6 +52,14 @@ extern "C" {
  ******************************************************************************/
 #define SI70XX_I2C_INSTANCE SL_SI70XX_CONFIG_I2C_INSTANCE ///<si70xx I2C Instance
 #define SI70XX_SLAVE_ADDR   SL_SI70XX_CONFIG_SLAVE_ADDR   ///<si70xx Slave Address
+
+/*******************************************************************************
+ ***************************  Delay / timing  ***********************************
+ ******************************************************************************/
+// Note: After any Si70xx reset (software or hardware), wait at least 15 ms before
+// calling sl_si91x_si70xx_init() or sl_si91x_si70xx_is_present() (Si70xx datasheet:
+// 5–15 ms to be ready). The driver does a single I2C attempt; the application
+// should implement delay/retry if needed.
 
 /*******************************************************************************
  ********************************   ENUMS   ************************************

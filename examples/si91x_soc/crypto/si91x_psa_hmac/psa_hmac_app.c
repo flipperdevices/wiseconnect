@@ -15,6 +15,7 @@
  *
  ******************************************************************************/
 #include "psa_hmac_app.h"
+#include <inttypes.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -41,7 +42,7 @@ void test_psa_hmac(psa_algorithm_t hash_alg)
   psa_key_attributes_t key_attr;
   ret = psa_crypto_init();
   if (ret != PSA_SUCCESS) {
-    printf("PSA Crypto Init Failed with error : %ld\n", ret);
+    printf("PSA Crypto Init Failed with error : %" PRId32 "\n", ret);
   } else {
     printf("PSA Crypto Init Success!\n");
   }
@@ -55,7 +56,7 @@ void test_psa_hmac(psa_algorithm_t hash_alg)
   // Import a volatile plain key for HMAC
   ret = psa_import_key(&key_attr, hmac_key, sizeof(hmac_key), &key_id);
   if (ret != PSA_SUCCESS) {
-    printf("PSA Import key failed with error : %ld\n", ret);
+    printf("PSA Import key failed with error : %" PRId32 "\n", ret);
   } else {
     printf("PSA Import Key Success!\n");
   }
@@ -65,7 +66,7 @@ void test_psa_hmac(psa_algorithm_t hash_alg)
   // fb 5b 26 22 9c 20 b7 ed 86 67 06 a2 fb fa e6 7e 3f 40 4b b6 ab e7 7f f4 50 63 a4 59 a4 29 24 a4
   ret = psa_mac_compute(key_id, PSA_ALG_HMAC(hash_alg), hmac_msg, sizeof(hmac_msg), mac_buf, mac_len, &mac_len);
   if (ret != PSA_SUCCESS || (memcmp(mac_buf, expected_mac, sizeof(expected_mac)))) {
-    printf("MAC Compute failed with error : %ld\n", ret);
+    printf("MAC Compute failed with error : %" PRId32 "\n", ret);
   } else {
     printf("MAC Compute is Successful!\n");
   }
@@ -73,7 +74,7 @@ void test_psa_hmac(psa_algorithm_t hash_alg)
   // Verify the HMAC MAC of a message
   ret = psa_mac_verify(key_id, PSA_ALG_HMAC(hash_alg), hmac_msg, sizeof(hmac_msg), mac_buf, mac_len);
   if (ret != PSA_SUCCESS) {
-    printf("MAC Verify Failed with error : %ld\n", ret);
+    printf("MAC Verify Failed with error : %" PRId32 "\n", ret);
   } else {
     printf("MAC Verification Success!\n");
   }

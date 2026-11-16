@@ -11,6 +11,9 @@ metadata:
 component_root_path: ./components/device/silabs/si91x/wireless
 provides:
 - name: sl_si91x_network_dual_stack
+- name: sl_si91x_network_stack
+# Shared with LwIP Network Stack (Hosted) so Paho can condition LwIP transport + mbedTLS once.
+- name: sl_si91x_paho_mqtt_lwip
 source:
 - path: sl_net/src/sl_si91x_net_internal_stack.c
 - path: icmp/sl_net_ping.c
@@ -58,6 +61,10 @@ define:
 
 requires:
   - name: sl_si91x_wireless
+  - name: log_none
   - name: netstack_silabs_lwip_port_freertos
   - name: netstack_silabs_lwip_api
   - name: netstack_silabs_lwip_netif_ethernet
+conflicts:
+  - name: sl_si91x_lwip_stack
+  - name: sl_si91x_internal_stack

@@ -5,7 +5,7 @@ description: 'This application demonstrates how to use of the sensorhub in SI91x
   '
 category: example|si91x_soc|service
 quality: production
-label: SI91x - SoC SL_SI91X_SENSORHUB
+label: SiWx91x Platform - Sensorhub
 component:
 - id: freertos
 - id: freertos_heap_4
@@ -21,9 +21,14 @@ component:
 - id: sl_si91x_internal_stack
 - id: wifi_resources
 - id: network_manager
+- id: si91x_log
+- id: si91x_log_iostream_formatted
+- id: iostream_si91x
+- id: iostream_uart_si91x
+  instance:
+  - vcom
 - id: basic_network_config_manager
 - id: sl_si91x_asynchronous_socket
-- id: sl_si91x_basic_buffers
 - id: sl_power_manager
 - id: sl_si91x_button_917
   instance:
@@ -85,7 +90,9 @@ define:
 - name: SL_SI91X_ULP_STATE_ENABLE
 toolchain_settings:
 - option: gcc_compiler_option
-  value: -Wall -Werror
+  value: -Wall -Werror -Wno-error=deprecated-declarations
+- option: llvm_compiler_option
+  value: -Wall -Werror -Wno-error=deprecated-declarations
 other_file:
 - path: resources/readme/image508b.png
 - path: resources/readme/setupdiagram.png
@@ -99,13 +106,26 @@ ui_hints:
     focus: true
 readme:
 - path: readme.md
+filter:
+- name: Device Type
+  value:
+  - SoC
+- name: MCU
+  value:
+  - 32-bit MCU
+- name: Level
+  value:
+  - Beginner
+- name: Wireless Technology
+  value:
+  - Wi-Fi
 post_build:
   profile: wiseconnect_soc
 sdk_extension:
 - id: wiseconnect3_sdk
   vendor: silabs
-  version: 4.0.1
+  version: 4.1.2
 sdk:
   id: simplicity_sdk
   vendor: silabs
-  version: 2025.12.2
+  version: 2026.6.2

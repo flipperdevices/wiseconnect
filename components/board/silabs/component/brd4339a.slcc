@@ -1,7 +1,7 @@
 id: brd4339a
 label: BRD4339A
 package: platform_siwx91x
-description: Board support for BRD4339A.
+description: Board support for BRD4339A(SoC).
 category: Board|Radio Board
 quality: production
 metadata:

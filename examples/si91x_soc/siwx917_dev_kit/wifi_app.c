@@ -39,6 +39,7 @@
 #include "sl_si91x_driver.h"
 #include <string.h>
 #include <stdio.h>
+#include <inttypes.h>
 
 #include "rsi_common_apis.h"
 #include "rsi_bt_common_apis.h"
@@ -163,7 +164,7 @@ wlan_app_cb_t wlan_app_cb; //! application control block
  *********************************************************************************************************
  */
 extern void wifi_app_send_to_ble(uint16_t msg_type, uint8_t *data, uint16_t data_len);
-extern uint8_t coex_ssid[50], pwd[34], sec_type;
+extern uint8_t coex_ssid[50], pwd[RSI_BLE_MAX_DATA_LEN], sec_type;
 
 uint8_t conn_status;
 extern uint8_t magic_word;
@@ -190,9 +191,28 @@ static sl_net_wifi_client_profile_t wifi_client_profile = {
         .mode = SL_IP_MANAGEMENT_DHCP,
         .type = SL_IPV4,
         .host_name = DHCP_HOST_NAME,
-        .ip = {{{0}}},
-
-    }
+        .ip = {
+            .v4 = {
+                .ip_address = { .value = 0u },
+                .gateway = { .value = 0u },
+                .netmask = { .value = 0u },
+            },
+            .v6 = {
+                .link_local_address = { .value = { 0u, 0u, 0u, 0u } },
+                .global_address = { .value = { 0u, 0u, 0u, 0u } },
+                .gateway = { .value = { 0u, 0u, 0u, 0u } },
+            },
+        },
+        .dhcp_config = {
+            .min_discover_retry_interval = 0,
+            .max_discover_retry_interval = 0,
+            .min_request_retry_interval = 0,
+            .max_request_retry_interval = 0,
+            .max_discover_retries = 0,
+            .max_request_retries = 0,
+        },
+    },
+    .priority = 0,
 };
 
 /*==============================================*/
@@ -284,7 +304,7 @@ void rsi_wlan_app_callbacks_init(void)
 
 static sl_status_t show_scan_results()
 {
-  printf("%lu Scan results:\n", scan_result->scan_count);
+  printf("%" PRIu32 " Scan results:\n", scan_result->scan_count);
 
   if (scan_result->scan_count) {
     printf("\n   %s %24s %s", "SSID", "SECURITY", "NETWORK");
@@ -421,7 +441,7 @@ void wifi_app_task(void)
           status = scan_complete ? callback_status : SL_STATUS_TIMEOUT;
         }
         if (status != SL_STATUS_OK) {
-          LOG_PRINT("\r\nWLAN Scan Wait Failed, Error Code : 0x%lX\r\n", status);
+          LOG_PRINT("\r\nWLAN Scan Wait Failed, Error Code : 0x%X\r\n", (unsigned int)status);
           osDelay(1000);
           wifi_app_set_event(WIFI_APP_SCAN_STATE);
           osDelay(1000);
@@ -444,7 +464,7 @@ void wifi_app_task(void)
         status =
           sl_net_set_credential(wifi_client_profile.config.credential_id, SL_NET_WIFI_PSK, pwd, strlen((char *)pwd));
         if (status != SL_STATUS_OK) {
-          printf("\r\nFailed to set client credentials: 0x%lx\r\n", status);
+          printf("\r\nFailed to set client credentials: 0x%x\r\n", (unsigned int)status);
           continue;
         }
 
@@ -492,7 +512,7 @@ void wifi_app_task(void)
         if (status != RSI_SUCCESS) {
           timeout = 1;
           wifi_app_send_to_ble(WIFI_APP_TIMEOUT_NOTIFY, (uint8_t *)&timeout, 1);
-          LOG_PRINT("\r\nWLAN Connect Failed, Error Code : 0x%lX\r\n", status);
+          LOG_PRINT("\r\nWLAN Connect Failed, Error Code : 0x%X\r\n", (unsigned int)status);
           osDelay(1000);
 
           // Update WLAN application state
@@ -514,7 +534,7 @@ void wifi_app_task(void)
         if (retry) {
           status = sl_net_up(SL_NET_WIFI_CLIENT_INTERFACE, SL_NET_DEFAULT_WIFI_CLIENT_PROFILE_ID);
           if (status != RSI_SUCCESS) {
-            LOG_PRINT("\r\nWLAN connection failed, Error Code : 0x%lX\r\n", status);
+            LOG_PRINT("\r\nWLAN connection failed, Error Code : 0x%X\r\n", (unsigned int)status);
             break;
           } else {
             wifi_app_set_event(WIFI_APP_CONNECTED_STATE);
@@ -542,7 +562,7 @@ void wifi_app_task(void)
               wifi_app_set_event(WIFI_APP_IDLE_STATE);
             }
           }
-          LOG_PRINT("\r\nIP configuration failed, Error Code : 0x%lX\r\n", status);
+          LOG_PRINT("\r\nIP configuration failed, Error Code : 0x%X\r\n", (unsigned int)status);
           break;
         } else {
           a             = 0;
@@ -595,7 +615,7 @@ void wifi_app_task(void)
         //
         //        rc = sl_wifi_set_performance_profile_v2(&performance_profile);
         //        if (rc != SL_STATUS_OK) {
-        //          printf("\r\nPower save configuration Failed, Error Code : 0x%lX\r\n", rc);
+        //          printf("\r\nPower save configuration Failed, Error Code : 0x%X\r\n", rc);
         //        }
 
         //        printf("\r\nAssociated power save enabled\r\n");
@@ -634,7 +654,7 @@ void wifi_app_task(void)
           wifi_app_send_to_ble(WIFI_APP_DISCONNECTION_NOTIFY, (uint8_t *)&disassociated, 1);
           wifi_app_set_event(WIFI_APP_UNCONNECTED_STATE);
         } else {
-          LOG_PRINT("\r\nWi-Fi disconnect failed, Error Code : 0x%lX\r\n", status);
+          LOG_PRINT("\r\nWi-Fi disconnect failed, Error Code : 0x%X\r\n", (unsigned int)status);
         }
       } break;
       default:

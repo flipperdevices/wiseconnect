@@ -2,7 +2,7 @@ id: user_files
 label: User Files
 package: platform_siwx91x
 description: >
-  Install this component to enable execution of User Files which are added in this component from RAM
+  Install this component from RAM
 category: Device|Si91x|MCU|Service|Power Manager|ULP Peripheral
 quality: production
 metadata:

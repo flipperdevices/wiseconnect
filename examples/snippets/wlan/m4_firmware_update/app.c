@@ -74,7 +74,6 @@ const osThreadAttr_t thread_attributes = {
   .stack_size = 3072,
   .priority   = osPriorityLow,
   .tz_module  = 0,
-  .reserved   = 0,
 };
 
 static const sl_wifi_device_configuration_t sl_wifi_firmware_update_configuration = {
@@ -101,7 +100,10 @@ static const sl_wifi_device_configuration_t sl_wifi_firmware_update_configuratio
                    .ext_tcp_ip_feature_bit_map = 0,
                    .ble_feature_bit_map        = 0,
                    .ble_ext_feature_bit_map    = 0,
-                   .config_feature_bit_map     = 0 }
+                   .config_feature_bit_map     = 0 },
+  .ta_pool         = { .tx_ratio_in_buffer_pool = 0, .rx_ratio_in_buffer_pool = 0, .global_ratio_in_buffer_pool = 0 },
+  .efuse_data_type = SL_SI91X_EFUSE_MFG_SW_VERSION,
+  .nwp_fw_image_number = SL_SI91X_NWP_FW_IMAGE_NUMBER_0
 };
 
 uint8_t recv_buffer[RECV_BUFFER_SIZE];
@@ -126,21 +128,21 @@ static void application_start(void *argument)
 
   status = sl_net_init(SL_NET_WIFI_CLIENT_INTERFACE, &sl_wifi_firmware_update_configuration, NULL, NULL);
   if (status != SL_STATUS_OK) {
-    printf("Failed to start Wi-Fi client interface: 0x%lx\r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "Failed to start Wi-Fi client interface: 0x%lx\r\n", status);
     return;
   }
-  printf("\r\nWi-Fi Init Success\r\n");
+  SL_DEBUG_LOG_V2(INFO, "Wi-Fi Init Success\r\n");
 
   status = sl_net_up(SL_NET_WIFI_CLIENT_INTERFACE, SL_NET_DEFAULT_WIFI_CLIENT_PROFILE_ID);
   if (status != SL_STATUS_OK) {
-    printf("Failed to bring Wi-Fi client interface up: 0x%lx\r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "Failed to bring Wi-Fi client interface up: 0x%lx\r\n", status);
     return;
   }
-  printf("\r\nWi-Fi Client Connected\r\n");
+  SL_DEBUG_LOG_V2(INFO, "Wi-Fi Client Connected\r\n");
 
   status = m4_firmware_update_app();
   if (status != SL_STATUS_OK) {
-    printf("\r\n Update Firmware failed with status 0x%lx\r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, " Update Firmware failed with status 0x%lx\r\n", status);
     return;
   }
 }
@@ -166,24 +168,24 @@ sl_status_t m4_firmware_update_app()
 
   client_socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
   if (client_socket < 0) {
-    printf("\r\nSocket creation failed with BSD error: %d\r\n", errno);
+    SL_DEBUG_LOG_V2(ERROR, "Socket creation failed with BSD error: %d\r\n", errno);
     return SL_STATUS_FAIL;
   }
-  printf("\r\nClient socket : %d\r\n", client_socket);
+  SL_DEBUG_LOG_V2(INFO, "Client socket : %d\r\n", client_socket);
 
   socket_return_value = connect(client_socket, (struct sockaddr *)&server_address, socket_length);
   if (socket_return_value < 0) {
-    printf("\r\nSocket Connect failed with BSD error: %d\r\n", errno);
+    SL_DEBUG_LOG_V2(ERROR, "Socket Connect failed with BSD error: %d\r\n", errno);
     close(client_socket);
     return SL_STATUS_FAIL;
   }
-  printf("\r\nConnect to TCP Server Success\r\n");
+  SL_DEBUG_LOG_V2(INFO, "Connect to TCP Server Success\r\n");
 
-  printf("\r\nM4 Firmware update start\r\n");
+  SL_DEBUG_LOG_V2(INFO, "M4 Firmware update start\r\n");
   while (1) {
 
     if (chunk > (chunk_max_count + 1)) {
-      printf("\r\n chunk : %d > chunk_max_count %d. Firmware update failed.\r\n", chunk, chunk_max_count);
+      SL_DEBUG_LOG_V2(ERROR, " chunk : %d > chunk_max_count %d. Firmware update failed.\r\n", chunk, chunk_max_count);
       close(client_socket);
       return SL_STATUS_FAIL;
     }
@@ -203,7 +205,7 @@ sl_status_t m4_firmware_update_app()
     if (data_length < 0) {
       if (errno == ENOBUFS)
         continue;
-      printf("\r\nFailed to Send data, BSD Error Code: %d\r\n", errno);
+      SL_DEBUG_LOG_V2(ERROR, "Failed to Send data, BSD Error Code: %d\r\n", errno);
       close(client_socket);
       return SL_STATUS_FAIL;
     }
@@ -212,7 +214,7 @@ sl_status_t m4_firmware_update_app()
     recv_size   = 3;
     data_length = recv(client_socket, recv_buffer, recv_size, 0);
     if (data_length < 0) {
-      printf("\r\nFailed to Receive data, BSD Error Code: %d\r\n", errno);
+      SL_DEBUG_LOG_V2(ERROR, "Failed to Receive data, BSD Error Code: %d\r\n", errno);
       close(client_socket);
       return SL_STATUS_FAIL;
     }
@@ -228,7 +230,7 @@ sl_status_t m4_firmware_update_app()
     if (recv_size > 0) {
       data_length = recv(client_socket, recv_buffer, recv_size, 0);
       if (data_length < 0) {
-        printf("\r\nFailed to Receive data from remote peer, BSD Error Code: %d\r\n", errno);
+        SL_DEBUG_LOG_V2(ERROR, "Failed to Receive data from remote peer, BSD Error Code: %d\r\n", errno);
         close(client_socket);
         return SL_STATUS_FAIL;
       }
@@ -236,13 +238,13 @@ sl_status_t m4_firmware_update_app()
       // Call corresponding firmware upgrade API based on the chunk type
       if (fwup_chunk_type == SL_FWUP_RPS_HEADER) {
         //! Send the first chunk to extract OTA image size
-        status = sl_wifi_get_firmware_size((void *)recv_buffer, &fw_image_size);
+        status = sl_si91x_get_firmware_size((void *)recv_buffer, &fw_image_size);
         if (status != SL_STATUS_OK) {
-          printf("Unable to fetch firmware size. Status: 0x%lx\n", status);
+          SL_DEBUG_LOG_V2(ERROR, "Unable to fetch firmware size. Status: 0x%lx\r\n", status);
           close(client_socket);
           return SL_STATUS_FAIL;
         }
-        printf("\r\n Image size = 0x%lx\r\n", fw_image_size);
+        SL_DEBUG_LOG_V2(INFO, " Image size = 0x%lx\r\n", fw_image_size);
         chunk_max_count += ((fw_image_size - FW_HEADER_SIZE) / CHUNK_SIZE) + 1;
         // Send RPS header which is received as first chunk
         status = sl_si91x_fwup_start(recv_buffer);
@@ -256,13 +258,13 @@ sl_status_t m4_firmware_update_app()
       if (status == SL_STATUS_SI91X_FW_UPDATE_DONE) {
         // Close the socket
         close(client_socket);
-        printf("\r\nM4 Firmware update complete\r\n");
+        SL_DEBUG_LOG_V2(INFO, "M4 Firmware update complete\r\n");
 
         sl_si91x_soc_nvic_reset();
 
         return SL_STATUS_OK;
       } else {
-        printf("\r\nFirmware update failed : 0x%lx\n", status);
+        SL_DEBUG_LOG_V2(ERROR, "Firmware update failed : 0x%lx\r\n", status);
         close(client_socket);
         return SL_STATUS_FAIL;
       }

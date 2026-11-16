@@ -33,6 +33,7 @@ include:
   - path: sl_net_types.h
   - path: sl_net_wifi_types.h
   - path: sl_net.h
+  - path: sli_net_credentials.h
   - path: sli_net_common_utility.h
   - path: sli_net_constants.h
   - path: sli_net_types.h
@@ -53,6 +54,12 @@ define:
 requires:
 - name: wifi
 - name: network_config_manager
+- condition:
+  - sl_si91x_lwip_stack
+  name: log_none
+- condition:
+  - sl_si91x_network_dual_stack
+  name: log_none
 recommends:
 - id: '%extension-wiseconnect3_sdk%basic_network_config_manager'
   vendor: silabs

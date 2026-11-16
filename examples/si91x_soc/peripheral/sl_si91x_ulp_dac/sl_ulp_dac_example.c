@@ -157,16 +157,24 @@ void sl_ulp_dac_example_init(void)
   do {
     // Version information of DAC driver
     dac_version = sl_si91x_dac_get_version();
-    DEBUGOUT("DAC version is fetched successfully \n");
-    DEBUGOUT("SL_DAC API version is %d.%d.%d \n", dac_version.release, dac_version.major, dac_version.minor);
+    /* Note: All status messages in this example — both success and failure — are
+ * intentionally emitted via SL_PRINT_STRING_ERROR so that they remain visible
+ * on the console at the default log level. This is a demonstration choice, not
+ * a recommendation: in production code, ERROR severity should be reserved for
+ * actual failures, with successful operations logged via SL_PRINT_STRING_INFO
+ * (or SL_PRINT_STRING_DEBUG for verbose trace). */
+    SL_PRINT_STRING_ERROR("SL_DAC API version is %d.%d.%d \n",
+                          dac_version.release,
+                          dac_version.major,
+                          dac_version.minor);
     // Initializing DAC peripheral
     status = sl_si91x_dac_init(&dac_clock_config);
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("sl_si91x_dac_init: Error Code : %lu \n", status);
+      SL_PRINT_STRING_ERROR("sl_si91x_dac_init: Error Code : %lu \n", status);
       break;
     }
-    DEBUGOUT("SL_DAC initialization is successful \n");
-    DEBUGOUT("current power state : %d\n", sl_si91x_power_manager_get_current_state());
+    SL_PRINT_STRING_ERROR("SL_DAC initialization is successful \n");
+    SL_PRINT_STRING_ERROR("current power state : %d\n", sl_si91x_power_manager_get_current_state());
     //   DAC configuration
     status = sl_si91x_dac_set_configuration(sl_dac_config, vref_value);
     /* Due to calling trim_efuse API on DAC configuration in driver it will
@@ -174,29 +182,29 @@ void sl_ulp_dac_example_init(void)
       it will print the garbage data in console output. */
     DEBUGINIT();
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("sl_si91x_dac_set_configuration: Error Code : %lu \n", status);
+      SL_PRINT_STRING_ERROR("sl_si91x_dac_set_configuration: Error Code : %lu \n", status);
       break;
     }
-    DEBUGOUT("SL_DAC set configuration is successful \n");
+    SL_PRINT_STRING_ERROR("SL_DAC set configuration is successful \n");
     // Register user callback function
     status = sl_si91x_dac_register_event_callback(dac_callback_event);
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("sl_si91x_dac_register_event_callback: Error Code : %lu \n", status);
+      SL_PRINT_STRING_ERROR("sl_si91x_dac_register_event_callback: Error Code : %lu \n", status);
       break;
     }
-    DEBUGOUT("SL_DAC register event callback is successful \n");
+    SL_PRINT_STRING_ERROR("SL_DAC register event callback is successful \n");
     // DAC input sample data writing
     status = sl_si91x_dac_write_data((int16_t *)dac_input_sample_data, BUFFER_SIZE);
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("sl_si91x_dac_write_data: Error Code : %lu \n", status);
+      SL_PRINT_STRING_ERROR("sl_si91x_dac_write_data: Error Code : %lu \n", status);
       break;
     }
-    DEBUGOUT("SL_DAC data write is successful\n");
-    DEBUGOUT("SL_DAC start \n");
+    SL_PRINT_STRING_ERROR("SL_DAC data write is successful\n");
+    SL_PRINT_STRING_ERROR("SL_DAC start \n");
     // Start DAC peripheral
     status = sl_si91x_dac_start();
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("sl_si91x_dac_start: Error Code : %lu \n", status);
+      SL_PRINT_STRING_ERROR("sl_si91x_dac_start: Error Code : %lu \n", status);
       break;
     }
   } while (false);
@@ -221,7 +229,7 @@ void sl_ulp_dac_example_process_action(void)
   switch (ulp_dac_current_mode) {
     case ULP_DAC_PROCESS_ACTION:
       if (dac_static_intr_flag == true) {
-        DEBUGOUT("Data successfully sampled \n");
+        SL_PRINT_STRING_ERROR("Data successfully sampled \n");
       }
 
       else if (dac_fifo_intr_flag == true) {
@@ -242,12 +250,12 @@ void sl_ulp_dac_example_process_action(void)
         dac_ps2_to_ps4_transition_done = false;
         status                         = sl_si91x_dac_deinit();
         if (status != SL_STATUS_OK) {
-          DEBUGOUT("sl_si91x_dac_deinit: Error Code : %lu \n", status);
+          SL_PRINT_STRING_ERROR("sl_si91x_dac_deinit: Error Code : %lu \n", status);
         }
-        DEBUGOUT("Data deinit \n");
+        SL_PRINT_STRING_ERROR("Data deinit \n");
         ulp_dac_current_mode = ULP_DAC_TRANSMISSION_COMPLETED;
       } else if (current_power_state == SL_SI91X_POWER_MANAGER_PS3) {
-        DEBUGOUT("Switching the dac from PS3 -> PS2 state\n");
+        SL_PRINT_STRING_ERROR("Switching the dac from PS3 -> PS2 state\n");
         // Control power management by adjusting clock references and shutting
         // down the power supply
         // This function is for demonstration purpose only. For more details, refer to the README file.
@@ -258,7 +266,7 @@ void sl_ulp_dac_example_process_action(void)
        garbage data or no data in console output. */
         DEBUGINIT();
         if (status != SL_STATUS_OK) {
-          DEBUGOUT("sl_si91x_power_manager_add_ps_requirement: Error Code : %lu \n", status);
+          SL_PRINT_STRING_ERROR("sl_si91x_power_manager_add_ps_requirement: Error Code : %lu \n", status);
           break;
         }
         // Configuring the ps2 power state by configuring
@@ -271,10 +279,10 @@ void sl_ulp_dac_example_process_action(void)
         ulp_dac_current_mode           = ULP_DAC_PROCESS_ACTION;
         dac_ps4_to_ps2_transition_done = true;
       } else if (current_power_state == SL_SI91X_POWER_MANAGER_PS2) {
-        DEBUGOUT("Switching the dac from PS2 -> PS4 state\n");
+        SL_PRINT_STRING_ERROR("Switching the dac from PS2 -> PS4 state\n");
         status = sl_si91x_power_manager_add_ps_requirement(SL_SI91X_POWER_MANAGER_PS4);
         if (status != SL_STATUS_OK) {
-          DEBUGOUT("sl_si91x_power_manager_add_ps_requirement: Error Code : %lu \n", status);
+          SL_PRINT_STRING_ERROR("sl_si91x_power_manager_add_ps_requirement: Error Code : %lu \n", status);
           break;
         }
         DEBUGINIT();
@@ -338,9 +346,9 @@ static void configure_ps2_power_state(void)
                                                                      // management
   config.ulpss_ram_banks = SL_SI91X_POWER_MANAGER_ULPSS_RAM_BANK_2 | SL_SI91X_POWER_MANAGER_ULPSS_RAM_BANK_3;
   // Ored value for ulpss peripheral.
-  peri.ulpss_peripheral = SL_SI91X_POWER_MANAGER_ULPSS_PG_MISC | SL_SI91X_POWER_MANAGER_ULPSS_PG_SSI
-                          | SL_SI91X_POWER_MANAGER_ULPSS_PG_I2S | SL_SI91X_POWER_MANAGER_ULPSS_PG_I2C
-                          | SL_SI91X_POWER_MANAGER_ULPSS_PG_IR | SL_SI91X_POWER_MANAGER_ULPSS_PG_FIM;
+  peri.ulpss_peripheral = SL_SI91X_POWER_MANAGER_ULPSS_PG_SSI | SL_SI91X_POWER_MANAGER_ULPSS_PG_I2S
+                          | SL_SI91X_POWER_MANAGER_ULPSS_PG_I2C | SL_SI91X_POWER_MANAGER_ULPSS_PG_IR
+                          | SL_SI91X_POWER_MANAGER_ULPSS_PG_FIM;
   // Ored value for npss peripheral.
   peri.npss_peripheral = SL_SI91X_POWER_MANAGER_NPSS_PG_MCUWDT | SL_SI91X_POWER_MANAGER_NPSS_PG_MCUPS
                          | SL_SI91X_POWER_MANAGER_NPSS_PG_MCUTS | SL_SI91X_POWER_MANAGER_NPSS_PG_MCUSTORE2
@@ -350,18 +358,18 @@ static void configure_ps2_power_state(void)
     status = sl_si91x_power_manager_remove_peripheral_requirement(&peri);
     if (status != SL_STATUS_OK) {
       // If status is not OK, return with the error code.
-      DEBUGOUT("sl_si91x_power_manager_remove_peripheral_requirement failed, "
-               "Error Code: 0x%lX",
-               status);
+      SL_PRINT_STRING_ERROR("sl_si91x_power_manager_remove_peripheral_requirement failed, "
+                            "Error Code: 0x%lX",
+                            status);
       break;
     }
     // RAM retention modes are configured and passed into this API.
     status = sl_si91x_power_manager_configure_ram_retention(&config);
     if (status != SL_STATUS_OK) {
       // If status is not OK, return with the error code.
-      DEBUGOUT("sl_si91x_power_manager_configure_ram_retention failed, Error "
-               "Code: 0x%lX",
-               status);
+      SL_PRINT_STRING_ERROR("sl_si91x_power_manager_configure_ram_retention failed, Error "
+                            "Code: 0x%lX",
+                            status);
       break;
     }
   } while (false);

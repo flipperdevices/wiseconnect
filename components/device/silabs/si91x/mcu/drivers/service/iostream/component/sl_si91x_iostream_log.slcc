@@ -1,13 +1,12 @@
 id: si91x_iostream_log
-label: SI91X IOSTREAM LOG
+label: IO Stream Log
 package: platform_siwx91x
 description: >
-  This component enables the redirection of printf statements to the default IOSTREAM output stream.
-  It automatically configures printf output to use the currently configured IOSTREAM interface,
-  providing a convenient way to handle debug and console output in SI91x applications.
-  
-  The component requires no additional configuration and will use whatever IOSTREAM interface
-  (SWO, RTT, etc.) is active in the system at runtime.
+  This component enables redirection of printf to the default IO Stream output.
+  It configures printf to use the active IO Stream interface (SWO, RTT, VUART, etc.)
+  for convenient debug and console output in SiWx91x applications.
+
+  No additional configuration is required; the active IO Stream interface at runtime is used.
 category: Device|Si91x|MCU|Service
 quality: production
 metadata:

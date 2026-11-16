@@ -19,7 +19,6 @@
 #include "sl_net_types.h"
 #include "sl_wifi_types.h"
 #include "sl_wifi_device.h"
-#include "sl_si91x_types.h"
 #include "lwip/netif.h"
 
 /** \addtogroup SL_NET_TYPES

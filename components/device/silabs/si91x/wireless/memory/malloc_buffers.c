@@ -33,8 +33,7 @@
 #include <string.h>
 #include "cmsis_os2.h"
 #include "sl_cmsis_utility.h"
-#include <string.h>
-extern osMutexId_t malloc_free_mutex;
+osMutexId_t malloc_free_mutex = NULL;
 sl_status_t sli_si91x_host_init_buffer_manager(void);
 sl_status_t sli_si91x_host_deinit_buffer_manager(void);
 sl_status_t sli_si91x_host_allocate_buffer(sl_wifi_buffer_t **buffer,

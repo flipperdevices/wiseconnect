@@ -31,6 +31,7 @@
 #if defined(DEBUG_UART)
 #include "rsi_debug.h"
 #endif // DEBUG_UART
+#include "sl_log_helper.h"
 #include "sl_si91x_clock_manager.h"
 /*******************************************************************************
  *******************************   DEFINES   ***********************************
@@ -123,6 +124,10 @@ void sl_si91x_button_init(const sl_button_t *handle)
     // Set button configuration
     status = sl_gpio_set_configuration(sl_button_pin_config);
     if (status != SL_STATUS_OK) {
+      SL_PRINT_STRING_ERROR("sl_si91x_button_init: GPIO configuration failed, "
+                            "status=0x%04lX,line no : %d \r\n",
+                            (unsigned long)status,
+                            __LINE__);
       break;
     }
 
@@ -136,6 +141,10 @@ void sl_si91x_button_init(const sl_button_t *handle)
     } else if (handle->port == ULP) {
       status = sl_si91x_gpio_driver_enable_clock((sl_si91x_gpio_select_clock_t)ULPCLK_GPIO); // Enable GPIO ULP_CLK
       if (status != SL_STATUS_OK) {
+        SL_PRINT_STRING_ERROR("sl_si91x_button_init: ULP GPIO clock enable "
+                              "failed, status=0x%04lX,line no : %d  \r\n",
+                              (unsigned long)status,
+                              __LINE__);
         break;
       }
       button_context_index                     = button_get_free_ulp_context_index();
@@ -149,6 +158,10 @@ void sl_si91x_button_init(const sl_button_t *handle)
     } else {
       status = sl_si91x_gpio_driver_enable_clock((sl_si91x_gpio_select_clock_t)M4CLK_GPIO); // Enable GPIO M4_CLK
       if (status != SL_STATUS_OK) {
+        SL_PRINT_STRING_ERROR("sl_si91x_button_init: M4 GPIO clock enable "
+                              "failed, status=0x%04lX,line no : %d \r\n",
+                              (unsigned long)status,
+                              __LINE__);
         break;
       }
       button_context_index                    = button_get_free_hp_context_index();
@@ -186,6 +199,9 @@ sl_status_t sl_si91x_button_deinit(const sl_button_t *handle)
       }
       if (index == MAX_ULP_BUTTON_COUNT) {
         status = SL_STATUS_INVALID_HANDLE;
+        SL_PRINT_STRING_ERROR("sl_si91x_button_deinit: deinit invalid ULP "
+                              "handle,line no : %d \r\n",
+                              __LINE__);
         break;
       }
       intr_no       = index;
@@ -200,6 +216,9 @@ sl_status_t sl_si91x_button_deinit(const sl_button_t *handle)
       }
       if (index == MAX_HP_BUTTON_COUNT) {
         status = SL_STATUS_INVALID_HANDLE;
+        SL_PRINT_STRING_ERROR("sl_si91x_button_deinit: deinit invalid HP "
+                              "handle,line no : %d \r\n",
+                              __LINE__);
         break;
       }
       intr_no       = index;

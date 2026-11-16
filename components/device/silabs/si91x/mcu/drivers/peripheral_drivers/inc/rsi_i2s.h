@@ -10,7 +10,6 @@
 *******************************************************************************
 *
 * SPDX-License-Identifier: Zlib
-*
 * The licensor of this software is Silicon Laboratories Inc.
 *
 * This software is provided 'as-is', without any express or implied
@@ -58,6 +57,11 @@ int32_t I2S_Initialize(ARM_SAI_SignalEvent_t cb_event,
                        uint32_t *mem);
 int32_t I2S_Uninitialize(I2S_RESOURCES *i2s, UDMA_RESOURCES *udma);
 int32_t I2S_PowerControl(ARM_POWER_STATE state, I2S_RESOURCES *i2s, UDMA_RESOURCES *udma, RSI_UDMA_HANDLE_T udmaHandle);
+int32_t I2S_Transfer(const void *data_out,
+                     void *data_in,
+                     uint32_t data_out_size,
+                     uint32_t data_in_size,
+                     uint32_t i2s_instance);
 int32_t I2S_Send(const void *data,
                  uint32_t num,
                  I2S_RESOURCES *i2s,

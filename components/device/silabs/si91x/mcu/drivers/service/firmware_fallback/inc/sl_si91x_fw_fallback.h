@@ -30,6 +30,7 @@
 #ifndef _SLI_SI91X_FW_FALLBACK__
 #define _SLI_SI91X_FW_FALLBACK__
 #include "sl_status.h"
+#include "sl_log_helper.h"
 #include <stdbool.h>
 #include <stdint.h>
 #ifdef __cplusplus

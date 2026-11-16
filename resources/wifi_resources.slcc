@@ -12,7 +12,6 @@ component_root_path: ./resources
 provides:
 - name: wifi_resources
 include:
-- path: defaults
 - path: certificates
   file_list:
     - path: aws_client_certificate.pem.crt.h
@@ -32,6 +31,7 @@ include:
     - path: mydevkitkey.pem.h
     - path: silabs_dgcert_ca.pem.h
     - path: eap.pem.h
+    - path: ca_cert.h
 - path: html
   file_list:
     - path: login.h
@@ -49,9 +49,6 @@ config_file:
 - path: lwip_defaults/lwipopts.h
   file_id: lwipopts
   condition: ["sl_si91x_lwip_stack"]
-- path: lwip_defaults/lwipopts.h
-  file_id: lwipopts
-  condition: ["sl_lwip_series3_stack"]
 - path: lwip_defaults/lwipopts.h
   file_id: lwipopts
   condition: ["sl_si91x_network_dual_stack"]

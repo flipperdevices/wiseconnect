@@ -3,7 +3,7 @@ package: wifi_app
 quality: production
 label: Wi-Fi - Data Transfer Application (SoC)
 category: Example|Wi-Fi
-description: 'In Client interface, recieve the data from remote PC1 to SiWx91x Station. This recieved data is stored in a buffer. Later in AP interface, the stored buffer is sent by SiWx91x AP to remote PC2.
+description: 'In Client interface, receive the data from remote PC1 to SiWx91x Station. This received data is stored in a buffer. Later in AP interface, the stored buffer is sent by SiWx91x AP to remote PC2.
 
   '
 filter:
@@ -33,18 +33,26 @@ component:
 - id: wifi_resources
 - id: network_manager
 - id: basic_network_config_manager
-- id: sl_si91x_mem_pool_buffers
 - id: sl_si91x_asynchronous_socket
 - id: sl_si91x_socket
 - id: mqtt
 - id: bsd_socket
+- id: log_none
+- id: si91x_log
+- id: si91x_log_iostream_formatted
+- id: iostream_si91x
+- id: iostream_uart_si91x
+  instance:
+  - vcom
 requires:
 - name: device_needs_ram_execution
   condition:
   - si91x_common_flash
 toolchain_settings:
 - option: gcc_compiler_option
-  value: -Wall -Werror
+  value: -Wall -Werror -Wno-error=deprecated-declarations
+- option: llvm_compiler_option
+  value: -Wall -Werror -Wno-error=deprecated-declarations
 configuration:
 - name: SL_BOARD_ENABLE_VCOM
   value: '1'
@@ -65,8 +73,8 @@ post_build:
 sdk_extension:
 - id: wiseconnect3_sdk
   vendor: silabs
-  version: 4.0.1
+  version: 4.1.2
 sdk:
   id: simplicity_sdk
   vendor: silabs
-  version: 2025.12.2
+  version: 2026.6.2

@@ -78,6 +78,6 @@
 
 // <<< end of configuration section >>>
 
-#define SL_SI91X_DEBUG_SWO_FREQ SL_SI91X_DEBUG_SWO_FREQ_KHZ * 1000
+#define SL_SI91X_DEBUG_SWO_FREQ ((SL_SI91X_DEBUG_SWO_FREQ_KHZ)*1000UL)
 
 #endif // SL_SI91X_DEBUG_SWO_CONFIG_H

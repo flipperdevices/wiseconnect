@@ -62,7 +62,7 @@ void *my_host_get_buffer_data_fake(sl_wifi_buffer_t *buffer, uint16_t offset, ui
 DEFINE_FFF_GLOBALS;
 
 DEFINE_FAKE_VALUE_FUNC7(sl_status_t,
-                        sli_si91x_driver_send_command,
+                        sli_wifi_send_command,
                         uint32_t,
                         sli_wifi_command_type_t,
                         const void *,
@@ -70,5 +70,5 @@ DEFINE_FAKE_VALUE_FUNC7(sl_status_t,
                         sli_wifi_wait_period_t,
                         void *,
                         sl_wifi_buffer_t **);
-DEFINE_FAKE_VOID_FUNC1(sli_si91x_host_free_buffer, sl_wifi_buffer_t *);
+DEFINE_FAKE_VALUE_FUNC1(sl_status_t, sli_buffer_manager_free_buffer, sli_buffer_t);
 DEFINE_FAKE_VALUE_FUNC3(void *, sli_wifi_host_get_buffer_data, sl_wifi_buffer_t *, uint16_t, uint16_t *);

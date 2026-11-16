@@ -45,6 +45,7 @@
 #include "sensorhub_error_codes.h"
 #include "sl_si91x_gpio.h"
 #include "sl_si91x_peripheral_gpio.h"
+#include "sl_log_helper.h"
 /**************************************************************************/ /**
  * @addtogroup SENSOR-HUB Sensor Hub
  * @ingroup SI91X_SERVICE_APIS
@@ -815,7 +816,7 @@ sl_adc_cfg_t *sl_si91x_fetch_adc_bus_intf_info(void);
 /**************************************************************************/
 /**
  * @brief ADC callback to set event flag
- * @details This callback function is called when ADC event occured and it sets event flag corresponding to that event
+ * @details This callback function is called when ADC event occurred and it sets event flag corresponding to that event
  * @param[in] channel_no - Respective channel number.
  * @param[in] event      - Callback event (ADC_STATIC_MODE_CALLBACK, 
  *                         ADC_THRSHOLD_CALLBACK, INTERNAL_DMA, FIFO_MODE_EVENT).

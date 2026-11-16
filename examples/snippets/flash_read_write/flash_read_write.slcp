@@ -3,9 +3,7 @@ package: wifi_app
 quality: production
 label: flash_read_write
 category: Example|Wi-Fi
-description: 'Flash Read Write Application
-
-  '
+description: Demonstrates the usage of sl_si91x_command_to_write_common_flash (write and optional sector erase) and sl_si91x_command_to_read_common_flash APIs in SiWx91x.
 filter:
 - name: Wireless Technology
   value:
@@ -25,7 +23,6 @@ component:
 - id: sl_main
 - id: freertos
 - id: freertos_heap_4
-- id: sl_si91x_mem_pool_buffers
 - id: syscalls
 - id: si91x_memory_default_config
 - id: wiseconnect_common
@@ -36,7 +33,9 @@ component:
 - id: basic_network_config_manager
 toolchain_settings:
 - option: gcc_compiler_option
-  value: -Wall -Werror
+  value: -Wall -Werror -Wno-error=deprecated-declarations
+- option: llvm_compiler_option
+  value: -Wall -Werror -Wno-error=deprecated-declarations
 configuration:
 - name: SL_BOARD_ENABLE_VCOM
   value: '1'
@@ -54,8 +53,8 @@ post_build:
 sdk_extension:
 - id: wiseconnect3_sdk
   vendor: silabs
-  version: 4.0.1
+  version: 4.1.2
 sdk:
   id: simplicity_sdk
   vendor: silabs
-  version: 2025.12.2
+  version: 2026.6.2

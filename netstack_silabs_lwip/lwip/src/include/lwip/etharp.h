@@ -100,7 +100,7 @@ err_t etharp_remove_static_entry(const ip4_addr_t *ipaddr);
 
 void etharp_input(struct pbuf *p, struct netif *netif);
 
-#if defined(SL_LWIP_ETHARP_ONDEMAND_TIMER) && SL_LWIP_ETHARP_ONDEMAND_TIMER && defined(LWIP_TESTMODE)
+#if SL_LWIP_ETHARP_ONDEMAND_TIMER && LWIP_TESTMODE
 /* Forward declaration for test mode */
 struct etharp_entry;
 

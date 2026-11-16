@@ -95,13 +95,13 @@ static sl_status_t sl_si91x_http_client_put_delete(void)
   request->command_type = SLI_SI91X_HTTP_CLIENT_PUT_DELETE;
   uint16_t packet_len   = sizeof(sl_si91x_http_client_put_request_t) - SLI_SI91X_HTTP_CLIENT_PUT_MAX_BUFFER_LENGTH;
 
-  status = sli_si91x_driver_send_command(SLI_WLAN_REQ_HTTP_CLIENT_PUT,
-                                         SLI_SI91X_NETWORK_CMD,
-                                         request,
-                                         packet_len,
-                                         SLI_WLAN_RSP_HTTP_CLIENT_PUT_WAIT_TIME,
-                                         NULL,
-                                         NULL);
+  status = sli_wifi_send_command(SLI_WIFI_REQ_HTTP_CLIENT_PUT,
+                                 SLI_SI91X_NETWORK_CMD,
+                                 request,
+                                 packet_len,
+                                 SLI_WIFI_RSP_HTTP_CLIENT_PUT_WAIT_TIME,
+                                 NULL,
+                                 NULL);
   // Free the memory allocated
   free(request);
 
@@ -125,7 +125,7 @@ sl_status_t sli_http_client_default_event_handler(sl_http_client_event_t event,
   sl_wifi_system_packet_t *packet = (sl_wifi_system_packet_t *)sli_wifi_host_get_buffer_data(buffer, 0, NULL);
 
   // Convert the firmware status to a library status
-  sl_status_t status = sli_convert_and_save_firmware_status(sli_get_si91x_frame_status(packet));
+  sl_status_t status = sli_wifi_convert_and_save_firmware_status(sli_wifi_get_wifi_frame_status(packet));
 
   // Initialize an HTTP client response structure
   sl_http_client_response_t *http_response = (sl_http_client_response_t *)malloc(sizeof(sl_http_client_response_t));
@@ -147,13 +147,13 @@ sl_status_t sli_http_client_default_event_handler(sl_http_client_event_t event,
     return SL_STATUS_FAIL;
   }
 
-  SL_DEBUG_LOG("\r\n>>> %s : %x <<<\r\n", __func__, status);
+  SL_DEBUG_LOG_V2(DEBUG, ">>> %s : %x <<<\r\n", (uintptr_t) __func__, status);
 
   // Handle different HTTP client response types based on the packet's command
   switch (packet->command) {
-    case SLI_WLAN_RSP_HTTP_CLIENT_GET:
-    case SLI_WLAN_RSP_HTTP_CLIENT_POST:
-    case SLI_WLAN_RSP_HTTP_CLIENT_POST_DATA: {
+    case SLI_WIFI_RSP_HTTP_CLIENT_GET:
+    case SLI_WIFI_RSP_HTTP_CLIENT_POST:
+    case SLI_WIFI_RSP_HTTP_CLIENT_POST_DATA: {
       // Handle GET, POST, and POST_DATA responses
       if (status == SL_STATUS_OK) {
         // Extract http server response from packet
@@ -180,7 +180,7 @@ sl_status_t sli_http_client_default_event_handler(sl_http_client_event_t event,
       break;
     }
 
-    case SLI_WLAN_RSP_HTTP_CLIENT_PUT: {
+    case SLI_WIFI_RSP_HTTP_CLIENT_PUT: {
       // Handle PUT responses
       uint8_t http_cmd_type                                 = *packet->data;
       const sli_si91x_http_client_put_pkt_rsp_t *response   = (sli_si91x_http_client_put_pkt_rsp_t *)&packet->data;
@@ -210,7 +210,7 @@ sl_status_t sli_http_client_default_event_handler(sl_http_client_event_t event,
       http_response->http_response_code = 0;
 
       // Delete only after the last server response segment is received
-      if (http_response->end_of_data == 9) {
+      if (http_response->end_of_data == SL_HTTP_CLIENT_PUT_SERVER_RESPONSE_END_OF_DATA) {
         sl_si91x_http_client_put_delete();
       }
       break;

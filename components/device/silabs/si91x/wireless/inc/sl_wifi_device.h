@@ -30,10 +30,11 @@
 #pragma once
 
 #include "sl_si91x_status.h"
+#include "sl_wifi_types.h"
 #include "sl_si91x_protocol_types.h"
+#include "sl_si91x_constants.h"
 #include "sl_constants.h"
 #include "sl_bit.h"
-#include "sl_wifi_types.h"
 #include <stdint.h>
 #include <stddef.h>
 
@@ -68,7 +69,7 @@
   * @def SL_WIFI_FEAT_SECURITY_OPEN
   * @brief Security type: Open.
   * @details
-  * This feature supports open security type in client mode.
+  * This feature supports open security type in client mode and AP mode.
   * 
   * @note It is recommended to enable this macro to configure the security type as open mode.
   */
@@ -141,8 +142,20 @@
    * This feature, when enabled, permits the execution of socket commands even if the Wi-Fi connection has not been established.
    * 
    * @note If this feature is disabled, issuing socket commands before the device obtains an IP address will result in an invalid state error.
+   * @note Bit(16) is used internally by SDK. Bit(17) is reserved and must be set to 0.
    */
 #define SL_WIFI_FEAT_SOCKET_CMDS_ALLOW_BEFORE_WLAN_CONNECTION BIT(18)
+
+/**
+   * @def SL_WIFI_FEAT_CLEAR_SCAN_RESULTS_AFTER_USE
+   * @brief Flush cached scan/BSS entries after scan results are used.
+   * @details
+   * Enables automatic clearing of cached scan/BSS entries once scan results
+   * are consumed.
+   * 
+   * @note Bits 19-20 are reserved. Must be set to 0.
+   */
+#define SL_WIFI_FEAT_CLEAR_SCAN_RESULTS_AFTER_USE BIT(21)
 
 /**
  * @def SL_WIFI_FEAT_SECURE_ATTESTATION
@@ -150,7 +163,8 @@
  * @details
  * Enables secure attestation functionality.
  * 
- * @note Bit(16) is used internally by SDK. Bits 17-29 and bit 31 are reserved.
+ * @note Bits 22-29 and bit 31 are reserved.
+ * @note Reserved bits must be set to 0.
  */
 #define SL_WIFI_FEAT_SECURE_ATTESTATION BIT(30)
 
@@ -490,42 +504,94 @@
 /** \addtogroup WIFI_CALIBRATION_FLAGS
     * @{ */
 /**
-   * @def SL_WIFI_BURN_GAIN_OFFSET
-   * @brief Burn gain offset into the device.
-   *
-   * @details
-   * This macro defines the bit for burning the gain offset into the device.
-   */
+ * @note Bit positions 0 and 7 are reserved. Bit positions 11-31 are reserved.
+ */
+
+/**
+ * @def SL_WIFI_BURN_GAIN_OFFSET
+ * @brief Burn gain offset into the device.
+ * 
+ * @note The macro SL_WIFI_BURN_GAIN_OFFSET is being deprecated and will be removed in future releases. Use SL_WIFI_BURN_GAIN_OFFSET_LOW, SL_WIFI_BURN_GAIN_OFFSET_MID, or SL_WIFI_BURN_GAIN_OFFSET_HIGH instead.
+ */
 #define SL_WIFI_BURN_GAIN_OFFSET BIT(0)
 
 /**
-   * @def SL_WIFI_BURN_FREQ_OFFSET
-   * @brief Burn frequency offset into the device.
-   *
-   * @details
-   * This macro defines the bit for burning the frequency offset into the device.
-   */
+ * @def SL_WIFI_BURN_FREQ_OFFSET
+ * @brief Update XO Ctune to calibration data.
+ *
+ * @details
+ * This macro defines the bit for burning the frequency offset into the device.
+ *  - 1 - Update XO Ctune to calibration data
+ *  - 0 - Skip XO Ctune update
+ */
 #define SL_WIFI_BURN_FREQ_OFFSET BIT(1)
 
 /**
-   * @def SL_WIFI_SW_XO_CTUNE_VALID
-   * @brief Indicates if the software XO CTUNE is valid.
-   *
-   * @details
-   * This macro defines the bit to indicate that the software XO CTUNE (crystal tuning) value is valid.
-   */
+ * @def SL_WIFI_SW_XO_CTUNE_VALID
+ * @brief Use XO Ctune provided as argument to update calibration data.
+ *
+ * @details
+ * This macro defines the bit to indicate that the software XO CTUNE (crystal tuning) value is valid.
+ *  - 1 - Use XO Ctune provided as argument to update calibration data
+ *  - 0 - Use XO Ctune value as read from hardware register
+ */
 #define SL_WIFI_SW_XO_CTUNE_VALID BIT(2)
 
 /**
-   * @def SL_WIFI_BURN_XO_FAST_DISABLE
-   * @brief Burn bit to disable XO fast into the device.
-   *
-   * @details
-   * This macro defines the bit for burning a setting to disable the fast XO (crystal oscillator) into the device.
-   * 
-   * @note Not applicable for SiWx91x.
-   */
+ * @def SL_WIFI_BURN_XO_FAST_DISABLE
+ * @brief Apply patch for cold temperature issue on CC0/CC1 modules.
+ *
+ * @details
+ * This macro defines the bit used to apply patch for cold temperature issue
+ * (host interface detection) observed on CC0/CC1 modules.
+ *
+ * @note Not applicable for SiWx91x.
+ */
 #define SL_WIFI_BURN_XO_FAST_DISABLE BIT(3)
+
+/**
+ * @def SL_WIFI_BURN_GAIN_OFFSET_LOW
+ * @brief Update gain offset for low sub-band (2 GHz).
+ *
+ * @details
+ * This macro defines the bit used to burn gain offset for low sub-band into the device.
+ *  - 1 - Update gain offset for low sub-band (2 GHz, channel 1)
+ *  - 0 - Skip low sub-band gain-offset update
+ */
+#define SL_WIFI_BURN_GAIN_OFFSET_LOW BIT(4)
+
+/**
+ * @def SL_WIFI_BURN_GAIN_OFFSET_MID
+ * @brief Update gain offset for mid sub-band (2 GHz).
+ *
+ * @details
+ * This macro defines the bit used to burn gain offset for mid sub-band into the device.
+ *  - 1 - Update gain offset for mid sub-band (2 GHz, channel 6)
+ *  - 0 - Skip mid sub-band gain-offset update
+ */
+#define SL_WIFI_BURN_GAIN_OFFSET_MID BIT(5)
+
+/**
+ * @def SL_WIFI_BURN_GAIN_OFFSET_HIGH
+ * @brief Update gain offset for high sub-band (2 GHz).
+ *
+ * @details
+ * This macro defines the bit used to burn gain offset for high sub-band into the device.
+ *  - 1 - Update gain offset for high sub-band (2 GHz, channel 11)
+ *  - 0 - Skip high sub-band gain-offset update
+ */
+#define SL_WIFI_BURN_GAIN_OFFSET_HIGH BIT(6)
+
+/**
+ * @def SL_WIFI_BURN_GAIN_OFFSET_CHANNEL_14
+ * @brief Update gain offset for channel-14 sub-band (2 GHz).
+ *
+ * @details
+ * This macro defines the bit used to burn gain offset for channel-14 into the device.
+ *  - 1 - Update gain offset for channel-14 sub-band (2 GHz)
+ *  - 0 - Skip channel-14 sub-band gain-offset update
+ */
+#define SL_WIFI_BURN_GAIN_OFFSET_CHANNEL_14 BIT(10)
 
 /** @} */
 
@@ -547,7 +613,7 @@
  * @def SL_SI91X_FEAT_SECURITY_OPEN
  * @brief Security type: Open.
  * @details
- * This feature supports open security type in client mode.
+ * This feature supports open security type in client mode and AP mode.
  * 
  * @note It is recommended to enable this macro to configure the security type as open mode.
  */
@@ -1182,16 +1248,22 @@
 #define SL_SI91X_CUSTOM_FEAT_BT_IAP BIT(29)
 
 /**
- * @def SL_SI91X_CUSTOM_FEAT_EXTENTION_VALID
+ * @def SL_SI91X_CUSTOM_FEAT_EXTENSION_VALID
  * @brief Validates the use of extended custom feature bitmap.
  * @details The bit indicates the extended custom feature bitmap is valid.
  * If this bit is enabled then only, the features present in the extended custom feature bitmap can be used.
  */
-#ifndef __ZEPHYR__
-#define SL_SI91X_CUSTOM_FEAT_EXTENTION_VALID SL_WIFI_SYSTEM_CUSTOM_FEAT_EXTENSION_VALID
-#else
 #define SL_SI91X_CUSTOM_FEAT_EXTENSION_VALID SL_WIFI_SYSTEM_CUSTOM_FEAT_EXTENSION_VALID
-#endif
+/**
+ * @def SL_SI91X_CUSTOM_FEAT_EXTENTION_VALID
+ * @brief Alias for SL_SI91X_CUSTOM_FEAT_EXTENSION_VALID
+ * @details Ensure smooth migration to SL_SI91X_CUSTOM_FEAT_EXTENSION_VALID the
+ *          deprecation
+ * @note The macro SL_SI91X_CUSTOM_FEAT_EXTENTION_VALID is being deprecated and
+ *       will be removed in the future. Please use
+ *       SL_SI91X_CUSTOM_FEAT_EXTENSION_VALID instead.
+ */
+#define SL_SI91X_CUSTOM_FEAT_EXTENTION_VALID SL_SI91X_CUSTOM_FEAT_EXTENSION_VALID
 /** @} */
 
 /** \addtogroup SI91X_EXTENDED_CUSTOM_FEATURE_BITMAP
@@ -1547,7 +1619,7 @@
  * | 1       | 0       | Internal Switch  | Internal Switch  | Internal Switch  |                                
  * | 1       | 1       | Reserved         | Reserved         | Reserved         |
  * 
- * @note SiWx917 has an integrated on-chip Transmit/Receive (T/R) switch. This internal RF switch configuration uses internal logic present in the IC, and GPIOs are not needed. RF_BLE_TX (8 dBm) mode is not supported in this configuration.
+ * @note SiWx917 has an integrated on-chip Transmit/Receive (T/R) switch, controlled by internal IC logic, eliminating the need for external GPIOs. In this configuration, RF_BLE_TX (8 dBm) mode is not supported on the LP chain. However, 8 dBm TX power can still be achieved using the HP chain.
  * @note VC1, VC2, and VC3 are control voltage pins of the RF switch.
  * @note This configuration is not applicable for devices with internal antennas.
  */
@@ -1701,6 +1773,12 @@
 #define SL_SI91X_EXT_TCP_IP_TOTAL_SELECTS(total_selects) (total_selects << 12)
 
 /**
+ * @def SL_SI91X_DEFAULT_EXT_TCP_IP_SELECTS
+ * @brief Default select count passed to @ref SL_SI91X_EXT_TCP_IP_TOTAL_SELECTS in default device configurations.
+ */
+#define SL_SI91X_DEFAULT_EXT_TCP_IP_SELECTS 10U
+
+/**
  * @def SL_SI91X_EXT_TCP_IP_WAIT_FOR_SOCKET_CLOSE
  * @brief Enable socket wait close.
  * @details
@@ -1762,8 +1840,22 @@
  * @details
  * This feature enables Network Address Translation (NAT) support, allowing
  * stations connected to SiWx91x to access the internet through a third-party AP.
+ * 
+ * @note Bits 22-27 are reserved.
  */
 #define SL_SI91X_EXT_TCP_NAT_SUPPORT BIT(21)
+
+/**
+ * @def SL_SI91X_EXT_TCP_IP_FEAT_SSL_HEAP_SIZE
+ * @brief Enable additional memory for SSL/TLS connections.
+ * @details
+ * This feature allocates additional memory for SSL/TLS connections.
+ * Additional memory allocation is required when you experience memory-related issues with cloud server connections.
+ * 
+ * @note Enable this bit to avoid 0xD2 errors related to insufficient memory during SSL/TLS operations.
+ * @note Applicable ONLY to SiWx91x chipset
+ */
+#define SL_SI91X_EXT_TCP_IP_FEAT_SSL_HEAP_SIZE BIT(28)
 
 /**
  * @def SL_SI91X_EXT_TCP_IP_FEAT_SSL_THREE_SOCKETS
@@ -1773,7 +1865,6 @@
  * SSL/TLS connections.
  * 
  * @note Set tcp_ip_feature_bit_map[31] and ext_tcp_ip_feature_bit_map[29] to open three TLS sockets.
- * @note Bits 21-28 are reserved.
  */
 #define SL_SI91X_EXT_TCP_IP_FEAT_SSL_THREE_SOCKETS BIT(29)
 
@@ -1789,17 +1880,23 @@
 #define SL_SI91X_EXT_TCP_IP_FEAT_SSL_MEMORY_CLOUD BIT(30)
 
 /**
- * @def SL_SI91X_CONFIG_FEAT_EXTENTION_VALID
- * @brief Config feature bitmap validity.
+ * @def SL_SI91X_CONFIG_FEAT_EXTENSION_VALID
+ * @brief Config feature bit map validity.
  * @details
- * This feature validates the configuration feature bitmap.
+ * This feature validates the configuration feature bit map.
  * If this bit is enabled then only, the features present in the configuration feature bitmap can be used.
  */
-#ifndef __ZEPHYR__
-#define SL_SI91X_CONFIG_FEAT_EXTENTION_VALID BIT(31)
-#else
 #define SL_SI91X_CONFIG_FEAT_EXTENSION_VALID BIT(31)
-#endif
+/**
+ * @def SL_SI91X_CONFIG_FEAT_EXTENTION_VALID
+ * @brief Alias for SL_SI91X_CONFIG_FEAT_EXTENSION_VALID
+ * @details Ensure smooth migration to SL_SI91X_CONFIG_FEAT_EXTENSION_VALID the
+ *          deprecation
+ * @note The macro SL_SI91X_CONFIG_FEAT_EXTENTION_VALID is being deprecated and
+ *       will be removed in the future. Please use SL_SI91X_CONFIG_FEAT_EXTENSION_VALID
+ *       instead.
+ */
+#define SL_SI91X_CONFIG_FEAT_EXTENTION_VALID SL_SI91X_CONFIG_FEAT_EXTENSION_VALID
 /** @} */
 
 /** \addtogroup SI91X_BT_FEATURE_BITMAP
@@ -1919,16 +2016,22 @@
  */
 #define SL_SI91X_916_BLE_COMPATIBLE_FEAT_ENABLE BIT(30)
 /**
- * @def SL_SI91X_FEAT_BLE_CUSTOM_FEAT_EXTENTION_VALID
+ * @def SL_SI91X_FEAT_BLE_CUSTOM_FEAT_EXTENSION_VALID
  * @brief Extension validity for custom feature bitmap.
  * @details
  * Validates the use of an extended custom feature bitmap for BLE.
  */
-#ifndef __ZEPHYR__
-#define SL_SI91X_FEAT_BLE_CUSTOM_FEAT_EXTENTION_VALID BIT(31)
-#else
 #define SL_SI91X_FEAT_BLE_CUSTOM_FEAT_EXTENSION_VALID BIT(31)
-#endif
+/**
+ * @def SL_SI91X_FEAT_BLE_CUSTOM_FEAT_EXTENTION_VALID
+ * @brief Alias for SL_SI91X_FEAT_BLE_CUSTOM_FEAT_EXTENSION_VALID
+ * @details Ensure smooth migration to SL_SI91X_FEAT_BLE_CUSTOM_FEAT_EXTENSION_VALID
+ *          the deprecation
+ * @note The macro SL_SI91X_FEAT_BLE_CUSTOM_FEAT_EXTENTION_VALID is being
+ *       deprecated and will be removed in the future. Please use
+ *       SL_SI91X_FEAT_BLE_CUSTOM_FEAT_EXTENSION_VALID instead.
+ */
+#define SL_SI91X_FEAT_BLE_CUSTOM_FEAT_EXTENTION_VALID SL_SI91X_FEAT_BLE_CUSTOM_FEAT_EXTENSION_VALID
 /** @} */
 
 /** \addtogroup SI91X_EXTENDED_BLE_CUSTOM_FEATURE_BITMAP
@@ -2032,7 +2135,6 @@
  * @brief Enable BT and BLE stack bypass.
  * @details
  * Enables or disables the BT and BLE stack bypass mode.
- * @note This bit is applicable only for Zephyr.
  * @note Bit 24 enables the BT and BLE stack bypass mode.
  */
 #define SL_SI91X_BT_BLE_STACK_BYPASS_ENABLE BIT(24)
@@ -2490,42 +2592,94 @@ typedef enum {
 /** \addtogroup SI91X_CALIBRATION_FLAGS
   * @{ */
 /**
+ * @note Bit positions 0 and 7 are reserved. Bit positions 11-31 are reserved.
+ */
+
+/**
  * @def SL_SI91X_BURN_GAIN_OFFSET
  * @brief Burn gain offset into the device.
- *
- * @details
- * This macro defines the bit for burning the gain offset into the device.
+ * 
+ * @note The macro SL_SI91X_BURN_GAIN_OFFSET is being deprecated and will be removed in future releases. Use SL_SI91X_BURN_GAIN_OFFSET_LOW, SL_SI91X_BURN_GAIN_OFFSET_MID, or SL_SI91X_BURN_GAIN_OFFSET_HIGH instead.
  */
 #define SL_SI91X_BURN_GAIN_OFFSET SL_WIFI_BURN_GAIN_OFFSET
 
 /**
  * @def SL_SI91X_BURN_FREQ_OFFSET
- * @brief Burn frequency offset into the device.
+ * @brief Update XO Ctune to calibration data.
  *
  * @details
  * This macro defines the bit for burning the frequency offset into the device.
+ *  - 1 - Update XO Ctune to calibration data
+ *  - 0 - Skip XO Ctune update
  */
 #define SL_SI91X_BURN_FREQ_OFFSET SL_WIFI_BURN_FREQ_OFFSET
 
 /**
  * @def SL_SI91X_SW_XO_CTUNE_VALID
- * @brief Indicates if the software XO CTUNE is valid.
+ * @brief Use XO Ctune provided as argument to update calibration data.
  *
  * @details
  * This macro defines the bit to indicate that the software XO CTUNE (crystal tuning) value is valid.
+ *  - 1 - Use XO Ctune provided as argument to update calibration data
+ *  - 0 - Use XO Ctune value as read from hardware register
  */
 #define SL_SI91X_SW_XO_CTUNE_VALID SL_WIFI_SW_XO_CTUNE_VALID
 
 /**
  * @def SL_SI91X_BURN_XO_FAST_DISABLE
- * @brief Burn bit to disable XO fast into the device.
+ * @brief Apply patch for cold temperature issue on CC0/CC1 modules.
  *
  * @details
- * This macro defines the bit for burning a setting to disable the fast XO (crystal oscillator) into the device.
- * 
+ * This macro defines the bit used to apply patch for cold temperature issue
+ * (host interface detection) observed on CC0/CC1 modules.
+ *
  * @note Not applicable for SiWx91x.
  */
 #define SL_SI91X_BURN_XO_FAST_DISABLE SL_WIFI_BURN_XO_FAST_DISABLE
+
+/**
+ * @def SL_SI91X_BURN_GAIN_OFFSET_LOW
+ * @brief Update gain offset for low sub-band (2 GHz).
+ *
+ * @details
+ * This macro defines the bit used to burn gain offset for low sub-band into the device.
+ *  - 1 - Update gain offset for low sub-band (2 GHz, channel 1)
+ *  - 0 - Skip low sub-band gain-offset update
+ */
+#define SL_SI91X_BURN_GAIN_OFFSET_LOW SL_WIFI_BURN_GAIN_OFFSET_LOW
+
+/**
+ * @def SL_SI91X_BURN_GAIN_OFFSET_MID
+ * @brief Update gain offset for mid sub-band (2 GHz).
+ *
+ * @details
+ * This macro defines the bit used to burn gain offset for mid sub-band into the device.
+ *  - 1 - Update gain offset for mid sub-band (2 GHz, channel 6)
+ *  - 0 - Skip mid sub-band gain-offset update
+ */
+#define SL_SI91X_BURN_GAIN_OFFSET_MID SL_WIFI_BURN_GAIN_OFFSET_MID
+
+/**
+ * @def SL_SI91X_BURN_GAIN_OFFSET_HIGH
+ * @brief Update gain offset for high sub-band (2 GHz).
+ *
+ * @details
+ * This macro defines the bit used to burn gain offset for high sub-band into the device.
+ *  - 1 - Update gain offset for high sub-band (2 GHz, channel 11)
+ *  - 0 - Skip high sub-band gain-offset update
+ */
+#define SL_SI91X_BURN_GAIN_OFFSET_HIGH SL_WIFI_BURN_GAIN_OFFSET_HIGH
+
+/**
+ * @def SL_SI91X_BURN_GAIN_OFFSET_CHANNEL_14
+ * @brief Update gain offset for channel-14 sub-band (2 GHz).
+ *
+ * @details
+ * This macro defines the bit used to burn gain offset for channel-14 into the device.
+ *  - 1 - Update gain offset for channel-14 sub-band (2 GHz)
+ *  - 0 - Skip channel-14 sub-band gain-offset update
+ */
+#define SL_SI91X_BURN_GAIN_OFFSET_CHANNEL_14 SL_WIFI_BURN_GAIN_OFFSET_CHANNEL_14
 
 /** @} */
 
@@ -2605,49 +2759,10 @@ typedef struct {
   uint8_t reserved1[2]; ///< Reserved bits
 } si91x_calibration_data_t;
 
-/** \addtogroup SL_SI91X_TYPES
- * @{
- * */
-/// Bluetooth performance profile
-typedef struct {
-  sl_wifi_system_performance_profile_t
-    profile; ///< Performance profile of type [sl_wifi_system_performance_profile_t](../wiseconnect-api-reference-guide-wi-fi/sl-wifi-types#sl-wifi-system-performance-profile-t).
-} sl_bt_performance_profile_t;
-
-/**
-* Wi-Fi performance profile
-* 
-* Moving forward, this structure will be deprecated. Instead, use the [sl_wifi_performance_profile_v2_t](../wiseconnect-api-reference-guide-si91x-driver/sl-wifi-performance-profile-v2-t) structure. This is retained for backward compatibility.
-*/
-typedef struct {
-  sl_wifi_system_performance_profile_t
-    profile; ///< Performance profile of type [sl_wifi_system_performance_profile_t](../wiseconnect-api-reference-guide-wi-fi/sl-wifi-types#sl-wifi-system-performance-profile-t).
-  uint8_t dtim_aligned_type; ///< Set DTIM alignment required. One of the values from @ref SI91X_DTIM_ALIGNMENT_TYPES.
-  uint8_t num_of_dtim_skip;  ///< Number of DTIM intervals to skip. Default value is 0.
-  uint16_t listen_interval;  ///< Listen interval in milliseconds.
-  uint16_t
-    monitor_interval; ///< Monitor interval in milliseconds. Default interval 50 milliseconds is used if monitor_interval is set to 0. This is only valid when performance profile is set to ASSOCIATED_POWER_SAVE_LOW_LATENCY.
-  sl_wifi_twt_request_t twt_request;     ///< Target Wake Time (TWT) request settings.
-  sl_wifi_twt_selection_t twt_selection; ///< Target Wake Time (TWT) selection request settings.
-} sl_wifi_performance_profile_t;
-
-/// Wi-Fi performance profile v2
-typedef struct {
-  sl_wifi_system_performance_profile_t
-    profile; ///< Performance profile of type [sl_wifi_system_performance_profile_t](../wiseconnect-api-reference-guide-wi-fi/sl-wifi-types#sl-wifi-system-performance-profile-t).
-  uint8_t dtim_aligned_type; ///< Set DTIM alignment required. One of the values from @ref SI91X_DTIM_ALIGNMENT_TYPES.
-  uint8_t num_of_dtim_skip;  ///< Number of DTIM intervals to skip. Default value is 0.
-  uint32_t listen_interval;  ///< Listen interval in milliseconds.
-  uint16_t
-    monitor_interval; ///< Monitor interval in milliseconds. Default interval 50 milliseconds is used if monitor_interval is set to 0. This is only valid when performance profile is set to ASSOCIATED_POWER_SAVE_LOW_LATENCY.
-  sl_wifi_twt_request_t twt_request;     ///< Target Wake Time (TWT) request settings.
-  sl_wifi_twt_selection_t twt_selection; ///< Target Wake Time (TWT) selection request settings.
-  uint8_t
-    beacon_miss_ignore_limit; ///< Number of consecutive missed beacons that can be ignored while the device remains in sleep mode. If the number of beacon misses exceeds this limit and the beacon is still not received, the device will wake up to listen for the beacon. The default value is 1. Recommended range: 1 - 10. Values beyond 10 might lead to interoperability issues.
-} sl_wifi_performance_profile_v2_t;
-
-/** @} */
 // driver TX/RX packet structure
+/** Command header size in @ref sl_wifi_system_packet_t (bytes). Same value as @c SLI_FRAME_DESC_LEN (16). */
+#define SL_SI91X_WIFI_PACKET_DESC_SIZE SLI_FRAME_DESC_LEN
+
 /// Wi-Fi packet structure
 typedef struct {
   union {
@@ -2657,8 +2772,8 @@ typedef struct {
       uint8_t unused
         [12]; ///< Contains command status and other additional information. Unused for TX and only used for RX packets.
     };
-    uint8_t desc[16]; ///< packet header
-  };                  ///< Command header
+    uint8_t desc[SL_SI91X_WIFI_PACKET_DESC_SIZE]; ///< packet header
+  };                                              ///< Command header
 
   uint8_t data[]; ///< Data to be transmitted or received
 } sl_wifi_system_packet_t;
@@ -2669,7 +2784,7 @@ typedef struct {
 /**
  * @struct sl_si91x_rsp_wireless_info_t
  * @brief si91x Specific Wireless information.
- * @note This structure is deprecated. Use [sl_wifi_interface_info_t](../wiseconnect-api-reference-guide-si91x-driver/sl-wifi-interface-info-t) for new implementations.
+ * @note This structure is deprecated. Use [sl_wifi_interface_info_t](../wiseconnect-api-reference-guide-wi-fi/sl-wifi-interface-info-t) for new implementations.
  */
 typedef struct {
 
@@ -2685,18 +2800,19 @@ typedef struct {
 
   uint8_t ssid[SL_WIFI_SSID_LEN]; ///< SSID of connected AP in station mode; SSID of the module in AP mode
 
-  uint8_t mac_address[6]; ///< MAC address of the module
+  uint8_t mac_address[SL_WIFI_MAC_ADDRESS_LENGTH]; ///< MAC address of the module
 
   uint8_t sec_type; ///< Security type of connected AP is supported in station mode, but not in AP mode.
                     ///< Refer sl_wifi_security_t for possible values of Security type
 
-  uint8_t psk_pmk[64]; ///< PSK for AP mode, PMK for station mode
+  uint8_t psk_pmk[SL_WIFI_MAX_PSK_LENGTH]; ///< PSK for AP mode, PMK for station mode
 
-  uint8_t ipv4_address[4]; ///< Module IPv4 Address
+  uint8_t ipv4_address[SL_IPV4_ADDRESS_LENGTH]; ///< Module IPv4 Address
 
-  uint8_t ipv6_address[16]; ///< Module IPv6 Address
+  uint8_t ipv6_address[SL_IPV6_ADDRESS_LENGTH]; ///< Module IPv6 Address
 
-  uint8_t bssid[6]; ///< BSSID address of connected AP in station mode; not supported in AP mode
+  uint8_t
+    bssid[SL_WIFI_MAC_ADDRESS_LENGTH]; ///< BSSID address of connected AP in station mode; not supported in AP mode
 
   uint8_t
     wireless_mode; ///< Wireless mode used in connected AP (6 - AX, 4 - N, 3 - G, 1 - B) in station mode, not supported in AP mode
@@ -2704,7 +2820,6 @@ typedef struct {
 } sl_si91x_rsp_wireless_info_t;
 /** @} */
 
-#ifndef __ZEPHYR__
 /** \addtogroup SL_SI91X_DEFAULT_DEVICE_CONFIGURATION 
   * @{ */
 /// Default Wi-Fi client configuration
@@ -2736,14 +2851,16 @@ static const sl_wifi_device_configuration_t sl_wifi_default_client_configuration
                       ),
                    .bt_feature_bit_map = 0,
                    .ext_tcp_ip_feature_bit_map =
-                     (SL_SI91X_EXT_TCP_IP_WINDOW_SCALING | SL_SI91X_EXT_TCP_IP_TOTAL_SELECTS(10)),
+                     (SL_SI91X_EXT_TCP_IP_WINDOW_SCALING
+                      | SL_SI91X_EXT_TCP_IP_TOTAL_SELECTS(SL_SI91X_DEFAULT_EXT_TCP_IP_SELECTS)),
                    .ble_feature_bit_map     = 0,
                    .ble_ext_feature_bit_map = 0,
-                   .config_feature_bit_map  = 0 }
+                   .config_feature_bit_map  = 0 },
+  .ta_pool         = { .tx_ratio_in_buffer_pool = 0, .rx_ratio_in_buffer_pool = 0, .global_ratio_in_buffer_pool = 0 },
+  .efuse_data_type = SL_SI91X_EFUSE_MFG_SW_VERSION,
+  .nwp_fw_image_number = SL_SI91X_NWP_FW_IMAGE_NUMBER_0
 };
-#endif
 
-#ifndef __ZEPHYR__
 /// Default Wi-Fi enterprise client configuration
 static const sl_wifi_device_configuration_t sl_wifi_default_enterprise_client_configuration = {
   .boot_option = LOAD_NWP_FW,
@@ -2764,14 +2881,16 @@ static const sl_wifi_device_configuration_t sl_wifi_default_enterprise_client_co
                       ),
                    .bt_feature_bit_map = 0,
                    .ext_tcp_ip_feature_bit_map =
-                     (SL_SI91X_EXT_TCP_IP_WINDOW_SCALING | SL_SI91X_EXT_TCP_IP_TOTAL_SELECTS(10)),
+                     (SL_SI91X_EXT_TCP_IP_WINDOW_SCALING
+                      | SL_SI91X_EXT_TCP_IP_TOTAL_SELECTS(SL_SI91X_DEFAULT_EXT_TCP_IP_SELECTS)),
                    .ble_feature_bit_map     = 0,
                    .ble_ext_feature_bit_map = 0,
-                   .config_feature_bit_map  = 0 }
+                   .config_feature_bit_map  = 0 },
+  .ta_pool         = { .tx_ratio_in_buffer_pool = 0, .rx_ratio_in_buffer_pool = 0, .global_ratio_in_buffer_pool = 0 },
+  .efuse_data_type = SL_SI91X_EFUSE_MFG_SW_VERSION,
+  .nwp_fw_image_number = SL_SI91X_NWP_FW_IMAGE_NUMBER_0
 };
-#endif
 
-#ifndef __ZEPHYR__
 /// Default Wi-Fi ap configuration
 static const sl_wifi_device_configuration_t sl_wifi_default_ap_configuration = {
   .boot_option = LOAD_NWP_FW,
@@ -2793,11 +2912,12 @@ static const sl_wifi_device_configuration_t sl_wifi_default_ap_configuration = {
                    .ext_tcp_ip_feature_bit_map = 0,
                    .ble_feature_bit_map        = 0,
                    .ble_ext_feature_bit_map    = 0,
-                   .config_feature_bit_map     = 0 }
+                   .config_feature_bit_map     = 0 },
+  .ta_pool         = { .tx_ratio_in_buffer_pool = 0, .rx_ratio_in_buffer_pool = 0, .global_ratio_in_buffer_pool = 0 },
+  .efuse_data_type = SL_SI91X_EFUSE_MFG_SW_VERSION,
+  .nwp_fw_image_number = SL_SI91X_NWP_FW_IMAGE_NUMBER_0
 };
-#endif
 
-#ifndef __ZEPHYR__
 /// Default Wi-Fi concurrent (AP + STATION) configuration
 static const sl_wifi_device_configuration_t sl_wifi_default_concurrent_configuration = {
   .boot_option = LOAD_NWP_FW,
@@ -2816,14 +2936,15 @@ static const sl_wifi_device_configuration_t sl_wifi_default_concurrent_configura
 #endif
                                                   ),
                    .bt_feature_bit_map         = 0,
-                   .ext_tcp_ip_feature_bit_map = SL_SI91X_CONFIG_FEAT_EXTENTION_VALID,
+                   .ext_tcp_ip_feature_bit_map = SL_SI91X_CONFIG_FEAT_EXTENSION_VALID,
                    .ble_feature_bit_map        = 0,
                    .ble_ext_feature_bit_map    = 0,
-                   .config_feature_bit_map     = SL_SI91X_FEAT_SLEEP_GPIO_SEL_BITMAP }
+                   .config_feature_bit_map     = SL_SI91X_FEAT_SLEEP_GPIO_SEL_BITMAP },
+  .ta_pool         = { .tx_ratio_in_buffer_pool = 0, .rx_ratio_in_buffer_pool = 0, .global_ratio_in_buffer_pool = 0 },
+  .efuse_data_type = SL_SI91X_EFUSE_MFG_SW_VERSION,
+  .nwp_fw_image_number = SL_SI91X_NWP_FW_IMAGE_NUMBER_0
 };
-#endif
 
-#ifndef __ZEPHYR__
 /// Default Wi-Fi concurrent (AP + STATION) configuration
 static const sl_wifi_device_configuration_t sl_wifi_default_concurrent_v6_configuration = {
   .boot_option = LOAD_NWP_FW,
@@ -2845,14 +2966,15 @@ static const sl_wifi_device_configuration_t sl_wifi_default_concurrent_v6_config
 #endif
                                                   ),
                    .bt_feature_bit_map         = 0,
-                   .ext_tcp_ip_feature_bit_map = SL_SI91X_CONFIG_FEAT_EXTENTION_VALID,
+                   .ext_tcp_ip_feature_bit_map = SL_SI91X_CONFIG_FEAT_EXTENSION_VALID,
                    .ble_feature_bit_map        = 0,
                    .ble_ext_feature_bit_map    = 0,
-                   .config_feature_bit_map     = SL_SI91X_FEAT_SLEEP_GPIO_SEL_BITMAP }
+                   .config_feature_bit_map     = SL_SI91X_FEAT_SLEEP_GPIO_SEL_BITMAP },
+  .ta_pool         = { .tx_ratio_in_buffer_pool = 0, .rx_ratio_in_buffer_pool = 0, .global_ratio_in_buffer_pool = 0 },
+  .efuse_data_type = SL_SI91X_EFUSE_MFG_SW_VERSION,
+  .nwp_fw_image_number = SL_SI91X_NWP_FW_IMAGE_NUMBER_0
 };
-#endif
 
-#ifndef __ZEPHYR__
 /// Default Wi-Fi transmit configuration
 static const sl_wifi_device_configuration_t sl_wifi_default_transmit_test_configuration = {
   .boot_option = LOAD_NWP_FW,
@@ -2876,14 +2998,15 @@ static const sl_wifi_device_configuration_t sl_wifi_default_transmit_test_config
 #endif
                                                   ),
                    .bt_feature_bit_map         = SL_SI91X_BT_RF_TYPE,
-                   .ext_tcp_ip_feature_bit_map = SL_SI91X_CONFIG_FEAT_EXTENTION_VALID,
+                   .ext_tcp_ip_feature_bit_map = SL_SI91X_CONFIG_FEAT_EXTENSION_VALID,
                    .ble_feature_bit_map        = 0,
                    .ble_ext_feature_bit_map    = 0,
-                   .config_feature_bit_map     = SL_SI91X_FEAT_SLEEP_GPIO_SEL_BITMAP }
+                   .config_feature_bit_map     = SL_SI91X_FEAT_SLEEP_GPIO_SEL_BITMAP },
+  .ta_pool         = { .tx_ratio_in_buffer_pool = 0, .rx_ratio_in_buffer_pool = 0, .global_ratio_in_buffer_pool = 0 },
+  .efuse_data_type = SL_SI91X_EFUSE_MFG_SW_VERSION,
+  .nwp_fw_image_number = SL_SI91X_NWP_FW_IMAGE_NUMBER_0
 };
-#endif
 
-#ifndef __ZEPHYR__
 /// Default Wi-Fi transceiver mode configuration
 static const sl_wifi_device_configuration_t sl_wifi_default_transceiver_configuration = {
   .boot_option = LOAD_NWP_FW,
@@ -2906,15 +3029,71 @@ static const sl_wifi_device_configuration_t sl_wifi_default_transceiver_configur
 #endif
                       ),
                    .bt_feature_bit_map         = 0,
-                   .ext_tcp_ip_feature_bit_map = (SL_SI91X_CONFIG_FEAT_EXTENTION_VALID),
+                   .ext_tcp_ip_feature_bit_map = (SL_SI91X_CONFIG_FEAT_EXTENSION_VALID),
                    .ble_feature_bit_map        = 0,
                    .ble_ext_feature_bit_map    = 0,
-                   .config_feature_bit_map     = 0 }
+                   .config_feature_bit_map     = 0 },
+  .ta_pool         = { .tx_ratio_in_buffer_pool = 0, .rx_ratio_in_buffer_pool = 0, .global_ratio_in_buffer_pool = 0 },
+  .efuse_data_type = SL_SI91X_EFUSE_MFG_SW_VERSION,
+  .nwp_fw_image_number = SL_SI91X_NWP_FW_IMAGE_NUMBER_0
 };
-#endif
 
 /// The typedefs in the below header depends on the structs defination in this .h
 #include "sl_si91x_types.h"
 /** @} */
 
+/** \addtogroup SL_SI91X_TYPES
+ * @{
+ * */
+/// Bluetooth performance profile
+typedef struct {
+  sl_wifi_system_performance_profile_t
+    profile; ///< Performance profile of type [sl_wifi_system_performance_profile_t](../wiseconnect-api-reference-guide-wi-fi/sl-wifi-types#sl-wifi-system-performance-profile-t).
+} sl_bt_performance_profile_t;
+
+/**
+* Wi-Fi performance profile
+*
+* Moving forward, this structure will be deprecated. Instead, use the [sl_wifi_performance_profile_v2_t](../wiseconnect-api-reference-guide-si91x-driver/sl-wifi-performance-profile-v2-t) structure. This is retained for backward compatibility.
+*/
+typedef struct {
+  sl_wifi_system_performance_profile_t
+    profile; ///< Performance profile of type [sl_wifi_system_performance_profile_t](../wiseconnect-api-reference-guide-wi-fi/sl-wifi-types#sl-wifi-system-performance-profile-t).
+  uint8_t dtim_aligned_type; ///< Set DTIM alignment required. One of the values from @ref SI91X_DTIM_ALIGNMENT_TYPES.
+  uint8_t num_of_dtim_skip;  ///< Number of DTIM intervals to skip. Default value is 0.
+  uint16_t listen_interval;  ///< Listen interval in milliseconds.
+  uint16_t
+    monitor_interval; ///< Monitor interval in milliseconds. Default interval 50 milliseconds is used if monitor_interval is set to 0. This is only valid when performance profile is set to ASSOCIATED_POWER_SAVE_LOW_LATENCY.
+  sl_wifi_twt_request_t twt_request; ///< Target Wake Time (TWT) request settings.
+  union {
+    sl_wifi_twt_selection_t
+      twt_selection; ///< @deprecated Use twt_selection_v2 instead. Target Wake Time (TWT) selection request settings.
+    sl_wifi_twt_selection_v2_t twt_selection_v2; ///< Target Wake Time (TWT) selection request settings.
+  };
+} sl_wifi_performance_profile_t;
+
+/// Wi-Fi performance profile v2
+typedef struct {
+  sl_wifi_system_performance_profile_t
+    profile; ///< Performance profile of type [sl_wifi_system_performance_profile_t](../wiseconnect-api-reference-guide-wi-fi/sl-wifi-types#sl-wifi-system-performance-profile-t).
+  uint8_t dtim_aligned_type; ///< Set DTIM alignment required. One of the values from @ref SI91X_DTIM_ALIGNMENT_TYPES.
+  uint8_t num_of_dtim_skip;  ///< Number of DTIM intervals to skip. Default value is 0.
+  uint32_t listen_interval;  ///< Listen interval in milliseconds.
+  uint16_t
+    monitor_interval; ///< Monitor interval in milliseconds. Default interval 50 milliseconds is used if monitor_interval is set to 0. This is only valid when performance profile is set to ASSOCIATED_POWER_SAVE_LOW_LATENCY.
+  sl_wifi_twt_request_t twt_request; ///< Target Wake Time (TWT) request settings.
+  union {
+    sl_wifi_twt_selection_t
+      twt_selection; ///< @deprecated Use twt_selection_v2 instead. Target Wake Time (TWT) selection request settings.
+    sl_wifi_twt_selection_v2_t twt_selection_v2; ///< Target Wake Time (TWT) selection request settings.
+  };
+  uint8_t
+    beacon_miss_ignore_limit; ///< Number of consecutive missed beacons that can be ignored while the device remains in sleep mode. If the number of beacon misses exceeds this limit and the beacon is still not received, the device will wake up to listen for the beacon. The default value is 1. Recommended range: 1 - 10. Values beyond 10 might lead to interoperability issues.
+} sl_wifi_performance_profile_v2_t;
+/** @} */
+
+/**
+ * @brief Print the firmware version
+ * @param firmware_version The firmware version to print
+ */
 void print_firmware_version(const sl_wifi_firmware_version_t *firmware_version);

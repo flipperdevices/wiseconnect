@@ -2,7 +2,7 @@
 - id: brd4357a
 - label: BRD4357A
 - package: platform_siwx91x
-- description: Board support for BRD4357A.
+- description: Board support for BRD4357A(NCP Module).
 - category: Board|Radio Board
 - quality: production
 - metadata:

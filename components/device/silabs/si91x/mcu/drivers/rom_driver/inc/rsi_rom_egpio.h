@@ -55,7 +55,7 @@ extern "C" {
 */
 
 /**
- * @fn           STATIC INLINE void  RSI_EGPIO_SetDir(EGPIO_Type *pEGPIO ,uint8_t port,uint8_t pin, boolean_t dir)
+ * @fn           STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void  RSI_EGPIO_SetDir(EGPIO_Type *pEGPIO ,uint8_t port,uint8_t pin, boolean_t dir)
  * @brief        This API is used to set the EGPIO direction(Direction of the GPIO pin. '1' for INPUT, '0' for OUTPUT)
  * @param[in]    pEGPIO  : Pointer to the EGPIO register instance
  * @param[in]    port    : GPIO port number
@@ -65,7 +65,10 @@ extern "C" {
  *                \n '1' : Input
  * @return       None
  */
-STATIC INLINE void RSI_EGPIO_SetDir(EGPIO_Type *pEGPIO, uint8_t port, uint8_t pin, boolean_t dir)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_EGPIO_SetDir(EGPIO_Type *pEGPIO,
+                                                                     uint8_t port,
+                                                                     uint8_t pin,
+                                                                     boolean_t dir)
 {
 #if defined(ROMDRIVER_PRESENT)
   ROMAPI_EGPIO_API->egpio_set_dir(pEGPIO, port, pin, dir);
@@ -75,7 +78,7 @@ STATIC INLINE void RSI_EGPIO_SetDir(EGPIO_Type *pEGPIO, uint8_t port, uint8_t pi
 }
 
 /**
- * @fn           STATIC INLINE void  RSI_EGPIO_SetPin(EGPIO_Type *pEGPIO ,uint8_t port,uint8_t pin , uint8_t val)
+ * @fn           STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void  RSI_EGPIO_SetPin(EGPIO_Type *pEGPIO ,uint8_t port,uint8_t pin , uint8_t val)
  * @brief        This API is used to set the GPIO pin value.It Loads 0th bit on to the pin on write &
  *                reads the value on pin on read into 0th bit
  * @param[in]    pEGPIO  : Pointer to the EGPIO register instance
@@ -86,7 +89,10 @@ STATIC INLINE void RSI_EGPIO_SetDir(EGPIO_Type *pEGPIO, uint8_t port, uint8_t pi
  *                \n '1' : Logic on Pin
  * @return       None
  */
-STATIC INLINE void RSI_EGPIO_SetPin(EGPIO_Type *pEGPIO, uint8_t port, uint8_t pin, uint8_t val)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_EGPIO_SetPin(EGPIO_Type *pEGPIO,
+                                                                     uint8_t port,
+                                                                     uint8_t pin,
+                                                                     uint8_t val)
 {
 #if defined(ROMDRIVER_PRESENT)
   ROMAPI_EGPIO_API->egpio_set_pin(pEGPIO, port, pin, val);
@@ -96,14 +102,16 @@ STATIC INLINE void RSI_EGPIO_SetPin(EGPIO_Type *pEGPIO, uint8_t port, uint8_t pi
 }
 
 /**
- * @fn           STATIC INLINE boolean_t RSI_EGPIO_GetPin(const EGPIO_Type *pEGPIO ,uint8_t port,uint8_t pin)
+ * @fn           STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE boolean_t RSI_EGPIO_GetPin(const EGPIO_Type *pEGPIO ,uint8_t port,uint8_t pin)
  * @brief        This API is used get the GPIO pin status.
  * @param[in]    pEGPIO  : Pointer to the EGPIO register instance
  * @param[in]    port    : GPIO port number
  * @param[in]    pin     : GPIO pin number
  * @return       returns Pin status
  */
-STATIC INLINE boolean_t RSI_EGPIO_GetPin(const EGPIO_Type *pEGPIO, uint8_t port, uint8_t pin)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE boolean_t RSI_EGPIO_GetPin(const EGPIO_Type *pEGPIO,
+                                                                          uint8_t port,
+                                                                          uint8_t pin)
 {
 #if defined(ROMDRIVER_PRESENT)
   return ROMAPI_EGPIO_API->egpio_get_pin(pEGPIO, port, pin);
@@ -113,14 +121,16 @@ STATIC INLINE boolean_t RSI_EGPIO_GetPin(const EGPIO_Type *pEGPIO, uint8_t port,
 }
 
 /**
- * @fn           STATIC INLINE boolean_t RSI_EGPIO_GetDir(const EGPIO_Type *pEGPIO,uint8_t port ,uint8_t pin)
+ * @fn           STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE boolean_t RSI_EGPIO_GetDir(const EGPIO_Type *pEGPIO,uint8_t port ,uint8_t pin)
  * @brief        This API is used to Get the Direction GPIO(Direction of the GPIO pin. '1' for INPUT,and '0'for OUTPUT)
  * @param[in]    pEGPIO  : Pointer to the EGPIO register instance
  * @param[in]    port    : GPIO port number
  * @param[in]    pin     : GPIO pin number
  * @return       returns the GPIO direction value
  */
-STATIC INLINE boolean_t RSI_EGPIO_GetDir(const EGPIO_Type *pEGPIO, uint8_t port, uint8_t pin)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE boolean_t RSI_EGPIO_GetDir(const EGPIO_Type *pEGPIO,
+                                                                          uint8_t port,
+                                                                          uint8_t pin)
 {
 #if defined(ROMDRIVER_PRESENT)
   return ROMAPI_EGPIO_API->egpio_get_dir(pEGPIO, port, pin);
@@ -130,7 +140,7 @@ STATIC INLINE boolean_t RSI_EGPIO_GetDir(const EGPIO_Type *pEGPIO, uint8_t port,
 }
 
 /**
- * @fn           STATIC INLINE void  RSI_EGPIO_PinIntSel(EGPIO_Type *pEGPIO ,uint8_t intCh ,uint8_t port , uint8_t pin)
+ * @fn           STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void  RSI_EGPIO_PinIntSel(EGPIO_Type *pEGPIO ,uint8_t intCh ,uint8_t port , uint8_t pin)
  * @brief        This API is used to select the pin for interrupt generation
  * @param[in]    pEGPIO  : Pointer to the EGPIO register instance
  * @param[in]    intCh   : GPIO pin interrupt channel number (0 to 7)
@@ -138,7 +148,10 @@ STATIC INLINE boolean_t RSI_EGPIO_GetDir(const EGPIO_Type *pEGPIO, uint8_t port,
  * @param[in]    pin     : GPIO pin number
  * @return       None
  */
-STATIC INLINE void RSI_EGPIO_PinIntSel(EGPIO_Type *pEGPIO, uint8_t intCh, uint8_t port, uint8_t pin)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_EGPIO_PinIntSel(EGPIO_Type *pEGPIO,
+                                                                        uint8_t intCh,
+                                                                        uint8_t port,
+                                                                        uint8_t pin)
 {
 #if defined(ROMDRIVER_PRESENT)
   ROMAPI_EGPIO_API->egpio_pin_int_sel(pEGPIO, intCh, port, pin);
@@ -148,14 +161,14 @@ STATIC INLINE void RSI_EGPIO_PinIntSel(EGPIO_Type *pEGPIO, uint8_t intCh, uint8_
 }
 
 /**
- * @fn           STATIC INLINE void  RSI_EGPIO_SetIntFallEdgeEnable(EGPIO_Type *pEGPIO ,uint8_t intCh)
+ * @fn           STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void  RSI_EGPIO_SetIntFallEdgeEnable(EGPIO_Type *pEGPIO ,uint8_t intCh)
  * @brief        This API is used to set the pin interrupt mode configuration
  *               \n(enables interrupt generation when falling edge is detected on pin '1' for intr enabled and '0' for disabled)
  * @param[in]    pEGPIO  : Pointer to the EGPIO register instance
  * @param[in]    intCh   : GPIO pin interrupt channel number (0 to 7)
  * @return       None
  */
-STATIC INLINE void RSI_EGPIO_SetIntFallEdgeEnable(EGPIO_Type *pEGPIO, uint8_t intCh)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_EGPIO_SetIntFallEdgeEnable(EGPIO_Type *pEGPIO, uint8_t intCh)
 {
 #if defined(ROMDRIVER_PRESENT)
   ROMAPI_EGPIO_API->egpio_set_int_fall_edge_enable(pEGPIO, intCh);
@@ -165,14 +178,14 @@ STATIC INLINE void RSI_EGPIO_SetIntFallEdgeEnable(EGPIO_Type *pEGPIO, uint8_t in
 }
 
 /**
- * @fn           STATIC INLINE void  RSI_EGPIO_SetIntFallEdgeDisable(EGPIO_Type *pEGPIO ,uint8_t intCh)
+ * @fn           STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void  RSI_EGPIO_SetIntFallEdgeDisable(EGPIO_Type *pEGPIO ,uint8_t intCh)
  * @brief        This API to used to set the pin interrupt mode configuration
  *               \n(enables interrupt generation when falling edge is detected on pin '1' for intr enabled and '0' for disabled)
  * @param[in]    pEGPIO  : Pointer to the EGPIO register instance
  * @param[in]    intCh   : GPIO pin interrupt channel number (0 to 7)
  * @return       None
  */
-STATIC INLINE void RSI_EGPIO_SetIntFallEdgeDisable(EGPIO_Type *pEGPIO, uint8_t intCh)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_EGPIO_SetIntFallEdgeDisable(EGPIO_Type *pEGPIO, uint8_t intCh)
 {
 #if defined(ROMDRIVER_PRESENT)
   ROMAPI_EGPIO_API->egpio_set_int_fall_edge_disable(pEGPIO, intCh);
@@ -182,14 +195,14 @@ STATIC INLINE void RSI_EGPIO_SetIntFallEdgeDisable(EGPIO_Type *pEGPIO, uint8_t i
 }
 
 /**
- * @fn           STATIC INLINE void  RSI_EGPIO_SetIntRiseEdgeEnable(EGPIO_Type *pEGPIO ,uint8_t intCh)
+ * @fn           STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void  RSI_EGPIO_SetIntRiseEdgeEnable(EGPIO_Type *pEGPIO ,uint8_t intCh)
  * @brief        This API to used to set the pin interrupt mode configuration
  *               \n(enables interrupt generation when rising edge is detected on pin '1' for intr enabled and '0' for disabled)
  * @param[in]    pEGPIO  : Pointer to the EGPIO register instance
  * @param[in]    intCh   : GPIO pin interrupt channel number (0 to 7)
  * @return       None
  */
-STATIC INLINE void RSI_EGPIO_SetIntRiseEdgeEnable(EGPIO_Type *pEGPIO, uint8_t intCh)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_EGPIO_SetIntRiseEdgeEnable(EGPIO_Type *pEGPIO, uint8_t intCh)
 {
 #if defined(ROMDRIVER_PRESENT)
   ROMAPI_EGPIO_API->egpio_set_int_rise_edge_enable(pEGPIO, intCh);
@@ -199,14 +212,14 @@ STATIC INLINE void RSI_EGPIO_SetIntRiseEdgeEnable(EGPIO_Type *pEGPIO, uint8_t in
 }
 
 /**
- * @fn           STATIC INLINE void  RSI_EGPIO_SetIntRiseEdgeDisable(EGPIO_Type *pEGPIO ,uint8_t intCh)
+ * @fn           STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void  RSI_EGPIO_SetIntRiseEdgeDisable(EGPIO_Type *pEGPIO ,uint8_t intCh)
  * @brief        This API to used to set the pin interrupt mode configuration
  *               \n(enables interrupt generation when rising edge is detected on pin '1' for intr enabled '0' for disabled)
  * @param[in]    pEGPIO  : Pointer to the EGPIO register instance
  * @param[in]    intCh   : GPIO pin interrupt channel number (0 to 7)
  * @return       None
  */
-STATIC INLINE void RSI_EGPIO_SetIntRiseEdgeDisable(EGPIO_Type *pEGPIO, uint8_t intCh)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_EGPIO_SetIntRiseEdgeDisable(EGPIO_Type *pEGPIO, uint8_t intCh)
 {
 #if defined(ROMDRIVER_PRESENT)
   ROMAPI_EGPIO_API->egpio_set_int_rise_edge_disable(pEGPIO, intCh);
@@ -216,14 +229,14 @@ STATIC INLINE void RSI_EGPIO_SetIntRiseEdgeDisable(EGPIO_Type *pEGPIO, uint8_t i
 }
 
 /**
- * @fn           STATIC INLINE void  RSI_EGPIO_SetIntLowLevelEnable(EGPIO_Type *pEGPIO ,uint8_t intCh)
+ * @fn           STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void  RSI_EGPIO_SetIntLowLevelEnable(EGPIO_Type *pEGPIO ,uint8_t intCh)
  * @brief        This API is used to set the pin interrupt mode configuration
  *               \n (enables interrupt generation when pin level is 0, '1' for intr enabled, '0' for disabled)
  * @param[in]    pEGPIO  : Pointer to the EGPIO register instance
  * @param[in]    intCh   : GPIO pin interrupt channel number (0 to 7)
  * @return       None
  */
-STATIC INLINE void RSI_EGPIO_SetIntLowLevelEnable(EGPIO_Type *pEGPIO, uint8_t intCh)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_EGPIO_SetIntLowLevelEnable(EGPIO_Type *pEGPIO, uint8_t intCh)
 {
 #if defined(ROMDRIVER_PRESENT)
   ROMAPI_EGPIO_API->egpio_set_int_low_level_enable(pEGPIO, intCh);
@@ -233,7 +246,7 @@ STATIC INLINE void RSI_EGPIO_SetIntLowLevelEnable(EGPIO_Type *pEGPIO, uint8_t in
 }
 
 /**
- * @fn           STATIC INLINE void  RSI_EGPIO_IntMask(EGPIO_Type *pEGPIO ,uint8_t intCh)
+ * @fn           STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void  RSI_EGPIO_IntMask(EGPIO_Type *pEGPIO ,uint8_t intCh)
  * @brief        This API is used to set the pin interrupt mode configuration
  *               \n(Masks the interrupt. Interrupt will still be seen in status register when enabled
  *							 '1' for intr masked '0' for intr unmasked)
@@ -241,7 +254,7 @@ STATIC INLINE void RSI_EGPIO_SetIntLowLevelEnable(EGPIO_Type *pEGPIO, uint8_t in
  * @param[in]    intCh   : GPIO pin interrupt channel number (0 to 7)
  * @return       None
  */
-STATIC INLINE void RSI_EGPIO_IntMask(EGPIO_Type *pEGPIO, uint8_t intCh)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_EGPIO_IntMask(EGPIO_Type *pEGPIO, uint8_t intCh)
 {
 #if defined(ROMDRIVER_PRESENT)
   ROMAPI_EGPIO_API->egpio_int_mask(pEGPIO, intCh);
@@ -251,14 +264,14 @@ STATIC INLINE void RSI_EGPIO_IntMask(EGPIO_Type *pEGPIO, uint8_t intCh)
 }
 
 /**
- * @fn           STATIC INLINE void  RSI_EGPIO_IntUnMask(EGPIO_Type *pEGPIO ,uint8_t intCh)
+ * @fn           STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void  RSI_EGPIO_IntUnMask(EGPIO_Type *pEGPIO ,uint8_t intCh)
  * @brief        This API is used to used to set the pin interrupt mode configuration
  *               \n(UnMasks the interrupt.						
  * @param[in]    pEGPIO  : Pointer to the EGPIO register instance
  * @param[in]    intCh   : GPIO pin interrupt channel number (0 to 7)
  * @return       None
  */
-STATIC INLINE void RSI_EGPIO_IntUnMask(EGPIO_Type *pEGPIO, uint8_t intCh)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_EGPIO_IntUnMask(EGPIO_Type *pEGPIO, uint8_t intCh)
 {
 #if defined(ROMDRIVER_PRESENT)
   ROMAPI_EGPIO_API->egpio_int_un_mask(pEGPIO, intCh);
@@ -268,14 +281,14 @@ STATIC INLINE void RSI_EGPIO_IntUnMask(EGPIO_Type *pEGPIO, uint8_t intCh)
 }
 
 /**
- * @fn           STATIC INLINE void  RSI_EGPIO_SetIntLowLevelDisable(EGPIO_Type *pEGPIO ,uint8_t intCh)
+ * @fn           STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void  RSI_EGPIO_SetIntLowLevelDisable(EGPIO_Type *pEGPIO ,uint8_t intCh)
  * @brief        This API is used to set the pin interrupt mode configuration
  *               \n(enables interrupt generation when pin level is 0 ,'1' for intr enabled '0' for disabled)
  * @param[in]    pEGPIO  : Pointer to the EGPIO register instance
  * @param[in]    intCh   : GPIO pin interrupt channel number (0 to 7)
  * @return       None
  */
-STATIC INLINE void RSI_EGPIO_SetIntLowLevelDisable(EGPIO_Type *pEGPIO, uint8_t intCh)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_EGPIO_SetIntLowLevelDisable(EGPIO_Type *pEGPIO, uint8_t intCh)
 {
 #if defined(ROMDRIVER_PRESENT)
   ROMAPI_EGPIO_API->egpio_set_int_low_level_disable(pEGPIO, intCh);
@@ -285,14 +298,14 @@ STATIC INLINE void RSI_EGPIO_SetIntLowLevelDisable(EGPIO_Type *pEGPIO, uint8_t i
 }
 
 /**
- * @fn           STATIC INLINE void  RSI_EGPIO_SetIntHighLevelEnable(EGPIO_Type *pEGPIO ,uint8_t intCh)
+ * @fn           STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void  RSI_EGPIO_SetIntHighLevelEnable(EGPIO_Type *pEGPIO ,uint8_t intCh)
  * @brief        This API used to set the pin interrupt mode configuration
  *               \n(enables interrupt generation when pin level is 1, '1' for intr enabled '0' for disabled)
  * @param[in]    pEGPIO  : Pointer to the EGPIO register instance
  * @param[in]    intCh   : GPIO pin interrupt channel number (0 to 7)
  * @return       None
  */
-STATIC INLINE void RSI_EGPIO_SetIntHighLevelEnable(EGPIO_Type *pEGPIO, uint8_t intCh)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_EGPIO_SetIntHighLevelEnable(EGPIO_Type *pEGPIO, uint8_t intCh)
 {
 #if defined(ROMDRIVER_PRESENT)
   ROMAPI_EGPIO_API->egpio_set_int_high_level_enable(pEGPIO, intCh);
@@ -302,14 +315,14 @@ STATIC INLINE void RSI_EGPIO_SetIntHighLevelEnable(EGPIO_Type *pEGPIO, uint8_t i
 }
 
 /**
- * @fn           STATIC INLINE void  RSI_EGPIO_SetIntHighLevelDisable(EGPIO_Type *pEGPIO ,uint8_t intCh)
+ * @fn           STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void  RSI_EGPIO_SetIntHighLevelDisable(EGPIO_Type *pEGPIO ,uint8_t intCh)
  * @brief        This API is used to used to set the pin interrupt mode configuration
                  \n(disables interrupt generation when pin level is 1 ,'1' for intr enabled '0' for disabled)
  * @param[in]    pEGPIO  : Pointer to the EGPIO register instance
  * @param[in]    intCh   : GPIO pin interrupt channel number (0 to 7)
  * @return       None
  */
-STATIC INLINE void RSI_EGPIO_SetIntHighLevelDisable(EGPIO_Type *pEGPIO, uint8_t intCh)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_EGPIO_SetIntHighLevelDisable(EGPIO_Type *pEGPIO, uint8_t intCh)
 {
 #if defined(ROMDRIVER_PRESENT)
   ROMAPI_EGPIO_API->egpio_set_int_high_level_disable(pEGPIO, intCh);
@@ -325,7 +338,7 @@ STATIC INLINE void RSI_EGPIO_SetIntHighLevelDisable(EGPIO_Type *pEGPIO, uint8_t 
  * @param[in]    intCh   : GPIO pin interrupt channel number (0 to 7)
  * @return       returns the interrupt status register
  */
-STATIC INLINE uint8_t RSI_EGPIO_GetIntStat(const EGPIO_Type *pEGPIO, uint8_t intCh)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE uint8_t RSI_EGPIO_GetIntStat(const EGPIO_Type *pEGPIO, uint8_t intCh)
 {
 #if defined(ROMDRIVER_PRESENT)
   return ROMAPI_EGPIO_API->egpio_get_int_stat(pEGPIO, intCh);
@@ -335,7 +348,7 @@ STATIC INLINE uint8_t RSI_EGPIO_GetIntStat(const EGPIO_Type *pEGPIO, uint8_t int
 }
 
 /**
- * @fn           STATIC INLINE void  RSI_EGPIO_IntClr(EGPIO_Type *pEGPIO ,uint8_t intCh , uint8_t flags)
+ * @fn           STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void  RSI_EGPIO_IntClr(EGPIO_Type *pEGPIO ,uint8_t intCh , uint8_t flags)
  * @brief        This API is used to clear the pin interrupt in status register
  * @param[in]    pEGPIO  : Pointer to the EGPIO register instance
  * @param[in]    intCh   : GPIO pin interrupt channel number (0 to 7)
@@ -345,7 +358,7 @@ STATIC INLINE uint8_t RSI_EGPIO_GetIntStat(const EGPIO_Type *pEGPIO, uint8_t int
 													\n 0- \ref INTERRUPT_STATUS_CLR
  * @return       None
  */
-STATIC INLINE void RSI_EGPIO_IntClr(EGPIO_Type *pEGPIO, uint8_t intCh, uint8_t flags)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_EGPIO_IntClr(EGPIO_Type *pEGPIO, uint8_t intCh, uint8_t flags)
 {
 #if defined(ROMDRIVER_PRESENT)
   ROMAPI_EGPIO_API->egpio_int_clr(pEGPIO, intCh, flags);
@@ -355,7 +368,7 @@ STATIC INLINE void RSI_EGPIO_IntClr(EGPIO_Type *pEGPIO, uint8_t intCh, uint8_t f
 }
 
 /**
- * @fn           STATIC INLINE void  RSI_EGPIO_SetPinMux(EGPIO_Type *pEGPIO ,uint8_t port , uint8_t pin , uint8_t mux)
+ * @fn           STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void  RSI_EGPIO_SetPinMux(EGPIO_Type *pEGPIO ,uint8_t port , uint8_t pin , uint8_t mux)
  * @brief        This API to used to set pin multiplexing
  *               \n(GPIO Pin Mode. Ranges 000 -> Mode 0 to 111 -> Mode 7 Used for GPIO Pin Muxing)
  * @param[in]    pEGPIO  : Pointer to the EGPIO register instance
@@ -381,7 +394,10 @@ STATIC INLINE void RSI_EGPIO_IntClr(EGPIO_Type *pEGPIO, uint8_t intCh, uint8_t f
  *               - \ref EGPIO_PIN_MUX_MODE15  : Select pin mode 15
  * @return       None
  */
-STATIC INLINE void RSI_EGPIO_SetPinMux(EGPIO_Type *pEGPIO, uint8_t port, uint8_t pin, uint8_t mux)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_EGPIO_SetPinMux(EGPIO_Type *pEGPIO,
+                                                                        uint8_t port,
+                                                                        uint8_t pin,
+                                                                        uint8_t mux)
 {
 #if defined(ROMDRIVER_PRESENT)
   ROMAPI_EGPIO_API->egpio_set_pin_mux(pEGPIO, port, pin, mux);
@@ -391,7 +407,7 @@ STATIC INLINE void RSI_EGPIO_SetPinMux(EGPIO_Type *pEGPIO, uint8_t port, uint8_t
 }
 
 /**
- * @fn           STATIC INLINE void  RSI_EGPIO_UlpSocGpioMode(ULPCLK_Type *pULPCLK,uint8_t gpio,uint8_t mode)
+ * @fn           STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void  RSI_EGPIO_UlpSocGpioMode(ULPCLK_Type *pULPCLK,uint8_t gpio,uint8_t mode)
  * @brief        This API is used set ulp soc gpio mode
  *               \n(Gpio pin mode,ranges 000 -> Mode 0 to 111 -> Mode 7 Used for GPIO Pin Muxing )
  * @param[in]    pULPCLK  : Pointer to the ULP register instance
@@ -408,7 +424,9 @@ STATIC INLINE void RSI_EGPIO_SetPinMux(EGPIO_Type *pEGPIO, uint8_t port, uint8_t
  *               - \ref EGPIO_PIN_MUX_MODE7   : Select pin mode 7
  * @return       None
  */
-STATIC INLINE void RSI_EGPIO_UlpSocGpioMode(ULPCLK_Type *pULPCLK, uint8_t gpio, uint8_t mode)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_EGPIO_UlpSocGpioMode(ULPCLK_Type *pULPCLK,
+                                                                             uint8_t gpio,
+                                                                             uint8_t mode)
 {
 #if defined(ROMDRIVER_PRESENT)
   ROMAPI_EGPIO_API->egpio_ulp_soc_gpio_mode(pULPCLK, gpio, mode);
@@ -418,14 +436,14 @@ STATIC INLINE void RSI_EGPIO_UlpSocGpioMode(ULPCLK_Type *pULPCLK, uint8_t gpio, 
 }
 
 /**
- * @fn           STATIC INLINE void  RSI_EGPIO_SetPortMask(EGPIO_Type *pEGPIO ,uint8_t port,uint8_t pin)
+ * @fn           STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void  RSI_EGPIO_SetPortMask(EGPIO_Type *pEGPIO ,uint8_t port,uint8_t pin)
  * @brief        This API is used to set the EGPIO port mask. When set, pin is masked when written/read through PORT MASK REG.
  * @param[in]    pEGPIO  : Pointer to the EGPIO register instance
  * @param[in]    port    : GPIO port number
  * @param[in]    pin     : GPIO pin number
  * @return       None
  */
-STATIC INLINE void RSI_EGPIO_SetPortMask(EGPIO_Type *pEGPIO, uint8_t port, uint8_t pin)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_EGPIO_SetPortMask(EGPIO_Type *pEGPIO, uint8_t port, uint8_t pin)
 {
 #if defined(ROMDRIVER_PRESENT)
   ROMAPI_EGPIO_API->egpio_set_port_mask(pEGPIO, port, pin);
@@ -435,14 +453,16 @@ STATIC INLINE void RSI_EGPIO_SetPortMask(EGPIO_Type *pEGPIO, uint8_t port, uint8
 }
 
 /**
- * @fn           STATIC INLINE void  RSI_EGPIO_SetPortUnMask(EGPIO_Type *pEGPIO ,uint8_t port,uint8_t pin)
+ * @fn           STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void  RSI_EGPIO_SetPortUnMask(EGPIO_Type *pEGPIO ,uint8_t port,uint8_t pin)
  * @brief        This API is used to set the EGPIO port unmask. When set, pin is masked when written/read through PORT MASK REG.
  * @param[in]    pEGPIO  : Pointer to the EGPIO register instance
  * @param[in]    port    : GPIO port number
  * @param[in]    pin     : GPIO pin number
  * @return       None
  */
-STATIC INLINE void RSI_EGPIO_SetPortUnMask(EGPIO_Type *pEGPIO, uint8_t port, uint8_t pin)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_EGPIO_SetPortUnMask(EGPIO_Type *pEGPIO,
+                                                                            uint8_t port,
+                                                                            uint8_t pin)
 {
 #if defined(ROMDRIVER_PRESENT)
   ROMAPI_EGPIO_API->egpio_set_port_un_mask(pEGPIO, port, pin);
@@ -452,14 +472,16 @@ STATIC INLINE void RSI_EGPIO_SetPortUnMask(EGPIO_Type *pEGPIO, uint8_t port, uin
 }
 
 /**
- * @fn           STATIC INLINE void  RSI_EGPIO_PortMaskedLoad(EGPIO_Type *pEGPIO ,uint8_t port,  uint16_t val)
+ * @fn           STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void  RSI_EGPIO_PortMaskedLoad(EGPIO_Type *pEGPIO ,uint8_t port,  uint16_t val)
  * @brief        This API is used to set the EGPIO port mask load. When set, pin is masked when written/read through PORT MASK REG.
  * @param[in]    pEGPIO  : Pointer to the EGPIO register instance
  * @param[in]    port    : GPIO port number
  * @param[in]    val     : Port value to be set
  * @return       None
  */
-STATIC INLINE void RSI_EGPIO_PortMaskedLoad(EGPIO_Type *pEGPIO, uint8_t port, uint16_t val)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_EGPIO_PortMaskedLoad(EGPIO_Type *pEGPIO,
+                                                                             uint8_t port,
+                                                                             uint16_t val)
 {
 #if defined(ROMDRIVER_PRESENT)
   ROMAPI_EGPIO_API->egpio_port_masked_load(pEGPIO, port, val);
@@ -469,7 +491,7 @@ STATIC INLINE void RSI_EGPIO_PortMaskedLoad(EGPIO_Type *pEGPIO, uint8_t port, ui
 }
 
 /**
- * @fn           STATIC INLINE void  RSI_EGPIO_SetPort(EGPIO_Type *pEGPIO ,uint8_t port , uint16_t val)
+ * @fn           STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void  RSI_EGPIO_SetPort(EGPIO_Type *pEGPIO ,uint8_t port , uint16_t val)
  * @brief        This API is used to set the port value.
  *               Sets the pin when corresponding bit is high. Writing zero has no effect
  * @param[in]    pEGPIO  : Pointer to the EGPIO register instance
@@ -477,7 +499,7 @@ STATIC INLINE void RSI_EGPIO_PortMaskedLoad(EGPIO_Type *pEGPIO, uint8_t port, ui
  * @param[in]    val     : Port value to be set
  * @return       None
  */
-STATIC INLINE void RSI_EGPIO_SetPort(EGPIO_Type *pEGPIO, uint8_t port, uint16_t val)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_EGPIO_SetPort(EGPIO_Type *pEGPIO, uint8_t port, uint16_t val)
 {
 #if defined(ROMDRIVER_PRESENT)
   ROMAPI_EGPIO_API->egpio_set_port(pEGPIO, port, val);
@@ -487,7 +509,7 @@ STATIC INLINE void RSI_EGPIO_SetPort(EGPIO_Type *pEGPIO, uint8_t port, uint16_t 
 }
 
 /**
- * @fn           STATIC INLINE void  RSI_EGPIO_PortLoad(EGPIO_Type *pEGPIO ,uint8_t port , uint16_t val)
+ * @fn           STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void  RSI_EGPIO_PortLoad(EGPIO_Type *pEGPIO ,uint8_t port , uint16_t val)
  * @brief        This API is used to load the port value.
  *               Loads the value on to pin on write. And reads the value of load register on read
  * @param[in]    pEGPIO  : Pointer to the EGPIO register instance
@@ -495,7 +517,7 @@ STATIC INLINE void RSI_EGPIO_SetPort(EGPIO_Type *pEGPIO, uint8_t port, uint16_t 
  * @param[in]    val     : Port value to be set
  * @return       None
  */
-STATIC INLINE void RSI_EGPIO_PortLoad(EGPIO_Type *pEGPIO, uint8_t port, uint16_t val)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_EGPIO_PortLoad(EGPIO_Type *pEGPIO, uint8_t port, uint16_t val)
 {
 #if defined(ROMDRIVER_PRESENT)
   ROMAPI_EGPIO_API->egpio_port_load(pEGPIO, port, val);
@@ -505,7 +527,7 @@ STATIC INLINE void RSI_EGPIO_PortLoad(EGPIO_Type *pEGPIO, uint8_t port, uint16_t
 }
 
 /**
- * @fn           STATIC INLINE void  RSI_EGPIO_WordLoad(EGPIO_Type *pEGPIO ,uint8_t pin , uint16_t val)
+ * @fn           STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void  RSI_EGPIO_WordLoad(EGPIO_Type *pEGPIO ,uint8_t pin , uint16_t val)
  * @brief        This API is used to load the port value.
  *               Loads 1 on the pin when any of the bit in load value is 1. On read pass the bit status into all bits.                       
  * @param[in]    pEGPIO  : Pointer to the EGPIO register instance
@@ -513,7 +535,7 @@ STATIC INLINE void RSI_EGPIO_PortLoad(EGPIO_Type *pEGPIO, uint8_t port, uint16_t
  * @param[in]    val     : Port value to be set
  * @return       None
  */
-STATIC INLINE void RSI_EGPIO_WordLoad(EGPIO_Type *pEGPIO, uint8_t pin, uint16_t val)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_EGPIO_WordLoad(EGPIO_Type *pEGPIO, uint8_t pin, uint16_t val)
 {
 #if defined(ROMDRIVER_PRESENT)
   ROMAPI_EGPIO_API->egpio_word_load(pEGPIO, pin, val);
@@ -523,7 +545,7 @@ STATIC INLINE void RSI_EGPIO_WordLoad(EGPIO_Type *pEGPIO, uint8_t pin, uint16_t 
 }
 
 /**
- * @fn           STATIC INLINE void  RSI_EGPIO_ClrPort(EGPIO_Type *pEGPIO ,uint8_t port , uint16_t val)
+ * @fn           STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void  RSI_EGPIO_ClrPort(EGPIO_Type *pEGPIO ,uint8_t port , uint16_t val)
  * @brief        This API is used to clear the port value.
  *               Clears the pin when corresponding bit is high. Writing zero has no effect.
  * @param[in]    pEGPIO  : Pointer to the EGPIO register instance
@@ -531,7 +553,7 @@ STATIC INLINE void RSI_EGPIO_WordLoad(EGPIO_Type *pEGPIO, uint8_t pin, uint16_t 
  * @param[in]    val     : Port value to be clear
  * @return       None
  */
-STATIC INLINE void RSI_EGPIO_ClrPort(EGPIO_Type *pEGPIO, uint8_t port, uint16_t val)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_EGPIO_ClrPort(EGPIO_Type *pEGPIO, uint8_t port, uint16_t val)
 {
 #if defined(ROMDRIVER_PRESENT)
   ROMAPI_EGPIO_API->egpio_clr_port(pEGPIO, port, val);
@@ -541,7 +563,7 @@ STATIC INLINE void RSI_EGPIO_ClrPort(EGPIO_Type *pEGPIO, uint8_t port, uint16_t 
 }
 
 /**
- * @fn           STATIC INLINE void  RSI_EGPIO_TogglePort(EGPIO_Type *pEGPIO ,uint8_t port , uint16_t val)
+ * @fn           STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void  RSI_EGPIO_TogglePort(EGPIO_Type *pEGPIO ,uint8_t port , uint16_t val)
  * @brief        This API is used to toggle the port.
  *               Toggles the pin when corresponding bit is high. Writing zero has not effect.
  * @param[in]    pEGPIO  : Pointer to the EGPIO register instance
@@ -549,7 +571,7 @@ STATIC INLINE void RSI_EGPIO_ClrPort(EGPIO_Type *pEGPIO, uint8_t port, uint16_t 
  * @param[in]    val     : Port value to be toggle
  * @return       None
  */
-STATIC INLINE void RSI_EGPIO_TogglePort(EGPIO_Type *pEGPIO, uint8_t port, uint16_t val)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_EGPIO_TogglePort(EGPIO_Type *pEGPIO, uint8_t port, uint16_t val)
 {
 #if defined(ROMDRIVER_PRESENT)
   ROMAPI_EGPIO_API->egpio_toggle_port(pEGPIO, port, val);
@@ -559,14 +581,14 @@ STATIC INLINE void RSI_EGPIO_TogglePort(EGPIO_Type *pEGPIO, uint8_t port, uint16
 }
 
 /**
- * @fn           STATIC INLINE uint16_t RSI_EGPIO_GetPort(const EGPIO_Type *pEGPIO ,uint8_t port)
+ * @fn           STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE uint16_t RSI_EGPIO_GetPort(const EGPIO_Type *pEGPIO ,uint8_t port)
  * @brief        This API is used to used to get the EGPIO port value.
  *               Reads the value on GPIO pins irrespective of the pin mode.
  * @param[in]    pEGPIO  : Pointer to the EGPIO register instance
  * @param[in]    port    : Port number to be read
  * @return       port value
  */
-STATIC INLINE uint16_t RSI_EGPIO_GetPort(const EGPIO_Type *pEGPIO, uint8_t port)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE uint16_t RSI_EGPIO_GetPort(const EGPIO_Type *pEGPIO, uint8_t port)
 {
 #if defined(ROMDRIVER_PRESENT)
   return ROMAPI_EGPIO_API->egpio_get_port(pEGPIO, port);
@@ -576,7 +598,7 @@ STATIC INLINE uint16_t RSI_EGPIO_GetPort(const EGPIO_Type *pEGPIO, uint8_t port)
 }
 
 /**
- * @fn           STATIC INLINE void  RSI_EGPIO_GroupIntOneEnable(EGPIO_Type *pEGPIO,uint8_t port,uint8_t pin)
+ * @fn           STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void  RSI_EGPIO_GroupIntOneEnable(EGPIO_Type *pEGPIO,uint8_t port,uint8_t pin)
  * @brief        This API is used to enable the group interrupt one ,  When set,
  *               the corresponding GPIO pin is selected for group interrupt 1 generation
  * @param[in]    pEGPIO  : Pointer to the EGPIO register instance
@@ -584,7 +606,9 @@ STATIC INLINE uint16_t RSI_EGPIO_GetPort(const EGPIO_Type *pEGPIO, uint8_t port)
  * @param[in]    pin     : GPIO pin number
  * @return       None
  */
-STATIC INLINE void RSI_EGPIO_GroupIntOneEnable(EGPIO_Type *pEGPIO, uint8_t port, uint8_t pin)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_EGPIO_GroupIntOneEnable(EGPIO_Type *pEGPIO,
+                                                                                uint8_t port,
+                                                                                uint8_t pin)
 {
 #if defined(ROMDRIVER_PRESENT)
   ROMAPI_EGPIO_API->egpio_group_int_one_enable(pEGPIO, port, pin);
@@ -594,14 +618,16 @@ STATIC INLINE void RSI_EGPIO_GroupIntOneEnable(EGPIO_Type *pEGPIO, uint8_t port,
 }
 
 /**
- * @fn           STATIC INLINE void  RSI_EGPIO_GroupIntOneDisable(EGPIO_Type *pEGPIO,uint8_t port,uint8_t pin)
+ * @fn           STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void  RSI_EGPIO_GroupIntOneDisable(EGPIO_Type *pEGPIO,uint8_t port,uint8_t pin)
  * @brief        This API is used to disable the group interrupt one
  * @param[in]    pEGPIO  : Pointer to the EGPIO register instance
  * @param[in]    port    : GPIO port number
  * @param[in]    pin     : GPIO pin number
  * @return       None
  */
-STATIC INLINE void RSI_EGPIO_GroupIntOneDisable(EGPIO_Type *pEGPIO, uint8_t port, uint8_t pin)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_EGPIO_GroupIntOneDisable(EGPIO_Type *pEGPIO,
+                                                                                 uint8_t port,
+                                                                                 uint8_t pin)
 {
 #if defined(ROMDRIVER_PRESENT)
   ROMAPI_EGPIO_API->egpio_group_int_one_disable(pEGPIO, port, pin);
@@ -611,7 +637,7 @@ STATIC INLINE void RSI_EGPIO_GroupIntOneDisable(EGPIO_Type *pEGPIO, uint8_t port
 }
 
 /**
- * @fn           STATIC INLINE void  RSI_EGPIO_GroupIntTwoEnable(EGPIO_Type *pEGPIO,uint8_t port,uint8_t pin)
+ * @fn           STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void  RSI_EGPIO_GroupIntTwoEnable(EGPIO_Type *pEGPIO,uint8_t port,uint8_t pin)
  * @brief        This API is used to enable the group interrupt Two ,  When set,
  *               the corresponding GPIO pin is selected for group interrupt 2 generation
  * @param[in]    pEGPIO  : Pointer to the EGPIO register instance
@@ -619,7 +645,9 @@ STATIC INLINE void RSI_EGPIO_GroupIntOneDisable(EGPIO_Type *pEGPIO, uint8_t port
  * @param[in]    pin     : GPIO pin number
  * @return       None
  */
-STATIC INLINE void RSI_EGPIO_GroupIntTwoEnable(EGPIO_Type *pEGPIO, uint8_t port, uint8_t pin)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_EGPIO_GroupIntTwoEnable(EGPIO_Type *pEGPIO,
+                                                                                uint8_t port,
+                                                                                uint8_t pin)
 {
 #if defined(ROMDRIVER_PRESENT)
   ROMAPI_EGPIO_API->egpio_group_int_two_enable(pEGPIO, port, pin);
@@ -629,13 +657,13 @@ STATIC INLINE void RSI_EGPIO_GroupIntTwoEnable(EGPIO_Type *pEGPIO, uint8_t port,
 }
 
 /**
- * @fn           STATIC INLINE void  RSI_EGPIO_GroupIntMask(EGPIO_Type *pEGPIO ,uint8_t grpInt)
+ * @fn           STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void  RSI_EGPIO_GroupIntMask(EGPIO_Type *pEGPIO ,uint8_t grpInt)
  * @brief        This API is used to configure the group interrupts(1-mask,0-unmask)
  * @param[in]    pEGPIO  : Pointer to the EGPIO register instance
  * @param[in]    grpInt  : Group interrupt number
  * @return       None
  */
-STATIC INLINE void RSI_EGPIO_GroupIntMask(EGPIO_Type *pEGPIO, uint8_t grpInt)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_EGPIO_GroupIntMask(EGPIO_Type *pEGPIO, uint8_t grpInt)
 {
 #if defined(ROMDRIVER_PRESENT)
   ROMAPI_EGPIO_API->egpio_group_int_mask(pEGPIO, grpInt);
@@ -645,13 +673,13 @@ STATIC INLINE void RSI_EGPIO_GroupIntMask(EGPIO_Type *pEGPIO, uint8_t grpInt)
 }
 
 /**
- * @fn           STATIC INLINE void  RSI_EGPIO_GroupIntUnMask(EGPIO_Type *pEGPIO ,uint8_t grpInt)
+ * @fn           STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void  RSI_EGPIO_GroupIntUnMask(EGPIO_Type *pEGPIO ,uint8_t grpInt)
  * @brief        This API is used to configure the group interrupts(1-mask,0-unmask)
  * @param[in]    pEGPIO  : Pointer to the EGPIO register instance
  * @param[in]    grpInt  : Group interrupt number
  * @return       None
  */
-STATIC INLINE void RSI_EGPIO_GroupIntUnMask(EGPIO_Type *pEGPIO, uint8_t grpInt)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_EGPIO_GroupIntUnMask(EGPIO_Type *pEGPIO, uint8_t grpInt)
 {
 #if defined(ROMDRIVER_PRESENT)
   ROMAPI_EGPIO_API->egpio_group_int_un_Mask(pEGPIO, grpInt);
@@ -661,13 +689,13 @@ STATIC INLINE void RSI_EGPIO_GroupIntUnMask(EGPIO_Type *pEGPIO, uint8_t grpInt)
 }
 
 /**
- * @fn           STATIC INLINE void  RSI_EGPIO_GroupIntEnable(EGPIO_Type *pEGPIO ,uint8_t grpInt)
+ * @fn           STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void  RSI_EGPIO_GroupIntEnable(EGPIO_Type *pEGPIO ,uint8_t grpInt)
  * @brief        This API is used to configure the group interrupts(1-enable, 0-disable)
  * @param[in]    pEGPIO  : Pointer to the EGPIO register instance
  * @param[in]    grpInt  : Group interrupt number
  * @return       None
  */
-STATIC INLINE void RSI_EGPIO_GroupIntEnable(EGPIO_Type *pEGPIO, uint8_t grpInt)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_EGPIO_GroupIntEnable(EGPIO_Type *pEGPIO, uint8_t grpInt)
 {
 #if defined(ROMDRIVER_PRESENT)
   ROMAPI_EGPIO_API->egpio_group_int_enable(pEGPIO, grpInt);
@@ -677,13 +705,13 @@ STATIC INLINE void RSI_EGPIO_GroupIntEnable(EGPIO_Type *pEGPIO, uint8_t grpInt)
 }
 
 /**
- * @fn           STATIC INLINE void  RSI_EGPIO_GroupIntDisable(EGPIO_Type *pEGPIO ,uint8_t grpInt)
+ * @fn           STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void  RSI_EGPIO_GroupIntDisable(EGPIO_Type *pEGPIO ,uint8_t grpInt)
  * @brief        This API is used to configure the group interrupts(1-enable, 0-disable)
  * @param[in]    pEGPIO  : Pointer to the EGPIO register instance
  * @param[in]    grpInt  : Group interrupt number
  * @return       None
  */
-STATIC INLINE void RSI_EGPIO_GroupIntDisable(EGPIO_Type *pEGPIO, uint8_t grpInt)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_EGPIO_GroupIntDisable(EGPIO_Type *pEGPIO, uint8_t grpInt)
 {
 #if defined(ROMDRIVER_PRESENT)
   ROMAPI_EGPIO_API->egpio_group_int_disable(pEGPIO, grpInt);
@@ -693,13 +721,13 @@ STATIC INLINE void RSI_EGPIO_GroupIntDisable(EGPIO_Type *pEGPIO, uint8_t grpInt)
 }
 
 /**
- * @fn           STATIC INLINE void  RSI_EGPIO_GroupIntLevel(EGPIO_Type *pEGPIO ,uint8_t grpInt)
+ * @fn           STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void  RSI_EGPIO_GroupIntLevel(EGPIO_Type *pEGPIO ,uint8_t grpInt)
  * @brief        This API is used to configure the group interrupts(0-level,1-edge)
  * @param[in]    pEGPIO   : Pointer to the EGPIO register instance
  * @param[in]    grpInt   : Group interrupt number
  * @return       None
  */
-STATIC INLINE void RSI_EGPIO_GroupIntLevel(EGPIO_Type *pEGPIO, uint8_t grpInt)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_EGPIO_GroupIntLevel(EGPIO_Type *pEGPIO, uint8_t grpInt)
 {
 #if defined(ROMDRIVER_PRESENT)
   ROMAPI_EGPIO_API->egpio_group_int_level(pEGPIO, grpInt);
@@ -709,13 +737,13 @@ STATIC INLINE void RSI_EGPIO_GroupIntLevel(EGPIO_Type *pEGPIO, uint8_t grpInt)
 }
 
 /**
- * @fn           STATIC INLINE void  RSI_EGPIO_GroupIntEdge(EGPIO_Type *pEGPIO ,uint8_t grpInt)
+ * @fn           STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void  RSI_EGPIO_GroupIntEdge(EGPIO_Type *pEGPIO ,uint8_t grpInt)
  * @brief        This API is used to configure the group interrupts(0-level,1-edge)
  * @param[in]    pEGPIO  : Pointer to the EGPIO register instance
  * @param[in]    grpInt  : Group interrupt number
  * @return       None
  */
-STATIC INLINE void RSI_EGPIO_GroupIntEdge(EGPIO_Type *pEGPIO, uint8_t grpInt)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_EGPIO_GroupIntEdge(EGPIO_Type *pEGPIO, uint8_t grpInt)
 {
 #if defined(ROMDRIVER_PRESENT)
   ROMAPI_EGPIO_API->egpio_group_int_edge(pEGPIO, grpInt);
@@ -725,13 +753,13 @@ STATIC INLINE void RSI_EGPIO_GroupIntEdge(EGPIO_Type *pEGPIO, uint8_t grpInt)
 }
 
 /**
- * @fn           STATIC INLINE void  RSI_EGPIO_GroupIntAnd(EGPIO_Type *pEGPIO ,uint8_t grpInt)
+ * @fn           STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void  RSI_EGPIO_GroupIntAnd(EGPIO_Type *pEGPIO ,uint8_t grpInt)
  * @brief        This API is used to configure the group interrupts(0-AND ,1-Or)
  * @param[in]    pEGPIO  : Pointer to the EGPIO register instance
  * @param[in]    grpInt  : Group interrupt number
  * @return       None
  */
-STATIC INLINE void RSI_EGPIO_GroupIntAnd(EGPIO_Type *pEGPIO, uint8_t grpInt)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_EGPIO_GroupIntAnd(EGPIO_Type *pEGPIO, uint8_t grpInt)
 {
 #if defined(ROMDRIVER_PRESENT)
   ROMAPI_EGPIO_API->egpio_group_int_and(pEGPIO, grpInt);
@@ -741,13 +769,13 @@ STATIC INLINE void RSI_EGPIO_GroupIntAnd(EGPIO_Type *pEGPIO, uint8_t grpInt)
 }
 
 /**
- * @fn           STATIC INLINE void  RSI_EGPIO_GroupIntOr(EGPIO_Type *pEGPIO ,uint8_t grpInt)
+ * @fn           STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void  RSI_EGPIO_GroupIntOr(EGPIO_Type *pEGPIO ,uint8_t grpInt)
  * @brief        This API is used to configure the group interrupts(0- AND , 1-Or)
  * @param[in]    pEGPIO  : Pointer to the EGPIO register instance
  * @param[in]    grpInt  : Group interrupt number
  * @return       None
  */
-STATIC INLINE void RSI_EGPIO_GroupIntOr(EGPIO_Type *pEGPIO, uint8_t grpInt)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_EGPIO_GroupIntOr(EGPIO_Type *pEGPIO, uint8_t grpInt)
 {
 #if defined(ROMDRIVER_PRESENT)
   ROMAPI_EGPIO_API->egpio_group_int_or(pEGPIO, grpInt);
@@ -757,13 +785,13 @@ STATIC INLINE void RSI_EGPIO_GroupIntOr(EGPIO_Type *pEGPIO, uint8_t grpInt)
 }
 
 /**
- * @fn           STATIC INLINE uint32_t RSI_EGPIO_GroupIntStat(const EGPIO_Type *pEGPIO ,uint8_t grpInt)
+ * @fn           STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE uint32_t RSI_EGPIO_GroupIntStat(const EGPIO_Type *pEGPIO ,uint8_t grpInt)
  * @brief        This API to used to get the group interrupt status
  * @param[in]    pEGPIO   : Pointer to the EGPIO register instance
  * @param[in]    grpInt   : Group interrupt number
  * @return       returns the group interrupt status register
  */
-STATIC INLINE uint32_t RSI_EGPIO_GroupIntStat(const EGPIO_Type *pEGPIO, uint8_t grpInt)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE uint32_t RSI_EGPIO_GroupIntStat(const EGPIO_Type *pEGPIO, uint8_t grpInt)
 {
 #if defined(ROMDRIVER_PRESENT)
   return ROMAPI_EGPIO_API->egpio_group_int_stat(pEGPIO, grpInt);
@@ -773,13 +801,13 @@ STATIC INLINE uint32_t RSI_EGPIO_GroupIntStat(const EGPIO_Type *pEGPIO, uint8_t 
 }
 
 /**
- * @fn           STATIC INLINE void  RSI_EGPIO_GroupIntWkeUpEnable(EGPIO_Type *pEGPIO ,uint8_t grpInt)
+ * @fn           STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void  RSI_EGPIO_GroupIntWkeUpEnable(EGPIO_Type *pEGPIO ,uint8_t grpInt)
  * @brief        This API to used to Enable the group interrupt wakeup interrupt
  * @param[in]    pEGPIO  : Pointer to the EGPIO register instance
  * @param[in]    grpInt  : Group interrupt number
  * @return       None
  */
-STATIC INLINE void RSI_EGPIO_GroupIntWkeUpEnable(EGPIO_Type *pEGPIO, uint8_t grpInt)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_EGPIO_GroupIntWkeUpEnable(EGPIO_Type *pEGPIO, uint8_t grpInt)
 {
 #if defined(ROMDRIVER_PRESENT)
   ROMAPI_EGPIO_API->egpio_group_int_wkeup_Enable(pEGPIO, grpInt);
@@ -789,13 +817,13 @@ STATIC INLINE void RSI_EGPIO_GroupIntWkeUpEnable(EGPIO_Type *pEGPIO, uint8_t grp
 }
 
 /**
- * @fn           STATIC INLINE void  RSI_EGPIO_GroupIntWkeUpDisable(EGPIO_Type *pEGPIO ,uint8_t grpInt)
+ * @fn           STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void  RSI_EGPIO_GroupIntWkeUpDisable(EGPIO_Type *pEGPIO ,uint8_t grpInt)
  * @brief        This API to used to Disable the group interrupt wakeup interrupt
  * @param[in]    pEGPIO  : Pointer to the EGPIO register instance
  * @param[in]    grpInt  : Group interrupt number
  * @return       None
  */
-STATIC INLINE void RSI_EGPIO_GroupIntWkeUpDisable(EGPIO_Type *pEGPIO, uint8_t grpInt)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_EGPIO_GroupIntWkeUpDisable(EGPIO_Type *pEGPIO, uint8_t grpInt)
 {
 #if defined(ROMDRIVER_PRESENT)
   ROMAPI_EGPIO_API->egpio_group_int_wkeup_disable(pEGPIO, grpInt);
@@ -805,14 +833,16 @@ STATIC INLINE void RSI_EGPIO_GroupIntWkeUpDisable(EGPIO_Type *pEGPIO, uint8_t gr
 }
 
 /**
- * @fn           STATIC INLINE void  RSI_EGPIO_GroupIntClr(EGPIO_Type *pEGPIO ,uint8_t grpInt , uint8_t flags)
+ * @fn           STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void  RSI_EGPIO_GroupIntClr(EGPIO_Type *pEGPIO ,uint8_t grpInt , uint8_t flags)
  * @brief        This API is used to used to clear the group interrupt status
  * @param[in]    pEGPIO     : Pointer to the EGPIO register instance
  * @param[in]    grpInt     : Group interrupt number
  * @param[in]    flags : clear flags
  * @return       None
  */
-STATIC INLINE void RSI_EGPIO_GroupIntClr(EGPIO_Type *pEGPIO, uint8_t grpInt, uint8_t flags)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_EGPIO_GroupIntClr(EGPIO_Type *pEGPIO,
+                                                                          uint8_t grpInt,
+                                                                          uint8_t flags)
 {
 #if defined(ROMDRIVER_PRESENT)
   ROMAPI_EGPIO_API->egpio_group_int_clr(pEGPIO, grpInt, flags);
@@ -822,14 +852,16 @@ STATIC INLINE void RSI_EGPIO_GroupIntClr(EGPIO_Type *pEGPIO, uint8_t grpInt, uin
 }
 
 /**
- * @fn           STATIC INLINE void  RSI_EGPIO_GroupIntTwoDisable(EGPIO_Type *pEGPIO ,uint8_t port ,uint8_t pin)
+ * @fn           STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void  RSI_EGPIO_GroupIntTwoDisable(EGPIO_Type *pEGPIO ,uint8_t port ,uint8_t pin)
  * @brief        This API is used to used to disable the group interrupt two
  * @param[in]    pEGPIO  : Pointer to the EGPIO register instance
  * @param[in]    port    : PORT number
  * @param[in]    pin     : PIN number
  * @return       None
  */
-STATIC INLINE void RSI_EGPIO_GroupIntTwoDisable(EGPIO_Type *pEGPIO, uint8_t port, uint8_t pin)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_EGPIO_GroupIntTwoDisable(EGPIO_Type *pEGPIO,
+                                                                                 uint8_t port,
+                                                                                 uint8_t pin)
 {
 #if defined(ROMDRIVER_PRESENT)
   ROMAPI_EGPIO_API->egpio_group_int_two_disable(pEGPIO, port, pin);
@@ -839,7 +871,7 @@ STATIC INLINE void RSI_EGPIO_GroupIntTwoDisable(EGPIO_Type *pEGPIO, uint8_t port
 }
 
 /**
- * @fn           STATIC INLINE void  RSI_EGPIO_SetGroupIntOnePol(EGPIO_Type *pEGPIO ,uint8_t port , uint8_t pin , uint8_t pol)
+ * @fn           STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void  RSI_EGPIO_SetGroupIntOnePol(EGPIO_Type *pEGPIO ,uint8_t port , uint8_t pin , uint8_t pol)
  * @brief        This API is used to set the group polarity of interrupt one.
  *               Decides the active value of the pin to be considered for group interrupt 1 generation when enabled
  * @param[in]    pEGPIO  : Pointer to the EGPIO register instance
@@ -850,7 +882,10 @@ STATIC INLINE void RSI_EGPIO_GroupIntTwoDisable(EGPIO_Type *pEGPIO, uint8_t port
  *               \n '1'  : group interrupt gets generated when GPIO input pin status is '1'
  * @return       None
  */
-STATIC INLINE void RSI_EGPIO_SetGroupIntOnePol(EGPIO_Type *pEGPIO, uint8_t port, uint8_t pin, uint8_t pol)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_EGPIO_SetGroupIntOnePol(EGPIO_Type *pEGPIO,
+                                                                                uint8_t port,
+                                                                                uint8_t pin,
+                                                                                uint8_t pol)
 {
 #if defined(ROMDRIVER_PRESENT)
   ROMAPI_EGPIO_API->egpio_set_group_int_one_pol(pEGPIO, port, pin, pol);
@@ -860,7 +895,7 @@ STATIC INLINE void RSI_EGPIO_SetGroupIntOnePol(EGPIO_Type *pEGPIO, uint8_t port,
 }
 
 /**
- * @fn           STATIC INLINE void  RSI_EGPIO_SetGroupIntTwoPol(EGPIO_Type *pEGPIO ,uint8_t port,uint8_t pin , uint8_t pol)
+ * @fn           STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void  RSI_EGPIO_SetGroupIntTwoPol(EGPIO_Type *pEGPIO ,uint8_t port,uint8_t pin , uint8_t pol)
  * @brief        This API is used to set the group polarity of interrupt two.
  *               Decides the active value of the pin to be considered for group interrupt 2 generation when enabled
  * @param[in]    pEGPIO  : Pointer to the EGPIO register instance
@@ -871,7 +906,10 @@ STATIC INLINE void RSI_EGPIO_SetGroupIntOnePol(EGPIO_Type *pEGPIO, uint8_t port,
  *               \n '1'  : group interrupt gets generated when GPIO input pin status is '1'.
  * @return       None
  */
-STATIC INLINE void RSI_EGPIO_SetGroupIntTwoPol(EGPIO_Type *pEGPIO, uint8_t port, uint8_t pin, uint8_t pol)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_EGPIO_SetGroupIntTwoPol(EGPIO_Type *pEGPIO,
+                                                                                uint8_t port,
+                                                                                uint8_t pin,
+                                                                                uint8_t pol)
 {
 #if defined(ROMDRIVER_PRESENT)
   ROMAPI_EGPIO_API->egpio_set_group_int_two_pol(pEGPIO, port, pin, pol);
@@ -881,12 +919,12 @@ STATIC INLINE void RSI_EGPIO_SetGroupIntTwoPol(EGPIO_Type *pEGPIO, uint8_t port,
 }
 
 /**
- * @fn           STATIC INLINE void  RSI_EGPIO_HostPadsGpioModeEnable(uint8_t u8GpioNum)
+ * @fn           STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void  RSI_EGPIO_HostPadsGpioModeEnable(uint8_t u8GpioNum)
  * @brief        This API is used to select the host pad gpios(25 to 30)
  * @param[in]    u8GpioNum  :  PAD number to be use
  * @return       None
  */
-STATIC INLINE void RSI_EGPIO_HostPadsGpioModeEnable(uint8_t u8GpioNum)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_EGPIO_HostPadsGpioModeEnable(uint8_t u8GpioNum)
 {
 #if defined(ROMDRIVER_PRESENT)
   ROMAPI_EGPIO_API->egpio_host_pads_gpio_mode_enable(u8GpioNum);
@@ -896,12 +934,12 @@ STATIC INLINE void RSI_EGPIO_HostPadsGpioModeEnable(uint8_t u8GpioNum)
 }
 
 /**
- * @fn           STATIC INLINE void  RSI_EGPIO_HostPadsGpioModeDisable(uint8_t u8GpioNum)
+ * @fn           STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void  RSI_EGPIO_HostPadsGpioModeDisable(uint8_t u8GpioNum)
  * @brief        This API is used to deselect the host pad gpios(25 to 30)
  * @param[in]    u8GpioNum  :  PAD number to be use
  * @return       None
  */
-STATIC INLINE void RSI_EGPIO_HostPadsGpioModeDisable(uint8_t u8GpioNum)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_EGPIO_HostPadsGpioModeDisable(uint8_t u8GpioNum)
 {
 #if defined(ROMDRIVER_PRESENT)
   ROMAPI_EGPIO_API->egpio_host_pads_gpio_mode_disable(u8GpioNum);
@@ -911,12 +949,12 @@ STATIC INLINE void RSI_EGPIO_HostPadsGpioModeDisable(uint8_t u8GpioNum)
 }
 
 /**
- * @fn           STATIC INLINE void  RSI_EGPIO_PadSelectionEnable(uint8_t padNum)
+ * @fn           STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void  RSI_EGPIO_PadSelectionEnable(uint8_t padNum)
  * @brief        This API is used to select the pad(0 to 21)
  * @param[in]    padNum  :  PAD number to be use
  * @return       None
  */
-STATIC INLINE void RSI_EGPIO_PadSelectionEnable(uint8_t padNum)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_EGPIO_PadSelectionEnable(uint8_t padNum)
 {
 #if defined(ROMDRIVER_PRESENT)
   ROMAPI_EGPIO_API->egpio_pad_selection_enable(padNum);
@@ -926,12 +964,12 @@ STATIC INLINE void RSI_EGPIO_PadSelectionEnable(uint8_t padNum)
 }
 
 /**
- * @fn           STATIC INLINE void  RSI_EGPIO_PadSelectionDisable(uint8_t padNum)
+ * @fn           STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void  RSI_EGPIO_PadSelectionDisable(uint8_t padNum)
  * @brief        This API is used to deselect the pad(0 to 21)
  * @param[in]    padNum  :  PAD number to be use
  * @return       None
  */
-STATIC INLINE void RSI_EGPIO_PadSelectionDisable(uint8_t padNum)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_EGPIO_PadSelectionDisable(uint8_t padNum)
 {
 #if defined(ROMDRIVER_PRESENT)
   ROMAPI_EGPIO_API->egpio_pad_selection_disable(padNum);
@@ -941,12 +979,12 @@ STATIC INLINE void RSI_EGPIO_PadSelectionDisable(uint8_t padNum)
 }
 
 /**
- * @fn           STATIC INLINE void  RSI_EGPIO_PadReceiverEnable(uint8_t u8GpioNum)
+ * @fn           STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void  RSI_EGPIO_PadReceiverEnable(uint8_t u8GpioNum)
  * @brief        This API is used to enable the receiver enable bit(REN)
  * @param[in]    u8GpioNum  :  GPIO num to be use
  * @return       None
  */
-STATIC INLINE void RSI_EGPIO_PadReceiverEnable(uint8_t u8GpioNum)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_EGPIO_PadReceiverEnable(uint8_t u8GpioNum)
 {
 #if defined(ROMDRIVER_PRESENT)
   ROMAPI_EGPIO_API->egpio_pad_receiver_enable(u8GpioNum);
@@ -956,12 +994,12 @@ STATIC INLINE void RSI_EGPIO_PadReceiverEnable(uint8_t u8GpioNum)
 }
 
 /**
- * @fn           STATIC INLINE void  RSI_EGPIO_PadReceiverDisable(uint8_t u8GpioNum)
+ * @fn           STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void  RSI_EGPIO_PadReceiverDisable(uint8_t u8GpioNum)
  * @brief        This API is used to Disable the receiver enable bit(REN)
  * @param[in]    u8GpioNum  :  GPIO num to be use
  * @return       None
  */
-STATIC INLINE void RSI_EGPIO_PadReceiverDisable(uint8_t u8GpioNum)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_EGPIO_PadReceiverDisable(uint8_t u8GpioNum)
 {
 #if defined(ROMDRIVER_PRESENT)
   ROMAPI_EGPIO_API->egpio_pad_receiver_disable(u8GpioNum);
@@ -971,11 +1009,11 @@ STATIC INLINE void RSI_EGPIO_PadReceiverDisable(uint8_t u8GpioNum)
 }
 
 /**
- * @fn           STATIC INLINE void  RSI_EGPIO_PadSdioConnected(void)
+ * @fn           STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void  RSI_EGPIO_PadSdioConnected(void)
  * @brief        This API is used to use the SDIO pins(25 to 30) in M4 or NWP (0 for M4SS and 1 for TASS)
  * @return       None
  */
-STATIC INLINE void RSI_EGPIO_PadSdioConnected(void)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_EGPIO_PadSdioConnected(void)
 {
 #if defined(ROMDRIVER_PRESENT)
   ROMAPI_EGPIO_API->egpio_pad_sdio_connected();
@@ -996,7 +1034,8 @@ STATIC INLINE void RSI_EGPIO_PadSdioConnected(void)
  *	             \n         -   3 for  \ref Repeater (P1=1,P2=1)
  * @return       None
  */
-STATIC INLINE void RSI_EGPIO_PadDriverDisableState(uint8_t u8GpioNum, en_driver_state_t endstate)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_EGPIO_PadDriverDisableState(uint8_t u8GpioNum,
+                                                                                    en_driver_state_t endstate)
 {
 #if defined(ROMDRIVER_PRESENT)
   ROMAPI_EGPIO_API->egpio_pad_driver_disable_state(u8GpioNum, endstate);
@@ -1006,7 +1045,7 @@ STATIC INLINE void RSI_EGPIO_PadDriverDisableState(uint8_t u8GpioNum, en_driver_
 }
 
 /**
- * @fn           STATIC INLINE void  RSI_EGPIO_PadDriverStrengthSelect(uint8_t u8GpioNum , en_driver_strength_select_t strength)
+ * @fn           STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void  RSI_EGPIO_PadDriverStrengthSelect(uint8_t u8GpioNum , en_driver_strength_select_t strength)
  * @brief        This API is used to select Drive strength
  * @param[in]    u8GpioNum :  GPIO number to be use
  * @param[in]    strength  :  Drive strength selector(E1,E2)
@@ -1017,7 +1056,9 @@ STATIC INLINE void RSI_EGPIO_PadDriverDisableState(uint8_t u8GpioNum, en_driver_
  *               \n          -  3 for \ref twelve_milli_amps(E1=1,E2=1)
  * @return       None
  */
-STATIC INLINE void RSI_EGPIO_PadDriverStrengthSelect(uint8_t u8GpioNum, en_driver_strength_select_t strength)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_EGPIO_PadDriverStrengthSelect(
+  uint8_t u8GpioNum,
+  en_driver_strength_select_t strength)
 {
 #if defined(ROMDRIVER_PRESENT)
   ROMAPI_EGPIO_API->egpio_pad_driver_strength_select(u8GpioNum, strength);
@@ -1027,7 +1068,7 @@ STATIC INLINE void RSI_EGPIO_PadDriverStrengthSelect(uint8_t u8GpioNum, en_drive
 }
 
 /**
- * @fn           STATIC INLINE void  RSI_EGPIO_PadPowerOnStartEnable(uint8_t u8GpioNum ,uint8_t val)
+ * @fn           STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void  RSI_EGPIO_PadPowerOnStartEnable(uint8_t u8GpioNum ,uint8_t val)
  * @brief        This API is used to select Power on Start enable
  * @param[in]    u8GpioNum  :  GPIO number to be use
  * @param[in]    val        :  POS = 1 : Enables active pull down for invalid power;
@@ -1036,7 +1077,7 @@ STATIC INLINE void RSI_EGPIO_PadDriverStrengthSelect(uint8_t u8GpioNum, en_drive
  *               \n AD is pulled to weak 0. When POS is set to 0, PAD remains in a high-Z state. : Default 0
  * @return       None
  */
-STATIC INLINE void RSI_EGPIO_PadPowerOnStartEnable(uint8_t u8GpioNum, uint8_t val)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_EGPIO_PadPowerOnStartEnable(uint8_t u8GpioNum, uint8_t val)
 {
 #if defined(ROMDRIVER_PRESENT)
   ROMAPI_EGPIO_API->egpio_pad_power_on_start_enable(u8GpioNum, val);
@@ -1046,14 +1087,15 @@ STATIC INLINE void RSI_EGPIO_PadPowerOnStartEnable(uint8_t u8GpioNum, uint8_t va
 }
 
 /**
- * @fn           STATIC INLINE void  RSI_EGPIO_PadActiveHighSchmittTrigger(uint8_t u8GpioNum ,uint8_t val)
+ * @fn           STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void  RSI_EGPIO_PadActiveHighSchmittTrigger(uint8_t u8GpioNum ,uint8_t val)
  * @brief        Active high Schmitt trigger (Hysteresis) select;
  *               \n SMT=0 for No hysteresis; Default value for reset is 1'b1 and others is 1'b0
  * @param[in]    u8GpioNum  : GPIO number to be use
  * @param[in]    val        : SMT=0 : No hysteresis; Default value for reset is 1'b1 and others is 1'b0
  * @return       None
  */
-STATIC INLINE void RSI_EGPIO_PadActiveHighSchmittTrigger(uint8_t u8GpioNum, uint8_t val)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_EGPIO_PadActiveHighSchmittTrigger(uint8_t u8GpioNum,
+                                                                                          uint8_t val)
 {
 #if defined(ROMDRIVER_PRESENT)
   ROMAPI_EGPIO_API->egpio_pad_active_high_schmitt_trigger(u8GpioNum, val);
@@ -1063,7 +1105,7 @@ STATIC INLINE void RSI_EGPIO_PadActiveHighSchmittTrigger(uint8_t u8GpioNum, uint
 }
 
 /**
- * @fn           STATIC INLINE void  RSI_EGPIO_PadSlewRateControll(uint8_t u8GpioNum ,uint8_t val)
+ * @fn           STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void  RSI_EGPIO_PadSlewRateControll(uint8_t u8GpioNum ,uint8_t val)
  * @brief        this API is used to control the slew rate
  * @param[in]    u8GpioNum  :  GPIO number to be use
  * @param[in]    val        :  slew rate
@@ -1071,7 +1113,7 @@ STATIC INLINE void RSI_EGPIO_PadActiveHighSchmittTrigger(uint8_t u8GpioNum, uint
                  \n         -  SR = 1 : Fast  ,Default 1
  * @return       None
  */
-STATIC INLINE void RSI_EGPIO_PadSlewRateControll(uint8_t u8GpioNum, uint8_t val)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_EGPIO_PadSlewRateControll(uint8_t u8GpioNum, uint8_t val)
 {
 #if defined(ROMDRIVER_PRESENT)
   ROMAPI_EGPIO_API->egpio_pad_slew_rate_controll(u8GpioNum, val);
@@ -1081,12 +1123,12 @@ STATIC INLINE void RSI_EGPIO_PadSlewRateControll(uint8_t u8GpioNum, uint8_t val)
 }
 
 /**
- * @fn           STATIC INLINE void  RSI_EGPIO_UlpPadReceiverEnable(uint8_t u8GpioNum)
+ * @fn           STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void  RSI_EGPIO_UlpPadReceiverEnable(uint8_t u8GpioNum)
  * @brief        This API is used to enable the REN for ULP
  * @param[in]    u8GpioNum   : GPIO number to be used
  * @return       None
  */
-STATIC INLINE void RSI_EGPIO_UlpPadReceiverEnable(uint8_t u8GpioNum)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_EGPIO_UlpPadReceiverEnable(uint8_t u8GpioNum)
 {
 #if defined(ROMDRIVER_PRESENT)
   ROMAPI_EGPIO_API->egpio_ulp_pad_receiver_enable(u8GpioNum);
@@ -1096,12 +1138,12 @@ STATIC INLINE void RSI_EGPIO_UlpPadReceiverEnable(uint8_t u8GpioNum)
 }
 
 /**
- * @fn           STATIC INLINE void  RSI_EGPIO_UlpPadReceiverDisable(uint8_t u8GpioNum)
+ * @fn           STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void  RSI_EGPIO_UlpPadReceiverDisable(uint8_t u8GpioNum)
  * @brief        This API is used to enable the REN for ULP
  * @param[in]    u8GpioNum   : GPIO number to be used
  * @return       None
  */
-STATIC INLINE void RSI_EGPIO_UlpPadReceiverDisable(uint8_t u8GpioNum)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_EGPIO_UlpPadReceiverDisable(uint8_t u8GpioNum)
 {
 #if defined(ROMDRIVER_PRESENT)
   ROMAPI_EGPIO_API->egpio_ulp_pad_receiver_disable(u8GpioNum);
@@ -1111,7 +1153,7 @@ STATIC INLINE void RSI_EGPIO_UlpPadReceiverDisable(uint8_t u8GpioNum)
 }
 
 /**
- * @fn           STATIC INLINE void  RSI_EGPIO_UlpPadDriverDisableState(uint8_t u8GpioNum , en_ulp_driver_disable_state_t  disablestate)
+ * @fn           STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void  RSI_EGPIO_UlpPadDriverDisableState(uint8_t u8GpioNum , en_ulp_driver_disable_state_t  disablestate)
  * @brief        This API is used to control the Driver disabled state control
  * @param[in]    u8GpioNum 		 :  GPIO number to be use
  * @param[in]    disablestate  :  the value to be passed
@@ -1122,7 +1164,9 @@ STATIC INLINE void RSI_EGPIO_UlpPadReceiverDisable(uint8_t u8GpioNum)
  *	             \n           - 3 for  \ref Repeater (P1=1,P2=1)
  * @return       None
  */
-STATIC INLINE void RSI_EGPIO_UlpPadDriverDisableState(uint8_t u8GpioNum, en_ulp_driver_disable_state_t disablestate)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_EGPIO_UlpPadDriverDisableState(
+  uint8_t u8GpioNum,
+  en_ulp_driver_disable_state_t disablestate)
 {
 #if defined(ROMDRIVER_PRESENT)
   ROMAPI_EGPIO_API->egpio_ulp_pad_driver_disable_state(u8GpioNum, disablestate);
@@ -1132,7 +1176,7 @@ STATIC INLINE void RSI_EGPIO_UlpPadDriverDisableState(uint8_t u8GpioNum, en_ulp_
 }
 
 /**
- * @fn           STATIC INLINE void  RSI_EGPIO_UlpPadDriverStrengthSelect(uint8_t u8GpioNum , en_ulp_driver_strength_select_t strength)
+ * @fn           STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void  RSI_EGPIO_UlpPadDriverStrengthSelect(uint8_t u8GpioNum , en_ulp_driver_strength_select_t strength)
  * @brief        this API is used to select Drive strength
  * @param[in]    u8GpioNum :  GPIO number to be use
  * @param[in]    strength  :  Drive strength selector(E1,E2)
@@ -1143,7 +1187,9 @@ STATIC INLINE void RSI_EGPIO_UlpPadDriverDisableState(uint8_t u8GpioNum, en_ulp_
  *               \n          -  3 for \ref twelve_milli_amps(E1=1,E2=1)
  * @return       None
  */
-STATIC INLINE void RSI_EGPIO_UlpPadDriverStrengthSelect(uint8_t u8GpioNum, en_ulp_driver_strength_select_t strength)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_EGPIO_UlpPadDriverStrengthSelect(
+  uint8_t u8GpioNum,
+  en_ulp_driver_strength_select_t strength)
 {
 #if defined(ROMDRIVER_PRESENT)
   ROMAPI_EGPIO_API->egpio_ulp_pad_driver_strength_select(u8GpioNum, strength);
@@ -1153,7 +1199,7 @@ STATIC INLINE void RSI_EGPIO_UlpPadDriverStrengthSelect(uint8_t u8GpioNum, en_ul
 }
 
 /**
- * @fn            STATIC INLINE void  RSI_EGPIO_UlpPadPowerOnStartEnable(uint8_t u8GpioNum ,uint8_t val )
+ * @fn            STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void  RSI_EGPIO_UlpPadPowerOnStartEnable(uint8_t u8GpioNum ,uint8_t val )
  * @brief         Power-on-Start enable;
  * @param[in]     u8GpioNum  :   GPIO number to be use
  * @param[in]     val        :   POS = 1 : Enables active pull down for invalid power;
@@ -1162,7 +1208,7 @@ STATIC INLINE void RSI_EGPIO_UlpPadDriverStrengthSelect(uint8_t u8GpioNum, en_ul
  *PAD is pulled to weak 0. When POS is set to 0, PAD remains in a high Z state. : Default 0
  * @return       None
  */
-STATIC INLINE void RSI_EGPIO_UlpPadPowerOnStartEnable(uint8_t u8GpioNum, uint8_t val)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_EGPIO_UlpPadPowerOnStartEnable(uint8_t u8GpioNum, uint8_t val)
 {
 #if defined(ROMDRIVER_PRESENT)
   ROMAPI_EGPIO_API->egpio_ulp_pad_power_on_start_enable(u8GpioNum, val);
@@ -1172,13 +1218,14 @@ STATIC INLINE void RSI_EGPIO_UlpPadPowerOnStartEnable(uint8_t u8GpioNum, uint8_t
 }
 
 /**
- * @fn           STATIC INLINE void  RSI_EGPIO_UlpPadActiveHighSchmittTrigger(uint8_t u8GpioNum ,uint8_t val )
+ * @fn           STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void  RSI_EGPIO_UlpPadActiveHighSchmittTrigger(uint8_t u8GpioNum ,uint8_t val )
  * @brief        Active high Schmitt trigger (Hysteresis) select;
  * @param[in]    u8GpioNum  :  GPIO number to be use
  * @param[in]    val        :  SMT=0 : No hysteresis; Default value for reset is 1'b1 and others is 1'b0
  * @return       None
  */
-STATIC INLINE void RSI_EGPIO_UlpPadActiveHighSchmittTrigger(uint8_t u8GpioNum, uint8_t val)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_EGPIO_UlpPadActiveHighSchmittTrigger(uint8_t u8GpioNum,
+                                                                                             uint8_t val)
 {
 #if defined(ROMDRIVER_PRESENT)
   ROMAPI_EGPIO_API->egpio_ulp_pad_active_high_schmitt_trigger(u8GpioNum, val);
@@ -1188,14 +1235,14 @@ STATIC INLINE void RSI_EGPIO_UlpPadActiveHighSchmittTrigger(uint8_t u8GpioNum, u
 }
 
 /**
- * @fn           STATIC INLINE void  RSI_EGPIO_UlpPadSlewRateControll(uint8_t u8GpioNum ,uint8_t val )
+ * @fn           STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void  RSI_EGPIO_UlpPadSlewRateControll(uint8_t u8GpioNum ,uint8_t val )
  * @brief        Slew Rate Control
  * @param[in]    u8GpioNum  :   GPIO number to be use
  * @param[in]    val        :   slew rate
  *               \n         -   SR = 0 : Slow (half frequency); SR = 1 for Fast , Default 1
  * @return       None
  */
-STATIC INLINE void RSI_EGPIO_UlpPadSlewRateControll(uint8_t u8GpioNum, uint8_t val)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE void RSI_EGPIO_UlpPadSlewRateControll(uint8_t u8GpioNum, uint8_t val)
 {
 #if defined(ROMDRIVER_PRESENT)
   ROMAPI_EGPIO_API->egpio_ulp_pad_slew_rate_controll(u8GpioNum, val);

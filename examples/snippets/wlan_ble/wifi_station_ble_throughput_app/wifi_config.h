@@ -40,6 +40,9 @@
 #define TLS_SERVER_PORT   443              //! Server port number of TLS client
 #define DHCP_MODE         1                //! DHCP mode 1- Enable 0- Disable
 
+//! Set to 1 to run WLAN throughput with BLE temporarily disabled (reclaim BLE memory for Wi-Fi).
+#define SL_BLE_DYNAMIC_DISABLE_THROUGHPUT_DEMO 0
+
 //! Type of throughput
 #define UDP_RX 1
 #define UDP_TX 2
@@ -71,9 +74,16 @@
 #endif
 
 #define CONTINUOUS_THROUGHPUT \
-  1                          /* Enable this only while measuring wlan alone throughput
+  1 /* Enable this only while measuring wlan alone throughput
                               1- Measure throughput for every interval of 'TEST_TIMEOUT'
                               0- Measure throughput only once for interval of 'TEST_TIMEOUT' */
+
+/* Continuous mode loops inside wlan_throughput_task(); dynamic BLE disable (second pass) is unsupported. */
+#if CONTINUOUS_THROUGHPUT
+#undef SL_BLE_DYNAMIC_DISABLE_THROUGHPUT_DEMO
+#define SL_BLE_DYNAMIC_DISABLE_THROUGHPUT_DEMO 0
+#endif
+
 #define RSI_DNS_CLIENT     0 //! Enable if using DNS client (when using server hostname instead of ip addr)
 #define TX_RX_RATIO_ENABLE 0
 #define RSI_TLS_BIT_ENABLE 0
@@ -162,5 +172,14 @@ typedef struct wlan_throughput_config_s {
 #define WIRELESS_MODE 0
 #define ENABLE_PPP    0
 #define AFE_TYPE      1
+
+#if SL_BLE_DYNAMIC_DISABLE_THROUGHPUT_DEMO
+#include "cmsis_os2.h"
+extern osMessageQueueId_t ble_disable_done_queue;
+extern osMessageQueueId_t ble_enable_done_queue;
+int32_t rsi_ble_app_request_disable(void);
+int32_t rsi_ble_app_request_enable(void);
+void rsi_wlan_init_wifi(void);
+#endif
 
 #endif

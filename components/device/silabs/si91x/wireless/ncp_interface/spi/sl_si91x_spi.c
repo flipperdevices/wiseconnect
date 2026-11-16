@@ -28,6 +28,7 @@
  *
  ******************************************************************************/
 #include "sli_wifi_utility.h"
+#include "sli_buffer_manager.h"
 #include "sl_si91x_status.h"
 #include "sl_si91x_types.h"
 #include "sl_si91x_constants.h"
@@ -39,6 +40,7 @@
 #include "sl_wifi_constants.h"
 #include "sl_constants.h"
 #include "sl_rsi_utility.h"
+#include "sli_hal_si91x.h"
 #include <stdint.h>
 #include <stddef.h>
 
@@ -72,8 +74,11 @@
   40000 //some scenarios like after firmware upgrade, it will take 40 seconds to boad ready
 #endif
 
+void sli_hal_si91x_set_rx_interrupt(void);
 sl_status_t sli_verify_device_boot(uint32_t *rom_version);
 sl_status_t sli_wifi_select_option(const uint8_t configuration);
+sl_status_t sli_si91x_req_wakeup(void);
+sl_status_t sli_hal_si91x_notify_events(uint32_t flags);
 
 /************************************************************************************
  ******************************** Static Functions *********************************
@@ -419,12 +424,14 @@ sl_status_t sli_si91x_bus_read_frame(sl_wifi_buffer_t **buffer)
   local_buffer[0] = (htole16(local_buffer[0]) - 4 + 3) & ~3;
   local_buffer[1] = htole16(local_buffer[1]) - 4;
 
-  // Allocate a buffer for the frame using sli_si91x_host_allocate_buffer
-  status = sli_si91x_host_allocate_buffer(buffer, SL_WIFI_RX_FRAME_BUFFER, local_buffer[0], 10000);
+  // Allocate packet to receive packet from module
+  status = sli_buffer_manager_allocate_buffer(SLI_BUFFER_MANAGER_CP_CMD_RX_POOL,
+                                              SLI_BUFFER_MANAGER_ALLOCATION_TYPE_HYBRID,
+                                              SLI_WIFI_ALLOCATE_COMMAND_BUFFER_WAIT_TIME,
+                                              (sli_buffer_t *)buffer);
   if (status != SL_STATUS_OK) {
     sl_si91x_host_spi_cs_deassert();
-    SL_DEBUG_LOG("\r\n HEAP EXHAUSTED DURING ALLOCATION \r\n");
-    sli_command_engine_status_queue_enqueue_and_set_event(SL_STATUS_ALLOCATION_FAILED);
+    SL_DEBUG_LOG_V2(ERROR, "HEAP EXHAUSTED DURING ALLOCATION\r\n");
     return SL_STATUS_ALLOCATION_FAILED;
   }
 
@@ -458,18 +465,26 @@ sl_status_t sli_si91x_bus_read_frame(sl_wifi_buffer_t **buffer)
 // Function for reading the interrupt status
 sl_status_t sli_si91x_bus_read_interrupt_status(uint16_t *interrupt_status)
 {
-  sl_status_t status;
+  sl_status_t status = sli_si91x_req_wakeup();
+
+  if (status != SL_STATUS_OK) {
+    SL_DEBUG_LOG_V2(ERROR, "Failed to wake up SI91X device");
+    return status; // Skip processing if wakeup failed
+  }
+
   uint32_t timestamp = sl_si91x_host_get_timestamp();
 
   do {
     // Read the interrupt register
     status = sli_si91x_bus_read_register(SLI_SPI_INT_REG_ADDR, 1, interrupt_status);
     if (status != SL_STATUS_BUSY) {
+      sl_si91x_host_clear_sleep_indicator();
       return status;
     }
     // Keep looping while the elapsed time is less than 1000 milliseconds
   } while (sl_si91x_host_elapsed_time(timestamp) < 1000);
 
+  sl_si91x_host_clear_sleep_indicator();
   // If the interrupt status cannot be read within the timeout, return a timeout
   return SL_STATUS_TIMEOUT;
 }
@@ -511,7 +526,7 @@ sl_status_t sli_si91x_bootup_firmware(const uint8_t select_option, uint8_t image
 
 sl_status_t sli_si91x_bus_rx_irq_handler(void)
 {
-  sli_wifi_set_event(SL_SI91X_NCP_HOST_BUS_RX_EVENT);
+  sli_hal_si91x_notify_events(SLI_HAL_SI91X_RX_EVENT);
   return SL_STATUS_OK;
 }
 
@@ -548,4 +563,9 @@ void sli_si91x_ulp_wakeup_init(void)
     }
   }
   sl_si91x_host_spi_cs_deassert();
+}
+
+sl_status_t sl_si91x_bus_deinit(void)
+{
+  return SL_STATUS_OK;
 }

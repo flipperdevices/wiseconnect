@@ -1,6 +1,6 @@
 /***************************************************************************/ /**
  * @file sli_event_engine.h
- * @brief
+ * @brief SLI event engine: async event dispatch thread and configuration macros.
  *******************************************************************************
  * # License
  * <b>Copyright 2025 Silicon Laboratories Inc. www.silabs.com</b>
@@ -37,8 +37,28 @@
 #include "sl_slist.h"
 #include "sli_queue_manager.h"
 
-// Event flag for Event Engine Async Event
+/** Event flag: async work pending for the event engine thread. */
 #define SLI_EVENT_ENGINE_ASYNC_EVENT (1 << 18)
+
+/**
+ * @brief CMSIS-RTOS priority for the SLI event engine worker thread.
+ *
+ * Define @c SLI_EVENT_ENGINE_THREAD_PRIORITY before including this header to override the
+ * default @c osPriorityRealtime2.
+ */
+#ifndef SLI_EVENT_ENGINE_THREAD_PRIORITY
+#define SLI_EVENT_ENGINE_THREAD_PRIORITY (osPriorityRealtime2)
+#endif
+
+/**
+ * @brief Stack size in bytes for the SLI event engine worker thread.
+ *
+ * Define @c SLI_EVENT_ENGINE_THREAD_STACK_SIZE before including this header to override the
+ * default 1536 bytes.
+ */
+#ifndef SLI_EVENT_ENGINE_THREAD_STACK_SIZE
+#define SLI_EVENT_ENGINE_THREAD_STACK_SIZE (1536)
+#endif
 
 /**
  * @typedef sli_event_engine_handler_t
@@ -96,5 +116,14 @@ sl_status_t sli_event_engine_deinit(void);
 sl_status_t sli_event_engine_register_event(sli_queue_t *event_queue,
                                             uint32_t event,
                                             sli_event_engine_handler_t handler);
+
+/**
+ * @brief Gets the thread priority of the event engine thread.
+ *
+ * This function returns the thread priority of the event engine thread.
+ *
+ * @return osPriority_t Thread priority of the event engine thread.
+ */
+osPriority_t sli_event_engine_get_thread_priority(void);
 
 #endif // SLI_ASYNC_EVENT_HANDLER_H

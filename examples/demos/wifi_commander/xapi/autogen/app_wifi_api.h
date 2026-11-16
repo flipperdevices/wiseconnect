@@ -1275,10 +1275,12 @@ typedef enum {
 
  */
 typedef enum {
-  APP_WIFI_MQTT_CLIENT_MQTT_VERSION_V3   = 0x0, /**< (0x0) MQTT protocol version
-                                                     3.0. */
-  APP_WIFI_MQTT_CLIENT_MQTT_VERSION_V3_1 = 0x1  /**< (0x1) PMQTT protocol
-                                                     version 3.1. */
+  APP_WIFI_MQTT_CLIENT_MQTT_VERSION_V3     = 0x0, /**< (0x0) MQTT protocol version
+                                                       3.0 (currently not supported). */
+  APP_WIFI_MQTT_CLIENT_MQTT_VERSION_V3_1   = 0x1, /**< (0x1) MQTT protocol version
+                                                       3.1 (currently not supported). */
+  APP_WIFI_MQTT_CLIENT_MQTT_VERSION_V3_1_1 = 0x2  /**< (0x2) MQTT protocol version
+                                                       3.1.1. */
 } app_wifi_mqtt_client_mqtt_version_t;
 
 /**
