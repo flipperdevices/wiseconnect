@@ -29,10 +29,12 @@ Before running the application, the user will need to set up the following thing
 
 - **SoC Mode**:
   - Standalone
-    - BRD4002A Wireless pro kit mainboard [SI-MB4002A]
+    - BRD4002B Wireless Pro Kit Mainboard [SI-MB4002B]
     - Radio Boards 
       - BRD4338A [SiWx917-RB4338A]
   - Kits
+    - SiWG917 Dev Kit [BRD2605A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-dk2605a-wifi-6-bluetooth-le-soc-dev-kit?tab=overview)
+    - SiWG917 Dev Kit [BRD2605B]
     - SiWx917 Pro Kit [Si917-PK6031A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-pro-kit?tab=overview)
 
 ### Software Requirements
@@ -83,7 +85,7 @@ Refer to the instructions [here](https://docs.silabs.com/wiseconnect/latest/wise
 
 1. Build the application.
 2. Flash, run and debug the application.
-3. After the application has been successfully flashed, Wi-Fi commander tool would recieve `sl_wifi_evt_system_boot` event indicating module is ready and tool can now send commands and receive the corresponding responses and events.
+3. After the application has been successfully flashed, Wi-Fi commander tool would receive `sl_wifi_evt_system_boot` event indicating module is ready and tool can now send commands and receive the corresponding responses and events.
 
 ### Evaluating with Wi-Fi Commander
 

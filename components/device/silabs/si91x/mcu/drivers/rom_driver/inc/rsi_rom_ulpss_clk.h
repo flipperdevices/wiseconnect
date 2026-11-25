@@ -67,12 +67,12 @@ extern "C" {
 #endif
 
 /**
- * @fn          STATIC INLINE rsi_error_t RSI_ULPSS_RefClkConfig(ULPSS_REF_CLK_SEL_T clkSource)
+ * @fn          STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE rsi_error_t RSI_ULPSS_RefClkConfig(ULPSS_REF_CLK_SEL_T clkSource)
  * @brief		    This API is used to select the ULPSS processor ref clk configuration
  * @param[in]	  clkSource : Enum values of clock source to select as ulp processor ref clock.Please refer #ULPSS_REF_CLK_SEL_T
  * @return 		  returns 0 \ref RSI_OK on success ,Error code on failure
  */
-STATIC INLINE rsi_error_t RSI_ULPSS_RefClkConfig(ULPSS_REF_CLK_SEL_T clkSource)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE rsi_error_t RSI_ULPSS_RefClkConfig(ULPSS_REF_CLK_SEL_T clkSource)
 {
 #if SL_WIFI_COMPONENT_INCLUDED
   if (clkSource == ULPSS_40MHZ_CLK) {
@@ -84,7 +84,7 @@ STATIC INLINE rsi_error_t RSI_ULPSS_RefClkConfig(ULPSS_REF_CLK_SEL_T clkSource)
 }
 
 /**
- * @fn          STATIC INLINE rsi_error_t RSI_ULPSS_ClockConfig(M4CLK_Type *pCLK, boolean_t clkEnable,uint16_t  divFactor,boolean_t  oddDivFactor)
+ * @fn          STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE rsi_error_t RSI_ULPSS_ClockConfig(M4CLK_Type *pCLK, boolean_t clkEnable,uint16_t  divFactor,boolean_t  oddDivFactor)
  * @brief	    	This API is used to select the ULPSS processor clock source when input is soc clk source which is greater than 100 MHz
  * @param[in]   pCLK      : Pointer to the pll register instance
  * @param[in]	  clkEnable : is to enable or disable the ulpss_soc clock
@@ -96,10 +96,10 @@ STATIC INLINE rsi_error_t RSI_ULPSS_RefClkConfig(ULPSS_REF_CLK_SEL_T clkSource)
  *              -  1 => Odd Divider is selected
  * @return 		  returns 0 \ref RSI_OK on success ,Error code on failure
  */
-STATIC INLINE rsi_error_t RSI_ULPSS_ClockConfig(M4CLK_Type *pCLK,
-                                                boolean_t clkEnable,
-                                                uint16_t divFactor,
-                                                boolean_t oddDivFactor)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE rsi_error_t RSI_ULPSS_ClockConfig(M4CLK_Type *pCLK,
+                                                                                 boolean_t clkEnable,
+                                                                                 uint16_t divFactor,
+                                                                                 boolean_t oddDivFactor)
 {
 #if defined(ULPSS_CLOCK_ROMDRIVER_PRESENT)
   return ROMAPI_ULPSS_CLK_API->ulpss_clock_config(pCLK, clkEnable, divFactor, oddDivFactor);
@@ -109,7 +109,7 @@ STATIC INLINE rsi_error_t RSI_ULPSS_ClockConfig(M4CLK_Type *pCLK,
 }
 
 /**
- * @fn          STATIC INLINE rsi_error_t RSI_ULPSS_UlpProcClkConfig(ULPCLK_Type *pULPCLK ,
+ * @fn          STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE rsi_error_t RSI_ULPSS_UlpProcClkConfig(ULPCLK_Type *pULPCLK ,
 					                                      ULP_PROC_CLK_SELECT_T  clkSource,
 				                                        uint16_t   divFactor,cdDelay delayFn)
  * @brief		    This API is used to configure the ULPSS processor clock source
@@ -124,16 +124,16 @@ STATIC INLINE rsi_error_t RSI_ULPSS_ClockConfig(M4CLK_Type *pCLK,
  *              - In order to enable the soc CLK source need to configure the Ulpss soc Clk from M4 soc clk
  *              - please refer RSI_ULPSS_ClockConfig(M4CLK_Type *pCLK,boolean_t clkEnable,uint16_t  divFactor,boolean_t  oddDivFactor);
  */
-STATIC INLINE rsi_error_t RSI_ULPSS_UlpProcClkConfig(ULPCLK_Type *pULPCLK,
-                                                     ULP_PROC_CLK_SELECT_T clkSource,
-                                                     uint16_t divFactor,
-                                                     cdDelay delayFn)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE rsi_error_t RSI_ULPSS_UlpProcClkConfig(ULPCLK_Type *pULPCLK,
+                                                                                      ULP_PROC_CLK_SELECT_T clkSource,
+                                                                                      uint16_t divFactor,
+                                                                                      cdDelay delayFn)
 {
   return ulpss_ulp_proc_clk_config(pULPCLK, clkSource, divFactor, delayFn);
 }
 
 /**
- * @fn          STATIC INLINE rsi_error_t RSI_ULPSS_UlpPeriClkEnable(ULPCLK_Type *pULPCLK , uint32_t  u32Flags)
+ * @fn          STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE rsi_error_t RSI_ULPSS_UlpPeriClkEnable(ULPCLK_Type *pULPCLK , uint32_t  u32Flags)
  * @brief		    This API is used to enable different pheriheral clocks in ULPSS
  * @param[in]   pULPCLK   : Pointer to the ulp clock register instance
  * @param[in]	  u32Flags : Ored value of the clock enable bits of particular peripheral
@@ -166,7 +166,8 @@ STATIC INLINE rsi_error_t RSI_ULPSS_UlpProcClkConfig(ULPCLK_Type *pULPCLK,
  *               - \ref PCM_ENABLE
  * @return 		returns 0 \ref RSI_OK on success ,Error code on failure
  */
-STATIC INLINE rsi_error_t RSI_ULPSS_UlpPeriClkEnable(ULPCLK_Type *pULPCLK, uint32_t u32Flags)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE rsi_error_t RSI_ULPSS_UlpPeriClkEnable(ULPCLK_Type *pULPCLK,
+                                                                                      uint32_t u32Flags)
 {
 #if defined(ULPSS_CLOCK_ROMDRIVER_PRESENT)
   return ROMAPI_ULPSS_CLK_API->ulpss_ulp_peri_clk_enable(pULPCLK, u32Flags);
@@ -176,7 +177,7 @@ STATIC INLINE rsi_error_t RSI_ULPSS_UlpPeriClkEnable(ULPCLK_Type *pULPCLK, uint3
 }
 
 /**
- * @fn          STATIC INLINE rsi_error_t RSI_ULPSS_UlpPeriClkDisable(ULPCLK_Type *pULPCLK , uint32_t  u32Flags)
+ * @fn          STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE rsi_error_t RSI_ULPSS_UlpPeriClkDisable(ULPCLK_Type *pULPCLK , uint32_t  u32Flags)
  * @brief		    This API is used to disable different peripheral clocks in ULPSS
  * @param[in]   pULPCLK  : Pointer to the ulp clock register instance
  * @param[in]	  u32Flags is to Ored value of the clock enable bits of particular peripheral
@@ -209,7 +210,8 @@ STATIC INLINE rsi_error_t RSI_ULPSS_UlpPeriClkEnable(ULPCLK_Type *pULPCLK, uint3
  *               - \ref PCM_ENABLE
  * @return 		returns 0 \ref RSI_OK on success ,Error code on failure
  */
-STATIC INLINE rsi_error_t RSI_ULPSS_UlpPeriClkDisable(ULPCLK_Type *pULPCLK, uint32_t u32Flags)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE rsi_error_t RSI_ULPSS_UlpPeriClkDisable(ULPCLK_Type *pULPCLK,
+                                                                                       uint32_t u32Flags)
 {
 #if defined(ULPSS_CLOCK_ROMDRIVER_PRESENT)
   return ROMAPI_ULPSS_CLK_API->ulpss_ulp_peri_clk_disable(pULPCLK, u32Flags);
@@ -218,7 +220,7 @@ STATIC INLINE rsi_error_t RSI_ULPSS_UlpPeriClkDisable(ULPCLK_Type *pULPCLK, uint
 #endif
 }
 /**
- * @fn          STATIC INLINE rsi_error_t RSI_ULPSS_UlpDynClkEnable(ULPCLK_Type *pULPCLK , uint32_t  u32Flags)
+ * @fn          STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE rsi_error_t RSI_ULPSS_UlpDynClkEnable(ULPCLK_Type *pULPCLK , uint32_t  u32Flags)
  * @brief		    This API is used to enable different peripheral clocks in ULPSS
  * @param[in]   pULPCLK   : Pointer to the ulp clock register instance
  * @param[in]	  u32Flags : Ored value of the clock enable bits of particular peripheral
@@ -251,7 +253,8 @@ STATIC INLINE rsi_error_t RSI_ULPSS_UlpPeriClkDisable(ULPCLK_Type *pULPCLK, uint
  *               - \ref PCM_ENABLE
  * @return 		  returns 0 \ref RSI_OK on success ,Error code on failure
  */
-STATIC INLINE rsi_error_t RSI_ULPSS_UlpDynClkEnable(ULPCLK_Type *pULPCLK, uint32_t u32Flags)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE rsi_error_t RSI_ULPSS_UlpDynClkEnable(ULPCLK_Type *pULPCLK,
+                                                                                     uint32_t u32Flags)
 {
 #if defined(ULPSS_CLOCK_ROMDRIVER_PRESENT)
   return ROMAPI_ULPSS_CLK_API->ulpss_ulp_dyn_clk_enable(pULPCLK, u32Flags);
@@ -260,7 +263,7 @@ STATIC INLINE rsi_error_t RSI_ULPSS_UlpDynClkEnable(ULPCLK_Type *pULPCLK, uint32
 #endif
 }
 /**
- * @fn          STATIC INLINE rsi_error_t RSI_ULPSS_UlpDynClkDisable(ULPCLK_Type *pULPCLK , uint32_t  u32Flags)
+ * @fn          STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE rsi_error_t RSI_ULPSS_UlpDynClkDisable(ULPCLK_Type *pULPCLK , uint32_t  u32Flags)
  * @brief		    This API is used to disable different peripheral clocks in ULPSS
  * @param[in]   pULPCLK   : Pointer to the ulp clock register instance
  * @param[in]	  u32Flags : is to Ored value of the clock enable bits of particular peripheral
@@ -293,7 +296,8 @@ STATIC INLINE rsi_error_t RSI_ULPSS_UlpDynClkEnable(ULPCLK_Type *pULPCLK, uint32
  *               - \ref PCM_ENABLE
  * @return 		  returns 0 \ref RSI_OK on success ,Error code on failure
  */
-STATIC INLINE rsi_error_t RSI_ULPSS_UlpDynClkDisable(ULPCLK_Type *pULPCLK, uint32_t u32Flags)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE rsi_error_t RSI_ULPSS_UlpDynClkDisable(ULPCLK_Type *pULPCLK,
+                                                                                      uint32_t u32Flags)
 {
 #if defined(ULPSS_CLOCK_ROMDRIVER_PRESENT)
   return ROMAPI_ULPSS_CLK_API->ulpss_ulp_dyn_clk_disable(pULPCLK, u32Flags);
@@ -303,7 +307,7 @@ STATIC INLINE rsi_error_t RSI_ULPSS_UlpDynClkDisable(ULPCLK_Type *pULPCLK, uint3
 }
 
 /**
- * @fn          STATIC INLINE rsi_error_t RSI_ULPSS_UlpSsiClkConfig(ULPCLK_Type *pULPCLK ,CLK_ENABLE_T clkType    ,
+ * @fn          STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE rsi_error_t RSI_ULPSS_UlpSsiClkConfig(ULPCLK_Type *pULPCLK ,CLK_ENABLE_T clkType    ,
 						          ULP_SSI_CLK_SELECT_T clkSource,
 								   uint16_t divFactor)
  * @brief	    	This API is used to configure the SSI clock source
@@ -323,10 +327,10 @@ STATIC INLINE rsi_error_t RSI_ULPSS_UlpDynClkDisable(ULPCLK_Type *pULPCLK, uint3
  *              - please refer \ref RSI_ULPSS_ClockConfig(M4CLK_Type *pCLK,boolean_t clkEnable,uint16_t  divFactor,boolean_t  oddDivFactor);
  */
 
-STATIC INLINE rsi_error_t RSI_ULPSS_UlpSsiClkConfig(ULPCLK_Type *pULPCLK,
-                                                    CLK_ENABLE_T clkType,
-                                                    ULP_SSI_CLK_SELECT_T clkSource,
-                                                    uint16_t divFactor)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE rsi_error_t RSI_ULPSS_UlpSsiClkConfig(ULPCLK_Type *pULPCLK,
+                                                                                     CLK_ENABLE_T clkType,
+                                                                                     ULP_SSI_CLK_SELECT_T clkSource,
+                                                                                     uint16_t divFactor)
 {
 #if defined(ULPSS_CLOCK_ROMDRIVER_PRESENT)
   return ROMAPI_ULPSS_CLK_API->ulpss_ulp_ssi_clk_config(pULPCLK, clkType, clkSource, divFactor);
@@ -336,7 +340,7 @@ STATIC INLINE rsi_error_t RSI_ULPSS_UlpSsiClkConfig(ULPCLK_Type *pULPCLK,
 }
 
 /**
- * @fn          STATIC INLINE rsi_error_t RSI_ULPSS_UlpI2sClkConfig(ULPCLK_Type *pULPCLK,
+ * @fn          STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE rsi_error_t RSI_ULPSS_UlpI2sClkConfig(ULPCLK_Type *pULPCLK,
                                    ULP_I2S_CLK_SELECT_T clkSource ,
 	                               uint16_t divFactor)
  * @brief		    This API is used to configure the I2S clock source
@@ -356,9 +360,9 @@ STATIC INLINE rsi_error_t RSI_ULPSS_UlpSsiClkConfig(ULPCLK_Type *pULPCLK,
  *             - In order to enable the soc CLK source need to configure the Ulpss soc Clk from M4 soc clk
  *             - please refer RSI_ULPSS_ClockConfig(M4CLK_Type *pCLK,boolean_t clkEnable,uint16_t  divFactor,boolean_t  oddDivFactor);
  */
-STATIC INLINE rsi_error_t RSI_ULPSS_UlpI2sClkConfig(ULPCLK_Type *pULPCLK,
-                                                    ULP_I2S_CLK_SELECT_T clkSource,
-                                                    uint16_t divFactor)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE rsi_error_t RSI_ULPSS_UlpI2sClkConfig(ULPCLK_Type *pULPCLK,
+                                                                                     ULP_I2S_CLK_SELECT_T clkSource,
+                                                                                     uint16_t divFactor)
 {
 #if defined(ULPSS_CLOCK_ROMDRIVER_PRESENT)
   return ROMAPI_ULPSS_CLK_API->ulpss_ulp_i2s_clk_config(pULPCLK, clkSource, divFactor);
@@ -368,7 +372,7 @@ STATIC INLINE rsi_error_t RSI_ULPSS_UlpI2sClkConfig(ULPCLK_Type *pULPCLK,
 }
 
 /**
- * @fn          STATIC INLINE rsi_error_t RSI_ULPSS_UlpUartClkConfig(ULPCLK_Type *pULPCLK,CLK_ENABLE_T clkType,
+ * @fn          STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE rsi_error_t RSI_ULPSS_UlpUartClkConfig(ULPCLK_Type *pULPCLK,CLK_ENABLE_T clkType,
 	                                boolean_t bFrClkSel,ULP_UART_CLK_SELECT_T clkSource ,
 	                                uint16_t divFactor)
  * @brief		    This API is used to configure the UART clock source
@@ -390,11 +394,11 @@ STATIC INLINE rsi_error_t RSI_ULPSS_UlpI2sClkConfig(ULPCLK_Type *pULPCLK,
  *               - In order to enable the soc CLK source need to configure the Ulpss soc Clk from M4 soc clk
  *               - please refer RSI_ULPSS_ClockConfig(M4CLK_Type *pCLK,boolean_t clkEnable,uint16_t  divFactor,boolean_t  oddDivFactor);
  */
-STATIC INLINE rsi_error_t RSI_ULPSS_UlpUartClkConfig(ULPCLK_Type *pULPCLK,
-                                                     CLK_ENABLE_T clkType,
-                                                     boolean_t bFrClkSel,
-                                                     ULP_UART_CLK_SELECT_T clkSource,
-                                                     uint16_t divFactor)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE rsi_error_t RSI_ULPSS_UlpUartClkConfig(ULPCLK_Type *pULPCLK,
+                                                                                      CLK_ENABLE_T clkType,
+                                                                                      boolean_t bFrClkSel,
+                                                                                      ULP_UART_CLK_SELECT_T clkSource,
+                                                                                      uint16_t divFactor)
 {
 #if defined(ULPSS_CLOCK_ROMDRIVER_PRESENT)
   return ROMAPI_ULPSS_CLK_API->ulpss_ulp_uar_clk_config(pULPCLK, clkType, bFrClkSel, clkSource, divFactor);
@@ -403,7 +407,7 @@ STATIC INLINE rsi_error_t RSI_ULPSS_UlpUartClkConfig(ULPCLK_Type *pULPCLK,
 #endif
 }
 /**
- * @fn           STATIC INLINE rsi_error_t RSI_ULPSS_TimerClkConfig(ULPCLK_Type *pULPCLK ,CLK_ENABLE_T  clkType,
+ * @fn           STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE rsi_error_t RSI_ULPSS_TimerClkConfig(ULPCLK_Type *pULPCLK ,CLK_ENABLE_T  clkType,
 		                                          boolean_t bTmrSync ,ULP_TIMER_CLK_SELECT_T clkSource,
 	 	                                          uint8_t   skipSwitchTime)
  * @brief		     This API is used to configure the timer clock source
@@ -428,11 +432,11 @@ STATIC INLINE rsi_error_t RSI_ULPSS_UlpUartClkConfig(ULPCLK_Type *pULPCLK,
  *               - In order to enable the soc CLK source need to configure the Ulpss soc Clk from M4 soc clk
  *               - please refer RSI_ULPSS_ClockConfig(M4CLK_Type *pCLK,boolean_t clkEnable,uint16_t  divFactor,boolean_t  oddDivFactor);
  */
-STATIC INLINE rsi_error_t RSI_ULPSS_TimerClkConfig(ULPCLK_Type *pULPCLK,
-                                                   CLK_ENABLE_T clkType,
-                                                   boolean_t bTmrSync,
-                                                   ULP_TIMER_CLK_SELECT_T clkSource,
-                                                   uint8_t skipSwitchTime)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE rsi_error_t RSI_ULPSS_TimerClkConfig(ULPCLK_Type *pULPCLK,
+                                                                                    CLK_ENABLE_T clkType,
+                                                                                    boolean_t bTmrSync,
+                                                                                    ULP_TIMER_CLK_SELECT_T clkSource,
+                                                                                    uint8_t skipSwitchTime)
 {
 #if defined(ULPSS_CLOCK_ROMDRIVER_PRESENT)
   return ROMAPI_ULPSS_CLK_API->ulpss_time_clk_config(pULPCLK, clkType, bTmrSync, clkSource, skipSwitchTime);
@@ -442,12 +446,12 @@ STATIC INLINE rsi_error_t RSI_ULPSS_TimerClkConfig(ULPCLK_Type *pULPCLK,
 }
 
 /**
- * @fn           STATIC INLINE rsi_error_t RSI_ULPSS_TimerClkDisable(ULPCLK_Type *pULPCLK )
+ * @fn           STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE rsi_error_t RSI_ULPSS_TimerClkDisable(ULPCLK_Type *pULPCLK )
  * @brief		     This API is used to disable  the timer clock source
  * @param[in]    pULPCLK       : Pointer to the ulp clock register instance
  * @return 		   returns 0 \ref RSI_OK on success ,Error code on failure
  */
-STATIC INLINE rsi_error_t RSI_ULPSS_TimerClkDisable(ULPCLK_Type *pULPCLK)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE rsi_error_t RSI_ULPSS_TimerClkDisable(ULPCLK_Type *pULPCLK)
 {
 #if defined(CHIP_9118) && defined(A11_ROM) && defined(ULPSS_CLOCK_ROMDRIVER_PRESENT)
   return ROMAPI_ULPSS_CLK_API->ulpss_time_clk_disable(pULPCLK);
@@ -457,7 +461,7 @@ STATIC INLINE rsi_error_t RSI_ULPSS_TimerClkDisable(ULPCLK_Type *pULPCLK)
 }
 
 /**
- * @fn           STATIC INLINE rsi_error_t RSI_ULPSS_AuxClkConfig(ULPCLK_Type *pULPCLK ,
+ * @fn           STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE rsi_error_t RSI_ULPSS_AuxClkConfig(ULPCLK_Type *pULPCLK ,
 														CLK_ENABLE_T clkType,
 												 ULP_AUX_CLK_SELECT_T clkSource
 														)
@@ -478,9 +482,9 @@ STATIC INLINE rsi_error_t RSI_ULPSS_TimerClkDisable(ULPCLK_Type *pULPCLK)
  *               - In order to enable the soc CLK source need to configure the Ulpss soc Clk from M4 soc clk
  *               - please refer RSI_ULPSS_ClockConfig(M4CLK_Type *pCLK,boolean_t clkEnable,uint16_t  divFactor,boolean_t  oddDivFactor);
  */
-STATIC INLINE rsi_error_t RSI_ULPSS_AuxClkConfig(ULPCLK_Type *pULPCLK,
-                                                 CLK_ENABLE_T clkType,
-                                                 ULP_AUX_CLK_SELECT_T clkSource)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE rsi_error_t RSI_ULPSS_AuxClkConfig(ULPCLK_Type *pULPCLK,
+                                                                                  CLK_ENABLE_T clkType,
+                                                                                  ULP_AUX_CLK_SELECT_T clkSource)
 {
 #if defined(ULPSS_CLOCK_ROMDRIVER_PRESENT)
   return ROMAPI_ULPSS_CLK_API->ulpss_aux_clk_config(pULPCLK, clkType, clkSource);
@@ -490,7 +494,7 @@ STATIC INLINE rsi_error_t RSI_ULPSS_AuxClkConfig(ULPCLK_Type *pULPCLK,
 }
 
 /**
- * @fn           STATIC INLINE rsi_error_t RSI_ULPSS_VadClkConfig(ULPCLK_Type *pULPCLK  ,
+ * @fn           STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE rsi_error_t RSI_ULPSS_VadClkConfig(ULPCLK_Type *pULPCLK  ,
 													 ULP_VAD_CLK_SELECT_T clkSource  ,
 													 ULP_VAD_FCLK_SELECT_T  FclkSource ,
 													 uint16_t divFactor)
@@ -515,10 +519,10 @@ STATIC INLINE rsi_error_t RSI_ULPSS_AuxClkConfig(ULPCLK_Type *pULPCLK,
  *                - In order to enable the  ulpss processor clock source need to configure the
  *		            - RSI_ULPSS_UlpProcClkConfig(ULPCLK_Type *pULPCLK ,boolean_t clkEnable,uint8_t clkSource,uint16_t divFactor,delayMs cbDelay )
  */
-STATIC INLINE rsi_error_t RSI_ULPSS_VadClkConfig(ULPCLK_Type *pULPCLK,
-                                                 ULP_VAD_CLK_SELECT_T clkSource,
-                                                 ULP_VAD_FCLK_SELECT_T FclkSource,
-                                                 uint16_t divFactor)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE rsi_error_t RSI_ULPSS_VadClkConfig(ULPCLK_Type *pULPCLK,
+                                                                                  ULP_VAD_CLK_SELECT_T clkSource,
+                                                                                  ULP_VAD_FCLK_SELECT_T FclkSource,
+                                                                                  uint16_t divFactor)
 {
 #if defined(ULPSS_CLOCK_ROMDRIVER_PRESENT)
   return ROMAPI_ULPSS_CLK_API->ulpss_vad_clk_config(pULPCLK, clkSource, FclkSource, divFactor);
@@ -527,7 +531,7 @@ STATIC INLINE rsi_error_t RSI_ULPSS_VadClkConfig(ULPCLK_Type *pULPCLK,
 #endif
 }
 /**
- * @fn           STATIC INLINE rsi_error_t RSI_ULPSS_TouchClkConfig(ULPCLK_Type *pULPCLK ,ULP_TOUCH_CLK_SELECT_T clkSource ,
+ * @fn           STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE rsi_error_t RSI_ULPSS_TouchClkConfig(ULPCLK_Type *pULPCLK ,ULP_TOUCH_CLK_SELECT_T clkSource ,
 															 uint16_t divFactor )
  * @brief		     This API is used to configure the Touch clock source
  * @param[in]    pULPCLK    : Pointer to the ulp clock register instance
@@ -544,9 +548,9 @@ STATIC INLINE rsi_error_t RSI_ULPSS_VadClkConfig(ULPCLK_Type *pULPCLK,
  *               - In order to enable the soc CLK source need to configure the Ulpss soc Clk from M4 soc clk
  *               - please refer RSI_ULPSS_ClockConfig(M4CLK_Type *pCLK,boolean_t clkEnable,uint16_t  divFactor,boolean_t  oddDivFactor);
  */
-STATIC INLINE rsi_error_t RSI_ULPSS_TouchClkConfig(ULPCLK_Type *pULPCLK,
-                                                   ULP_TOUCH_CLK_SELECT_T clkSource,
-                                                   uint16_t divFactor)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE rsi_error_t RSI_ULPSS_TouchClkConfig(ULPCLK_Type *pULPCLK,
+                                                                                    ULP_TOUCH_CLK_SELECT_T clkSource,
+                                                                                    uint16_t divFactor)
 {
 #if defined(ULPSS_CLOCK_ROMDRIVER_PRESENT)
   return ROMAPI_ULPSS_CLK_API->ulpss_touch_clk_config(pULPCLK, clkSource, divFactor);
@@ -555,7 +559,7 @@ STATIC INLINE rsi_error_t RSI_ULPSS_TouchClkConfig(ULPCLK_Type *pULPCLK,
 #endif
 }
 /**
- * @fn          STATIC INLINE rsi_error_t RSI_ULPSS_SlpSensorClkConfig(ULPCLK_Type *pULPCLK , boolean_t clkEnable ,uint32_t divFactor)
+ * @fn          STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE rsi_error_t RSI_ULPSS_SlpSensorClkConfig(ULPCLK_Type *pULPCLK , boolean_t clkEnable ,uint32_t divFactor)
  * @brief		    This API is used to configure the sleep sensor clock source
  * @param[in]   pULPCLK    : Pointer to the ulp clock register instance
  * @param[in]	  clkEnable : To enable or disable the sleep sensor clock
@@ -566,7 +570,9 @@ STATIC INLINE rsi_error_t RSI_ULPSS_TouchClkConfig(ULPCLK_Type *pULPCLK,
  * @note        In order to enable the XTAL CLK source need to configure the NPSS_GPIO pins
  *   	          - which can be done through RSI_CLK_XtalClkConfig(uint8_t xtalPin) API that is we need to call that API first
  */
-STATIC INLINE rsi_error_t RSI_ULPSS_SlpSensorClkConfig(ULPCLK_Type *pULPCLK, boolean_t clkEnable, uint32_t divFactor)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE rsi_error_t RSI_ULPSS_SlpSensorClkConfig(ULPCLK_Type *pULPCLK,
+                                                                                        boolean_t clkEnable,
+                                                                                        uint32_t divFactor)
 {
 #if defined(ULPSS_CLOCK_ROMDRIVER_PRESENT)
   return ROMAPI_ULPSS_CLK_API->ulpss_slp_sensor_clk_config(pULPCLK, clkEnable, divFactor);
@@ -576,7 +582,7 @@ STATIC INLINE rsi_error_t RSI_ULPSS_SlpSensorClkConfig(ULPCLK_Type *pULPCLK, boo
 }
 
 /**
- * @fn          STATIC INLINE rsi_error_t RSI_ULPSS_PeripheralEnable(ULPCLK_Type *pULPCLK,
+ * @fn          STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE rsi_error_t RSI_ULPSS_PeripheralEnable(ULPCLK_Type *pULPCLK,
                                                     ULPPERIPHERALS_CLK_T module,CLK_ENABLE_T clkType)
  * @brief		    This API is used to enable the particular ULP peripherial Clock
  * @param[in]   pULPCLK  : Pointer to the ulp clock register instance
@@ -584,9 +590,9 @@ STATIC INLINE rsi_error_t RSI_ULPSS_SlpSensorClkConfig(ULPCLK_Type *pULPCLK, boo
  * @param[in]   clkType :To select the clock as dynamic or static clock. See the #CLK_ENABLE_T for more info
  * @return 		  returns 0 \ref RSI_OK on success ,Error code on failure
  */
-STATIC INLINE rsi_error_t RSI_ULPSS_PeripheralEnable(ULPCLK_Type *pULPCLK,
-                                                     ULPPERIPHERALS_CLK_T module,
-                                                     CLK_ENABLE_T clkType)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE rsi_error_t RSI_ULPSS_PeripheralEnable(ULPCLK_Type *pULPCLK,
+                                                                                      ULPPERIPHERALS_CLK_T module,
+                                                                                      CLK_ENABLE_T clkType)
 {
 #if defined(ULPSS_CLOCK_ROMDRIVER_PRESENT)
   return ROMAPI_ULPSS_CLK_API->ulpss_peripheral_enable(pULPCLK, module, clkType);
@@ -595,13 +601,14 @@ STATIC INLINE rsi_error_t RSI_ULPSS_PeripheralEnable(ULPCLK_Type *pULPCLK,
 #endif
 }
 /**
- * @fn          STATIC INLINE rsi_error_t RSI_ULPSS_PeripheralDisable(ULPCLK_Type *pULPCLK, ULPPERIPHERALS_CLK_T module)
+ * @fn          STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE rsi_error_t RSI_ULPSS_PeripheralDisable(ULPCLK_Type *pULPCLK, ULPPERIPHERALS_CLK_T module)
  * @brief		    This API is used to Disable the particular ULP peripherial Clock
  * @param[in]   pULPCLK : Pointer to the ulp clock register instance
  * @param[in]  	module : To select particular ulp pheripheral. \ref ULPPERIPHERALS_DISABLE_T for more info.
  * @return 		  returns 0 \ref RSI_OK on success ,Error code on failure
  */
-STATIC INLINE rsi_error_t RSI_ULPSS_PeripheralDisable(ULPCLK_Type *pULPCLK, ULPPERIPHERALS_CLK_T module)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE rsi_error_t RSI_ULPSS_PeripheralDisable(ULPCLK_Type *pULPCLK,
+                                                                                       ULPPERIPHERALS_CLK_T module)
 {
 #if defined(ULPSS_CLOCK_ROMDRIVER_PRESENT)
   return ROMAPI_ULPSS_CLK_API->ulpss_peripheral_disable(pULPCLK, module);
@@ -610,67 +617,74 @@ STATIC INLINE rsi_error_t RSI_ULPSS_PeripheralDisable(ULPCLK_Type *pULPCLK, ULPP
 #endif
 }
 
-STATIC INLINE rsi_error_t RSI_ULPSS_RefClkConfig(ULPSS_REF_CLK_SEL_T clkSource);
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE rsi_error_t RSI_ULPSS_RefClkConfig(ULPSS_REF_CLK_SEL_T clkSource);
 
-STATIC INLINE rsi_error_t RSI_ULPSS_ClockConfig(M4CLK_Type *pCLK,
-                                                boolean_t clkEnable,
-                                                uint16_t divFactor,
-                                                boolean_t oddDivFactor);
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE rsi_error_t RSI_ULPSS_ClockConfig(M4CLK_Type *pCLK,
+                                                                                 boolean_t clkEnable,
+                                                                                 uint16_t divFactor,
+                                                                                 boolean_t oddDivFactor);
 
-STATIC INLINE rsi_error_t RSI_ULPSS_UlpProcClkConfig(ULPCLK_Type *pULPCLK,
-                                                     ULP_PROC_CLK_SELECT_T clkSource,
-                                                     uint16_t divFactor,
-                                                     cdDelay delayFn);
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE rsi_error_t RSI_ULPSS_UlpProcClkConfig(ULPCLK_Type *pULPCLK,
+                                                                                      ULP_PROC_CLK_SELECT_T clkSource,
+                                                                                      uint16_t divFactor,
+                                                                                      cdDelay delayFn);
 
-STATIC INLINE rsi_error_t RSI_ULPSS_UlpPeriClkEnable(ULPCLK_Type *pULPCLK, uint32_t u32Flags);
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE rsi_error_t RSI_ULPSS_UlpPeriClkEnable(ULPCLK_Type *pULPCLK,
+                                                                                      uint32_t u32Flags);
 
-STATIC INLINE rsi_error_t RSI_ULPSS_UlpPeriClkDisable(ULPCLK_Type *pULPCLK, uint32_t u32Flags);
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE rsi_error_t RSI_ULPSS_UlpPeriClkDisable(ULPCLK_Type *pULPCLK,
+                                                                                       uint32_t u32Flags);
 
-STATIC INLINE rsi_error_t RSI_ULPSS_UlpDynClkEnable(ULPCLK_Type *pULPCLK, uint32_t u32Flags);
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE rsi_error_t RSI_ULPSS_UlpDynClkEnable(ULPCLK_Type *pULPCLK,
+                                                                                     uint32_t u32Flags);
 
-STATIC INLINE rsi_error_t RSI_ULPSS_UlpDynClkDisable(ULPCLK_Type *pULPCLK, uint32_t u32Flags);
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE rsi_error_t RSI_ULPSS_UlpDynClkDisable(ULPCLK_Type *pULPCLK,
+                                                                                      uint32_t u32Flags);
 
-STATIC INLINE rsi_error_t RSI_ULPSS_UlpSsiClkConfig(ULPCLK_Type *pULPCLK,
-                                                    CLK_ENABLE_T clkType,
-                                                    ULP_SSI_CLK_SELECT_T clkSource,
-                                                    uint16_t divFactor);
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE rsi_error_t RSI_ULPSS_UlpSsiClkConfig(ULPCLK_Type *pULPCLK,
+                                                                                     CLK_ENABLE_T clkType,
+                                                                                     ULP_SSI_CLK_SELECT_T clkSource,
+                                                                                     uint16_t divFactor);
 
-STATIC INLINE rsi_error_t RSI_ULPSS_UlpI2sClkConfig(ULPCLK_Type *pULPCLK,
-                                                    ULP_I2S_CLK_SELECT_T clkSource,
-                                                    uint16_t divFactor);
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE rsi_error_t RSI_ULPSS_UlpI2sClkConfig(ULPCLK_Type *pULPCLK,
+                                                                                     ULP_I2S_CLK_SELECT_T clkSource,
+                                                                                     uint16_t divFactor);
 
-STATIC INLINE rsi_error_t RSI_ULPSS_UlpUartClkConfig(ULPCLK_Type *pULPCLK,
-                                                     CLK_ENABLE_T clkType,
-                                                     boolean_t bFrClkSel,
-                                                     ULP_UART_CLK_SELECT_T clkSource,
-                                                     uint16_t divFactor);
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE rsi_error_t RSI_ULPSS_UlpUartClkConfig(ULPCLK_Type *pULPCLK,
+                                                                                      CLK_ENABLE_T clkType,
+                                                                                      boolean_t bFrClkSel,
+                                                                                      ULP_UART_CLK_SELECT_T clkSource,
+                                                                                      uint16_t divFactor);
 
-STATIC INLINE rsi_error_t RSI_ULPSS_TimerClkConfig(ULPCLK_Type *pULPCLK,
-                                                   CLK_ENABLE_T clkType,
-                                                   boolean_t bTmrSync,
-                                                   ULP_TIMER_CLK_SELECT_T clkSource,
-                                                   uint8_t skipSwitchTime);
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE rsi_error_t RSI_ULPSS_TimerClkConfig(ULPCLK_Type *pULPCLK,
+                                                                                    CLK_ENABLE_T clkType,
+                                                                                    boolean_t bTmrSync,
+                                                                                    ULP_TIMER_CLK_SELECT_T clkSource,
+                                                                                    uint8_t skipSwitchTime);
 
-STATIC INLINE rsi_error_t RSI_ULPSS_AuxClkConfig(ULPCLK_Type *pULPCLK,
-                                                 CLK_ENABLE_T clkType,
-                                                 ULP_AUX_CLK_SELECT_T clkSource);
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE rsi_error_t RSI_ULPSS_AuxClkConfig(ULPCLK_Type *pULPCLK,
+                                                                                  CLK_ENABLE_T clkType,
+                                                                                  ULP_AUX_CLK_SELECT_T clkSource);
 
-STATIC INLINE rsi_error_t RSI_ULPSS_VadClkConfig(ULPCLK_Type *pULPCLK,
-                                                 ULP_VAD_CLK_SELECT_T clkSource,
-                                                 ULP_VAD_FCLK_SELECT_T FclkSource,
-                                                 uint16_t divFactor);
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE rsi_error_t RSI_ULPSS_VadClkConfig(ULPCLK_Type *pULPCLK,
+                                                                                  ULP_VAD_CLK_SELECT_T clkSource,
+                                                                                  ULP_VAD_FCLK_SELECT_T FclkSource,
+                                                                                  uint16_t divFactor);
 
-STATIC INLINE rsi_error_t RSI_ULPSS_TouchClkConfig(ULPCLK_Type *pULPCLK,
-                                                   ULP_TOUCH_CLK_SELECT_T clkSource,
-                                                   uint16_t divFactor);
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE rsi_error_t RSI_ULPSS_TouchClkConfig(ULPCLK_Type *pULPCLK,
+                                                                                    ULP_TOUCH_CLK_SELECT_T clkSource,
+                                                                                    uint16_t divFactor);
 
-STATIC INLINE rsi_error_t RSI_ULPSS_SlpSensorClkConfig(ULPCLK_Type *pULPCLK, boolean_t clkEnable, uint32_t divFactor);
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE rsi_error_t RSI_ULPSS_SlpSensorClkConfig(ULPCLK_Type *pULPCLK,
+                                                                                        boolean_t clkEnable,
+                                                                                        uint32_t divFactor);
 
-STATIC INLINE rsi_error_t RSI_ULPSS_PeripheralEnable(ULPCLK_Type *pULPCLK,
-                                                     ULPPERIPHERALS_CLK_T module,
-                                                     CLK_ENABLE_T clkType);
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE rsi_error_t RSI_ULPSS_PeripheralEnable(ULPCLK_Type *pULPCLK,
+                                                                                      ULPPERIPHERALS_CLK_T module,
+                                                                                      CLK_ENABLE_T clkType);
 
-STATIC INLINE rsi_error_t RSI_ULPSS_PeripheralDisable(ULPCLK_Type *pULPCLK, ULPPERIPHERALS_CLK_T module);
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE rsi_error_t RSI_ULPSS_PeripheralDisable(ULPCLK_Type *pULPCLK,
+                                                                                       ULPPERIPHERALS_CLK_T module);
 
 #ifdef __cplusplus
 }

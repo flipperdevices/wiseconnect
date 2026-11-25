@@ -1,18 +1,24 @@
 project_name: ble_throughput_app_uart_ncp
 package: bluetooth_le_siwx91x_app
 quality: production
-label: BLE - Throughput (UART NCP)
+label: BLE - UART NCP Throughput FreeRTOS
 category: Example|BLE
-description: 'This application demonstrates how to exchange continuous data to the remote  device to measure the On-Air Throughput using a BLE Sniffer.
+description: 'Demonstrates BLE on-air throughput by exchanging continuous data on SiWx91x over UART NCP with FreeRTOS. Demonstrated by sustained transfers measurable with a sniffer.
 
   '
 filter:
 - name: Wireless Technology
   value:
   - BLE
+- name: Device Type
+  value:
+  - NCP
 - name: Project Difficulty
   value:
   - Beginner
+- name: Quality
+  value:
+  - Production
 source:
 - path: app.c
 include:
@@ -41,12 +47,17 @@ component:
 - id: network_manager
 - id: basic_network_config_manager
 - id: ble
-- id: sl_si91x_mem_pool_buffers_with_quota
+- id: log_none
+- id: log_backend_iostream
+- id: log_backend_iostream_formatted
+- id: log_platform_specific
 toolchain_settings:
 - option: gcc_linker_option
   value: -u _printf_float
 - option: gcc_compiler_option
-  value: -Wall -Werror
+  value: -Wall -Werror -Wno-error=deprecated-declarations
+- option: llvm_compiler_option
+  value: -Wall -Werror -Wno-error=deprecated-declarations
 configuration:
 - name: SL_BOARD_ENABLE_VCOM
   value: '1'
@@ -56,6 +67,8 @@ configuration:
   value: '51200'
 - name: configTIMER_TASK_PRIORITY
   value: '55'
+- name: SL_LOG_CONFIG_LEVEL_COMPILE_TIME
+  value: SL_LOG_CONFIG_LEVEL_INFO
 readme:
 - path: readme.md
 other_file:
@@ -75,8 +88,8 @@ ui_hints:
 sdk_extension:
 - id: wiseconnect3_sdk
   vendor: silabs
-  version: 4.0.1
+  version: 4.1.2
 sdk:
   id: simplicity_sdk
   vendor: silabs
-  version: 2025.12.2
+  version: 2026.6.2

@@ -58,10 +58,16 @@ void mic_init(void)
   status = sl_si91x_mic_init(sampling_frequency, MIC_N_CHANNELS);
   if (status != SL_STATUS_OK) {
     // Print error message if mic initialization fails
-    DEBUGOUT("Microphone initialization failed");
+    /* Note: All status messages in this example — both success and failure — are
+ * intentionally emitted via SL_PRINT_STRING_ERROR so that they remain visible
+ * on the console at the default log level. This is a demonstration choice, not
+ * a recommendation: in production code, ERROR severity should be reserved for
+ * actual failures, with successful operations logged via SL_PRINT_STRING_INFO
+ * (or SL_PRINT_STRING_DEBUG for verbose trace). */
+    SL_PRINT_STRING_ERROR("Microphone initialization failed");
     return;
   } else {
-    DEBUGOUT("Microphone initialized successfully.\r\n");
+    SL_PRINT_STRING_ERROR("Microphone initialized successfully.\r\n");
   }
 }
 
@@ -77,7 +83,7 @@ void mic_process_action(void)
   status = sl_si91x_mic_get_n_samples(buffer, MIC_SAMPLE_BUFFER_SIZE);
   if (status != SL_STATUS_OK) {
     // Print error message if sample retrieval fails
-    DEBUGOUT("Failed to retrieve microphone samples");
+    SL_PRINT_STRING_ERROR("Failed to retrieve microphone samples");
   }
 
   while (!sl_si91x_mic_sample_buffer_ready()) {
@@ -88,9 +94,17 @@ void mic_process_action(void)
   sl_si91x_mic_calculate_sound_level(&spl_0, (int32_t *)buffer, MIC_SAMPLE_BUFFER_SIZE, 0);
   if (n_channels == 2) {
     sl_si91x_mic_calculate_sound_level(&spl_1, (int32_t *)buffer, MIC_SAMPLE_BUFFER_SIZE, 1);
-    DEBUGOUT("Sound level [dB]: %.2f %.2f \r\n", spl_0, spl_1);
+    if (status != SL_STATUS_OK) {
+      SL_PRINT_STRING_ERROR("Failed to calculate sound level");
+    } else {
+      SL_PRINT_STRING_ERROR("Sound level [dB]: %.2f %.2f \r\n", spl_0, spl_1);
+    }
   } else {
-    DEBUGOUT("Sound level [dB]: %.2f \r\n", spl_0);
+    if (status != SL_STATUS_OK) {
+      SL_PRINT_STRING_ERROR("Failed to calculate sound level");
+    } else {
+      SL_PRINT_STRING_ERROR("Sound level [dB]: %.2f \r\n", spl_0);
+    }
   }
 
   // Stop the microphone from capturing further audio

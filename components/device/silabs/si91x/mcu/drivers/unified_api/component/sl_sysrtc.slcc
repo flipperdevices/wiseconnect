@@ -29,8 +29,6 @@ provides:
 requires:
   - name: udma_linker_config
   - name: rsilib_sysrtc
+  - name: log_none
 conflicts:
   - name: sleeptimer_si91x
-documentation:
-    docset: wiseconnect
-    document: wiseconnect-api-reference-guide-si91x-peripherals/sysrtc

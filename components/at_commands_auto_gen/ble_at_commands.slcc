@@ -11,6 +11,9 @@ component_root_path: ./components/at_commands_auto_gen
 provides:
   - name: ble_at_commands
 
+source:
+  - path: ble_commands_compat.c
+
 template_contribution:
   - name: console_commands
     value:
@@ -18,16 +21,12 @@ template_contribution:
         handler: coex_mode_command_handler
         arguments:
           - "uint16"  # coex-mode
-      net-info:
-        handler: net_info_command_handler
-        arguments:
-          - "uint8"   # interface
       91x-ble-enable-gatt:
         handler: ble_enable_gatt_command_handler
         arguments:
           - "uint8"   # enable-gatt
       91x-ble-max-per:
-        handler: ble_max_per_command_handler
+        handler: ble_max_peripherals_command_handler
         arguments:
           - "uint8"   # max-peripherals
       91x-ble-max-cent:

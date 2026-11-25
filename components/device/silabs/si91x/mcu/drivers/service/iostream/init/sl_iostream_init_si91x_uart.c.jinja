@@ -1,3 +1,4 @@
+// IO Stream UART instance initialization for SiWx91x (generated template).
 #if defined(SL_COMPONENT_CATALOG_PRESENT)
 #include "sl_component_catalog.h"
 #endif
@@ -48,11 +49,19 @@ sl_status_t sl_iostream_uart_91x_init_vcom(void)
     .rx_buffer_length = SL_IOSTREAM_USART_{{ instance | upper}}_RX_BUFFER_SIZE,
     .lf_to_crlf = SL_IOSTREAM_USART_{{ instance | upper }}_CONVERT_BY_DEFAULT_LF_TO_CRLF, 
   };
+
+  sl_iostream_usart_config_t usart_config_vcom = {
+    .tx_pin = 0,
+    .rx_pin = 0,
+    .cts_pin = 0,
+    .rts_pin = 0,
+    .rx_timeout = 0,
+  };
   // Instantiate usart instance {# Initialize usart instance #}
   status = sl_iostream_usart_init(&sl_iostream_vcom,
                                   &uart_config_vcom,
                                   &init_vcom,
-                                  NULL,
+                                  &usart_config_vcom,
                                   &context_vcom);
   EFM_ASSERT(status == SL_STATUS_OK);
 

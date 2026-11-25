@@ -100,6 +100,8 @@ sl_status_t sl_si91x_gspi_configure_clock(sl_gspi_clock_config_t *clock_configur
     // returns an error code
     if (clock_configuration == NULL) {
       status = SL_STATUS_NULL_POINTER;
+      SL_PRINT_STRING_ERROR("sl_si91x_gspi_configure_clock: clock_configuration is NULL,line no : %d\r\n",
+                            (int)__LINE__);
       break;
     }
   } while (false);
@@ -123,16 +125,25 @@ sl_status_t sl_si91x_gspi_init(sl_gspi_instance_t instance, sl_gspi_handle_t *gs
   do {
     // To validate status of GSPI, if already enabled, returns error code.
     if (GSPI_GetInitState() == ENABLE) {
+      SL_PRINT_STRING_ERROR("sl_si91x_gspi_init: GSPI is already enabled st=0x%04lX,line no : %d\r\n",
+                            (unsigned long)SL_STATUS_BUSY,
+                            (int)__LINE__);
       status = SL_STATUS_BUSY;
       break;
     }
     if (gspi_handle == NULL) {
       status = SL_STATUS_NULL_POINTER;
+      SL_PRINT_STRING_ERROR("sl_si91x_gspi_init: gspi_handle is NULL st=0x%04lX,line no : %d\r\n",
+                            (unsigned long)SL_STATUS_NULL_POINTER,
+                            (int)__LINE__);
       break;
     }
     // To validate the structure pointer and gspi handle, if the parameters is NULL, it
     // returns an error code
     if (*gspi_handle != NULL) {
+      SL_PRINT_STRING_ERROR("sl_si91x_gspi_init: gspi_handle is not NULL st=0x%04lX,line no : %d\r\n",
+                            (unsigned long)SL_STATUS_INVALID_PARAMETER,
+                            (int)__LINE__);
       status = SL_STATUS_INVALID_PARAMETER;
       break;
     }
@@ -140,12 +151,19 @@ sl_status_t sl_si91x_gspi_init(sl_gspi_instance_t instance, sl_gspi_handle_t *gs
     status = get_gspi_handle(instance, &gspi_temp_handle);
     // If the status is not equal to SL_STATUS_OK, returns error code.
     if (status != SL_STATUS_OK) {
+      SL_PRINT_STRING_ERROR("sl_si91x_gspi_init: get_gspi_handle failed st=0x%04lX,line no : %d\r\n",
+                            (unsigned long)status,
+                            (int)__LINE__);
       break;
     }
     *gspi_handle = gspi_temp_handle;
     // Validate the GSPI handle address, if incorrect returns error code
     if (*gspi_handle != gspi_temp_handle) {
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR(
+        "sl_si91x_gspi_init: gspi_handle is not equal to gspi_temp_handle st=0x%04lX,line no : %d\r\n",
+        (unsigned long)SL_STATUS_INVALID_PARAMETER,
+        (int)__LINE__);
       break;
     }
     // CMSIS API for initialization is called with the function address of
@@ -154,11 +172,19 @@ sl_status_t sl_si91x_gspi_init(sl_gspi_instance_t instance, sl_gspi_handle_t *gs
     error_status = ((sl_gspi_driver_t *)gspi_temp_handle)->Initialize(callback_event_handler);
     status       = convert_arm_to_sl_error_code(error_status);
     if (status != SL_STATUS_OK) {
+      SL_PRINT_STRING_ERROR("sl_si91x_gspi_init: Initialize failed st=0x%04lX,line no : %d\r\n",
+                            (unsigned long)status,
+                            (int)__LINE__);
       return status;
     }
     // Configuration of power mode
     status = sli_si91x_gspi_configure_power_mode(gspi_temp_handle, SL_GSPI_FULL_POWER);
   } while (false);
+  if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si91x_gspi_init: failed st=0x%04lX,line no : %d\r\n",
+                          (unsigned long)status,
+                          (int)__LINE__);
+  }
   return status;
 }
 
@@ -175,11 +201,17 @@ sl_status_t sl_si91x_gspi_deinit(sl_gspi_handle_t gspi_handle)
     // To validate the gspi handle, if the parameters is NULL, it
     // returns an error code
     if (gspi_handle == NULL) {
+      SL_PRINT_STRING_ERROR("sl_si91x_gspi_deinit: gspi_handle is NULL st=0x%04lX,line no : %d\r\n",
+                            (unsigned long)SL_STATUS_NULL_POINTER,
+                            (int)__LINE__);
       status = SL_STATUS_NULL_POINTER;
       break;
     }
     // Validate the GSPI handle address, if incorrect returns error code
     if (!validate_gspi_handle(gspi_handle)) {
+      SL_PRINT_STRING_ERROR("sl_si91x_gspi_deinit: gspi_handle is invalid st=0x%04lX,line no : %d\r\n",
+                            (unsigned long)SL_STATUS_INVALID_PARAMETER,
+                            (int)__LINE__);
       status = SL_STATUS_INVALID_PARAMETER;
       break;
     }
@@ -190,6 +222,11 @@ sl_status_t sl_si91x_gspi_deinit(sl_gspi_handle_t gspi_handle)
     error_status = ((sl_gspi_driver_t *)gspi_handle)->Uninitialize();
     status       = convert_arm_to_sl_error_code(error_status);
   } while (false);
+  if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si91x_gspi_deinit: failed st=0x%04lX,line no : %d\r\n",
+                          (unsigned long)status,
+                          (int)__LINE__);
+  }
   return status;
 }
 
@@ -209,16 +246,25 @@ static sl_status_t sli_si91x_gspi_configure_power_mode(sl_gspi_handle_t gspi_han
     // Validates the null pointer, if results true,
     // returns error code.
     if (gspi_handle == NULL) {
+      SL_PRINT_STRING_ERROR("sli_si91x_gspi_configure_power_mode: gspi_handle is NULL st=0x%04lX,line no : %d\r\n",
+                            (unsigned long)SL_STATUS_NULL_POINTER,
+                            (int)__LINE__);
       status = SL_STATUS_NULL_POINTER;
       break;
     }
     // Validates the power mode, if it is greater than POWER_MODE_LAST, returns error code.
     if (state >= SL_GSPI_POWER_MODE_LAST) {
+      SL_PRINT_STRING_ERROR("sli_si91x_gspi_configure_power_mode: state is invalid st=0x%04lX,line no : %d\r\n",
+                            (unsigned long)SL_STATUS_INVALID_PARAMETER,
+                            (int)__LINE__);
       status = SL_STATUS_INVALID_PARAMETER;
       break;
     }
     // Validate the GSPI handle address, if incorrect returns error code
     if (!validate_gspi_handle(gspi_handle)) {
+      SL_PRINT_STRING_ERROR("sli_si91x_gspi_configure_power_mode: gspi_handle is invalid st=0x%04lX,line no : %d\r\n",
+                            (unsigned long)SL_STATUS_INVALID_PARAMETER,
+                            (int)__LINE__);
       status = SL_STATUS_INVALID_PARAMETER;
       break;
     }
@@ -227,6 +273,11 @@ static sl_status_t sli_si91x_gspi_configure_power_mode(sl_gspi_handle_t gspi_han
     error_status = ((sl_gspi_driver_t *)gspi_handle)->PowerControl((ARM_POWER_STATE)state);
     status       = convert_arm_to_sl_error_code(error_status);
   } while (false);
+  if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sli_si91x_gspi_configure_power_mode: failed st=0x%04lX,line no : %d\r\n",
+                          (unsigned long)status,
+                          (int)__LINE__);
+  }
   return status;
 }
 
@@ -261,11 +312,18 @@ sl_status_t sl_si91x_gspi_set_configuration(sl_gspi_handle_t gspi_handle,
     // returns an error code
     if ((control_configuration == NULL) || (gspi_handle == NULL)) {
       status = SL_STATUS_NULL_POINTER;
+      SL_PRINT_STRING_ERROR(
+        "sl_si91x_gspi_set_configuration: control_configuration or gspi_handle is NULL st=0x%04lX,line no : %d\r\n",
+        (unsigned long)SL_STATUS_NULL_POINTER,
+        (int)__LINE__);
       break;
     }
     // Validate the GSPI handle address, if incorrect returns error code
     if (!validate_gspi_handle(gspi_handle)) {
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR("sl_si91x_gspi_set_configuration: gspi_handle is invalid st=0x%04lX,line no : %d\r\n",
+                            (unsigned long)SL_STATUS_INVALID_PARAMETER,
+                            (int)__LINE__);
       break;
     }
     // By doing 'OR' operations and validations, it builds one uint32_t integer which is
@@ -273,6 +331,10 @@ sl_status_t sl_si91x_gspi_set_configuration(sl_gspi_handle_t gspi_handle,
     status = validate_control_parameters(control_configuration);
     // If the status is not equal to SL_STATUS_OK, returns error code.
     if (status != SL_STATUS_OK) {
+      SL_PRINT_STRING_ERROR(
+        "sl_si91x_gspi_set_configuration: validate_control_parameters failed st=0x%04lX,line no : %d\r\n",
+        (unsigned long)status,
+        (int)__LINE__);
       break;
     }
     if (control_configuration->bit_width == MAX_BIT_WIDTH) {
@@ -286,6 +348,9 @@ sl_status_t sl_si91x_gspi_set_configuration(sl_gspi_handle_t gspi_handle,
     error_status = ((sl_gspi_driver_t *)gspi_handle)->Control(input_mode, control_configuration->bitrate);
     status       = convert_arm_to_sl_error_code(error_status);
     if (status != SL_STATUS_OK) {
+      SL_PRINT_STRING_ERROR("sl_si91x_gspi_set_configuration: Control failed st=0x%04lX,line no : %d\r\n",
+                            (unsigned long)status,
+                            (int)__LINE__);
       break;
     }
     // Updating the registers according to the value of swap read and write.
@@ -299,6 +364,11 @@ sl_status_t sl_si91x_gspi_set_configuration(sl_gspi_handle_t gspi_handle,
       GSPI_WriteDummyByte();
     }
   } while (false);
+  if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si91x_gspi_set_configuration: failed st=0x%04lX,line no : %d\r\n",
+                          (unsigned long)status,
+                          (int)__LINE__);
+  }
   return status;
 }
 
@@ -323,16 +393,25 @@ sl_status_t sl_si91x_gspi_receive_data(sl_gspi_handle_t gspi_handle, void *data,
     // Validate the GSPI handle address, if incorrect returns error code
     if (!validate_gspi_handle(gspi_handle)) {
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR("sl_si91x_gspi_receive_data: gspi_handle is invalid st=0x%04lX,line no : %d\r\n",
+                            (unsigned long)SL_STATUS_INVALID_PARAMETER,
+                            (int)__LINE__);
       break;
     }
     // If data_length is not in range, it returns an error code
     if ((data_length == MIN_DATA_LENGTH) || (data_length > MAX_READ_SIZE)) {
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR("sl_si91x_gspi_receive_data: data_length is not in range st=0x%04lX,line no : %d\r\n",
+                            (unsigned long)SL_STATUS_INVALID_PARAMETER,
+                            (int)__LINE__);
       break;
     }
     // It calls the API to enable to slave gpio.
     status = set_slave_gpio_state(gspi_handle, ENABLE);
     if (status != SL_STATUS_OK) {
+      SL_PRINT_STRING_ERROR("sl_si91x_gspi_receive_data: set_slave_gpio_state failed st=0x%04lX,line no : %d\r\n",
+                            (unsigned long)status,
+                            (int)__LINE__);
       break;
     }
     // CMSIS API for receiving data is called and the arm error code returned from
@@ -341,6 +420,11 @@ sl_status_t sl_si91x_gspi_receive_data(sl_gspi_handle_t gspi_handle, void *data,
     error_status = ((sl_gspi_driver_t *)gspi_handle)->Receive(data, data_length);
     status       = convert_arm_to_sl_error_code(error_status);
   } while (false);
+  if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si91x_gspi_receive_data: failed st=0x%04lX,line no : %d\r\n",
+                          (unsigned long)status,
+                          (int)__LINE__);
+  }
   return status;
 }
 
@@ -365,21 +449,36 @@ sl_status_t sl_si91x_gspi_receive_data_blocking(sl_gspi_handle_t gspi_handle,
     // Validate pointers, if any parameter is NULL, return error code
     if ((data == NULL) || (gspi_handle == NULL)) {
       status = SL_STATUS_NULL_POINTER;
+      SL_PRINT_STRING_ERROR(
+        "sl_si91x_gspi_receive_data_blocking: data or gspi_handle is NULL st=0x%04lX,line no : %d\r\n",
+        (unsigned long)SL_STATUS_NULL_POINTER,
+        (int)__LINE__);
       break;
     }
     // Validate the GSPI handle address, if incorrect return error code
     if (!validate_gspi_handle(gspi_handle)) {
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR("sl_si91x_gspi_receive_data_blocking: gspi_handle is invalid st=0x%04lX,line no : %d\r\n",
+                            (unsigned long)SL_STATUS_INVALID_PARAMETER,
+                            (int)__LINE__);
       break;
     }
     // If data_length is not in range, return error code
     if ((data_length == MIN_DATA_LENGTH) || (data_length > MAX_READ_SIZE)) {
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR(
+        "sl_si91x_gspi_receive_data_blocking: data_length is not in range st=0x%04lX,line no : %d\r\n",
+        (unsigned long)SL_STATUS_INVALID_PARAMETER,
+        (int)__LINE__);
       break;
     }
     // Enable slave select GPIO
     status = GSPI_MASTER_SetSlaveSelectGPIOState(ENABLE);
     if (status != SL_STATUS_OK) {
+      SL_PRINT_STRING_ERROR(
+        "sl_si91x_gspi_receive_data_blocking: SetSlaveSelectGPIOState failed st=0x%04lX,line no : %d\r\n",
+        (unsigned long)status,
+        (int)__LINE__);
       break;
     }
     // Receive data in blocking mode and convert ARM error code to SL error code
@@ -388,9 +487,18 @@ sl_status_t sl_si91x_gspi_receive_data_blocking(sl_gspi_handle_t gspi_handle,
     // Disable slave select GPIO
     if (GSPI_MASTER_SetSlaveSelectGPIOState(DISABLE) != SL_STATUS_OK) {
       status = SL_STATUS_FAIL;
+      SL_PRINT_STRING_ERROR(
+        "sl_si91x_gspi_receive_data_blocking: SetSlaveSelectGPIOState failed st=0x%04lX,line no : %d\r\n",
+        (unsigned long)status,
+        (int)__LINE__);
       break;
     }
   } while (false);
+  if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si91x_gspi_receive_data_blocking: failed st=0x%04lX,line no : %d\r\n",
+                          (unsigned long)status,
+                          (int)__LINE__);
+  }
   return status;
 }
 
@@ -409,21 +517,33 @@ sl_status_t sl_si91x_gspi_send_data(sl_gspi_handle_t gspi_handle, const void *da
     // To validate pointers, if the parameters is NULL, it returns an error code
     if ((data == NULL) || (gspi_handle == NULL)) {
       status = SL_STATUS_NULL_POINTER;
+      SL_PRINT_STRING_ERROR("sl_si91x_gspi_send_data: data or gspi_handle is NULL st=0x%04lX,line no : %d\r\n",
+                            (unsigned long)SL_STATUS_NULL_POINTER,
+                            (int)__LINE__);
       break;
     }
     // Validate the GSPI handle address, if incorrect returns error code
     if (!validate_gspi_handle(gspi_handle)) {
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR("sl_si91x_gspi_send_data: gspi_handle is invalid st=0x%04lX,line no : %d\r\n",
+                            (unsigned long)SL_STATUS_INVALID_PARAMETER,
+                            (int)__LINE__);
       break;
     }
     // Validates the data length parameter, if zero then returns error code
     if (data_length == MIN_DATA_LENGTH) {
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR("sl_si91x_gspi_send_data: data_length is not in range st=0x%04lX,line no : %d\r\n",
+                            (unsigned long)SL_STATUS_INVALID_PARAMETER,
+                            (int)__LINE__);
       break;
     }
     // It calls the API to enable to slave gpio.
     status = set_slave_gpio_state(gspi_handle, ENABLE);
     if (status != SL_STATUS_OK) {
+      SL_PRINT_STRING_ERROR("sl_si91x_gspi_send_data: set_slave_gpio_state failed st=0x%04lX,line no : %d\r\n",
+                            (unsigned long)status,
+                            (int)__LINE__);
       break;
     }
     // CMSIS API for sending data is called and the arm error code returned from
@@ -431,6 +551,11 @@ sl_status_t sl_si91x_gspi_send_data(sl_gspi_handle_t gspi_handle, const void *da
     error_status = ((sl_gspi_driver_t *)gspi_handle)->Send(data, data_length);
     status       = convert_arm_to_sl_error_code(error_status);
   } while (false);
+  if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si91x_gspi_send_data: failed st=0x%04lX,line no : %d\r\n",
+                          (unsigned long)status,
+                          (int)__LINE__);
+  }
   return status;
 }
 
@@ -454,21 +579,34 @@ sl_status_t sl_si91x_gspi_send_data_blocking(sl_gspi_handle_t gspi_handle,
     // Validate pointers, if any parameter is NULL, return error code
     if ((data == NULL) || (gspi_handle == NULL)) {
       status = SL_STATUS_NULL_POINTER;
+      SL_PRINT_STRING_ERROR("sl_si91x_gspi_send_data_blocking: data or gspi_handle is NULL st=0x%04lX,line no : %d\r\n",
+                            (unsigned long)SL_STATUS_NULL_POINTER,
+                            (int)__LINE__);
       break;
     }
     // Validate the GSPI handle address, if incorrect return error code
     if (!validate_gspi_handle(gspi_handle)) {
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR("sl_si91x_gspi_send_data_blocking: gspi_handle is invalid st=0x%04lX,line no : %d\r\n",
+                            (unsigned long)SL_STATUS_INVALID_PARAMETER,
+                            (int)__LINE__);
       break;
     }
     // Validate data_length, if zero return error code
     if (data_length == MIN_DATA_LENGTH) {
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR("sl_si91x_gspi_send_data_blocking: data_length is not in range st=0x%04lX,line no : %d\r\n",
+                            (unsigned long)SL_STATUS_INVALID_PARAMETER,
+                            (int)__LINE__);
       break;
     }
     // Enable slave select GPIO
     status = GSPI_MASTER_SetSlaveSelectGPIOState(ENABLE);
     if (status != SL_STATUS_OK) {
+      SL_PRINT_STRING_ERROR(
+        "sl_si91x_gspi_send_data_blocking: SetSlaveSelectGPIOState failed st=0x%04lX,line no : %d\r\n",
+        (unsigned long)status,
+        (int)__LINE__);
       break;
     }
     // Send data in blocking mode and convert ARM error code to SL error code
@@ -477,14 +615,23 @@ sl_status_t sl_si91x_gspi_send_data_blocking(sl_gspi_handle_t gspi_handle,
     // Disable slave select GPIO
     if (GSPI_MASTER_SetSlaveSelectGPIOState(DISABLE) != SL_STATUS_OK) {
       status = SL_STATUS_FAIL;
+      SL_PRINT_STRING_ERROR(
+        "sl_si91x_gspi_send_data_blocking: SetSlaveSelectGPIOState failed st=0x%04lX,line no : %d\r\n",
+        (unsigned long)status,
+        (int)__LINE__);
       break;
     }
   } while (false);
+  if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si91x_gspi_send_data_blocking: failed st=0x%04lX,line no : %d\r\n",
+                          (unsigned long)status,
+                          (int)__LINE__);
+  }
   return status;
 }
 
 /*******************************************************************************
- * Sends and recieves the data to the slave device simultaneously
+ * Sends and receives the data to the slave device simultaneously
  * It takes three arguments, 
  *   - data_in: pointer to the data buffer which stores the received data
  *   - data_out: pointer to the data buffer which stores the data that needs to 
@@ -503,21 +650,34 @@ sl_status_t sl_si91x_gspi_transfer_data(sl_gspi_handle_t gspi_handle,
     // To validate pointers, if the parameters is NULL, it returns an error code
     if ((data_in == NULL) || (data_out == NULL) || (gspi_handle == NULL)) {
       status = SL_STATUS_NULL_POINTER;
+      SL_PRINT_STRING_ERROR(
+        "sl_si91x_gspi_transfer_data: data_in or data_out or gspi_handle is NULL st=0x%04lX,line no : %d\r\n",
+        (unsigned long)SL_STATUS_NULL_POINTER,
+        (int)__LINE__);
       break;
     }
     // Validate the GSPI handle address, if incorrect returns error code
     if (!validate_gspi_handle(gspi_handle)) {
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR("sl_si91x_gspi_transfer_data: gspi_handle is invalid st=0x%04lX,line no : %d\r\n",
+                            (unsigned long)SL_STATUS_INVALID_PARAMETER,
+                            (int)__LINE__);
       break;
     }
     // Validates the data length parameter, if zero returns error code
     if (data_length == MIN_DATA_LENGTH) {
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR("sl_si91x_gspi_transfer_data: data_length is not in range st=0x%04lX,line no : %d\r\n",
+                            (unsigned long)SL_STATUS_INVALID_PARAMETER,
+                            (int)__LINE__);
       break;
     }
     // It calls the API to enable to slave gpio.
     status = set_slave_gpio_state(gspi_handle, ENABLE);
     if (status != SL_STATUS_OK) {
+      SL_PRINT_STRING_ERROR("sl_si91x_gspi_transfer_data: set_slave_gpio_state failed st=0x%04lX,line no : %d\r\n",
+                            (unsigned long)status,
+                            (int)__LINE__);
       break;
     }
     // CMSIS API for transfering data is called and the arm error code returned from
@@ -526,6 +686,11 @@ sl_status_t sl_si91x_gspi_transfer_data(sl_gspi_handle_t gspi_handle,
     error_status = ((sl_gspi_driver_t *)gspi_handle)->Transfer(data_out, data_in, data_length);
     status       = convert_arm_to_sl_error_code(error_status);
   } while (false);
+  if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si91x_gspi_transfer_data: failed st=0x%04lX,line no : %d\r\n",
+                          (unsigned long)status,
+                          (int)__LINE__);
+  }
   return status;
 }
 
@@ -551,21 +716,36 @@ sl_status_t sl_si91x_gspi_transfer_data_blocking(sl_gspi_handle_t gspi_handle,
     // Validate pointers, if any parameter is NULL, return error code
     if ((data_in == NULL) || (data_out == NULL) || (gspi_handle == NULL)) {
       status = SL_STATUS_NULL_POINTER;
+      SL_PRINT_STRING_ERROR(
+        "sl_si91x_gspi_transfer_data_blocking: data_in or data_out or gspi_handle is NULL st=0x%04lX,line no : %d\r\n",
+        (unsigned long)SL_STATUS_NULL_POINTER,
+        (int)__LINE__);
       break;
     }
     // Validate the GSPI handle address, if incorrect return error code
     if (!validate_gspi_handle(gspi_handle)) {
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR("sl_si91x_gspi_transfer_data_blocking: gspi_handle is invalid st=0x%04lX,line no : %d\r\n",
+                            (unsigned long)SL_STATUS_INVALID_PARAMETER,
+                            (int)__LINE__);
       break;
     }
     // Validate data_length, if zero return error code
     if (data_length == MIN_DATA_LENGTH) {
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR(
+        "sl_si91x_gspi_transfer_data_blocking: data_length is not in range st=0x%04lX,line no : %d\r\n",
+        (unsigned long)SL_STATUS_INVALID_PARAMETER,
+        (int)__LINE__);
       break;
     }
     // Enable slave select GPIO
     status = GSPI_MASTER_SetSlaveSelectGPIOState(ENABLE);
     if (status != SL_STATUS_OK) {
+      SL_PRINT_STRING_ERROR(
+        "sl_si91x_gspi_transfer_data_blocking: SetSlaveSelectGPIOState failed st=0x%04lX,line no : %d\r\n",
+        (unsigned long)status,
+        (int)__LINE__);
       break;
     }
     // Transfer data in blocking mode and convert ARM error code to SL error code
@@ -574,9 +754,18 @@ sl_status_t sl_si91x_gspi_transfer_data_blocking(sl_gspi_handle_t gspi_handle,
     // Disable slave select GPIO
     if (GSPI_MASTER_SetSlaveSelectGPIOState(DISABLE) != SL_STATUS_OK) {
       status = SL_STATUS_FAIL;
+      SL_PRINT_STRING_ERROR(
+        "sl_si91x_gspi_transfer_data_blocking: SetSlaveSelectGPIOState failed st=0x%04lX,line no : %d\r\n",
+        (unsigned long)status,
+        (int)__LINE__);
       break;
     }
   } while (false);
+  if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si91x_gspi_transfer_data_blocking: failed st=0x%04lX,line no : %d\r\n",
+                          (unsigned long)status,
+                          (int)__LINE__);
+  }
   return status;
 }
 
@@ -593,11 +782,17 @@ sl_status_t sl_si91x_gspi_set_master_state(sl_gspi_handle_t gspi_handle, boolean
     // Validates the null pointer, if true returns error code
     if (gspi_handle == NULL) {
       status = SL_STATUS_NULL_POINTER;
+      SL_PRINT_STRING_ERROR("sl_si91x_gspi_set_master_state: gspi_handle is NULL st=0x%04lX,line no : %d\r\n",
+                            (unsigned long)SL_STATUS_NULL_POINTER,
+                            (int)__LINE__);
       break;
     }
     // Validate the GSPI handle address, if incorrect returns error code
     if (!validate_gspi_handle(gspi_handle)) {
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR("sl_si91x_gspi_set_master_state: gspi_handle is invalid st=0x%04lX,line no : %d\r\n",
+                            (unsigned long)SL_STATUS_INVALID_PARAMETER,
+                            (int)__LINE__);
       break;
     }
     if (value == ENABLE) {
@@ -608,6 +803,9 @@ sl_status_t sl_si91x_gspi_set_master_state(sl_gspi_handle_t gspi_handle, boolean
       // The arm error code returned from  the API is converted to SL error code
       // via convert_arm_to_sl_error_code function.
       status = convert_arm_to_sl_error_code(error_status);
+      SL_PRINT_STRING_ERROR("sl_si91x_gspi_set_master_state: Control failed st=0x%04lX,line no : %d\r\n",
+                            (unsigned long)status,
+                            (int)__LINE__);
       break;
     }
     // If the value is disable, it calls the CMSIS API control to set the
@@ -617,7 +815,13 @@ sl_status_t sl_si91x_gspi_set_master_state(sl_gspi_handle_t gspi_handle, boolean
     // The arm error code returned from  the API is converted to SL error code
     // via convert_arm_to_sl_error_code function.
     status = convert_arm_to_sl_error_code(error_status);
+
   } while (false);
+  if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si91x_gspi_set_master_state: failed st=0x%04lX,line no : %d\r\n",
+                          (unsigned long)status,
+                          (int)__LINE__);
+  }
   return status;
 }
 
@@ -637,17 +841,28 @@ sl_status_t sl_si91x_gspi_register_event_callback(sl_gspi_handle_t gspi_handle, 
     // Validates the null pointer, if true returns error code
     if ((gspi_handle == NULL) || (callback_event == NULL)) {
       status = SL_STATUS_NULL_POINTER;
+      SL_PRINT_STRING_ERROR(
+        "sl_si91x_gspi_register_event_callback: gspi_handle or callback_event is NULL st=0x%04lX,line no : %d\r\n",
+        (unsigned long)SL_STATUS_NULL_POINTER,
+        (int)__LINE__);
       break;
     }
     // Validate the GSPI handle address, if incorrect returns error code
     if (!validate_gspi_handle(gspi_handle)) {
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR("sl_si91x_gspi_register_event_callback: gspi_handle is invalid st=0x%04lX,line no : %d\r\n",
+                            (unsigned long)SL_STATUS_INVALID_PARAMETER,
+                            (int)__LINE__);
       break;
     }
     // To validate the function pointer if the parameters is not NULL then, it
     // returns an error code
     if ((user_callback != NULL) || (local_gspi_handle != NULL)) {
       status = SL_STATUS_BUSY;
+      SL_PRINT_STRING_ERROR(
+        "sl_si91x_gspi_register_event_callback: callback is already registered st=0x%04lX,line no : %d\r\n",
+        (unsigned long)SL_STATUS_BUSY,
+        (int)__LINE__);
       break;
     }
     // User callback address is passed to the static variable which is called at the time of
@@ -657,6 +872,11 @@ sl_status_t sl_si91x_gspi_register_event_callback(sl_gspi_handle_t gspi_handle, 
     // Returns SL_STATUS_OK if callback is successfully registered
     status = SL_STATUS_OK;
   } while (false);
+  if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si91x_gspi_register_event_callback: failed st=0x%04lX,line no : %d\r\n",
+                          (unsigned long)status,
+                          (int)__LINE__);
+  }
   return status;
 }
 
@@ -752,6 +972,9 @@ static sl_status_t set_slave_gpio_state(sl_gspi_handle_t gspi_handle, boolean_t 
   do {
     if (gspi_handle == NULL) {
       status = SL_STATUS_NULL_POINTER;
+      SL_PRINT_STRING_ERROR("set_slave_gpio_state: gspi_handle is NULL st=0x%04lX,line no : %d\r\n",
+                            (unsigned long)SL_STATUS_NULL_POINTER,
+                            (int)__LINE__);
       break;
     }
     // Validate the GSPI handle address, if incorrect returns error code
@@ -766,6 +989,12 @@ static sl_status_t set_slave_gpio_state(sl_gspi_handle_t gspi_handle, boolean_t 
       // The arm error code returned from  the API is converted to SL error code
       // via convert_arm_to_sl_error_code function.
       status = convert_arm_to_sl_error_code(error_status);
+      if (status != SL_STATUS_OK) {
+        SL_PRINT_STRING_ERROR("set_slave_gpio_state: Control failed st=0x%04lX,line no : %d\r\n",
+                              (unsigned long)status,
+                              (int)__LINE__);
+        break;
+      }
       break;
     }
     // If the value is disable, it calls the CMSIS API control to set the
@@ -775,6 +1004,11 @@ static sl_status_t set_slave_gpio_state(sl_gspi_handle_t gspi_handle, boolean_t 
     // via convert_arm_to_sl_error_code function.
     status = convert_arm_to_sl_error_code(error_status);
   } while (false);
+  if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("set_slave_gpio_state: failed st=0x%04lX,line no : %d\r\n",
+                          (unsigned long)status,
+                          (int)__LINE__);
+  }
   return status;
 }
 
@@ -850,23 +1084,36 @@ static sl_status_t validate_control_parameters(sl_gspi_control_config_t *control
     // Validates the bitrate, if it is greater than maximum bitrate, returns error code.
     if (control_configuration->bitrate > MAX_BITRATE) {
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR(
+        "validate_control_parameters: bitrate is greater than maximum bitrate st=0x%04lX,line no : %d\r\n",
+        (unsigned long)SL_STATUS_INVALID_PARAMETER,
+        (int)__LINE__);
       break;
     }
     // If the mode is neither 0 nor 3, returns the error code.
     if (control_configuration->clock_mode != SL_GSPI_MODE_0 && control_configuration->clock_mode != SL_GSPI_MODE_3) {
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR("validate_control_parameters: clock_mode is invalid st=0x%04lX,line no : %d\r\n",
+                            (unsigned long)SL_STATUS_INVALID_PARAMETER,
+                            (int)__LINE__);
       break;
     }
     // If the bit width is not in range i.e., between 0 and 16,
     // returns the error code.
     if ((control_configuration->bit_width == MIN_BIT_WIDTH) || (control_configuration->bit_width > MAX_BIT_WIDTH)) {
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR("validate_control_parameters: bit_width is not in range st=0x%04lX,line no : %d\r\n",
+                            (unsigned long)SL_STATUS_INVALID_PARAMETER,
+                            (int)__LINE__);
       break;
     }
     // If the slave select mode is greater than the slave select last enum, it
     // returns the error code.
     if (control_configuration->slave_select_mode >= SL_GSPI_SLAVE_SELECT_MODE_LAST) {
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR("validate_control_parameters: slave_select_mode is invalid st=0x%04lX,line no : %d\r\n",
+                            (unsigned long)SL_STATUS_INVALID_PARAMETER,
+                            (int)__LINE__);
       break;
     }
     // Returns SL_STATUS_OK if the parameter are appropriate
@@ -886,10 +1133,16 @@ static sl_status_t get_gspi_handle(sl_gspi_instance_t instance, sl_gspi_handle_t
   do {
     if (instance >= SL_GSPI_INSTANCE_LAST_ENUM) {
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR("get_gspi_handle: instance is invalid st=0x%04lX,line no : %d\r\n",
+                            (unsigned long)SL_STATUS_INVALID_PARAMETER,
+                            (int)__LINE__);
       break;
     }
     if (gspi_handle == NULL) {
       status = SL_STATUS_NULL_POINTER;
+      SL_PRINT_STRING_ERROR("get_gspi_handle: gspi_handle is NULL st=0x%04lX,line no : %d\r\n",
+                            (unsigned long)SL_STATUS_NULL_POINTER,
+                            (int)__LINE__);
       break;
     }
     *gspi_handle = &Driver_GSPI_MASTER;

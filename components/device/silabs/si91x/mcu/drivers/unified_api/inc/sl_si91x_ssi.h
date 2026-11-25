@@ -37,6 +37,7 @@ extern "C" {
 
 #include "sl_status.h"
 #include "SPI.h"
+#include "sl_log_helper.h"
 
 /***************************************************************************/
 /**

@@ -24,7 +24,6 @@
 #include "em_core.h"
 #include "em_gpio.h"
 #include "cmsis_os2.h"
-#include "dmadrv.h"
 #include "gpiointerrupt.h"
 #include "sl_si91x_status.h"
 #include "sl_rsi_utility.h"
@@ -38,6 +37,7 @@
 #define SLI_SPI_ASYNC_TRANSFER_TIMEOUT_MS 1000
 #define SLI_SPI_SYNC_TRANSFER_MAX_BYTES   16
 #define SLI_SPI_BIT_RATE                  9500000
+#define SLI_UART_DMA_TRANSFER_TIMEOUT_MS  1000
 
 #ifdef SL_NCP_UART_INTERFACE
 #define NCP_RX_IRQ USART0_RX_IRQn
@@ -67,6 +67,10 @@
 #include "si91x_ncp_uart_config.h"
 #include "sl_uartdrv_instances.h"
 #include "sl_uartdrv_usart_exp_config.h"
+// DMA Driver 2.0 is only consumed by the UART NCP path. The SPI NCP path
+// uses SPIDRV which abstracts DMA internally.
+#include "sl_dma_manager.h"
+#include "sl_dma_channel.h"
 
 #endif
 
@@ -79,47 +83,46 @@ static uint8_t dummy_buffer[1800] = { 0 };
 #else
 
 #define SLI_UART_HANDLE SL_UARTDRV_USART_EXP_PERIPHERAL
-static UARTDRV_Handle_t uartdrv_handle = NULL;
-static bool ncp_initialized            = false;
+static UARTDRV_Handle_t uartdrv_handle  = NULL;
+static bool ncp_initialized             = false;
+static bool uartdrv_default_deinit_done = false;
 
+// DMA Driver 2.0 channel resources for the NCP UART path. Handles are
+// caller-allocated stack structs; the channel driver does not allocate
+// them. The DMA Manager is auto-initialized via SL Main, so no manual
+// sl_dma_manager_init() call is needed.
+static uint8_t rx_dma_channel_nbr = 0;
+static uint8_t tx_dma_channel_nbr = 0;
+static sl_dma_channel_handle_t rx_dma_handle;
+static sl_dma_channel_handle_t tx_dma_handle;
+static bool ncp_uart_dma_initialized       = false;
+static volatile bool ncp_uart_dma_tx_error = false;
 #endif
-
-unsigned int rx_ldma_channel;
-unsigned int tx_ldma_channel;
-
-// LDMA descriptor and transfer configuration structures for USART TX channel
-LDMA_Descriptor_t ldmaTXDescriptor[SLI_LDMA_DESCRIPTOR_ARRAY_LENGTH];
-LDMA_TransferCfg_t ldmaTXConfig;
-
-// LDMA descriptor and transfer configuration structures for USART RX channel
-LDMA_Descriptor_t ldmaRXDescriptor[SLI_LDMA_DESCRIPTOR_ARRAY_LENGTH];
-LDMA_TransferCfg_t ldmaRXConfig;
 
 static osSemaphoreId_t transfer_done_semaphore        = NULL;
 osMutexId_t ncp_transfer_mutex                        = 0;
 static sl_si91x_host_init_configuration_t init_config = { 0 };
 
 #ifdef SL_NCP_UART_INTERFACE
-static bool sli_rx_dma_callback(unsigned int channel, unsigned int sequenceNo, void *userParam)
+static void sli_rx_dma_callback(sl_dma_channel_handle_t *dma_channel_handle, void *user_data, bool error, bool aborted)
 {
-  UNUSED_PARAMETER(channel);
-  UNUSED_PARAMETER(sequenceNo);
-  UNUSED_PARAMETER(userParam);
+  UNUSED_PARAMETER(dma_channel_handle);
+  UNUSED_PARAMETER(user_data);
+  if (error || aborted) {
+    return;
+  }
 
   if (NULL != init_config.rx_done) {
     init_config.rx_done();
   }
-
-  return false;
 }
 
-static bool sli_dma_callback(unsigned int channel, unsigned int sequenceNo, void *userParam)
+static void sli_dma_callback(sl_dma_channel_handle_t *dma_channel_handle, void *user_data, bool error, bool aborted)
 {
-  UNUSED_PARAMETER(channel);
-  UNUSED_PARAMETER(sequenceNo);
-  UNUSED_PARAMETER(userParam);
+  UNUSED_PARAMETER(dma_channel_handle);
+  UNUSED_PARAMETER(user_data);
+  ncp_uart_dma_tx_error = (error || aborted);
   osSemaphoreRelease(transfer_done_semaphore);
-  return false;
 }
 
 void SLI_NCP_UART_RX_IRQ_HANDLER(void)
@@ -138,8 +141,9 @@ void SLI_NCP_UART_RX_IRQ_HANDLER(void)
   return;
 }
 
-static void sli_efx32_ncp_uart_init(uint32_t baudrate, bool hfc)
+static sl_status_t sli_efx32_ncp_uart_init(uint32_t baudrate, bool hfc)
 {
+  sl_status_t dma_status       = SL_STATUS_OK;
   USART_InitAsync_TypeDef init = USART_INITASYNC_DEFAULT;
   init.baudrate                = baudrate;
 
@@ -152,7 +156,10 @@ static void sli_efx32_ncp_uart_init(uint32_t baudrate, bool hfc)
   GPIO_PinOutClear(VCOM_EN_PIN.port, VCOM_EN_PIN.pin);
 
   uartdrv_handle = sl_uartdrv_get_default();
-  UARTDRV_DeInit(uartdrv_handle);
+  if (!uartdrv_default_deinit_done) {
+    UARTDRV_DeInit(uartdrv_handle);
+    uartdrv_default_deinit_done = true;
+  }
 
   // Enable oscillator to NCP USART module
   CMU_ClockEnable(NCP_USART_CMU_CLOCK, true);
@@ -196,15 +203,50 @@ static void sli_efx32_ncp_uart_init(uint32_t baudrate, bool hfc)
     GPIO->USARTROUTE[NCP_USART_ROUTE_INDEX].ROUTEEN = GPIO_USART_ROUTEEN_RXPEN | GPIO_USART_ROUTEEN_TXPEN;
   }
 
-  DMADRV_Init();
-  DMADRV_AllocateChannel(&rx_ldma_channel, NULL);
-  DMADRV_AllocateChannel(&tx_ldma_channel, NULL);
+  // Initialize DMA Driver 2.0 resources only once. The UART init helper
+  // can be invoked multiple times (e.g. when switching to high-speed bus).
+  // The DMA Manager itself is auto-initialized by SL Main; only channel
+  // allocation and per-channel driver setup are needed here.
+  if (!ncp_uart_dma_initialized) {
+    dma_status = sl_dma_manager_allocate_channel(NULL, &rx_dma_channel_nbr);
+    if (dma_status != SL_STATUS_OK) {
+      return dma_status;
+    }
+    dma_status = sl_dma_manager_allocate_channel(NULL, &tx_dma_channel_nbr);
+    if (dma_status != SL_STATUS_OK) {
+      return dma_status;
+    }
+
+    dma_status =
+      sl_dma_channel_init(&rx_dma_handle, SL_PERIPHERAL_LDMA0, rx_dma_channel_nbr, sli_rx_dma_callback, NULL);
+    if (dma_status != SL_STATUS_OK) {
+      return dma_status;
+    }
+    dma_status = sl_dma_channel_init(&tx_dma_handle, SL_PERIPHERAL_LDMA0, tx_dma_channel_nbr, sli_dma_callback, NULL);
+    if (dma_status != SL_STATUS_OK) {
+      return dma_status;
+    }
+
+    // Peripheral signals must be programmed while the channel is idle, before
+    // the first p2m / m2p submit. Both directions handshake with USART0.
+    dma_status = sl_dma_channel_set_peripheral_signal(&tx_dma_handle, NCP_USART_LDMA_TX);
+    if (dma_status != SL_STATUS_OK) {
+      return dma_status;
+    }
+    dma_status = sl_dma_channel_set_peripheral_signal(&rx_dma_handle, NCP_USART_LDMA_RX);
+    if (dma_status != SL_STATUS_OK) {
+      return dma_status;
+    }
+
+    ncp_uart_dma_initialized = true;
+  }
 
   // Clear interrupt
   NVIC_ClearPendingIRQ(NCP_RX_IRQ);
 
   // Enable receive data valid interrupt
   USART_IntEnable(SLI_UART_HANDLE, USART_IEN_RXDATAV);
+  return SL_STATUS_OK;
 }
 
 #else
@@ -364,7 +406,10 @@ sl_status_t sl_si91x_host_init(const sl_si91x_host_init_configuration_t *config)
   }
 
 #ifdef SL_NCP_UART_INTERFACE
-  sli_efx32_ncp_uart_init(115200, false);
+  sl_status_t status = sli_efx32_ncp_uart_init(115200, false);
+  if (status != SL_STATUS_OK) {
+    return status;
+  }
 #else
   sli_efx32_spi_init();
 #endif
@@ -390,7 +435,7 @@ sl_status_t sl_si91x_host_deinit(void)
 void sl_si91x_host_enable_high_speed_bus()
 {
 #ifdef SL_NCP_UART_INTERFACE
-  sli_efx32_ncp_uart_init(SL_SI91X_NCP_UART_BAUDRATE, false);
+  (void)sli_efx32_ncp_uart_init(SL_SI91X_NCP_UART_BAUDRATE, false);
 #else
   //SPI_USART->CTRL_SET |= USART_CTRL_SMSDELAY | USART_CTRL_SSSEARLY;
 #endif
@@ -470,20 +515,35 @@ sl_status_t sl_si91x_host_uart_transfer(const void *tx_buffer, void *rx_buffer, 
         USART_Tx(SLI_UART_HANDLE, buffer[i]);
       }
     } else {
-      ldmaTXDescriptor[0] =
-        (LDMA_Descriptor_t)LDMA_DESCRIPTOR_SINGLE_M2P_BYTE(tx_buffer, &(SLI_UART_HANDLE->TXDATA), buffer_length);
-      // Transfer a byte on free space in the USART buffer
-      ldmaTXConfig = (LDMA_TransferCfg_t)LDMA_TRANSFER_CFG_PERIPHERAL(NCP_USART_LDMA_TX);
-      // Start TX channel
-      DMADRV_LdmaStartTransfer(tx_ldma_channel,
-                               &ldmaTXConfig,
-                               (LDMA_Descriptor_t *)&ldmaTXDescriptor,
-                               sli_dma_callback,
-                               NULL);
+      sl_status_t dma_status = SL_STATUS_OK;
+      if (!ncp_uart_dma_initialized) {
+        osMutexRelease(ncp_transfer_mutex);
+        return SL_STATUS_NOT_INITIALIZED;
+      }
+      ncp_uart_dma_tx_error = false;
+      while (osSemaphoreAcquire(transfer_done_semaphore, 0) == osOK) {
+      }
 
-      if (osSemaphoreAcquire(transfer_done_semaphore, 1000) != osOK) {
+      // M2P transfer; descriptor is auto-allocated by the driver. The
+      // peripheral signal was bound once during init.
+      dma_status = sl_dma_channel_submit_transfer_m2p(&tx_dma_handle,
+                                                      (void *)tx_buffer,
+                                                      (void *)&(SLI_UART_HANDLE->TXDATA),
+                                                      buffer_length,
+                                                      SL_DMA_CTRL_SIZE_BYTE,
+                                                      NULL);
+      if (dma_status != SL_STATUS_OK) {
+        osMutexRelease(ncp_transfer_mutex);
+        return dma_status;
+      }
+
+      if (osSemaphoreAcquire(transfer_done_semaphore, SLI_UART_DMA_TRANSFER_TIMEOUT_MS) != osOK) {
         osMutexRelease(ncp_transfer_mutex);
         return SL_STATUS_BUS_ERROR;
+      }
+      if (ncp_uart_dma_tx_error) {
+        osMutexRelease(ncp_transfer_mutex);
+        return SL_STATUS_FAIL;
       }
     }
   }
@@ -495,16 +555,23 @@ sl_status_t sl_si91x_host_uart_transfer(const void *tx_buffer, void *rx_buffer, 
         buffer[i] = USART_Rx(SLI_UART_HANDLE);
       }
     } else {
-      ldmaRXDescriptor[0] =
-        (LDMA_Descriptor_t)LDMA_DESCRIPTOR_SINGLE_P2M_BYTE(&(SLI_UART_HANDLE->RXDATA), rx_buffer, buffer_length);
-      // Transfer a byte on receive data valid
-      ldmaRXConfig = (LDMA_TransferCfg_t)LDMA_TRANSFER_CFG_PERIPHERAL(NCP_USART_LDMA_RX);
-      // Start RX channel
-      DMADRV_LdmaStartTransfer(rx_ldma_channel,
-                               &ldmaRXConfig,
-                               (LDMA_Descriptor_t *)&ldmaRXDescriptor,
-                               sli_rx_dma_callback,
-                               NULL);
+      sl_status_t dma_status = SL_STATUS_OK;
+      if (!ncp_uart_dma_initialized) {
+        osMutexRelease(ncp_transfer_mutex);
+        return SL_STATUS_NOT_INITIALIZED;
+      }
+      // P2M transfer; descriptor is auto-allocated by the driver. The
+      // peripheral signal was bound once during init.
+      dma_status = sl_dma_channel_submit_transfer_p2m(&rx_dma_handle,
+                                                      (void *)&(SLI_UART_HANDLE->RXDATA),
+                                                      rx_buffer,
+                                                      buffer_length,
+                                                      SL_DMA_CTRL_SIZE_BYTE,
+                                                      NULL);
+      if (dma_status != SL_STATUS_OK) {
+        osMutexRelease(ncp_transfer_mutex);
+        return dma_status;
+      }
 
       status = SL_STATUS_IN_PROGRESS;
     }
@@ -539,7 +606,7 @@ void sl_si91x_host_flush_uart_rx(void)
 void sl_si91x_host_uart_enable_hardware_flow_control(void)
 {
 #ifdef SL_NCP_UART_INTERFACE
-  sli_efx32_ncp_uart_init(SL_SI91X_NCP_UART_BAUDRATE, true);
+  (void)sli_efx32_ncp_uart_init(SL_SI91X_NCP_UART_BAUDRATE, true);
 #endif
 
   return;

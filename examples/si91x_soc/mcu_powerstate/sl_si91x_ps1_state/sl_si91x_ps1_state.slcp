@@ -5,7 +5,7 @@ description: 'This application demonstrates the PS1 state with NWP shutdown.
   '
 category: example|mcu powerstate
 quality: production
-label: SI91x - SL_SI91X_PS1_STATE
+label: SiWx91x Platform - PS1 STATE
 component:
 - id: sl_main
 - id: status
@@ -17,6 +17,12 @@ component:
   - timer0
 - id: calendar_ulp_component
 - id: timer_ulp_component
+- id: si91x_log
+- id: si91x_log_iostream_compact
+- id: iostream_si91x
+- id: iostream_uart_si91x
+  instance:
+  - vcom
 - id: debug_ulp_component
 - id: pm_ps2_component
 template_contribution:
@@ -45,7 +51,9 @@ include:
   - path: ps1_state.h
 toolchain_settings:
 - option: gcc_compiler_option
-  value: -Wall -Werror
+  value: -Wall -Werror -Wno-error=deprecated-declarations
+- option: llvm_compiler_option
+  value: -Wall -Werror -Wno-error=deprecated-declarations
 other_file:
 - path: resources/readme/setupdiagram.png
 - path: resources/readme/ps1_power_plot.png
@@ -56,13 +64,26 @@ ui_hints:
     focus: true
 readme:
 - path: readme.md
+filter:
+- name: Device Type
+  value:
+  - SoC
+- name: MCU
+  value:
+  - 32-bit MCU
+- name: Level
+  value:
+  - Beginner
+- name: Wireless Technology
+  value:
+  - Wi-Fi
 post_build:
   profile: wiseconnect_soc
 sdk_extension:
 - id: wiseconnect3_sdk
   vendor: silabs
-  version: 4.0.1
+  version: 4.1.2
 sdk:
   id: simplicity_sdk
   vendor: silabs
-  version: 2025.12.2
+  version: 2026.6.2

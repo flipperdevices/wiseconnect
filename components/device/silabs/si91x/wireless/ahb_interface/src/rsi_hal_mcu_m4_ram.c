@@ -28,8 +28,9 @@
  ******************************************************************************/
 
 #if defined(SLI_SI917)
-//! This file should be in RAM
-#include "sl_device.h"
+/* Include before the definition so the SL_CODE_CLASSIFY prototype in rsi_m4.h applies
+ * (same as other TUs); do not add SL_CODE_CLASSIFY on the definition. */
+#include "rsi_m4.h"
 
 /*==================================================*/
 /**
@@ -38,7 +39,6 @@
  * @param[in]   option
  * @param[out]  none  
  */
-
 void sli_mv_m4_app_from_flash_to_ram(int option)
 {
 
@@ -47,21 +47,21 @@ void sli_mv_m4_app_from_flash_to_ram(int option)
 
   if (option == UPGRADE_M4_IMAGE_OTA) {
     //! Raise interrupt to NWP
-    raise_m4_to_ta_interrupt(UPGRADE_M4_IMAGE);
+    M4SS_P2P_INTR_SET_REG = UPGRADE_M4_IMAGE;
 
     //! Poll for bit to clear
     while (M4SS_P2P_INTR_CLR_REG & UPGRADE_M4_IMAGE)
       ;
   } else if (option == TA_WRITES_ON_COMM_FLASH) {
     //! Raise interrupt to NWP
-    raise_m4_to_ta_interrupt(M4_WAITING_FOR_TA_TO_WR_ON_FLASH);
+    M4SS_P2P_INTR_SET_REG = M4_WAITING_FOR_TA_TO_WR_ON_FLASH;
 
     //! Poll for bit to clear
     while (M4SS_P2P_INTR_CLR_REG & M4_WAITING_FOR_TA_TO_WR_ON_FLASH)
       ;
   } else if (option == M4_WAIT_FOR_NWP_DEINIT) {
     //! Raise interrupt to NWP
-    raise_m4_to_ta_interrupt(M4_WAITING_FOR_TA_DEINIT);
+    M4SS_P2P_INTR_SET_REG = M4_WAITING_FOR_TA_DEINIT;
 
     //! Poll for bit to clear
     while (M4SS_P2P_INTR_CLR_REG & M4_WAITING_FOR_TA_DEINIT)

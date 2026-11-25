@@ -88,7 +88,7 @@ void rsi_delay_ms(uint32_t val)
  * @brief       select M4 ref clock
  * @return      m4_ref_clk: M4 ref clock value    
  */
-STATIC INLINE uint32_t RSI_CLK_GetM4RefClock(void)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE uint32_t RSI_CLK_GetM4RefClock(void)
 {
   uint32_t m4_ref_clk = 0;
 
@@ -119,7 +119,8 @@ STATIC INLINE uint32_t RSI_CLK_GetM4RefClock(void)
 }
 
 // It will gets the clock of each peripheral
-STATIC INLINE uint32_t RSI_CLK_GetUlpssTouchClock(uint32_t src_clk_mux, uint32_t div_fac)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE uint32_t RSI_CLK_GetUlpssTouchClock(uint32_t src_clk_mux,
+                                                                                   uint32_t div_fac)
 {
   uint32_t ulpss_touch_src_clk = 0;
 
@@ -156,7 +157,7 @@ STATIC INLINE uint32_t RSI_CLK_GetUlpssTouchClock(uint32_t src_clk_mux, uint32_t
 
   return ulpss_touch_src_clk;
 }
-STATIC INLINE uint32_t RSI_CLK_GetUlpssAuxClock(uint32_t src_clk_mux)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE uint32_t RSI_CLK_GetUlpssAuxClock(uint32_t src_clk_mux)
 {
   uint32_t ulpss_aux_src_clk = 0;
 
@@ -195,7 +196,7 @@ STATIC INLINE uint32_t RSI_CLK_GetUlpssAuxClock(uint32_t src_clk_mux)
 
   return ulpss_aux_src_clk;
 }
-STATIC INLINE uint32_t RSI_CLK_GetUlpssTimerClock(uint32_t src_clk_mux)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE uint32_t RSI_CLK_GetUlpssTimerClock(uint32_t src_clk_mux)
 {
   uint32_t ulpss_timer_src_clk = 0;
 
@@ -228,7 +229,8 @@ STATIC INLINE uint32_t RSI_CLK_GetUlpssTimerClock(uint32_t src_clk_mux)
 
   return ulpss_timer_src_clk;
 }
-STATIC INLINE uint32_t RSI_CLK_GetUlpssUartClock(uint32_t src_clk_mux, uint32_t div_fac)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE uint32_t RSI_CLK_GetUlpssUartClock(uint32_t src_clk_mux,
+                                                                                  uint32_t div_fac)
 {
   uint32_t ulpss_uart_src_clk = 0;
 
@@ -268,7 +270,7 @@ STATIC INLINE uint32_t RSI_CLK_GetUlpssUartClock(uint32_t src_clk_mux, uint32_t 
 
   return ulpss_uart_src_clk;
 }
-STATIC INLINE uint32_t RSI_CLK_GetUlpssI2sClock(uint32_t src_clk_mux, uint32_t div_fac)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE uint32_t RSI_CLK_GetUlpssI2sClock(uint32_t src_clk_mux, uint32_t div_fac)
 {
   uint32_t ulpss_i2s_src_clk = 0;
 
@@ -302,7 +304,7 @@ STATIC INLINE uint32_t RSI_CLK_GetUlpssI2sClock(uint32_t src_clk_mux, uint32_t d
 
   return ulpss_i2s_src_clk;
 }
-STATIC INLINE uint32_t RSI_CLK_GetUlpssSsiClock(uint32_t src_clk_mux, uint32_t div_fac)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE uint32_t RSI_CLK_GetUlpssSsiClock(uint32_t src_clk_mux, uint32_t div_fac)
 {
   uint32_t ulpss_ssi_src_clk = 0;
 
@@ -339,7 +341,7 @@ STATIC INLINE uint32_t RSI_CLK_GetUlpssSsiClock(uint32_t src_clk_mux, uint32_t d
 
   return ulpss_ssi_src_clk;
 }
-STATIC INLINE uint32_t RSI_CLK_GetI2smClock(uint32_t src_clk_mux, uint32_t div_fac)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE uint32_t RSI_CLK_GetI2smClock(uint32_t src_clk_mux, uint32_t div_fac)
 {
   uint32_t i2sm_src_clk = 0;
 
@@ -360,7 +362,9 @@ STATIC INLINE uint32_t RSI_CLK_GetI2smClock(uint32_t src_clk_mux, uint32_t div_f
 
   return i2sm_src_clk;
 }
-STATIC INLINE uint32_t RSI_CLK_GetEthernetClock(uint32_t src_clk_mux, uint32_t div_fac, uint32_t swallow_val)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE uint32_t RSI_CLK_GetEthernetClock(uint32_t src_clk_mux,
+                                                                                 uint32_t div_fac,
+                                                                                 uint32_t swallow_val)
 {
   uint32_t ethernet_src_clk = 0;
 
@@ -390,7 +394,7 @@ STATIC INLINE uint32_t RSI_CLK_GetEthernetClock(uint32_t src_clk_mux, uint32_t d
 
   return ethernet_src_clk;
 }
-STATIC INLINE uint32_t RSI_CLK_GetGspiClock(uint32_t src_clk_mux)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE uint32_t RSI_CLK_GetGspiClock(uint32_t src_clk_mux)
 {
   uint32_t gspi_src_clk = 0;
 
@@ -417,10 +421,10 @@ STATIC INLINE uint32_t RSI_CLK_GetGspiClock(uint32_t src_clk_mux)
 
   return gspi_src_clk;
 }
-STATIC INLINE uint32_t RSI_CLK_GetQspi2Clock(uint32_t src_clk_mux,
-                                             uint32_t div_fac,
-                                             uint32_t swallow_val,
-                                             uint32_t odd_div)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE uint32_t RSI_CLK_GetQspi2Clock(uint32_t src_clk_mux,
+                                                                              uint32_t div_fac,
+                                                                              uint32_t swallow_val,
+                                                                              uint32_t odd_div)
 {
   uint32_t qspi2_src_clk = 0;
 
@@ -470,10 +474,10 @@ STATIC INLINE uint32_t RSI_CLK_GetQspi2Clock(uint32_t src_clk_mux,
 
   return qspi2_src_clk;
 }
-STATIC INLINE uint32_t RSI_CLK_GetQspiClock(uint32_t src_clk_mux,
-                                            uint32_t div_fac,
-                                            uint32_t swallow_val,
-                                            uint32_t odd_div)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE uint32_t RSI_CLK_GetQspiClock(uint32_t src_clk_mux,
+                                                                             uint32_t div_fac,
+                                                                             uint32_t swallow_val,
+                                                                             uint32_t odd_div)
 {
   uint32_t qspi_src_clk = 0;
 
@@ -524,7 +528,7 @@ STATIC INLINE uint32_t RSI_CLK_GetQspiClock(uint32_t src_clk_mux,
   return qspi_src_clk;
 }
 #if !defined(SLI_SI917)
-STATIC INLINE uint32_t RSI_CLK_GetCciClock(uint32_t src_clk_mux, uint32_t div_fac)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE uint32_t RSI_CLK_GetCciClock(uint32_t src_clk_mux, uint32_t div_fac)
 {
   uint32_t cci_src_clk = 0;
 
@@ -546,7 +550,9 @@ STATIC INLINE uint32_t RSI_CLK_GetCciClock(uint32_t src_clk_mux, uint32_t div_fa
 
   return cci_src_clk;
 }
-STATIC INLINE uint32_t RSI_CLK_GetSdMemClock(uint32_t src_clk_mux, uint32_t div_fac, uint32_t swallow_val)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE uint32_t RSI_CLK_GetSdMemClock(uint32_t src_clk_mux,
+                                                                              uint32_t div_fac,
+                                                                              uint32_t swallow_val)
 {
   uint32_t sdmem_src_clk = 0;
 
@@ -583,7 +589,7 @@ STATIC INLINE uint32_t RSI_CLK_GetSdMemClock(uint32_t src_clk_mux, uint32_t div_
   return sdmem_src_clk;
 }
 #endif
-STATIC INLINE uint32_t RSI_CLK_GetCtClock(uint32_t src_clk_mux, uint32_t div_fac)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE uint32_t RSI_CLK_GetCtClock(uint32_t src_clk_mux, uint32_t div_fac)
 {
   uint32_t ct_src_clk = 0;
 
@@ -611,7 +617,7 @@ STATIC INLINE uint32_t RSI_CLK_GetCtClock(uint32_t src_clk_mux, uint32_t div_fac
 
   return ct_src_clk;
 }
-STATIC INLINE uint32_t RSI_CLK_GetSsiMstClock(uint32_t src_clk_mux, uint32_t div_fac)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE uint32_t RSI_CLK_GetSsiMstClock(uint32_t src_clk_mux, uint32_t div_fac)
 {
   uint32_t ssi_mst_src_clk = 0;
 
@@ -645,7 +651,9 @@ STATIC INLINE uint32_t RSI_CLK_GetSsiMstClock(uint32_t src_clk_mux, uint32_t div
 
   return ssi_mst_src_clk;
 }
-STATIC INLINE uint32_t RSI_CLK_GetUart1Clock(uint32_t src_clk_mux, uint32_t div_fac, uint32_t swallow_val)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE uint32_t RSI_CLK_GetUart1Clock(uint32_t src_clk_mux,
+                                                                              uint32_t div_fac,
+                                                                              uint32_t swallow_val)
 {
   uint32_t uart1_src_clk = 0;
 
@@ -682,7 +690,9 @@ STATIC INLINE uint32_t RSI_CLK_GetUart1Clock(uint32_t src_clk_mux, uint32_t div_
 
   return uart1_src_clk;
 }
-STATIC INLINE uint32_t RSI_CLK_GetUsart0Clock(uint32_t src_clk_mux, uint32_t div_fac, uint32_t swallow_val)
+STATIC INLINE SL_SI91X_ATTRIBUTE_ALWAYS_INLINE uint32_t RSI_CLK_GetUsart0Clock(uint32_t src_clk_mux,
+                                                                               uint32_t div_fac,
+                                                                               uint32_t swallow_val)
 {
   uint32_t usart0_src_clk = 0;
 

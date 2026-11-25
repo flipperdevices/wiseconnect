@@ -3,7 +3,7 @@ package: wifi_app
 quality: production
 label: Wi-Fi - HTTP/HTTPS OTAF TWT Update (SoC)
 category: Example|Wi-Fi
-description: 'Update Firmware from remote AWS or Azure or Apache Server
+description: 'Demonstrates how to perform firmware upgrade using an HTTP(S) server or a cloud storage server with TWT.
 
   '
 filter:
@@ -38,12 +38,22 @@ component:
 - id: network_manager
 - id: basic_network_config_manager
 - id: sl_si91x_soc_soft_reset
-- id: sl_si91x_mem_pool_buffers_with_quota
+- id: log_none
+- id: si91x_log
+- id: si91x_log_iostream_formatted
+- id: iostream_si91x
+- id: iostream_uart_si91x
+  instance:
+  - vcom
 requires:
 - name: device_needs_ram_execution
   condition:
   - si91x_common_flash
-toolchain_settings: []
+toolchain_settings:
+- option: gcc_compiler_option
+  value: -Wall -Werror -Wno-error=deprecated-declarations
+- option: llvm_compiler_option
+  value: -Wall -Werror -Wno-error=deprecated-declarations
 configuration:
 - name: SL_BOARD_ENABLE_VCOM
   value: '1'
@@ -99,8 +109,8 @@ post_build:
 sdk_extension:
 - id: wiseconnect3_sdk
   vendor: silabs
-  version: 4.0.1
+  version: 4.1.2
 sdk:
   id: simplicity_sdk
   vendor: silabs
-  version: 2025.12.2
+  version: 2026.6.2

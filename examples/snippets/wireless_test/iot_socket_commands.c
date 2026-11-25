@@ -50,8 +50,6 @@
 /******************************************************
  *               Static Function Declarations
  ******************************************************/
-
-static inline void print_ipv6(const sl_ipv6_address_t *ip);
 static inline void print_iot_status(const int32_t status);
 
 /******************************************************
@@ -81,7 +79,7 @@ sl_status_t wifi_iot_socket_create_handler(console_args_t *arguments)
   int32_t sock_fd = iotSocketCreate(domain, type, protocol);
   VERIFY_IOT_STATUS(sock_fd);
 
-  printf("%ld", sock_fd);
+  SL_DEBUG_LOG_V2(INFO, "%ld\r\n", sock_fd);
 
   return SL_STATUS_OK;
 }
@@ -131,7 +129,7 @@ sl_status_t wifi_iot_socket_accept_handler(console_args_t *arguments)
   VERIFY_IOT_STATUS(iot_socket_status);
 
   // print client socket fd
-  printf("%ld\n", iot_socket_status);
+  SL_DEBUG_LOG_V2(INFO, "%ld\r\n", iot_socket_status);
 
   return SL_STATUS_OK;
 }
@@ -157,7 +155,7 @@ sl_status_t wifi_iot_socket_send_handler(console_args_t *arguments)
   int32_t iot_socket_status = iotSocketSend(sock_fd, buffer, strlen((char *)buffer));
   VERIFY_IOT_STATUS(iot_socket_status);
 
-  printf("%ld bytes sent", iot_socket_status);
+  SL_DEBUG_LOG_V2(INFO, "%ld bytes sent", iot_socket_status);
   return SL_STATUS_OK;
 }
 
@@ -171,7 +169,8 @@ sl_status_t wifi_iot_socket_get_socket_name_handler(console_args_t *arguments)
   int32_t iot_socket_status = iotSocketGetSockName(sock_fd, ip.bytes, &ip_length, &port);
   VERIFY_IOT_STATUS(iot_socket_status);
 
-  printf("%u.%u.%u.%u:%u", ip.bytes[0], ip.bytes[1], ip.bytes[2], ip.bytes[3], port);
+  SL_DEBUG_LOG_V2(INFO, "%u.%u.", ip.bytes[0], ip.bytes[1]);
+  SL_DEBUG_LOG_V2(INFO, "%u.%u:%u", ip.bytes[2], ip.bytes[3], port);
 
   return SL_STATUS_OK;
 }
@@ -186,7 +185,8 @@ sl_status_t wifi_iot_socket_get_peer_name_handler(console_args_t *arguments)
   int32_t iot_socket_status = iotSocketGetPeerName(sock_fd, ip.bytes, &ip_length, &port);
   VERIFY_IOT_STATUS(iot_socket_status);
 
-  printf("%u.%u.%u.%u:%u", ip.bytes[0], ip.bytes[1], ip.bytes[2], ip.bytes[3], port);
+  SL_DEBUG_LOG_V2(INFO, "%u.%u.", ip.bytes[0], ip.bytes[1]);
+  SL_DEBUG_LOG_V2(INFO, "%u.%u:%u", ip.bytes[2], ip.bytes[3], port);
 
   return SL_STATUS_OK;
 }
@@ -214,7 +214,7 @@ sl_status_t wifi_iot_socket_get_opt_handler(console_args_t *arguments)
   int32_t iot_socket_status = iotSocketGetOpt(socket, option_id, &option_val, &length);
   VERIFY_IOT_STATUS(iot_socket_status);
 
-  printf("%lu", option_val);
+  SL_DEBUG_LOG_V2(INFO, "%lu", option_val);
 
   return SL_STATUS_OK;
 }
@@ -226,7 +226,7 @@ sl_status_t wifi_iot_socket_receive_handler(console_args_t *arguments)
   int32_t iot_socket_status = iotSocketRecv(sock_fd, socket_buffer, sizeof(socket_buffer));
   VERIFY_IOT_STATUS(iot_socket_status);
 
-  printf("Received:%s", socket_buffer);
+  SL_DEBUG_LOG_V2(INFO, "Received:%s", (uintptr_t)socket_buffer);
   memset(socket_buffer, 0, sizeof(socket_buffer));
 
   return SL_STATUS_OK;
@@ -244,9 +244,10 @@ sl_status_t wifi_iot_socket_receive_from_handler(console_args_t *arguments)
   VERIFY_IOT_STATUS(iot_socket_status);
 
   if (ip_length == SL_IPV4_ADDRESS_LENGTH) {
-    printf("remote:%u.%u.%u.%u:%u\r\n", ip.bytes[0], ip.bytes[1], ip.bytes[2], ip.bytes[3], port);
+    SL_DEBUG_LOG_V2(INFO, "remote:%u.%u.", ip.bytes[0], ip.bytes[1]);
+    SL_DEBUG_LOG_V2(INFO, "%u.%u:%u", ip.bytes[2], ip.bytes[3], port);
   }
-  printf("Received:%s", socket_buffer);
+  SL_DEBUG_LOG_V2(INFO, "Received:%s", (uintptr_t)socket_buffer);
   memset(socket_buffer, 0, sizeof(socket_buffer));
 
   return SL_STATUS_OK;
@@ -279,17 +280,12 @@ sl_status_t wifi_iot_socket_send_to_handler(console_args_t *arguments)
   int32_t iot_socket_status = iotSocketSendTo(sock_fd, buffer, length, ip->bytes, ip_length, port);
   VERIFY_IOT_STATUS(iot_socket_status);
 
-  printf("%ld bytes sent", iot_socket_status);
+  SL_DEBUG_LOG_V2(INFO, "%ld bytes sent", iot_socket_status);
 
   return SL_STATUS_OK;
 }
 
-static inline void print_ipv6(const sl_ipv6_address_t *ip)
-{
-  printf("%lx:%lx:%lx:%lx", ip->value[0], ip->value[1], ip->value[2], ip->value[3]);
-}
-
 static inline void print_iot_status(const int32_t status)
 {
-  printf("Error:%ld", status);
+  SL_DEBUG_LOG_V2(ERROR, "Error:%ld", status);
 }

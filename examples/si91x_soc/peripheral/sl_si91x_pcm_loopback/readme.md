@@ -1,8 +1,8 @@
-# SL PCM LOOPBACK
+# SiWx91x Platform PCM Loopback
 
 ## Table of Contents
 
-- [SL PCM LOOPBACK](#sl-pcm-loopback)
+- [SiWx91x Platform PCM Loopback](#platform-siwx91x-pcm-loopback)
   - [Table of Contents](#table-of-contents)
   - [Purpose/Scope](#purposescope)
   - [Overview](#overview)
@@ -18,6 +18,9 @@
     - [Pin Configuration](#pin-configuration)
     - [Pin Description](#pin-description)
   - [Test the Application](#test-the-application)
+  - [Troubleshooting](#troubleshooting)
+  - [Resources](#resources)
+  - [Report Bugs/Support](#report-bugssupport)
 
 ## Purpose/Scope
 
@@ -51,7 +54,7 @@
 ### Hardware Requirements
 
 - Windows PC
-- Silicon Labs Si917 Evaluation Kit [[BRD4002](https://www.silabs.com/development-tools/wireless/wireless-pro-kit-mainboard?tab=overview) + [BRD4338A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-rb4338a-wifi-6-bluetooth-le-soc-radio-board?tab=overview) / [BRD4342A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx91x-rb4342a-wifi-6-bluetooth-le-soc-radio-board?tab=overview) / [BRD4343A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4343a-wi-fi-6-bluetooth-le-8mb-flash-radio-board-for-module?tab=overview)]
+- Silicon Labs SiWx91x Evaluation Kit [[BRD4002](https://www.silabs.com/development-tools/wireless/wireless-pro-kit-mainboard?tab=overview) + [BRD4338A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-rb4338a-wifi-6-bluetooth-le-soc-radio-board?tab=overview) / [BRD4342A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx91x-rb4342a-wifi-6-bluetooth-le-soc-radio-board?tab=overview) / [BRD4343A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4343a-wi-fi-6-bluetooth-le-8mb-flash-radio-board-for-module?tab=overview) / [BRD4343C](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4343c-wi-fi-6-bluetooth-le-8mb-flash-radio-board-for-module?tab=overview)]
 - SiWx917 AC1 Module Explorer Kit [BRD2708A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-ek2708a-explorer-kit)
 
 ### Software Requirements
@@ -90,15 +93,23 @@ Using the configuration wizard, configure parameters as follows:
 
 Configuration files are generated in the **config** folder. If not changed, the code will run on default UC values.
 
-Configure the following macros in [`pcm_loopback.c`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.1-content-for-docs/examples/si91x_soc/peripheral/sl_si91x_pcm_loopback/pcm_loopback.c) file and update/modify them if required.
+Configure the following macros in [`pcm_loopback.c`](pcm_loopback.c) file and update/modify them if required.
 
-  ```C
-  #define PCM_LOOPBACK_BUFFER_SIZE 1024    ///< Transmit/Receive buffer size
+- `PCM_BUFFER_SIZE`: Size (in samples) of the buffers used to transmit and receive PCM data in loopback mode. By default, it is set to 1024.
+
+  ```c
+  #define PCM_BUFFER_SIZE      1024                   ///< Transmit/Receive buffer size
   ```
 
-- If the resolution is changed to 24-bit or 32-bit, update the typedef for `pcm_data_size_t` to `uint32_t` instead of `uint16_t` to accommodate the larger data size - 
+- `PCM_INSTANCE`: Selects the PCM peripheral instance used by the example. By default, it is set to `SL_SI91X_PCM0_INSTANCE`.
 
- ```C
+  ```c
+  #define PCM_INSTANCE         SL_SI91X_PCM0_INSTANCE ///< PCM instance
+  ```
+
+- If the resolution is changed to 24-bit or 32-bit, update the typedef for `pcm_data_size_t` to `uint32_t` instead of `uint16_t` to accommodate the larger data size -
+
+ ```c
  typedef uint32_t pcm_data_size_t;
  ```
 
@@ -106,9 +117,9 @@ Configure the following macros in [`pcm_loopback.c`](https://github.com/SiliconL
 
 To use the ULP_PCM instance instead of the default PCM0 instance:
 
-- Change the `PCM_INSTANCE` macro value to `ULP_PCM` in pcm_loopback_exmaple.c:
+- `PCM_INSTANCE`: Set this macro to `ULP_PCM` in pcm_loopback_exmaple.c to use the ULP_PCM instance instead of the default PCM0 instance.
 
-  ```C
+  ```c
   #define PCM_INSTANCE ULP_PCM
   ```
 
@@ -125,9 +136,9 @@ To use the ULP_PCM instance instead of the default PCM0 instance:
 
   ![Figure: Pin Connections](resources/readme/image505d.png)
 
-- Pin Description
+### Pin Description
 
- >**Note:** The default pin configurations are set in the SiWx917:[RTE_Device_917.h](path:/$project/config/RTE_Device_917.h) file. Verify that these pin settings match your hardware setup. You can modify the pin configurations in this file if your board uses different GPIO pins for the PCM interface.
+>**Note:** The default pin configurations are set in the SiWx917:[RTE_Device_917.h](path:/$project/config/RTE_Device_917.h) file. Verify that these pin settings match your hardware setup. You can modify the pin configurations in this file if your board uses different GPIO pins for the PCM interface.
 
 ## Test the Application
 
@@ -143,3 +154,18 @@ Refer to the instructions [here](https://docs.silabs.com/wiseconnect/latest/wise
 >
 > - Interrupt handlers are implemented in the driver layer, and user callbacks are provided for custom code. If you want to write your own interrupt handler instead of using the default one, make the driver interrupt handler a weak handler. Then, copy the necessary code from the driver handler to your custom interrupt handler.
 > - pcm0 or ulp_pcm uses i2s0 and ulp_i2s peripherals internally. It is recommended not to install the i2s0 and ulp_i2s instances simultaneously with pcm0 or ulp_pcm, as this may cause resource conflicts.
+## Troubleshooting
+
+- If the project does not build, ensure Simplicity Studio and the WiSeConnect extension are installed and the board is connected.
+- If the device is not detected, reinstall the connectivity firmware and check USB drivers.
+
+## Resources
+
+- [WiSeConnect Getting Started](https://docs.silabs.com/wiseconnect/latest/wiseconnect-getting-started/)
+- [WiSeConnect Examples](https://docs.silabs.com/wiseconnect/latest/wiseconnect-examples/)
+- [SiWx91x SoC Documentation](https://docs.silabs.com/wiseconnect/latest/)
+
+## Report Bugs/Support
+
+For issues and support, use the Silicon Labs Community or your normal support channel.
+

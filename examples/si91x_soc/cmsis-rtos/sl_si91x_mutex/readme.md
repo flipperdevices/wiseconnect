@@ -1,8 +1,8 @@
-# SL MUTEX EXAMPLE
+# SiWx91x Platform RTOS Mutex
 
 ## Table of Contents
 
-- [SL MUTEX EXAMPLE](#sl-mutex-example)
+- [SiWx91x Platform RTOS Mutex](#platform-siwx91x-rtos-mutex)
   - [Table of Contents](#table-of-contents)
   - [Purpose/Scope](#purposescope)
   - [Overview](#overview)
@@ -13,6 +13,9 @@
   - [Getting Started](#getting-started)
   - [Application Build Environment](#application-build-environment)
   - [Test the Application](#test-the-application)
+  - [Troubleshooting](#troubleshooting)
+  - [Resources](#resources)
+  - [Report Bugs/Support](#report-bugssupport)
 
 ## Purpose/Scope
 
@@ -31,7 +34,7 @@
 ### Hardware Requirements
 
 - Windows PC
-- Silicon Labs Si917 Evaluation Kit [WPK(BRD4002) + BRD4338A]
+- Silicon Labs SiWx91x Evaluation Kit [[BRD4002](https://www.silabs.com/development-tools/wireless/wireless-pro-kit-mainboard?tab=overview) + [BRD4338A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-rb4338a-wifi-6-bluetooth-le-soc-radio-board?tab=overview) / [BRD4342A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx91x-rb4342a-wifi-6-bluetooth-le-soc-radio-board?tab=overview) / [BRD4343A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4343a-wi-fi-6-bluetooth-le-8mb-flash-radio-board-for-module?tab=overview) / [BRD4343C](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4343c-wi-fi-6-bluetooth-le-8mb-flash-radio-board-for-module?tab=overview)]
 
 ### Software Requirements
 
@@ -55,11 +58,19 @@ For details on the project folder structure, see the [WiSeConnect Examples](http
 
 ## Application Build Environment
 
-- Configure the following parameter in [`blinky.c`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.1-content-for-docs/examples/si91x_soc/cmsis-rtos/sl_si91x_mutex/src/blinky.c) file, update/modify following macro if required.
+- Configure the following macros in [`blinky.c`](src/blinky.c) file, update/modify following macros if required.
 
-  ```C
-    #define TOGGLE_DELAY_MS 500//  configured for 500 ms   
-  ```   
+- `LED_INSTANCE`: Selects the on-board LED instance controlled by the two threads for toggling. By default, it is set to `led_led0`.
+
+  ```c
+    #define LED_INSTANCE    led_led0 // On-board LED instance
+  ```
+
+- `TOGGLE_DELAY_MS`: Specifies the delay (in milliseconds) between successive LED toggle operations performed by each thread. By default, it is set to 500.
+
+  ```c
+    #define TOGGLE_DELAY_MS 500      // Toggle delay in milliseconds
+  ```
 
 > **Note**: For recommended settings, please refer the [recommendations guide](https://docs.silabs.com/wiseconnect/latest/wiseconnect-developers-guide-prog-recommended-settings/).
 
@@ -72,3 +83,19 @@ For details on the project folder structure, see the [WiSeConnect Examples](http
   > **Note!**
   >
   > LED0 will continuously be turned on and off.
+
+## Troubleshooting
+
+- If the project does not build, ensure Simplicity Studio and the WiSeConnect extension are installed and the board is connected.
+- If the device is not detected, reinstall the connectivity firmware and check USB drivers.
+
+## Resources
+
+- [WiSeConnect Getting Started](https://docs.silabs.com/wiseconnect/latest/wiseconnect-getting-started/)
+- [WiSeConnect Examples](https://docs.silabs.com/wiseconnect/latest/wiseconnect-examples/)
+- [SiWx91x SoC Documentation](https://docs.silabs.com/wiseconnect/latest/)
+
+## Report Bugs/Support
+
+For issues and support, use the Silicon Labs Community or your normal support channel.
+

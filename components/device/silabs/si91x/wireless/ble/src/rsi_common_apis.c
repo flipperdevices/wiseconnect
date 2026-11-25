@@ -33,11 +33,20 @@
 
 #include "sl_si91x_status.h"
 #include "rsi_ble_common_config.h"
+#include "sli_wifi_utility.h"
+#include "sli_wifi_constants.h"
+#include "rsi_bt_common.h"
+#include <stdbool.h>
 
+extern bool device_initialized;
 /*
   Global Variables
  * */
 rsi_driver_cb_t *rsi_driver_cb = NULL;
+
+typedef enum { BLE_STATE_DISABLED = 0, BLE_STATE_ENABLED = 1 } ble_state_t;
+
+static volatile ble_state_t ble_runtime_state = BLE_STATE_DISABLED;
 
 int32_t rsi_driver_memory_estimate(void);
 
@@ -161,17 +170,32 @@ int32_t rsi_ble_driver_init(uint8_t *buffer, uint32_t length)
 
 //======================================================
 /**
+ * @fn          int32_t rsi_ble_driver_deinit(void)
+ * @brief       De-initialize BLE driver components allocated by
+ *              \ref rsi_ble_driver_init(). This is a non-blocking API.
  *
- * @brief       De-Initialize driver components. Clear all the memory given for driver operations in \ref rsi_ble_driver_init() API.
- * In OS case,  User need to take care of OS variables initialized in \ref rsi_ble_driver_init(). This is a non-blocking API.
- * This API must be called by the thread/task/Master thread that it is not dependent on.
- * OS variables allocated/initialized in \ref rsi_ble_driver_init() API.
- * @pre 		Need to call after the driver initialization
- * @param[in]   Void
+ * @details     Clears driver OS objects and device state created during
+ *              \ref rsi_ble_driver_init(). Does not stop ADV/SCAN or disconnect
+ *              links; the application must quiesce BLE before NWP/Wi-Fi deinit.
+ *
+ * @pre         Need to call after successful driver initialization
+ *              (\ref rsi_ble_driver_init()). Call from a context that is not
+ *              dependent on BLE driver services after teardown.
+ *
+ * @param[in]   void
+ *
  * @return      0              - Success \n
- *              Non-Zero Value - Failure
+ *              -3             - Command given in wrong state \n
+ *              Non-Zero Value - Failure (for example, buffer address is NULL)
+ *
+ * @note        If this API is invoked as part of the sl_wifi_deinit() sequence,
+ *              ensure that any active BLE advertising and scanning roles are
+ *              stopped before calling this API. After the API call, wait for
+ *              the BLE disconnect event(s) to be received before invoking
+ *              sl_wifi_deinit(). Additionally, the application should not
+ *              restart advertising or scanning from the BLE disconnect event
+ *              handler during this deinitialization flow.
  */
-
 int32_t rsi_ble_driver_deinit(void)
 {
   SL_PRINTF(SL_DRIVER_DEINIT_ENTRY, COMMON, LOG_INFO);
@@ -214,6 +238,106 @@ int32_t rsi_ble_driver_deinit(void)
   rsi_driver_cb->device_state = RSI_DEVICE_STATE_NONE;
   SL_PRINTF(SL_DRIVER_DEINIT_SEMAPHORE_DESTROY_FAILED_26, COMMON, LOG_INFO);
   return RSI_SUCCESS;
+}
+
+/** @addtogroup BT-BLE
+* @{
+*/
+/*==============================================*/
+/**
+ * @brief      Enable BLE at runtime. See @ref rsi_ble_enable() in rsi_common_apis.h for
+ *             pre-conditions, application queue usage, and full return-code list.
+ * @return     RSI_SUCCESS on success; otherwise see rsi_ble_enable() documentation.
+ */
+int32_t rsi_ble_enable(void)
+{
+  sl_status_t status;
+  uint8_t sub_cmd = SLI_BLE_SUB_CMD_ENABLE;
+
+  if (!device_initialized) {
+    return (int32_t)SL_STATUS_NOT_INITIALIZED;
+  }
+
+  if (ble_runtime_state == BLE_STATE_ENABLED) {
+    return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
+  }
+
+  status = sli_wifi_send_command(SLI_COMMON_REQ_ENABLE_DISABLE_BLE,
+                                 SLI_WIFI_COMMON_CMD,
+                                 &sub_cmd,
+                                 sizeof(sub_cmd),
+                                 SLI_COMMON_RSP_BLE_ENABLE_DISABLE_WAIT_TIME,
+                                 NULL,
+                                 NULL);
+
+  if (status == SL_STATUS_OK) {
+    ble_runtime_state = BLE_STATE_ENABLED;
+  }
+
+  return (int32_t)status;
+}
+
+/*==============================================*/
+/**
+ * @brief      Disable BLE at runtime. See @ref rsi_ble_disable() in rsi_common_apis.h for
+ *             quiesce requirements (stop adv/scan, disconnect all links), application queue
+ *             usage, and full return-code list.
+ * @return     RSI_SUCCESS on success; otherwise see rsi_ble_disable() documentation.
+ */
+int32_t rsi_ble_disable(void)
+{
+  sl_status_t status;
+  uint8_t sub_cmd = SLI_BLE_SUB_CMD_DISABLE;
+
+  if (!device_initialized) {
+    return (int32_t)SL_STATUS_NOT_INITIALIZED;
+  }
+
+  if (ble_runtime_state == BLE_STATE_DISABLED) {
+    return RSI_ERROR_COMMAND_GIVEN_IN_WRONG_STATE;
+  }
+
+  // Check if any BLE devices are connected
+  if (rsi_ble_is_device_connected()) {
+    return RSI_ERROR_BLE_ACTIVITY_PENDING;
+  }
+
+  status = sli_wifi_send_command(SLI_COMMON_REQ_ENABLE_DISABLE_BLE,
+                                 SLI_WIFI_COMMON_CMD,
+                                 &sub_cmd,
+                                 sizeof(sub_cmd),
+                                 SLI_COMMON_RSP_BLE_ENABLE_DISABLE_WAIT_TIME,
+                                 NULL,
+                                 NULL);
+
+  if (status == SL_STATUS_OK) {
+    ble_runtime_state = BLE_STATE_DISABLED;
+  }
+
+  return (int32_t)status;
+}
+/** @} */
+
+/*==============================================*/
+/**
+ * @brief      Set BLE runtime state based on opermode configuration.
+ *             Should be called during opermode initialization.
+ * @param[in]  is_ble_enabled - true if BLE is enabled in opermode, false otherwise
+ * @return     void
+ */
+void rsi_ble_set_opermode_state(bool is_ble_enabled)
+{
+  ble_runtime_state = is_ble_enabled ? BLE_STATE_ENABLED : BLE_STATE_DISABLED;
+}
+
+/*==============================================*/
+/**
+ * @brief      Check if BLE is currently enabled.
+ * @return     true if BLE is enabled, false if disabled
+ */
+bool rsi_ble_state_is_enabled(void)
+{
+  return (ble_runtime_state == BLE_STATE_ENABLED);
 }
 
 /** @} */

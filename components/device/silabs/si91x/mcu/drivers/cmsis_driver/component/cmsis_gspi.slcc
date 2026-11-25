@@ -2,7 +2,7 @@ id: cmsis_gspi
 label: CMSIS GSPI
 package: platform_siwx91x
 description: >
-  Generic Serial Peripheral Interface Driver API's
+  This component provides Generic Serial Peripheral Interface driver APIs for the SiWx91x.
 category: Device|Si91x|MCU|Internal|CMSIS Drivers
 quality: production
 metadata:

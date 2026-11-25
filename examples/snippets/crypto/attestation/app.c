@@ -45,30 +45,32 @@ const osThreadAttr_t thread_attributes = {
   .stack_size = 3072,
   .priority   = osPriorityLow,
   .tz_module  = 0,
-  .reserved   = 0,
 };
 
 static const sl_wifi_device_configuration_t station_init_configuration = {
-  .boot_option = LOAD_NWP_FW,
-  .mac_address = NULL,
-  .band        = SL_SI91X_WIFI_BAND_2_4GHZ,
-  .region_code = US,
-  .boot_config = { .oper_mode              = SL_SI91X_CLIENT_MODE,
-                   .coex_mode              = SL_SI91X_WLAN_ONLY_MODE,
-                   .feature_bit_map        = (SL_WIFI_FEAT_SECURITY_PSK | SL_WIFI_FEAT_AGGREGATION),
-                   .tcp_ip_feature_bit_map = (SL_SI91X_TCP_IP_FEAT_DHCPV4_CLIENT | SL_SI91X_TCP_IP_FEAT_HTTP_CLIENT
+  .boot_option     = LOAD_NWP_FW,
+  .mac_address     = NULL,
+  .band            = SL_SI91X_WIFI_BAND_2_4GHZ,
+  .region_code     = US,
+  .boot_config     = { .oper_mode              = SL_SI91X_CLIENT_MODE,
+                       .coex_mode              = SL_SI91X_WLAN_ONLY_MODE,
+                       .feature_bit_map        = (SL_WIFI_FEAT_SECURITY_PSK | SL_WIFI_FEAT_AGGREGATION),
+                       .tcp_ip_feature_bit_map = (SL_SI91X_TCP_IP_FEAT_DHCPV4_CLIENT | SL_SI91X_TCP_IP_FEAT_HTTP_CLIENT
                                               | SL_SI91X_TCP_IP_FEAT_EXTENSION_VALID | SL_SI91X_TCP_IP_FEAT_OTAF
                                               | SL_SI91X_TCP_IP_FEAT_DNS_CLIENT),
-                   .custom_feature_bit_map = SL_WIFI_SYSTEM_CUSTOM_FEAT_EXTENSION_VALID,
-                   .ext_custom_feature_bit_map =
-                     (SL_SI91X_EXT_FEAT_XTAL_CLK | SL_SI91X_EXT_FEAT_UART_SEL_FOR_DEBUG_PRINTS | MEMORY_CONFIG),
-                   .bt_feature_bit_map = 0,
-                   .ext_tcp_ip_feature_bit_map =
-                     (SL_SI91X_EXT_FEAT_HTTP_OTAF_SUPPORT | SL_SI91X_EXT_TCP_IP_SSL_16K_RECORD
-                      | SL_SI91X_CONFIG_FEAT_EXTENTION_VALID),
-                   .ble_feature_bit_map     = 0,
-                   .ble_ext_feature_bit_map = 0,
-                   .config_feature_bit_map  = 0 }
+                       .custom_feature_bit_map = SL_WIFI_SYSTEM_CUSTOM_FEAT_EXTENSION_VALID,
+                       .ext_custom_feature_bit_map =
+                         (SL_SI91X_EXT_FEAT_XTAL_CLK | SL_SI91X_EXT_FEAT_UART_SEL_FOR_DEBUG_PRINTS | MEMORY_CONFIG),
+                       .bt_feature_bit_map = 0,
+                       .ext_tcp_ip_feature_bit_map =
+                         (SL_SI91X_EXT_FEAT_HTTP_OTAF_SUPPORT | SL_SI91X_EXT_TCP_IP_SSL_16K_RECORD
+                      | SL_SI91X_CONFIG_FEAT_EXTENSION_VALID),
+                       .ble_feature_bit_map     = 0,
+                       .ble_ext_feature_bit_map = 0,
+                       .config_feature_bit_map  = 0 },
+  .ta_pool         = { .tx_ratio_in_buffer_pool = 0, .rx_ratio_in_buffer_pool = 0, .global_ratio_in_buffer_pool = 0 },
+  .efuse_data_type = SL_SI91X_EFUSE_MFG_SW_VERSION,
+  .nwp_fw_image_number = SL_SI91X_NWP_FW_IMAGE_NUMBER_0
 };
 /**
  * @fn    void app_init(void)
@@ -97,7 +99,7 @@ void application_start(const void *unused)
   sl_status_t status = SL_STATUS_OK;
   status             = sl_net_init(SL_NET_WIFI_CLIENT_INTERFACE, &station_init_configuration, NULL, NULL);
   if (status != SL_STATUS_OK) {
-    printf("Failed to start Wi-Fi client interface: 0x%lx\r\n", status);
+    printf("Failed to start Wi-Fi client interface: 0x%x\r\n", (unsigned int)status);
     return;
   }
   printf("\r\nWi-Fi Init success\r\n");
@@ -158,7 +160,7 @@ void sl_decode()
 {
   struct q_useful_buf_c signed_cose;
   struct q_useful_buf_c returned_payload;
-  struct t_cose_key key_pair;
+  struct t_cose_key key_pair = { 0 };
   struct t_cose_sign1_verify_ctx verify_ctx;
 
   //! Assigning the token received for verification

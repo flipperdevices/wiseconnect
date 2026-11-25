@@ -23,9 +23,10 @@
 #include "sl_sleeptimer.h"
 #include "sl_si91x_led_instances.h"
 #include "rsi_debug.h"
+#include "sl_log_helper.h"
 #include "sl_si91x_led.h"
 
-// Code classifier feature for memory section placement
+// PSRAM code classifier feature for memory section placement
 #ifdef SL_SI91X_CODE_CLASSIFIER_ENABLE
 #include "sl_si91x_code_classifier.h"
 #endif
@@ -104,14 +105,20 @@ void code_classifier_example_process_action(void)
     // Storing large data in PSRAM helps reduce RAM usage
     if (buffer_index < 1024) {
       psram_large_buffer[buffer_index] = buffer_index;
-      DEBUGOUT("PSRAM Buffer [%d]: %d\n", buffer_index, psram_large_buffer[buffer_index]);
+      /* Note: All status messages in this example — both success and failure — are
+ * intentionally emitted via SL_PRINT_STRING_ERROR so that they remain visible
+ * on the console at the default log level. This is a demonstration choice, not
+ * a recommendation: in production code, ERROR severity should be reserved for
+ * actual failures, with successful operations logged via SL_PRINT_STRING_INFO
+ * (or SL_PRINT_STRING_DEBUG for verbose trace). */
+      SL_PRINT_STRING_ERROR("PSRAM Buffer [%d]: %d\n", buffer_index, psram_large_buffer[buffer_index]);
       buffer_index++;
     }
 
     // Fast-Access RAM Example
     // This variable is placed in RAM because it is frequently updated
     fast_access_counter++;
-    DEBUGOUT("Fast RAM Counter: %d\n", fast_access_counter);
+    SL_PRINT_STRING_ERROR("Fast RAM Counter: %d\n", fast_access_counter);
 
     // DMA Accessible Buffer
     // This buffer is used for DMA-based data transfer.
@@ -119,12 +126,13 @@ void code_classifier_example_process_action(void)
     if (buffer_index % 2 == 0) {
       dma_transfer_buffer[0]++;
       dma_transfer_buffer[1]++;
-      DEBUGOUT("DMA Transfer Buffer: {%d, %d}\n", dma_transfer_buffer[0], dma_transfer_buffer[1]);
+      SL_PRINT_STRING_ERROR("DMA Transfer Buffer: {%d, %d}\n", dma_transfer_buffer[0], dma_transfer_buffer[1]);
     }
 
     // Time-Critical Event Logging
     // Indicating whether a time-sensitive event has been triggered.
-    DEBUGOUT("Time-Critical Event Triggered: %s\n", time_critical_event_triggered ? "Yes" : "No");
+    SL_PRINT_STRING_ERROR("Time-Critical Event Triggered: %s\n",
+                          time_critical_event_triggered ? (uintptr_t) "Yes" : (uintptr_t) "No");
   }
 }
 

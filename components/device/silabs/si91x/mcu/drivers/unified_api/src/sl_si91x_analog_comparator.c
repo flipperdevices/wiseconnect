@@ -100,6 +100,9 @@ sl_status_t sl_si91x_analog_comparator_set_configurations(sl_analog_comparator_c
     // will return an error code
     if (comparator_config_ptr == NULL) {
       status = SL_STATUS_NULL_POINTER;
+      SL_PRINT_STRING_ERROR(
+        "sl_si91x_analog_comparator_set_configurations:Comparator configuration pointer is NULL,line no : %d\r\n",
+        (int)__LINE__);
       break;
     }
     // Validating comparator parameters
@@ -108,6 +111,9 @@ sl_status_t sl_si91x_analog_comparator_set_configurations(sl_analog_comparator_c
         || (comparator_config_ptr->inverting_input >= SL_COMPARATOR_INPUT_LAST)
         || (comparator_config_ptr->hystersis_value >= SL_COMPARATOR_HYSTERSIS_VALUE_LAST)) {
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR(
+        "sl_si91x_analog_comparator_set_configurations:Comparator parameters are invalid,line no : %d\r\n",
+        (int)__LINE__);
       break;
     }
     // Configuring comparator parameters
@@ -144,17 +150,26 @@ sl_status_t sl_si91x_analog_comparator_register_callback(sl_analog_comparator_nu
     // if they are NULL will return an error code
     if (on_comparator_callback == NULL) {
       status = SL_STATUS_NULL_POINTER;
+      SL_PRINT_STRING_ERROR(
+        "sl_si91x_analog_comparator_register_callback:Callback function pointer is NULL,line no : %d\r\n",
+        (int)__LINE__);
       break;
     }
     // Validating comparator number
     if (comparator_number >= SL_COMPARATOR_LAST) {
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR(
+        "sl_si91x_analog_comparator_register_callback:Comparator number is invalid,line no : %d\r\n",
+        (int)__LINE__);
       break;
     }
     // To validate the function pointer, if the parameters is not NULL then it
     //will return an busy error code
     if (comparator_callback_function_pointers[(comparator_number - 1)] != NULL) {
       status = SL_STATUS_BUSY;
+      SL_PRINT_STRING_ERROR(
+        "sl_si91x_analog_comparator_register_callback:Callback function pointer is already registered,line no : %d\r\n",
+        (int)__LINE__);
       break;
     }
     // The function pointer is fed to the static variable, which will be called in the IRQ handler
@@ -181,6 +196,9 @@ sl_status_t sl_si91x_analog_comparator_set_resistor_bank_threshold(
     // Validating comparator threshold value param
     if (threshold_value >= SL_COMPARATOR_THRESHOLD_VALUE_LAST) {
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR(
+        "sl_si91x_analog_comparator_set_resistor_bank_threshold:Comparator threshold value is invalid,line no : %d\r\n",
+        (int)__LINE__);
       break;
     }
     // Setting resistor bank threshold value to change its output voltage
@@ -204,6 +222,9 @@ sl_status_t sl_si91x_analog_comparator_set_reference_scaler_output(
     // Validating comparator scalar factor value
     if (scale_factor_value >= SL_COMPARATOR_SCALE_FACTOR_VALUE_LAST) {
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR("sl_si91x_analog_comparator_set_reference_scaler_output:Comparator scale factor value is "
+                            "invalid,line no : %d\r\n",
+                            (int)__LINE__);
       break;
     }
     // Setting reference scale value to change its output voltage
@@ -229,6 +250,9 @@ sl_status_t sl_si91x_analog_comparator_unregister_callback(sl_analog_comparator_
     // Validating comparator number
     if (comparator_number >= SL_COMPARATOR_LAST) {
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR(
+        "sl_si91x_analog_comparator_unregister_callback:Comparator number is invalid,line no : %d\r\n",
+        (int)__LINE__);
       break;
     }
     // Disabling passed timer instance interrupt

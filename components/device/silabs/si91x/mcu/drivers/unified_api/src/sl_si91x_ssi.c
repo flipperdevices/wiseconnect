@@ -88,7 +88,7 @@ static uint8_t convert_handle_to_instance(sl_ssi_handle_t ssi_handle);
  ******************************************************************************/
 /*******************************************************************************
  * To configure clock with input clock config structure for SSI. It validates
- * the clock frequency validate_clock_paramters function. If the clock frequency
+ * the clock frequency validate_clock_parameters function. If the clock frequency
  * is in range, it activates the clock for SSI peripheral. RSI errors are converted
  * to SL errors via convert_rsi_to_sl_error_code function.
  *
@@ -106,6 +106,7 @@ sl_status_t sl_si91x_ssi_configure_clock(sl_ssi_clock_config_t *clock_config)
   do {
     if (clock_config == NULL) {
       status = SL_STATUS_NULL_POINTER;
+      SL_PRINT_STRING_ERROR("sl_si91x_ssi_configure_clock: handle NULL,line no : %d\r\n", (int)__LINE__);
       break;
     }
   } while (false);
@@ -150,21 +151,31 @@ sl_status_t sl_si91x_ssi_init(sl_ssi_instance_t instance, sl_ssi_handle_t *ssi_h
 #endif
     if (SSI_GetInitState(instance) == ENABLE) {
       status = SL_STATUS_BUSY;
+      SL_PRINT_STRING_ERROR("sl_si91x_ssi_init: error status=0x%04lX,line no : %d\r\n",
+                            (unsigned long)(SL_STATUS_BUSY),
+                            (int)__LINE__);
       break;
     }
     status = get_ssi_handle(instance, &ssi_temp_handle);
     if (status != SL_STATUS_OK) {
       status = SL_STATUS_FAIL;
+      SL_PRINT_STRING_ERROR("sl_si91x_ssi_init: error status=0x%04lX,line no : %d\r\n",
+                            (unsigned long)(SL_STATUS_FAIL),
+                            (int)__LINE__);
       break;
     }
     if (ssi_handle == NULL) {
       status = SL_STATUS_NULL_POINTER;
+      SL_PRINT_STRING_ERROR("sl_si91x_ssi_init: handle NULL,line no : %d\r\n", (int)__LINE__);
       break;
     }
     *ssi_handle  = ssi_temp_handle;
     error_status = ((sl_ssi_driver_t *)ssi_temp_handle)->Initialize(callback_event_handler);
     status       = convert_arm_to_sl_error_code(error_status);
     if (status != SL_STATUS_OK) {
+      SL_PRINT_STRING_ERROR("sl_si91x_ssi_init: error status=0x%04lX,line no : %d\r\n",
+                            (unsigned long)(status),
+                            (int)__LINE__);
       return status;
     }
     status = sli_si91x_ssi_configure_power_mode(ssi_temp_handle, ARM_POWER_FULL);
@@ -189,10 +200,14 @@ sl_status_t sl_si91x_ssi_deinit(sl_ssi_handle_t ssi_handle)
     // validate passed in parameter
     if (ssi_handle == NULL) {
       status = SL_STATUS_NULL_POINTER;
+      SL_PRINT_STRING_ERROR("sl_si91x_ssi_deinit: handle NULL,line no : %d\r\n", (int)__LINE__);
       break;
     }
     if (!validate_ssi_handle(ssi_handle)) {
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR("sl_si91x_ssi_deinit: error status=0x%04lX,line no : %d\r\n",
+                            (unsigned long)(SL_STATUS_INVALID_PARAMETER),
+                            (int)__LINE__);
       break;
     }
     //unregister the callback event on a per-instance basis.
@@ -200,6 +215,12 @@ sl_status_t sl_si91x_ssi_deinit(sl_ssi_handle_t ssi_handle)
 
     error_status = ((sl_ssi_driver_t *)ssi_handle)->Uninitialize();
     status       = convert_arm_to_sl_error_code(error_status);
+    if (status != SL_STATUS_OK) {
+      SL_PRINT_STRING_ERROR("sl_si91x_ssi_deinit: error status=0x%04lX,line no : %d\r\n",
+                            (unsigned long)(status),
+                            (int)__LINE__);
+      break;
+    }
   } while (false);
   return status;
 }
@@ -224,14 +245,24 @@ static sl_status_t sli_si91x_ssi_configure_power_mode(sl_ssi_handle_t ssi_handle
     // then returns error status
     if (state > ARM_POWER_FULL || !validate_ssi_handle(ssi_handle)) {
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR("sli_si91x_ssi_configure_power_mode: error status=0x%04lX,line no : %d\r\n",
+                            (unsigned long)(SL_STATUS_INVALID_PARAMETER),
+                            (int)__LINE__);
       break;
     }
     if (ssi_handle == NULL) {
       status = SL_STATUS_NULL_POINTER;
+      SL_PRINT_STRING_ERROR("sli_si91x_ssi_configure_power_mode: handle NULL,line no : %d\r\n", (int)__LINE__);
       break;
     }
     error_status = ((sl_ssi_driver_t *)ssi_handle)->PowerControl(state);
     status       = convert_arm_to_sl_error_code(error_status);
+    if (status != SL_STATUS_OK) {
+      SL_PRINT_STRING_ERROR("sli_si91x_ssi_configure_power_mode: error status=0x%04lX,line no : %d\r\n",
+                            (unsigned long)(status),
+                            (int)__LINE__);
+      break;
+    }
   } while (false);
   return status;
 }
@@ -279,16 +310,23 @@ sl_status_t sl_si91x_ssi_set_configuration(sl_ssi_handle_t ssi_handle,
     // validate parameters passed in
     if (control_configuration == NULL || ssi_handle == NULL) {
       status = SL_STATUS_NULL_POINTER;
+      SL_PRINT_STRING_ERROR("sl_si91x_ssi_set_configuration: handle NULL,line no : %d\r\n", (int)__LINE__);
       break;
     }
     // validate ssi handle and baud rate
     if (!validate_ssi_handle(ssi_handle) || control_configuration->baud_rate > MAX_BAUDRATE) {
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR("sl_si91x_ssi_set_configuration: error status=0x%04lX,line no : %d\r\n",
+                            (unsigned long)(SL_STATUS_INVALID_PARAMETER),
+                            (int)__LINE__);
       break;
     }
     // validate control parameters
     status = validate_control_parameters(control_configuration);
     if (status != SL_STATUS_OK) {
+      SL_PRINT_STRING_ERROR("sl_si91x_ssi_set_configuration: error status=0x%04lX,line no : %d\r\n",
+                            (unsigned long)(status),
+                            (int)__LINE__);
       break;
     }
 
@@ -303,7 +341,23 @@ sl_status_t sl_si91x_ssi_set_configuration(sl_ssi_handle_t ssi_handle,
       input_mode |= ARM_SPI_SS_MASTER_SW;
       input_mode |= SL_SSI_MASTER_ACTIVE;
     } else {
-      input_mode |= ARM_SPI_SS_MASTER_HW_OUTPUT;
+      boolean_t is_dma_enabled = false;
+#if defined(SL_SSI_PRIMARY_DMA_CONFIG_ENABLE) && (SL_SSI_PRIMARY_DMA_CONFIG_ENABLE == 1)
+      if (ssi_handle == &Driver_SSI_MASTER) {
+        is_dma_enabled = true;
+      }
+#endif
+#if defined(SL_SSI_ULP_PRIMARY_DMA_CONFIG_ENABLE) && (SL_SSI_ULP_PRIMARY_DMA_CONFIG_ENABLE == 1)
+      if (ssi_handle == &Driver_SSI_ULP_MASTER) {
+        is_dma_enabled = true;
+      }
+#endif
+      // When DMA is enabled from UC, use HW slave-select output; otherwise drive CS in software.
+      if (is_dma_enabled) {
+        input_mode |= ARM_SPI_SS_MASTER_HW_OUTPUT;
+      } else {
+        input_mode |= ARM_SPI_SS_MASTER_SW;
+      }
       input_mode |= SL_SSI_MASTER_ACTIVE;
     }
 
@@ -317,6 +371,12 @@ sl_status_t sl_si91x_ssi_set_configuration(sl_ssi_handle_t ssi_handle,
     sl_ssi_set_receive_sample_delay(ssi_handle, control_configuration->receive_sample_delay);
     error_status = ((sl_ssi_driver_t *)ssi_handle)->Control(input_mode, control_configuration->baud_rate);
     status       = convert_arm_to_sl_error_code(error_status);
+    if (status != SL_STATUS_OK) {
+      SL_PRINT_STRING_ERROR("sl_si91x_ssi_set_configuration: error status=0x%04lX,line no : %d\r\n",
+                            (unsigned long)(status),
+                            (int)__LINE__);
+      break;
+    }
   } while (false);
   return status;
 }
@@ -344,29 +404,44 @@ sl_status_t sl_si91x_ssi_command_config(sl_ssi_handle_t ssi_handle,
     // validate input arguments
     if (ssi_handle == NULL) {
       status = SL_STATUS_NULL_POINTER;
+      SL_PRINT_STRING_ERROR("sl_si91x_ssi_command_config: handle NULL,line no : %d\r\n", (int)__LINE__);
       break;
     }
     // validate ssi handle
     if (!validate_ssi_handle(ssi_handle)) {
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR("sl_si91x_ssi_command_config: error status=0x%04lX,line no : %d\r\n",
+                            (unsigned long)(SL_STATUS_INVALID_PARAMETER),
+                            (int)__LINE__);
       break;
     }
     // Only support master mode for command API
     if (ssi_handle != &Driver_SSI_MASTER) {
       status = SL_STATUS_INVALID_HANDLE;
+      SL_PRINT_STRING_ERROR("sl_si91x_ssi_command_config: error status=0x%04lX,line no : %d\r\n",
+                            (unsigned long)(SL_STATUS_INVALID_HANDLE),
+                            (int)__LINE__);
       break;
     }
     // Validate command parameters
     if (spi_frf >= SSI_FRF_LAST || inst_len > SSI_INST_LEN_16_BITS || addr_len > SSI_ADDR_LEN_60_BITS
         || inst_len == SSI_INST_LEN_0_BITS || xfer_type > SSI_XFER_TYPE_BOTH_ENH) {
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR("sl_si91x_ssi_command_config: error status=0x%04lX,line no : %d\r\n",
+                            (unsigned long)(SL_STATUS_INVALID_PARAMETER),
+                            (int)__LINE__);
       break;
     }
 
     // Call the SSI command API to configure and send the command phase
     error_status = SSI_Command_Configure(inst_len, addr_len, spi_frf, xfer_type);
     status       = convert_arm_to_sl_error_code(error_status);
-
+    if (status != SL_STATUS_OK) {
+      SL_PRINT_STRING_ERROR("sl_si91x_ssi_command_config: error status=0x%04lX,line no : %d\r\n",
+                            (unsigned long)(status),
+                            (int)__LINE__);
+      break;
+    }
   } while (false);
   return status;
 }
@@ -392,11 +467,15 @@ sl_status_t sl_si91x_ssi_receive_data(sl_ssi_handle_t ssi_handle, void *data, ui
     // validate input arguments
     if (data == NULL || ssi_handle == NULL) {
       status = SL_STATUS_NULL_POINTER;
+      SL_PRINT_STRING_ERROR("sl_si91x_ssi_receive_data: handle NULL,line no : %d\r\n", (int)__LINE__);
       break;
     }
     // validate data length and ssi handle
     if (!data_length || !validate_ssi_handle(ssi_handle)) {
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR("sl_si91x_ssi_receive_data: error status=0x%04lX,line no : %d\r\n",
+                            (unsigned long)(SL_STATUS_INVALID_PARAMETER),
+                            (int)__LINE__);
       break;
     }
     if (ssi_handle != &Driver_SSI_SLAVE) {
@@ -404,12 +483,21 @@ sl_status_t sl_si91x_ssi_receive_data(sl_ssi_handle_t ssi_handle, void *data, ui
       error_status = ((sl_ssi_driver_t *)ssi_handle)->Control(ARM_SPI_CONTROL_SS, ARM_SPI_SS_ACTIVE);
       status       = convert_arm_to_sl_error_code(error_status);
       if (status != SL_STATUS_OK) {
+        SL_PRINT_STRING_ERROR("sl_si91x_ssi_receive_data: error status=0x%04lX,line no : %d\r\n",
+                              (unsigned long)(status),
+                              (int)__LINE__);
         break;
       }
     }
     sl_si91x_ssi_set_fifo_threshold(ssi_handle);
     error_status = ((sl_ssi_driver_t *)ssi_handle)->Receive(data, data_length);
     status       = convert_arm_to_sl_error_code(error_status);
+    if (status != SL_STATUS_OK) {
+      SL_PRINT_STRING_ERROR("sl_si91x_ssi_receive_data: error status=0x%04lX,line no : %d\r\n",
+                            (unsigned long)(status),
+                            (int)__LINE__);
+      break;
+    }
   } while (false);
   return status;
 }
@@ -445,28 +533,44 @@ sl_status_t sl_si91x_ssi_receive_command_data(sl_ssi_handle_t ssi_handle,
 
   // Validate input arguments
   if ((data == NULL) || (ssi_handle == NULL)) {
+    SL_PRINT_STRING_ERROR("sl_si91x_ssi_receive_command_data: handle NULL,line no : %d\r\n", (int)__LINE__);
     return SL_STATUS_NULL_POINTER;
   }
 
   // Validate data length and ssi handle
   if ((!validate_ssi_handle(ssi_handle)) || (!data_length)) {
+    SL_PRINT_STRING_ERROR("sl_si91x_ssi_receive_command_data: error status=0x%04lX,line no : %d\r\n",
+                          (unsigned long)(SL_STATUS_INVALID_PARAMETER),
+                          (int)__LINE__);
     return SL_STATUS_INVALID_PARAMETER;
   }
 
   // Only master mode supports advanced commands
   if (&Driver_SSI_MASTER != ssi_handle) {
+    SL_PRINT_STRING_ERROR("sl_si91x_ssi_receive_command_data: error status=0x%04lX,line no : %d\r\n",
+                          (unsigned long)(SL_STATUS_INVALID_HANDLE),
+                          (int)__LINE__);
     return SL_STATUS_INVALID_HANDLE;
   }
 
   // Assert the slave select line for the connected slave
   error_status = ((sl_ssi_driver_t *)ssi_handle)->Control(ARM_SPI_CONTROL_SS, ARM_SPI_SS_ACTIVE);
   if ((status = convert_arm_to_sl_error_code(error_status)) != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si91x_ssi_receive_command_data: error status=0x%04lX,line no : %d\r\n",
+                          (unsigned long)(status),
+                          (int)__LINE__);
     return status;
   }
 
   sl_si91x_ssi_set_fifo_threshold(ssi_handle);
   error_status = SSI_MASTER_Receive_Command_Data(data, data_length, instruction, address, wait_cycles);
   status       = convert_arm_to_sl_error_code(error_status);
+  if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si91x_ssi_receive_command_data: error status=0x%04lX,line no : %d\r\n",
+                          (unsigned long)(status),
+                          (int)__LINE__);
+    return status;
+  }
   return status;
 }
 
@@ -490,10 +594,14 @@ sl_status_t sl_si91x_ssi_send_data(sl_ssi_handle_t ssi_handle, const void *data,
     // validate input arguments
     if (data == NULL || ssi_handle == NULL) {
       status = SL_STATUS_NULL_POINTER;
+      SL_PRINT_STRING_ERROR("sl_si91x_ssi_send_data: handle NULL,line no : %d\r\n", (int)__LINE__);
       break;
     }
     if (!data_length || !validate_ssi_handle(ssi_handle)) {
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR("sl_si91x_ssi_send_data: error status=0x%04lX,line no : %d\r\n",
+                            (unsigned long)(SL_STATUS_INVALID_PARAMETER),
+                            (int)__LINE__);
       break;
     }
 
@@ -502,12 +610,21 @@ sl_status_t sl_si91x_ssi_send_data(sl_ssi_handle_t ssi_handle, const void *data,
       error_status = ((sl_ssi_driver_t *)ssi_handle)->Control(ARM_SPI_CONTROL_SS, ARM_SPI_SS_ACTIVE);
       status       = convert_arm_to_sl_error_code(error_status);
       if (status != SL_STATUS_OK) {
+        SL_PRINT_STRING_ERROR("sl_si91x_ssi_send_data: error status=0x%04lX,line no : %d\r\n",
+                              (unsigned long)(status),
+                              (int)__LINE__);
         break;
       }
     }
     sl_si91x_ssi_set_fifo_threshold(ssi_handle);
     error_status = ((sl_ssi_driver_t *)ssi_handle)->Send(data, data_length);
     status       = convert_arm_to_sl_error_code(error_status);
+    if (status != SL_STATUS_OK) {
+      SL_PRINT_STRING_ERROR("sl_si91x_ssi_send_data: error status=0x%04lX,line no : %d\r\n",
+                            (unsigned long)(status),
+                            (int)__LINE__);
+      break;
+    }
   } while (false);
   return status;
 }
@@ -543,18 +660,25 @@ sl_status_t sl_si91x_ssi_send_command_data(sl_ssi_handle_t ssi_handle,
     // Validate input arguments
     if (data == NULL || ssi_handle == NULL) {
       status = SL_STATUS_NULL_POINTER;
+      SL_PRINT_STRING_ERROR("sl_si91x_ssi_send_command_data: handle NULL,line no : %d\r\n", (int)__LINE__);
       break;
     }
 
     // Validate data length and ssi handle
     if (!data_length || !validate_ssi_handle(ssi_handle)) {
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR("sl_si91x_ssi_send_command_data: error status=0x%04lX,line no : %d\r\n",
+                            (unsigned long)(SL_STATUS_INVALID_PARAMETER),
+                            (int)__LINE__);
       break;
     }
 
     // Only master mode supports advanced commands
     if (ssi_handle != &Driver_SSI_MASTER) {
       status = SL_STATUS_INVALID_HANDLE;
+      SL_PRINT_STRING_ERROR("sl_si91x_ssi_send_command_data: error status=0x%04lX,line no : %d\r\n",
+                            (unsigned long)(SL_STATUS_INVALID_HANDLE),
+                            (int)__LINE__);
       break;
     }
 
@@ -562,12 +686,21 @@ sl_status_t sl_si91x_ssi_send_command_data(sl_ssi_handle_t ssi_handle,
     error_status = ((sl_ssi_driver_t *)ssi_handle)->Control(ARM_SPI_CONTROL_SS, ARM_SPI_SS_ACTIVE);
     status       = convert_arm_to_sl_error_code(error_status);
     if (status != SL_STATUS_OK) {
+      SL_PRINT_STRING_ERROR("sl_si91x_ssi_send_command_data: error status=0x%04lX,line no : %d\r\n",
+                            (unsigned long)(status),
+                            (int)__LINE__);
       break;
     }
 
     sl_si91x_ssi_set_fifo_threshold(ssi_handle);
     error_status = SSI_MASTER_Send_Command_Data(data, data_length, instruction, address);
     status       = convert_arm_to_sl_error_code(error_status);
+    if (status != SL_STATUS_OK) {
+      SL_PRINT_STRING_ERROR("sl_si91x_ssi_transfer_data: error status=0x%04lX,line no : %d\r\n",
+                            (unsigned long)(status),
+                            (int)__LINE__);
+      break;
+    }
   } while (false);
   return status;
 }
@@ -597,10 +730,14 @@ sl_status_t sl_si91x_ssi_transfer_data(sl_ssi_handle_t ssi_handle,
     // validate input arguments
     if ((data_out == NULL) || (data_in == NULL) || ssi_handle == NULL) {
       status = SL_STATUS_NULL_POINTER;
+      SL_PRINT_STRING_ERROR("sl_si91x_ssi_transfer_data: handle NULL,line no : %d\r\n", (int)__LINE__);
       break;
     }
     if (!validate_ssi_handle(ssi_handle) || !data_length) {
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR("sl_si91x_ssi_transfer_data: error status=0x%04lX,line no : %d\r\n",
+                            (unsigned long)(SL_STATUS_INVALID_PARAMETER),
+                            (int)__LINE__);
       break;
     }
     if (ssi_handle != &Driver_SSI_SLAVE) {
@@ -608,12 +745,21 @@ sl_status_t sl_si91x_ssi_transfer_data(sl_ssi_handle_t ssi_handle,
       error_status = ((sl_ssi_driver_t *)ssi_handle)->Control(ARM_SPI_CONTROL_SS, ARM_SPI_SS_ACTIVE);
       status       = convert_arm_to_sl_error_code(error_status);
       if (status != SL_STATUS_OK) {
+        SL_PRINT_STRING_ERROR("sl_si91x_ssi_transfer_data: error status=0x%04lX,line no : %d\r\n",
+                              (unsigned long)(status),
+                              (int)__LINE__);
         break;
       }
     }
     sl_si91x_ssi_set_fifo_threshold(ssi_handle);
     error_status = ((sl_ssi_driver_t *)ssi_handle)->Transfer(data_out, data_in, data_length);
     status       = convert_arm_to_sl_error_code(error_status);
+    if (status != SL_STATUS_OK) {
+      SL_PRINT_STRING_ERROR("sl_si91x_ssi_set_receive_sample_delay: error status=0x%04lX,line no : %d\r\n",
+                            (unsigned long)(status),
+                            (int)__LINE__);
+      break;
+    }
   } while (false);
   return status;
 }
@@ -757,11 +903,15 @@ sl_status_t sl_si91x_ssi_register_event_callback(sl_ssi_handle_t ssi_handle, sl_
     // Validates the null pointer, if true returns error code
     if ((ssi_handle == NULL) || (callback_event == NULL)) {
       status = SL_STATUS_NULL_POINTER;
+      SL_PRINT_STRING_ERROR("sl_si91x_ssi_register_event_callback: handle NULL,line no : %d\r\n", (int)__LINE__);
       break;
     }
     // Validate the SSI handle address, if incorrect returns error code
     if (!validate_ssi_handle(ssi_handle)) {
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR("sl_si91x_ssi_register_event_callback: error status=0x%04lX,line no : %d\r\n",
+                            (unsigned long)(SL_STATUS_INVALID_PARAMETER),
+                            (int)__LINE__);
       break;
     }
     // Getting the instance number from the input handle
@@ -770,6 +920,9 @@ sl_status_t sl_si91x_ssi_register_event_callback(sl_ssi_handle_t ssi_handle, sl_
     // returns an error code
     if (user_callback[instance] != NULL) {
       status = SL_STATUS_BUSY;
+      SL_PRINT_STRING_ERROR("sl_si91x_ssi_register_event_callback: error status=0x%04lX,line no : %d\r\n",
+                            (unsigned long)(SL_STATUS_BUSY),
+                            (int)__LINE__);
       break;
     }
     // User callback address is passed to the static variable which is called at the time of
@@ -879,17 +1032,24 @@ sl_status_t sl_si91x_ssi_set_frame_length(sl_ssi_handle_t ssi_handle, uint8_t fr
     // Validate input parameters
     if (ssi_handle == NULL) {
       status = SL_STATUS_NULL_POINTER;
+      SL_PRINT_STRING_ERROR("sl_si91x_ssi_set_frame_length: handle NULL,line no : %d\r\n", (int)__LINE__);
       break;
     }
 
     if (!validate_ssi_handle(ssi_handle)) {
       status = SL_STATUS_INVALID_HANDLE;
+      SL_PRINT_STRING_ERROR("sl_si91x_ssi_set_frame_length: error status=0x%04lX,line no : %d\r\n",
+                            (unsigned long)(SL_STATUS_INVALID_HANDLE),
+                            (int)__LINE__);
       break;
     }
 
     // Validate frame length range (4-32 bits)
     if (frame_length < 4 || frame_length > 32) {
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR("sl_si91x_ssi_set_frame_length: error status=0x%04lX,line no : %d\r\n",
+                            (unsigned long)(SL_STATUS_INVALID_PARAMETER),
+                            (int)__LINE__);
       break;
     }
 
@@ -1122,31 +1282,47 @@ static sl_status_t validate_control_parameters(sl_ssi_control_config_t *control_
   do {
     if (control_configuration == NULL) {
       status = SL_STATUS_NULL_POINTER;
+      SL_PRINT_STRING_ERROR("validate_control_parameters: handle NULL,line no : %d\r\n", (int)__LINE__);
       break;
     }
 
     if (control_configuration->clock_mode > SL_SSI_PERIPHERAL_MICROWIRE) {
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR("validate_control_parameters: error status=0x%04lX,line no : %d\r\n",
+                            (unsigned long)(SL_STATUS_INVALID_PARAMETER),
+                            (int)__LINE__);
       break;
     }
     if ((control_configuration->bit_width < MIN_BIT_WIDTH) || (control_configuration->bit_width > MAX_BIT_WIDTH)) {
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR("validate_control_parameters: error status=0x%04lX,line no : %d\r\n",
+                            (unsigned long)(SL_STATUS_INVALID_PARAMETER),
+                            (int)__LINE__);
       break;
     }
     // Maximum bit rate that ULP_SSI can support.
     if (control_configuration->device_mode == SL_SSI_ULP_MASTER_ACTIVE) {
       if (control_configuration->baud_rate > ULP_SSI_MAX_BAUDRATE) {
         status = SL_STATUS_INVALID_PARAMETER;
+        SL_PRINT_STRING_ERROR("validate_control_parameters: error status=0x%04lX,line no : %d\r\n",
+                              (unsigned long)(SL_STATUS_INVALID_PARAMETER),
+                              (int)__LINE__);
         break;
       }
     } else {
       if (control_configuration->baud_rate > MAX_BAUDRATE) {
         status = SL_STATUS_INVALID_PARAMETER;
+        SL_PRINT_STRING_ERROR("validate_control_parameters: error status=0x%04lX,line no : %d\r\n",
+                              (unsigned long)(SL_STATUS_INVALID_PARAMETER),
+                              (int)__LINE__);
         break;
       }
     }
     if (control_configuration->device_mode >= SL_SSI_INSTANCE_LAST) {
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR("validate_control_parameters: error status=0x%04lX,line no : %d\r\n",
+                            (unsigned long)(SL_STATUS_INVALID_PARAMETER),
+                            (int)__LINE__);
       break;
     }
   } while (false);
@@ -1164,10 +1340,14 @@ static sl_status_t get_ssi_handle(sl_ssi_instance_t instance, sl_ssi_handle_t *s
   do {
     if (instance >= SL_SSI_INSTANCE_LAST) {
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR("get_ssi_handle: error status=0x%04lX,line no : %d\r\n",
+                            (unsigned long)(SL_STATUS_INVALID_PARAMETER),
+                            (int)__LINE__);
       break;
     }
     if (ssi_handle == NULL) {
       status = SL_STATUS_NULL_POINTER;
+      SL_PRINT_STRING_ERROR("get_ssi_handle: handle NULL,line no : %d\r\n", (int)__LINE__);
       break;
     }
     if (instance == SL_SSI_MASTER_ACTIVE) {

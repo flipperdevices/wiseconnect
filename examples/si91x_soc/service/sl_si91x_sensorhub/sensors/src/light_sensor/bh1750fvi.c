@@ -34,6 +34,7 @@
  * sensor data through I2C interface.
  * This sensor will detect the temperature value.
  ============================================================================**/
+#include <inttypes.h>
 #include "bh1750fvi.h"
 #include "sensor_hub.h"
 #include "rsi_debug.h"
@@ -74,7 +75,7 @@ sl_bh1750_handle_t sl_si91x_bh1750_create(sl_sensor_bus_t bus, uint8_t dev_addr)
   sensor->i2c_dev = I2Cdrv->MasterTransmit(SL_BH1750_I2C_ADDRESS_DEFAULT, a, 1, false);
 
   if (sensor->i2c_dev != SL_DRIVER_OK) {
-    DEBUGOUT("bh1750 create fail I2C unable to transmit:%ld\r\n", sensor->i2c_dev);
+    DEBUGOUT("bh1750 create fail I2C unable to transmit:%" PRId32 "\r\n", sensor->i2c_dev);
     return NULL;
   }
 
@@ -153,7 +154,7 @@ sl_bh170_err_t sl_si91x_bh1750_power_on(sl_bh1750_handle_t sensor)
   a[0] = (uint8_t)(SL_BH1750_POWER_ON & 0xFF);
   ret  = (int32_t)I2Cdrv->MasterTransmit(SL_BH1750_I2C_ADDRESS_DEFAULT, a, 1, false); //sens->i2c_dev
   if (ret != ARM_DRIVER_OK) {
-    DEBUGOUT("\r\n BH1750 Power on command transmit fail %ld \r\n", ret);
+    DEBUGOUT("\r\n BH1750 Power on command transmit fail %" PRId32 " \r\n", ret);
     return ret;
   }
 
@@ -234,7 +235,7 @@ sl_bh170_err_t sl_si91x_bh1750_set_measure_mode(sl_bh1750_handle_t sensor, sl_bh
   a[0] = (uint8_t)(cmd_measure & 0xFF);
   ret  = (int32_t)I2Cdrv->MasterTransmit(SL_BH1750_I2C_ADDRESS_DEFAULT, a, 1, false);
   if (ret != ARM_DRIVER_OK) {
-    DEBUGOUT("\r\n BH1750 set measure mode command transmit fail :%ld\r\n", ret);
+    DEBUGOUT("\r\n BH1750 set measure mode command transmit fail :%" PRId32 "\r\n", ret);
     return ret;
   }
   /* TODO: Add timeout and PASS error*/
@@ -261,7 +262,7 @@ sl_bh170_err_t sl_si91x_bh1750_get_data(sl_bh1750_handle_t sensor, float *data)
   uint8_t bh1750_data[2] = { 0 };
   ret                    = (int32_t)I2Cdrv->MasterReceive(SL_BH1750_I2C_ADDRESS_DEFAULT, bh1750_data, 2, false);
   if (ret != RSI_OK) {
-    DEBUGOUT("\r\n BH1750 Data transmit fail :%ld\r\n", ret);
+    DEBUGOUT("\r\n BH1750 Data transmit fail :%" PRId32 "\r\n", ret);
     return ret;
   }
   /* TODO: Add timeout and PASS error*/

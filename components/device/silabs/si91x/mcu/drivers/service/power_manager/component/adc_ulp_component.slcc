@@ -2,9 +2,9 @@ id: adc_ulp_component
 label: PM ULP ADC
 package: platform_siwx91x
 description: >
-  ULP ADC component will enable ADC in the low-power mode. It moves all the peripheral dependencies to RAM. 
-  It also installs the peripheral component if already not installed.
-  If an instantiable component then the user needs to install the instance manually.
+  This component enables ADC in low-power mode. It moves peripheral dependencies to RAM
+  and installs the peripheral component if not already installed. For instantiable components,
+  the user must install the instance manually.
 category: Device|Si91x|MCU|Service|Power Manager|ULP Peripheral
 quality: production
 metadata:

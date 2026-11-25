@@ -7,8 +7,6 @@ ui_hints:
 quality: production
 define:
 - name: SIWG917Y121MGNB
-  unless:
-  - device_content_override
 - name: SLI_SI917
   value: '1'
 - name: SLI_SI917B0
@@ -38,8 +36,6 @@ define:
 source:
 - path: components/device/silabs/si91x/mcu/core/chip/src/system_si91x.c
 - path: components/device/silabs/si91x/mcu/core/chip/src/startup_si91x.c
-  unless:
-  - siwx917_soc_custom_startup
 provides:
 - name: siwg917y121mgnb
 - name: device
@@ -58,6 +54,7 @@ provides:
 - name: device_is_module
 - name: device_no_antenna
 requires:
+- name: sl_si91x_agents_md
 - name: rsilib_chip
 - name: cmsis_common
   condition:
@@ -75,6 +72,11 @@ requires:
   condition:
   - freertos
 - name: si91x_32kHz_external_oscillator
+- name: psram_aps1604m_sqr
+  condition:
+  - psram_core
+- name: external_psram_none
+- name: external_flash_none
 - name: opn_config
 recommends:
 - id: si91x_mem_config_1

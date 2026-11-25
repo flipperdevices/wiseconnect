@@ -57,4 +57,10 @@ typedef enum wifi_app_cmd_e {
   WIFI_APP_TIMEOUT_NOTIFY       = 5
 } wifi_app_cmd_t;
 
+// SSID buffer for BLE-provisioned STA credentials (must match `coex_ssid[]` in ble_app.c).
+#define WIFI_STATION_BLE_COEX_SSID_BUFFER_LEN 50u
+
+// PSK buffer / max BLE GATT value length for provisioning commands (must match `pwd[]` and `RSI_BLE_MAX_DATA_LEN` in ble_app.c).
+#define WIFI_STATION_BLE_PWD_BUFFER_LEN 66u
+
 #endif

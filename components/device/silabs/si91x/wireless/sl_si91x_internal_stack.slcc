@@ -1,7 +1,7 @@
 id: sl_si91x_internal_stack
 package: wifi
 description: >
-  The offload network stack component offloads the network stack to the Si91x Wireless Subsystem
+  The offload network stack component offloads the network stack to the SiWx91x Wireless Subsystem
 label: Offload Network Stack
 category: Device|Si91x|Wireless|Network Stack
 quality: production
@@ -53,4 +53,5 @@ define:
 
 requires:
 - name: sl_si91x_wireless
+- name: log_none
 

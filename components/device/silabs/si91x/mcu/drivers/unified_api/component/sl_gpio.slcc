@@ -24,6 +24,4 @@ provides:
   - name: sl_gpio
 requires:
   - name: sl_gpio_peripheral
-documentation:
-    docset: wiseconnect
-    document: wiseconnect-api-reference-guide-si91x-peripherals/gpio
+  - name: log_none

@@ -76,12 +76,11 @@ const osThreadAttr_t thread_attributes = {
   .stack_size = 3072,
   .priority   = osPriorityLow,
   .tz_module  = 0,
-  .reserved   = 0,
 };
 
 volatile bool is_server_running = false;
-char WIFI_CLIENT_PROFILE_SSID[32]; // Assuming SSID can be up to 32 characters long
-char WIFI_CLIENT_CREDENTIAL[64];   // Assuming Password can be up to 64 characters long
+char WIFI_CLIENT_PROFILE_SSID[33]; // SSID is limited to 32 characters plus null terminator
+char WIFI_CLIENT_CREDENTIAL[64];   // Password is limited to 63 characters plus null terminator
 char WIFI_CLIENT_SECURITY_TYPE[32];
 
 static sl_net_wifi_ap_profile_t wifi_ap_profile = {
@@ -157,7 +156,10 @@ sl_status_t login_request_handler(sl_http_server_t *handle, sl_http_server_reque
 {
   sl_http_server_response_t http_response = { 0 };
 
-  printf("Got request %s with data length : %lu\n", req->uri.path, req->request_data_length);
+  SL_DEBUG_LOG_V2(DEBUG,
+                  "Got request %s with data length : %lu\r\n",
+                  (uintptr_t)req->uri.path,
+                  req->request_data_length);
 
   // Set the response code to 200 (OK)
   http_response.response_code = SL_HTTP_RESPONSE_OK;
@@ -178,7 +180,10 @@ sl_status_t connect_data_handler(sl_http_server_t *handle, sl_http_server_reques
   sl_http_recv_req_data_t recvData        = { 0 };
   sl_http_server_response_t http_response = { 0 };
 
-  printf("Got request %s with data length : %lu\n", req->uri.path, req->request_data_length);
+  SL_DEBUG_LOG_V2(DEBUG,
+                  "Got request %s with data length : %lu\r\n",
+                  (uintptr_t)req->uri.path,
+                  req->request_data_length);
   if (req->request_data_length > 0) {
     recvData.request       = req;
     recvData.buffer        = (uint8_t *)response;
@@ -186,7 +191,7 @@ sl_status_t connect_data_handler(sl_http_server_t *handle, sl_http_server_reques
 
     sl_http_server_read_request_data(handle, &recvData);
     response[recvData.received_data_length] = 0;
-    printf("Got request data as : %s\n", response);
+    SL_DEBUG_LOG_V2(DEBUG, "Got request data as : %s\r\n", (uintptr_t)response);
   }
 
   // Set the response code to 200 (OK)
@@ -211,7 +216,10 @@ sl_status_t default_handler(sl_http_server_t *handle, sl_http_server_request_t *
   sl_http_server_response_t http_response = { 0 };
   sl_http_header_t header                 = { .key = "Server", .value = "SI917-HTTPServer" };
 
-  printf("Got request %s with data length : %lu\n", req->uri.path, req->request_data_length);
+  SL_DEBUG_LOG_V2(DEBUG,
+                  "Got request %s with data length : %lu\r\n",
+                  (uintptr_t)req->uri.path,
+                  req->request_data_length);
   if (req->request_data_length > 0) {
     recvData.request       = req;
     recvData.buffer        = (uint8_t *)response;
@@ -219,7 +227,7 @@ sl_status_t default_handler(sl_http_server_t *handle, sl_http_server_request_t *
 
     sl_http_server_read_request_data(handle, &recvData);
     response[recvData.received_data_length] = 0;
-    printf("Got request data as : %s\n", response);
+    SL_DEBUG_LOG_V2(DEBUG, "Got request data as : %s\r\n", (uintptr_t)response);
   }
 
   http_response.response_code = SL_HTTP_RESPONSE_NOT_FOUND;
@@ -255,13 +263,13 @@ void parse_json_response()
   jsmn_init(&p);
   r = jsmn_parse(&p, response, strlen(response), t, sizeof(t) / sizeof(t[0]));
   if (r < 0) {
-    printf("Failed to parse JSON: %d\n", r);
+    SL_DEBUG_LOG_V2(ERROR, "Failed to parse JSON: %d\r\n", r);
     return;
   }
 
   /* Assume the top-level element is an object */
   if (r < 1 || t[0].type != JSMN_OBJECT) {
-    printf("Object expected\n");
+    SL_DEBUG_LOG_V2(ERROR, "Object expected\r\n");
     return;
   }
 
@@ -269,39 +277,43 @@ void parse_json_response()
   for (i = 1; i < r; i++) {
     if (jsoneq(response, &t[i], "id") == 0) {
       /* We may use strndup() to fetch string value */
-      SL_DEBUG_LOG("- SSID: %.*s\n", t[i + 1].end - t[i + 1].start, response + t[i + 1].start);
       snprintf(WIFI_CLIENT_PROFILE_SSID,
                sizeof(WIFI_CLIENT_PROFILE_SSID),
                "%.*s",
                t[i + 1].end - t[i + 1].start,
                response + t[i + 1].start);
+      SL_DEBUG_LOG_V2(INFO, "- SSID: %s", (uintptr_t)WIFI_CLIENT_PROFILE_SSID);
       i++;
     } else if (jsoneq(response, &t[i], "password") == 0) {
       /* Only store password if it's not empty (not Open security) */
       if (t[i + 1].end - t[i + 1].start > 0) {
-        SL_DEBUG_LOG("- Password: %.*s\n", t[i + 1].end - t[i + 1].start, response + t[i + 1].start);
         snprintf(WIFI_CLIENT_CREDENTIAL,
                  sizeof(WIFI_CLIENT_CREDENTIAL),
                  "%.*s",
                  t[i + 1].end - t[i + 1].start,
                  response + t[i + 1].start);
+        SL_DEBUG_LOG_V2(INFO, "- Password: %s", (uintptr_t)WIFI_CLIENT_CREDENTIAL);
       } else {
         /* For Open networks, set empty password */
         WIFI_CLIENT_CREDENTIAL[0] = '\0';
-        SL_DEBUG_LOG("- Password: (empty for Open network)\n");
+        SL_DEBUG_LOG_V2(INFO, "- Password: (empty for Open network)\r\n");
       }
       i++;
     } else if (jsoneq(response, &t[i], "securityType") == 0) {
       /* We may want to do strtol() here to get numeric value */
-      SL_DEBUG_LOG("- Security Type: %.*s\n", t[i + 1].end - t[i + 1].start, response + t[i + 1].start);
       snprintf(WIFI_CLIENT_SECURITY_TYPE,
                sizeof(WIFI_CLIENT_SECURITY_TYPE),
                "%.*s",
                t[i + 1].end - t[i + 1].start,
                response + t[i + 1].start);
+      SL_DEBUG_LOG_V2(INFO, "- Security Type: %s", (uintptr_t)WIFI_CLIENT_SECURITY_TYPE);
       i++;
     } else {
-      printf("Unexpected key: %.*s\n", t[i].end - t[i].start, response + t[i].start);
+      {
+        char key_log[64];
+        snprintf(key_log, sizeof(key_log), "%.*s", (int)(t[i].end - t[i].start), response + t[i].start);
+        SL_DEBUG_LOG_V2(WARN, "Unexpected key: %s\r\n", (uintptr_t)key_log);
+      }
     }
   }
 }
@@ -334,10 +346,10 @@ static void application_start(void *argument)
 
   status = sl_net_init(SL_NET_WIFI_AP_INTERFACE, &sl_wifi_default_concurrent_configuration, NULL, NULL);
   if (status != SL_STATUS_OK) {
-    printf("\r\nFailed to start Wi-Fi AP interface: 0x%lx\r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "Failed to start Wi-Fi AP interface: 0x%lx\r\n", status);
     return;
   }
-  printf("\r\nWi-Fi AP interface init\r\n");
+  SL_DEBUG_LOG_V2(INFO, "Wi-Fi AP interface init\r\n");
 
   sl_wifi_set_callback_v2(SL_WIFI_CLIENT_CONNECTED_EVENTS, ap_connected_event_handler, NULL);
   sl_wifi_set_callback_v2(SL_WIFI_CLIENT_DISCONNECTED_EVENTS, ap_disconnected_event_handler, NULL);
@@ -345,27 +357,27 @@ static void application_start(void *argument)
   wifi_ap_profile.config.channel.channel = CHANNEL_NUMBER;
   status = sl_net_set_profile(SL_NET_WIFI_AP_INTERFACE, SL_NET_PROFILE_ID_1, &wifi_ap_profile);
   if (status != SL_STATUS_OK) {
-    printf("\r\nFailed to set AP profile: 0x%lx\r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "Failed to set AP profile: 0x%lx\r\n", status);
     return;
   }
-  printf("\r\nSuccess to set AP profile \r\n");
+  SL_DEBUG_LOG_V2(INFO, "Success to set AP profile \r\n");
 
   status = sl_net_set_credential(SL_NET_DEFAULT_WIFI_AP_CREDENTIAL_ID,
                                  wifi_ap_credential.type,
                                  &wifi_ap_credential.data,
                                  wifi_ap_credential.data_length);
   if (status != SL_STATUS_OK) {
-    printf("Failed to set credentials: 0x%lx\r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "Failed to set credentials: 0x%lx\r\n", status);
     return;
   }
-  printf("\nWi-Fi set credential success\n");
+  SL_DEBUG_LOG_V2(INFO, "Wi-Fi set credential success\r\n");
 
   status = sl_net_up(SL_NET_WIFI_AP_INTERFACE, SL_NET_PROFILE_ID_1);
   if (status != SL_STATUS_OK) {
-    printf("\r\nFailed to bring Wi-Fi AP interface up: 0x%lx\r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "Failed to bring Wi-Fi AP interface up: 0x%lx\r\n", status);
     return;
   }
-  printf("\r\nAP started\r\n");
+  SL_DEBUG_LOG_V2(INFO, "AP started\r\n");
 
   sl_http_server_config_t server_config = { 0 };
 
@@ -377,17 +389,17 @@ static void application_start(void *argument)
 
   status = sl_http_server_init(&server_handle, &server_config);
   if (status != SL_STATUS_OK) {
-    printf("\r\nHTTP server init failed:%lx\r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "HTTP server init failed:%lx\r\n", status);
     return;
   }
-  printf("\r\n Http Init done\r\n");
+  SL_DEBUG_LOG_V2(INFO, " Http Init done\r\n");
 
   status = sl_http_server_start(&server_handle);
   if (status != SL_STATUS_OK) {
-    printf("\r\n Server start fail:%lx\r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, " Server start fail:%lx\r\n", status);
     return;
   }
-  printf("\r\n Server start done\r\n");
+  SL_DEBUG_LOG_V2(INFO, " Server start done\r\n");
 
   is_server_running = true;
   while (is_server_running) { //Server is exited when we receive the credentials
@@ -396,30 +408,30 @@ static void application_start(void *argument)
 
   parse_json_response();
 
-  SL_DEBUG_LOG("SSID stored:%s\r\n", WIFI_CLIENT_PROFILE_SSID);
-  SL_DEBUG_LOG("Password stored:%s\r\n", WIFI_CLIENT_CREDENTIAL);
-  SL_DEBUG_LOG("Security type stored:%s\r\n", WIFI_CLIENT_SECURITY_TYPE);
+  SL_DEBUG_LOG_V2(INFO, "SSID stored:%s\r\n", (uintptr_t)WIFI_CLIENT_PROFILE_SSID);
+  SL_DEBUG_LOG_V2(INFO, "Password stored:%s\r\n", (uintptr_t)WIFI_CLIENT_CREDENTIAL);
+  SL_DEBUG_LOG_V2(INFO, "Security type stored:%s\r\n", (uintptr_t)WIFI_CLIENT_SECURITY_TYPE);
 
   status = sl_http_server_stop(&server_handle);
   if (status != SL_STATUS_OK) {
-    printf("\r\n Server stop fail:%lx\r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, " Server stop fail:%lx\r\n", status);
     return;
   }
-  printf("\r\n Server stop done\r\n");
+  SL_DEBUG_LOG_V2(INFO, " Server stop done\r\n");
 
   status = sl_http_server_deinit(&server_handle);
   if (status != SL_STATUS_OK) {
-    printf("\r\n Server deinit fail:%lx\r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, " Server deinit fail:%lx\r\n", status);
     return;
   }
-  printf("\r\n Server deinit done\r\n");
+  SL_DEBUG_LOG_V2(INFO, " Server deinit done\r\n");
 
   status = sl_net_init(SL_NET_WIFI_CLIENT_INTERFACE, &sl_wifi_default_concurrent_configuration, NULL, NULL);
   if (status != SL_STATUS_OK) {
-    printf("\r\nFailed to start Wi-Fi client interface: 0x%lx\r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "Failed to start Wi-Fi client interface: 0x%lx\r\n", status);
     return;
   }
-  printf("\r\nWi-Fi Client interface init\r\n");
+  SL_DEBUG_LOG_V2(INFO, "Wi-Fi Client interface init\r\n");
 
   sl_wifi_security_t sec_type = string_to_security_type(WIFI_CLIENT_SECURITY_TYPE);
   sl_wifi_credential_id_t id;
@@ -427,7 +439,7 @@ static void application_start(void *argument)
 
   if (sec_type == SL_WIFI_OPEN) {
     id = SL_NET_NO_CREDENTIAL_ID;
-    SL_DEBUG_LOG("Connecting to Open network - no credentials required\n");
+    SL_DEBUG_LOG_V2(INFO, "Connecting to Open network - no credentials required\r\n");
   } else {
     // Handle PSK-based security (WPA, WPA2, WPA3, etc.)
     id = SL_NET_DEFAULT_WIFI_CLIENT_CREDENTIAL_ID;
@@ -437,13 +449,13 @@ static void application_start(void *argument)
       cred_status =
         sl_net_set_credential(id, SL_NET_WIFI_PSK, WIFI_CLIENT_CREDENTIAL, strlen((char *)WIFI_CLIENT_CREDENTIAL));
     } else {
-      printf("Error: Password required for %s security\n", WIFI_CLIENT_SECURITY_TYPE);
+      SL_DEBUG_LOG_V2(ERROR, "Error: Password required for %s security\r\n", (uintptr_t)WIFI_CLIENT_SECURITY_TYPE);
       return;
     }
   }
 
   if (sec_type == SL_WIFI_OPEN || cred_status == SL_STATUS_OK) {
-    SL_DEBUG_LOG("Credentials set, id : %lu\n", id);
+    SL_DEBUG_LOG_V2(INFO, "Credentials set, id : %lu\r\n", id);
     sl_wifi_client_configuration_t access_point = { 0 };
     access_point.ssid.length                    = strlen((char *)WIFI_CLIENT_PROFILE_SSID);
     memcpy(access_point.ssid.value, WIFI_CLIENT_PROFILE_SSID, access_point.ssid.length);
@@ -453,26 +465,26 @@ static void application_start(void *argument)
 
     status = sl_wifi_set_join_configuration(SL_WIFI_CLIENT_INTERFACE, SL_WIFI_JOIN_FEAT_LISTEN_INTERVAL_VALID);
     if (status != SL_STATUS_OK) {
-      printf("Failed to start set join configuration: 0x%lx\r\n", status);
+      SL_DEBUG_LOG_V2(ERROR, "Failed to start set join configuration: 0x%lx\r\n", status);
       return;
     }
 
-    SL_DEBUG_LOG("SSID %s\n", access_point.ssid.value);
+    SL_DEBUG_LOG_V2(INFO, "SSID %s\r\n", (uintptr_t)access_point.ssid.value);
     do {
       status = sl_wifi_connect(SL_WIFI_CLIENT_2_4GHZ_INTERFACE, &access_point, 25000);
       if (status != SL_STATUS_OK) {
-        printf("\r\nWLAN Connect Failed, Error Code : 0x%lX\r\n", status);
+        SL_DEBUG_LOG_V2(ERROR, "WLAN Connect Failed, Error Code : 0x%lX\r\n", status);
       } else {
-        printf("\n WLAN connection is successful\n");
+        SL_DEBUG_LOG_V2(INFO, " WLAN connection is successful\r\n");
 
         status = sl_net_get_profile(SL_NET_WIFI_CLIENT_INTERFACE, SL_NET_PROFILE_ID_0, &profile);
         if (status != SL_STATUS_OK) {
-          printf("\r\nFailed to get client profile: 0x%lx\r\n", status);
+          SL_DEBUG_LOG_V2(ERROR, "Failed to get client profile: 0x%lx\r\n", status);
         }
 
         status = sl_si91x_configure_ip_address(&profile.ip, SL_SI91X_WIFI_CLIENT_VAP_ID);
         if (status != SL_STATUS_OK) {
-          printf("\r\nIPv4 address configuration is failed : 0x%lx\r\n", status);
+          SL_DEBUG_LOG_V2(ERROR, "IPv4 address configuration is failed : 0x%lx\r\n", status);
         }
 
         ip_address.type = SL_IPV4;
@@ -481,9 +493,9 @@ static void application_start(void *argument)
       }
     } while (status != SL_STATUS_OK);
   } else {
-    printf("\r\nFailed to set credentials; status: %lu\n", cred_status);
+    SL_DEBUG_LOG_V2(ERROR, "Failed to set credentials; status: %lu\r\n", cred_status);
   }
-  printf("\r\nExample demonstration completed\r\n");
+  SL_DEBUG_LOG_V2(INFO, "Example demonstration completed\r\n");
 }
 
 static sl_status_t ap_connected_event_handler(sl_wifi_event_t event,
@@ -499,9 +511,9 @@ static sl_status_t ap_connected_event_handler(sl_wifi_event_t event,
     return status_code;
   }
 
-  printf("Remote Client connected: ");
+  SL_DEBUG_LOG_V2(INFO, "Remote Client connected: ");
   print_mac_address((sl_mac_address_t *)data);
-  printf("\n");
+  SL_DEBUG_LOG_V2(INFO, "\r\n");
 
   return SL_STATUS_OK;
 }
@@ -519,9 +531,9 @@ static sl_status_t ap_disconnected_event_handler(sl_wifi_event_t event,
     return status_code;
   }
 
-  printf("Remote Client disconnected: ");
+  SL_DEBUG_LOG_V2(INFO, "Remote Client disconnected: ");
   print_mac_address((sl_mac_address_t *)data);
-  printf("\n");
+  SL_DEBUG_LOG_V2(INFO, "\r\n");
 
   return SL_STATUS_OK;
 }

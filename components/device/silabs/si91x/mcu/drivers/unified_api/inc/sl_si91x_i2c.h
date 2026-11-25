@@ -38,6 +38,7 @@ extern "C" {
 #include "sl_si91x_peripheral_i2c.h"
 #include "stdio.h"
 #include "sl_i2c_board.h"
+#include "sl_log_helper.h"
 
 /***************************************************************************/ /**
 * @addtogroup I2C I2C
@@ -209,6 +210,17 @@ typedef struct {
   uint8_t scl_pad;  ///< I2C SCL GPIO pad.
   uint8_t instance; ///< I2C instance.
 } sl_i2c_pin_init_t;
+
+/**
+ * @brief Structure to hold the SDA hold time configuration.
+ *
+ * This structure defines the SDA hold time values for transmit and receive operations.
+ * The hold time is specified in units of ic_clk periods.
+ */
+typedef struct {
+  uint16_t sda_tx_hold; ///< SDA transmit hold time (0-65535 ic_clk periods). Controls hold time after SCL goes LOW.
+  uint8_t sda_rx_hold;  ///< SDA receive hold time (0-255 ic_clk periods). Extends SDA transition when SCL is HIGH.
+} sl_i2c_sda_hold_config_t;
 
 /**
  * @brief Enumeration to represent I2C power modes.
@@ -558,6 +570,37 @@ sl_i2c_status_t sl_i2c_driver_leader_reconfig_on_power_mode_change(sl_i2c_power_
  * 
  ******************************************************************************/
 sl_i2c_status_t sl_i2c_driver_enable_repeated_start(sl_i2c_instance_t i2c_instance, boolean_t enable_rep_start);
+
+/***************************************************************************/
+/**
+ * @brief Configure the SDA hold time for an I2C instance.
+ *
+ * This function configures both the transmit and receive SDA hold times for the specified
+ * I2C instance. The SDA hold time determines how long the SDA line is held after the SCL
+ * falling edge. The function validates the hold time values against hardware constraints
+ * based on the current operating mode (Standard, Fast, Fast Plus, or High Speed).
+ *
+ * @param[in] i2c_instance The I2C instance to configure (e.g., SL_I2C_INSTANCE_0).
+ * @param[in] p_hold_config Pointer to the SDA hold time configuration structure containing
+ *                          sda_tx_hold and sda_rx_hold values.
+ *
+ * @return sl_i2c_status_t Status of the operation:
+ *         - SL_I2C_SUCCESS: Configuration successful
+ *         - SL_I2C_INVALID_PARAMETER: Invalid instance, NULL pointer, or hold time values
+ *                                     exceed maximum allowed limits
+ *
+ * @note The I2C instance is temporarily disabled during configuration as the IC_SDA_HOLD
+ *       register can only be programmed when I2C is disabled.
+ *
+ * @note The maximum sda_rx_hold value depends on the operating mode and is calculated as:
+ *       - Standard Mode: IC_SS_SCL_HCNT - IC_FS_SPKLEN - 3
+ *       - Fast/Fast Plus Mode: IC_FS_SCL_HCNT - IC_FS_SPKLEN - 3
+ *       - High Speed Mode: minimum of FS and HS limits
+ *
+ * @note The sda_tx_hold value must not exceed N_SCL_LOW - 2 for the current operating mode.
+ */
+sl_i2c_status_t sl_i2c_driver_configure_sda_hold_time(sl_i2c_instance_t i2c_instance,
+                                                      const sl_i2c_sda_hold_config_t *p_hold_config);
 
 /***************************************************************************/
 /**

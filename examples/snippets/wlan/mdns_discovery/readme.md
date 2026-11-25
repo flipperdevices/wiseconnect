@@ -1,9 +1,14 @@
 # Wi-Fi - mDNS Advertising and Discovery
 
+## High-Level Overview
+
+SiWx91x mDNS discovery example: Connect to Wi-Fi and advertise or discover services on the local network using mDNS in SoC and NCP modes.
+
 ## Table of Contents
 
 - [Wi-Fi - mDNS Advertising and Discovery](#wi-fi---mdns-advertising-and-discovery)
   - [Table of Contents](#table-of-contents)
+  - [High-Level Overview](#high-level-overview)
   - [Purpose/Scope](#purposescope)
   - [Prerequisites/Setup Requirements](#prerequisitessetup-requirements)
     - [Hardware Requirements](#hardware-requirements)
@@ -14,6 +19,9 @@
   - [Test the Application](#test-the-application)
   - [Behavior Overview](#behavior-overview)
   - [Discovery Response Handling](#discovery-response-handling)
+  - [Troubleshooting](#troubleshooting)
+  - [Resources](#resources)
+  - [Report Bugs and Get Support](#report-bugs-and-get-support)
 
 ---
 
@@ -35,35 +43,49 @@ This application demonstrates how to configure the SiWx91x module in client mode
 #### SoC Mode
 
 - **Standalone**:
-  - BRD4002A Wireless pro kit mainboard [SI-MB4002A]
+  - BRD4002B Wireless Pro Kit Mainboard [SI-MB4002B](https://www.silabs.com/development-tools/wireless/wireless-pro-kit-mainboard?tab=overview)
   - Radio Boards:
-    - BRD4338A [SiWx917-RB4338A]
-    - BRD4342A [SiWx917-RB4342A]
-    - BRD4343A [SiWx917-RB4343A]
+    - BRD4338A [SiWx917-RB4338A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-rb4338a-wifi-6-bluetooth-le-soc-radio-board?tab=overview)
+    - BRD4342A [SiWx917-RB4342A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx91x-rb4342a-wifi-6-bluetooth-le-soc-radio-board?tab=overview)
+    - BRD4339B [SiWx917-RB4339B](https://docs.silabs.com/wiseconnect/latest/wiseconnect-getting-started/getting-started-with-at)
+    - BRD4340A [SiWx917-RB4340A](https://docs.silabs.com/wiseconnect/latest/wiseconnect-getting-started/getting-started-with-at)
+    - BRD4343A [SiWx917-RB4343A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4343a-wi-fi-6-bluetooth-le-8mb-flash-radio-board-for-module?tab=overview)
+    - BRD4343C [SiWx917-RB4343C](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4343c-wi-fi-6-bluetooth-le-8mb-flash-radio-board-for-module?tab=overview)
 
 - **Kits**:
+  - SiWG917 Dev Kit [BRD2605A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-dk2605a-wifi-6-bluetooth-le-soc-dev-kit?tab=overview)
+  - SiWG917 Dev Kit [BRD2605B]
   - [SiWx917 Pro Kit (Si917-PK6031A)](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-pro-kit?tab=overview)
   - SiWx917 Pro Kit (Si917-PK6032A)
-  - SiWx917 AC1 Module Explorer Kit (BRD2708A)
+  - SiWx917 AC1 Module Explorer Kit [BRD2708A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-ek2708a-explorer-kit?tab=overview)
 
-#### NCP Mode
+#### NCP Mode (select either the EFR32 or STM32 host MCU platform; a single platform is sufficient to run the application)
+  - **Option 1: EFR32 host**
+  - **Standalone**:
+    - BRD4002B Wireless Pro Kit Mainboard [SI-MB4002B](https://www.silabs.com/development-tools/wireless/wireless-pro-kit-mainboard?tab=overview)
+    - [EFR32xG24 Wireless 2.4 GHz +10 dBm Radio Board (xG24-RB4186C)](https://www.silabs.com/development-tools/wireless/xg24-rb4186c-efr32xg24-wireless-gecko-radio-board?tab=overview)
+    - NCP Expansion Kit with NCP Radio Boards:
+      - [BRD4346A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-rb4346a-wifi-6-bluetooth-le-soc-4mb-flash-radio-board?tab=overview) + [BRD8045A](https://www.silabs.com/development-tools/wireless/wi-fi/expansion-adapter-board-for-co-processor-radio-boards?tab=overview)
+      - [BRD4357A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4357a-wi-fi-6-bluetooth-le-4mb-flash-radio-board-for-rcp-and-ncp-modules?tab=overview) + [BRD8045A](https://www.silabs.com/development-tools/wireless/wi-fi/expansion-adapter-board-for-co-processor-radio-boards?tab=overview)
+      - [BRD4357C](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4357c-wi-fi-6-bluetooth-le-4mb-flash-radio-board-for-rcp-and-ncp-modules?tab=overview) + [BRD8045A](https://www.silabs.com/development-tools/wireless/wi-fi/expansion-adapter-board-for-co-processor-radio-boards?tab=overview)
 
-- **Standalone**:
-  - BRD4002A Wireless pro kit mainboard [SI-MB4002A]
-  - [EFR32xG24 Wireless 2.4 GHz +10 dBm Radio Board (xG24-RB4186C)](https://www.silabs.com/development-tools/wireless/xg24-rb4186c-efr32xg24-wireless-gecko-radio-board?tab=overview)
-  - NCP Expansion Kit with NCP Radio Boards:
-    - (BRD4346A + BRD8045A) [SiWx917-EB4346A]
-    - (BRD4357A + BRD8045A) [SiWx917-EB4357A]
+  - **Option 2: STM32F411RE host**
+    - [STM32F411RE](https://www.st.com/en/microcontrollers-microprocessors/stm32f411re.html) MCU
+    - NCP Expansion Kit with NCP Radio Boards
+      - [BRD4346A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-rb4346a-wifi-6-bluetooth-le-soc-4mb-flash-radio-board?tab=overview) + [BRD8045C](https://www.silabs.com/development-tools/wireless/wi-fi/shield-adapter-board-for-co-processor-radio-boards?tab=overview)
+      - [BRD4357A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4357a-wi-fi-6-bluetooth-le-4mb-flash-radio-board-for-rcp-and-ncp-modules?tab=overview) + [BRD8045C](https://www.silabs.com/development-tools/wireless/wi-fi/shield-adapter-board-for-co-processor-radio-boards?tab=overview)
+      - [BRD4357C](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4357c-wi-fi-6-bluetooth-le-4mb-flash-radio-board-for-rcp-and-ncp-modules?tab=overview) + [BRD8045C](https://www.silabs.com/development-tools/wireless/wi-fi/shield-adapter-board-for-co-processor-radio-boards?tab=overview)
 
-- **Interface and Host MCU Supported**:
-  - SPI – EFR32  
-  - UART – EFR32
+  - Interface and host MCU supported
+    - SPI : EFR32 and STM32
+    - UART : EFR32
 
 ---
 
 ### Software Requirements
 
 - Simplicity Studio  
+- [Keil IDE](https://www.keil.com/) (to be used with STM32F411RE MCU)
 - Serial Terminal – [Docklight](https://docklight.de/) / [Tera Term](https://ttssh2.osdn.jp/index.html.en)
 
 ---
@@ -193,3 +215,25 @@ sl_mdns_service_query_t service_query = { .service_type = "_services._dns-sd._ud
 ```
 
 This returns all PTR records on the network, which can then initiate targeted queries for specific services.
+
+## Troubleshooting
+
+If you encounter issues while running this example, check the following:
+
+- Verify Wi-Fi credentials in `sl_net_default_values.h`.
+- Ensure that your PC and the SiWx91x are on the same LAN. mDNS does not work across routed subnets.
+- If discovery fails, disable conflicting mDNS services or use unique service names.
+- For Windows, allow mDNS/Bonjour traffic through your firewall if the peer is not discovered.
+
+
+## Resources
+
+- [WiSeConnect Getting Started Guide](https://docs.silabs.com/wiseconnect/latest/wiseconnect-getting-started/)
+- [WiSeConnect Examples](https://docs.silabs.com/wiseconnect/latest/wiseconnect-examples/#example-folder-structure)
+- [WiSeConnect Recommended Settings Guide](https://docs.silabs.com/wiseconnect/latest/wiseconnect-developers-guide-prog-recommended-settings/)
+
+## Report Bugs and Get Support
+
+Report issues and get help from the Silicon Labs community:
+
+- [Silicon Labs Community](https://www.silabs.com/community)

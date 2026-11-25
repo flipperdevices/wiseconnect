@@ -26,6 +26,7 @@
 //For TLS
 #include "sl_si91x_socket_constants.h"
 #include "sl_si91x_constants.h"
+#include "sli_mqtt_tls_alpn.h"
 
 //For WebSocket functionality
 #include "sl_websocket_client_types.h"
@@ -133,7 +134,7 @@ static int mqtt_tcpconnection_handler(Network *n, uint8_t flags, char *addr, int
     n->socket = socket(AF_INET, type, IPPROTO_TCP);
 
   if (n->socket < 0) {
-    printf("\r\nSocket creation failed with bsd error: %d\r\n", errno);
+    SL_DEBUG_LOG_V2(ERROR, "Socket creation failed with bsd error: %d\r\n", errno);
     return -1;
   }
 
@@ -154,7 +155,7 @@ static int mqtt_tcpconnection_handler(Network *n, uint8_t flags, char *addr, int
     n->socket = socket(AF_INET, type, IPPROTO_TCP);
 
   if (n->socket < 0) {
-    printf("\r\nSocket creation failed with bsd error: %d\r\n", errno);
+    SL_DEBUG_LOG_V2(ERROR, "Socket creation failed with bsd error: %d\r\n", errno);
     return -1;
   }
   client_address.sin_family = AF_INET;
@@ -166,9 +167,17 @@ static int mqtt_tcpconnection_handler(Network *n, uint8_t flags, char *addr, int
     int socket_return_value = 0;
     socket_return_value     = setsockopt(n->socket, SOL_SOCKET, TCP_ULP, TLS, sizeof(TLS));
     if (socket_return_value < 0) {
-      printf("\r\nSet Socket option failed with bsd error: %d\r\n", errno);
+      SL_DEBUG_LOG_V2(ERROR, "Set Socket option failed with bsd error: %d\r\n", errno);
       close(n->socket);
+      return -1;
     }
+
+#if MQTT_TLS_ALPN_ENABLED
+    if (sli_mqtt_tls_alpn_set_bsd(n->socket) < 0) {
+      close(n->socket);
+      return -1;
+    }
+#endif
   }
 
 #ifdef SLI_SI91X_ENABLE_IPV6
@@ -179,7 +188,7 @@ static int mqtt_tcpconnection_handler(Network *n, uint8_t flags, char *addr, int
 #endif
 
   if (status != SL_STATUS_OK) {
-    printf("\r\nSocket bind failed with bsd error: %d\r\n", errno);
+    SL_DEBUG_LOG_V2(ERROR, "Socket bind failed with bsd error: %d\r\n", errno);
     mqtt_tcp_disconnect(n);
     return status;
   }
@@ -190,12 +199,177 @@ static int mqtt_tcpconnection_handler(Network *n, uint8_t flags, char *addr, int
   rc     = connect(n->socket, (struct sockaddr *)&server_address, socket_length);
 #endif
   if (rc == -1) {
-    printf("\r\nSocket Connect failed with bsd error: %d\r\n", errno);
+    SL_DEBUG_LOG_V2(ERROR, "Socket Connect failed with bsd error: %d\r\n", errno);
     close(n->socket);
     return rc;
   }
-  printf("\nSocket connection success \n");
+  SL_DEBUG_LOG_V2(INFO, "Socket connection success\r\n");
   return status;
+}
+
+/**
+ * SiLabs dual-IP TCP connect: family selected by flags, addr is raw IP bytes.
+ * Does not alter mqtt_tcpconnection_handler / NetworkConnect behavior.
+ */
+static int sl_paho_mqtt_tcpconnection_handler(Network *n,
+                                              uint8_t flags,
+                                              char *addr,
+                                              int dst_port,
+                                              int src_port,
+                                              bool ssl)
+{
+  int type = SOCK_STREAM;
+  int rc   = -1;
+  int status;
+  bool is_ipv4_requested = (flags & SL_PAHO_NETWORK_FLAG_IPV4) != 0;
+  bool is_ipv6_requested = (flags & SL_PAHO_NETWORK_FLAG_IPV6) != 0;
+
+  if (is_ipv4_requested == is_ipv6_requested) {
+    SL_DEBUG_LOG_V2(ERROR, "sl_paho_network_connect: set exactly one of IPV4/IPV6 flags\r\n");
+    return NETWORK_ERROR_INVALID_FLAGS;
+  }
+
+#ifdef SLI_SI91X_ENABLE_IPV6
+  if (is_ipv4_requested) {
+    struct sockaddr_in server_address = { 0 };
+    struct sockaddr_in client_address = { 0 };
+    socklen_t socket_length           = sizeof(struct sockaddr_in);
+
+    server_address.sin_family = AF_INET;
+    server_address.sin_port   = dst_port;
+    memcpy(&server_address.sin_addr.s_addr, addr, SL_IPV4_ADDRESS_LENGTH);
+
+    n->socket = socket(AF_INET, type, IPPROTO_TCP);
+    if (n->socket < 0) {
+      SL_DEBUG_LOG_V2(ERROR, "Socket creation failed with bsd error: %d\r\n", errno);
+      return -1;
+    }
+
+    client_address.sin_family = AF_INET;
+    client_address.sin_port   = src_port;
+
+    if (ssl) {
+      int socket_return_value = setsockopt(n->socket, SOL_SOCKET, TCP_ULP, TLS, sizeof(TLS));
+      if (socket_return_value < 0) {
+        SL_DEBUG_LOG_V2(ERROR, "Set Socket option failed with bsd error: %d\r\n", errno);
+        close(n->socket);
+        return -1;
+      }
+#if MQTT_TLS_ALPN_ENABLED
+      if (sli_mqtt_tls_alpn_set_bsd(n->socket) < 0) {
+        close(n->socket);
+        return -1;
+      }
+#endif
+    }
+
+    status = bind(n->socket, (struct sockaddr *)&client_address, socket_length);
+    if (status != SL_STATUS_OK) {
+      SL_DEBUG_LOG_V2(ERROR, "Socket bind failed with bsd error: %d\r\n", errno);
+      mqtt_tcp_disconnect(n);
+      return status;
+    }
+
+    rc = connect(n->socket, (struct sockaddr *)&server_address, socket_length);
+  } else {
+    struct sockaddr_in6 server_address_v6 = { 0 };
+    struct sockaddr_in6 client_address_v6 = { 0 };
+    socklen_t socket_length_v6            = sizeof(struct sockaddr_in6);
+
+    server_address_v6.sin6_family = AF_INET6;
+    server_address_v6.sin6_port   = dst_port;
+    memcpy(&server_address_v6.sin6_addr.__u6_addr.__u6_addr8, addr, SL_IPV6_ADDRESS_LENGTH);
+
+    n->socket = socket(AF_INET6, type, IPPROTO_TCP);
+    if (n->socket < 0) {
+      SL_DEBUG_LOG_V2(ERROR, "Socket creation failed with bsd error: %d\r\n", errno);
+      return -1;
+    }
+
+    client_address_v6.sin6_family = AF_INET6;
+    client_address_v6.sin6_port   = src_port;
+
+    if (ssl) {
+      int socket_return_value = setsockopt(n->socket, SOL_SOCKET, TCP_ULP, TLS, sizeof(TLS));
+      if (socket_return_value < 0) {
+        SL_DEBUG_LOG_V2(ERROR, "Set Socket option failed with bsd error: %d\r\n", errno);
+        close(n->socket);
+        return -1;
+      }
+#if MQTT_TLS_ALPN_ENABLED
+      if (sli_mqtt_tls_alpn_set_bsd(n->socket) < 0) {
+        close(n->socket);
+        return -1;
+      }
+#endif
+    }
+
+    status = bind(n->socket, (struct sockaddr *)&client_address_v6, socket_length_v6);
+    if (status != SL_STATUS_OK) {
+      SL_DEBUG_LOG_V2(ERROR, "Socket bind failed with bsd error: %d\r\n", errno);
+      mqtt_tcp_disconnect(n);
+      return status;
+    }
+
+    rc = connect(n->socket, (struct sockaddr *)&server_address_v6, socket_length_v6);
+  }
+#else
+  if (is_ipv6_requested) {
+    SL_DEBUG_LOG_V2(ERROR, "sl_paho_network_connect: IPv6 not available in this build\r\n");
+    return NETWORK_ERROR_INVALID_FLAGS;
+  }
+
+  {
+    struct sockaddr_in server_address = { 0 };
+    struct sockaddr_in client_address = { 0 };
+    socklen_t socket_length           = sizeof(struct sockaddr_in);
+
+    server_address.sin_family = AF_INET;
+    server_address.sin_port   = dst_port;
+    memcpy(&server_address.sin_addr.s_addr, addr, sizeof(server_address.sin_addr.s_addr));
+
+    n->socket = socket(AF_INET, type, IPPROTO_TCP);
+    if (n->socket < 0) {
+      SL_DEBUG_LOG_V2(ERROR, "Socket creation failed with bsd error: %d\r\n", errno);
+      return -1;
+    }
+
+    client_address.sin_family = AF_INET;
+    client_address.sin_port   = src_port;
+
+    if (ssl) {
+      int socket_return_value = setsockopt(n->socket, SOL_SOCKET, TCP_ULP, TLS, sizeof(TLS));
+      if (socket_return_value < 0) {
+        SL_DEBUG_LOG_V2(ERROR, "Set Socket option failed with bsd error: %d\r\n", errno);
+        close(n->socket);
+        return -1;
+      }
+#if MQTT_TLS_ALPN_ENABLED
+      if (sli_mqtt_tls_alpn_set_bsd(n->socket) < 0) {
+        close(n->socket);
+        return -1;
+      }
+#endif
+    }
+
+    status = bind(n->socket, (struct sockaddr *)&client_address, socket_length);
+    if (status != SL_STATUS_OK) {
+      SL_DEBUG_LOG_V2(ERROR, "Socket bind failed with bsd error: %d\r\n", errno);
+      mqtt_tcp_disconnect(n);
+      return status;
+    }
+
+    rc = connect(n->socket, (struct sockaddr *)&server_address, socket_length);
+  }
+#endif
+
+  if (rc == -1) {
+    SL_DEBUG_LOG_V2(ERROR, "Socket Connect failed with bsd error: %d\r\n", errno);
+    close(n->socket);
+    return rc;
+  }
+  SL_DEBUG_LOG_V2(INFO, "Socket connection success\r\n");
+  return 0;
 }
 
 static int mqtt_ws_read(Network *n, unsigned char *buffer, int len, int timeout_ms)
@@ -312,6 +486,23 @@ int NetworkConnect(Network *n, uint8_t flags, char *addr, int dst_port, int src_
   } else {
     return NETWORK_ERROR_INVALID_TYPE; // Error: invalid transport type
   }
+}
+
+int sl_paho_network_connect(Network *n, uint8_t flags, char *addr, int dst_port, int src_port, bool ssl)
+{
+  if (n == NULL) {
+    return NETWORK_ERROR_NULL_STRUCTURE;
+  }
+
+  if (addr == NULL) {
+    return NETWORK_ERROR_NULL_ADDRESS;
+  }
+
+  if (n->transport_type == MQTT_TRANSPORT_TCP) {
+    return sl_paho_mqtt_tcpconnection_handler(n, flags, addr, dst_port, src_port, ssl);
+  }
+
+  return NETWORK_ERROR_INVALID_TYPE;
 }
 
 // Cleans up and closes the network connection.

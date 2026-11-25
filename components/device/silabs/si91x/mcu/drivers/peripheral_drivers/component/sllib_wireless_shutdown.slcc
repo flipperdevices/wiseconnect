@@ -1,8 +1,8 @@
 id: sllib_wireless_shutdown
-label: Si91x Wireless Shutdown
+label: Wireless Shutdown
 package: platform_siwx91x
 description: >
-  Provides API to wireless shutdown, disabling the clocks and change the reference clock.
+  This component provides an API to shut down the wireless subsystem, disabling its clocks and changing the reference clock.
 category: Device|Si91x|MCU|Internal|RSI Peripheral Drivers
 quality: production
 metadata:

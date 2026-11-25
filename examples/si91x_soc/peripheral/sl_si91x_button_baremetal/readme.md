@@ -1,8 +1,8 @@
-# SL BUTTON BAREMETAL
+# SiWx91x Platform Button Baremetal
 
 ## Table of Contents
 
-- [SL BUTTON BAREMETAL](#sl-button-baremetal)
+- [SiWx91x Platform Button Baremetal](#platform-siwx91x-button-baremetal)
   - [Table of Contents](#table-of-contents)
   - [Purpose/Scope](#purposescope)
   - [Prerequisites/Setup Requirements](#prerequisitessetup-requirements)
@@ -13,6 +13,9 @@
   - [Application Build Environment](#application-build-environment)
     - [Configuration](#configuration)
   - [Test the Application](#test-the-application)
+  - [Troubleshooting](#troubleshooting)
+  - [Resources](#resources)
+  - [Report Bugs/Support](#report-bugssupport)
 
 ## Purpose/Scope
 
@@ -23,7 +26,7 @@ This example application demonstrates the use of BUTTON in a bare metal environm
 ### Hardware Requirements
 
 - Windows PC
-- Silicon Labs Si917 Evaluation Kit [[BRD4002](https://www.silabs.com/development-tools/wireless/wireless-pro-kit-mainboard?tab=overview) + [BRD4338A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-rb4338a-wifi-6-bluetooth-le-soc-radio-board?tab=overview) / [BRD4342A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx91x-rb4342a-wifi-6-bluetooth-le-soc-radio-board?tab=overview) / [BRD4343A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4343a-wi-fi-6-bluetooth-le-8mb-flash-radio-board-for-module?tab=overview)]
+- Silicon Labs SiWx91x Evaluation Kit [[BRD4002](https://www.silabs.com/development-tools/wireless/wireless-pro-kit-mainboard?tab=overview) + [BRD4338A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-rb4338a-wifi-6-bluetooth-le-soc-radio-board?tab=overview) / [BRD4342A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx91x-rb4342a-wifi-6-bluetooth-le-soc-radio-board?tab=overview) / [BRD4343A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4343a-wi-fi-6-bluetooth-le-8mb-flash-radio-board-for-module?tab=overview) / [BRD4343C](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4343c-wi-fi-6-bluetooth-le-8mb-flash-radio-board-for-module?tab=overview)]
 - SiWx917 AC1 Module Explorer Kit [BRD2708A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-ek2708a-explorer-kit)
 
 ### Software Requirements
@@ -48,6 +51,20 @@ For details on the project folder structure, see the [WiSeConnect Examples](http
 
 ## Application Build Environment
 
+- Configure the following macros in [`button_baremetal.c`](button_baremetal.c) file and update/modify following macros, if required.
+
+  - `BUTTON_INSTANCE`: Selects the button instance whose press events toggle the LED. By default, it is set to `button_btn0`.
+
+    ```c
+      #define BUTTON_INSTANCE button_btn0 // Button instance
+    ```
+
+  - `LED_INSTANCE`: Selects the LED instance that is toggled on each button press. By default, it is set to `led_led0`.
+
+    ```c
+      #define LED_INSTANCE    led_led0    // LED instance
+    ```
+
  The application toggles the selected LED on each selected button press.
 
 ### Configuration
@@ -69,11 +86,11 @@ For details on the project folder structure, see the [WiSeConnect Examples](http
 The project uses BTN0 by default. To change the button to BTN1, follow the below steps:
 
 1. Add btn1 instance by traversing to the below path and select "Add New Instances":
-    "Software Components -> WiSeConnect SDK -> Device -> Si91x -> MCU -> Drivers -> BUTTON"
+    "Software Components -> WiSeConnect SDK -> Device -> SiWx91x -> MCU -> Drivers -> BUTTON"
 
    ![Figure: Adding Button Instance](resources/readme/image600d.png)
 
-2. Change the definition of macro BUTTON_INSTANCE_0 in the [`button_baremetal.c`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.1-content-for-docs/examples/si91x_soc/peripheral/sl_si91x_button_baremetal/button_baremetal.c) file to button_btn1.
+2. Change the definition of macro BUTTON_INSTANCE_0 in the [`button_baremetal.c`](button_baremetal.c) file to button_btn1.
 
 3. Build and test the output.
 
@@ -81,10 +98,27 @@ The project uses BTN0 by default. To change the button to BTN1, follow the below
 
 > **Note:**
 >
-> - In case of DEVKIT board [BRD2605A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-dk2605a-wifi-6-bluetooth-le-soc-dev-kit?tab=overview), the blue LED toggles on button press. No other LED instance works for this board. To further use the DEVKIT LED, refer to the RGB LED application.
+> - In case of DEVKIT board [BRD2605A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-dk2605a-wifi-6-bluetooth-le-soc-dev-kit?tab=overview)/ [BRD2605B](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-dk2605b-wifi-6-bluetooth-le-soc-dev-kit?tab=overview), the blue LED toggles on button press. No other LED instance works for this board. To further use the DEVKIT LED, refer to the RGB LED application.
 >
 > - Interrupt handlers are implemented in the driver layer, and user callbacks are provided for custom code. If you want to write your own interrupt handler instead of using the default one, make the driver interrupt handler a weak handler. Further then, copy the necessary code from the driver handler to your custom interrupt handler.
 >
 > - A maximum of 8 HP GPIO buttons, 8 ULP GPIO buttons, and 5 UULP GPIO buttons can be used simultaneously. This limitation arises from the number of available GPIO interrupts allocated for each GPIO type.
 >
 > - By default, the `SL_SI91X_BUTTON_DEBOUNCE` macro is disabled. If debouncing is needed, please enable the `SL_SI91X_BUTTON_DEBOUNCE` macro in studio preprocessor settings.
+>
+> - In case of sleep-wakeup, call `button_init_instances()` and `led_init_instances()` after wakeup before handling button events or toggling LEDs so the configured button and LED instances are restored.
+
+## Troubleshooting
+
+- If the project does not build, ensure Simplicity Studio and the WiSeConnect extension are installed and the board is connected.
+- If the device is not detected, reinstall the connectivity firmware and check USB drivers.
+
+## Resources
+
+- [WiSeConnect Getting Started](https://docs.silabs.com/wiseconnect/latest/wiseconnect-getting-started/)
+- [WiSeConnect Examples](https://docs.silabs.com/wiseconnect/latest/wiseconnect-examples/)
+- [SiWx91x SoC Documentation](https://docs.silabs.com/wiseconnect/latest/)
+
+## Report Bugs/Support
+
+For issues and support, use the Silicon Labs Community or your normal support channel.

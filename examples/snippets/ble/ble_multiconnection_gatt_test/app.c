@@ -41,6 +41,7 @@
 #include "sl_board_configuration.h"
 #include "sl_constants.h"
 #include "sl_wifi.h"
+#include "sl_si91x_driver.h"
 #include "sl_wifi_callback_framework.h"
 #include "cmsis_os2.h"
 #include "app.h"
@@ -70,6 +71,19 @@ rsi_parsed_conf_t rsi_parsed_conf = { 0 };
 osSemaphoreId_t ble_main_task_sem, ble_peripheral_conn_sem;
 bool powersave_cmd_given;
 
+#if (defined(SLI_SI91X_MCU_INTERFACE) || defined(SLI_SI91X_NCP_INTERFACE))
+/*
+ * FreeRTOS idle hook: drains the logger ring buffer via sl_log_flush().
+ * Active only for backends that emit the proprietary stream (IOStream
+ * Compact over UART/VCOM and the proprietary UART backend); a no-op for
+ * IOStream Compact over RTT, IOStream Formatted, SystemView, and Log None.
+ */
+void vApplicationIdleHook(void)
+{
+  sl_log_flush();
+}
+#endif
+
 static const sl_wifi_device_configuration_t config = {
   .boot_option = LOAD_NWP_FW,
   .mac_address = NULL,
@@ -89,14 +103,14 @@ static const sl_wifi_device_configuration_t config = {
 #endif
                       | SL_SI91X_EXT_FEAT_BT_CUSTOM_FEAT_ENABLE),
                    .bt_feature_bit_map         = (SL_SI91X_BT_RF_TYPE | SL_SI91X_ENABLE_BLE_PROTOCOL),
-                   .ext_tcp_ip_feature_bit_map = (SL_SI91X_CONFIG_FEAT_EXTENTION_VALID),
+                   .ext_tcp_ip_feature_bit_map = (SL_SI91X_CONFIG_FEAT_EXTENSION_VALID),
                    //!ENABLE_BLE_PROTOCOL in bt_feature_bit_map
                    .ble_feature_bit_map =
                      ((SL_SI91X_BLE_MAX_NBR_PERIPHERALS(RSI_BLE_MAX_NBR_PERIPHERALS)
                        | SL_SI91X_BLE_MAX_NBR_CENTRALS(RSI_BLE_MAX_NBR_CENTRALS)
                        | SL_SI91X_BLE_MAX_NBR_ATT_SERV(RSI_BLE_MAX_NBR_ATT_SERV)
                        | SL_SI91X_BLE_MAX_NBR_ATT_REC(RSI_BLE_MAX_NBR_ATT_REC))
-                      | SL_SI91X_FEAT_BLE_CUSTOM_FEAT_EXTENTION_VALID | SL_SI91X_BLE_PWR_INX(RSI_BLE_PWR_INX)
+                      | SL_SI91X_FEAT_BLE_CUSTOM_FEAT_EXTENSION_VALID | SL_SI91X_BLE_PWR_INX(RSI_BLE_PWR_INX)
                       | SL_SI91X_BLE_PWR_SAVE_OPTIONS(RSI_BLE_PWR_SAVE_OPTIONS)
                       | SL_SI91X_916_BLE_COMPATIBLE_FEAT_ENABLE
 #if RSI_BLE_GATT_ASYNC_ENABLE
@@ -122,7 +136,10 @@ static const sl_wifi_device_configuration_t config = {
                       | SL_SI91X_BLE_GATT_INIT
 #endif
                       ),
-                   .config_feature_bit_map = (SL_SI91X_FEAT_SLEEP_GPIO_SEL_BITMAP | SL_WIFI_ENABLE_ENHANCED_MAX_PSP) }
+                   .config_feature_bit_map = (SL_SI91X_FEAT_SLEEP_GPIO_SEL_BITMAP | SL_WIFI_ENABLE_ENHANCED_MAX_PSP) },
+  .ta_pool         = { .tx_ratio_in_buffer_pool = 0, .rx_ratio_in_buffer_pool = 0, .global_ratio_in_buffer_pool = 0 },
+  .efuse_data_type = SL_SI91X_EFUSE_MFG_SW_VERSION,
+  .nwp_fw_image_number = SL_SI91X_NWP_FW_IMAGE_NUMBER_0
 };
 
 const osThreadAttr_t thread_attributes = {
@@ -134,7 +151,6 @@ const osThreadAttr_t thread_attributes = {
   .stack_size = 3072,
   .priority   = osPriorityNormal,
   .tz_module  = 0,
-  .reserved   = 0,
 };
 /*=======================================================================*/
 //   ! EXTERN VARIABLES
@@ -163,7 +179,7 @@ int32_t rsi_initiate_power_save(void)
 {
   int32_t status = RSI_SUCCESS;
 
-  LOG_PRINT("\r\n keep module in to power save \r\n");
+  SL_DEBUG_LOG_V2(INFO, "keep module in to power save \r\n");
   status = rsi_bt_power_save_profile(PSP_MODE, PSP_TYPE);
   if (status != RSI_SUCCESS) {
     return status;
@@ -173,10 +189,10 @@ int32_t rsi_initiate_power_save(void)
   wifi_profile.profile = ASSOCIATED_POWER_SAVE;
   status               = sl_wifi_set_performance_profile_v2(&wifi_profile);
   if (status != SL_STATUS_OK) {
-    LOG_PRINT("\r\n Failed to keep module in power save \r\n");
+    SL_DEBUG_LOG_V2(ERROR, "Failed to keep module in power save \r\n");
     return status;
   }
-  LOG_PRINT("\r\n Module is in power save \r\n");
+  SL_DEBUG_LOG_V2(INFO, "Module is in power save \r\n");
   return status;
 }
 
@@ -193,11 +209,11 @@ int32_t rsi_initiate_power_save(void)
 int32_t rsi_initiate_power_awake(void)
 {
   int32_t status = RSI_SUCCESS;
-  LOG_PRINT("\r\n keep module in to active state \r\n");
+  SL_DEBUG_LOG_V2(INFO, "keep module in to active state \r\n");
   //! initiating Active mode in BT mode
   status = rsi_bt_power_save_profile(RSI_ACTIVE, PSP_TYPE);
   if (status != RSI_SUCCESS) {
-    LOG_PRINT("\r\n Failed to keep Module in ACTIVE mode \r\n");
+    SL_DEBUG_LOG_V2(ERROR, "Failed to keep Module in ACTIVE mode \r\n");
     return status;
   }
 
@@ -205,10 +221,10 @@ int32_t rsi_initiate_power_awake(void)
   wifi_profile.profile = HIGH_PERFORMANCE;
   status               = sl_wifi_set_performance_profile_v2(&wifi_profile);
   if (status != SL_STATUS_OK) {
-    LOG_PRINT("\r\n Failed to keep module in HIGH_PERFORMANCE mode \r\n");
+    SL_DEBUG_LOG_V2(ERROR, "Failed to keep module in HIGH_PERFORMANCE mode \r\n");
     return status;
   }
-  LOG_PRINT("\r\n Module is in power awake \r\n");
+  SL_DEBUG_LOG_V2(INFO, "Module is in power awake \r\n");
   return status;
 }
 #endif // #if ENABLE_NWP_POWER_SAVE
@@ -332,7 +348,7 @@ int8_t rsi_ble_initialize_conn_buffer(rsi_ble_conn_config_t *ble_conn_spec_conf)
       ble_conn_spec_conf[CENTRAL2].buff_mode_sel.max_data_length    = RSI_BLE_MAX_DATA_LEN_C2;
     }
   } else {
-    LOG_PRINT("\r\n Invalid buffer passed \r\n");
+    SL_DEBUG_LOG_V2(ERROR, "Invalid buffer passed \r\n");
     status = RSI_FAILURE;
   }
   return status;
@@ -368,7 +384,7 @@ void rsi_common_app_task(void)
 {
   uint32_t status                                            = RSI_SUCCESS;
   powersave_cmd_given                                        = false;
-  sl_wifi_firmware_version_t version                         = { 0 };
+  sl_si91x_firmware_version_t version                        = { 0 };
   static uint8_t rsi_app_resp_get_dev_addr[RSI_DEV_ADDR_LEN] = { 0 };
   uint8_t local_dev_addr[LOCAL_DEV_ADDR_LEN]                 = { 0 };
 
@@ -380,34 +396,42 @@ void rsi_common_app_task(void)
 
   status = sl_wifi_init(&config, NULL, sl_wifi_default_event_handler);
   if (status != SL_STATUS_OK) {
-    LOG_PRINT("\r\n Wi-Fi Initialization Failed, Error Code : 0x%lX\r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "Wi-Fi Initialization Failed, Error Code : 0x%lX\r\n", status);
     return;
   } else {
-    LOG_PRINT("\r\n Wi-Fi Initialization Success\n");
+    SL_DEBUG_LOG_V2(INFO, "Wi-Fi Initialization Success\r\n");
   }
 
   //! Firmware version Prints
-  status = sl_wifi_get_firmware_version(&version);
+  status = sl_si91x_get_firmware_version(&version);
   if (status != SL_STATUS_OK) {
-    LOG_PRINT("\r\nFirmware version Failed, Error Code : 0x%lX\r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "Firmware version Failed, Error Code : 0x%lX\r\n", status);
   } else {
-    print_firmware_version(&version);
+    printf("\r\nFirmware version is: %x%x.%d.%d.%d.%d.%d.%d\r\n",
+           version.chip_id,
+           version.rom_id,
+           version.major,
+           version.minor,
+           version.security_version,
+           version.patch_num,
+           version.customer_id,
+           version.build_num);
   }
 
   //! get the local device MAC address.
   status = rsi_bt_get_local_device_address(rsi_app_resp_get_dev_addr);
   if (status != RSI_SUCCESS) {
-    LOG_PRINT("\r\n Get local device address failed = %lx\r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "Get local device address failed = %lx\r\n", status);
     return;
   } else {
     rsi_6byte_dev_address_to_ascii(local_dev_addr, rsi_app_resp_get_dev_addr);
-    LOG_PRINT("\r\n Local device address %s \r\n", local_dev_addr);
+    SL_DEBUG_LOG_V2(INFO, "Local device address %s \r\n", (uintptr_t)(local_dev_addr));
   }
 
   //! fill the configurations in local structure based on compilation macros
   status = rsi_fill_user_config();
   if (status != RSI_SUCCESS) {
-    LOG_PRINT("\r\n failed to fill the configurations in local buffer \r\n");
+    SL_DEBUG_LOG_V2(ERROR, "failed to fill the configurations in local buffer \r\n");
     return;
   }
 

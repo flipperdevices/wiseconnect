@@ -67,27 +67,35 @@ void gpio_uulp_example_init(void)
     status = sl_gpio_driver_init();
     if (status != SL_STATUS_OK) {
       // Prints GPIO initialization fails
-      DEBUGOUT("sl_gpio_driver_init, Error code: %lu\r\n", status);
+      /* Note: All status messages in this example — both success and failure — are
+ * intentionally emitted via SL_PRINT_STRING_ERROR so that they remain visible
+ * on the console at the default log level. This is a demonstration choice, not
+ * a recommendation: in production code, ERROR severity should be reserved for
+ * actual failures, with successful operations logged via SL_PRINT_STRING_INFO
+ * (or SL_PRINT_STRING_DEBUG for verbose trace). */
+      SL_PRINT_STRING_ERROR("sl_gpio_driver_init, Error code: %lu\r\n", status);
       break; // breaks if error occurs
     }
-    DEBUGOUT("GPIO driver initialization is successful \r\n");
+    SL_PRINT_STRING_ERROR("GPIO driver initialization is successful \r\n");
     // Configure UULP GPIO pin 2 using driver pin configuration API.
     // Using this API by default GPIO mode is set as MODE 0. If any other mode is selected for any GPIO use
     // corresponding API sl_gpio_driver_set_pin_mode() is for mode setting.
     status = sl_gpio_set_configuration(sl_gpio_pin_config1);
     if (status != SL_STATUS_OK) {
       // Prints if pin configuration fails
-      DEBUGOUT("sl_gpio_set_configuration, Error code: %lu\r\n", status);
+      SL_PRINT_STRING_ERROR("sl_gpio_set_configuration, Error code: %lu\r\n", status);
       break; // breaks if error occurs
     }
-    DEBUGOUT("GPIO driver set pin configuration is successful \r\n");
+    SL_PRINT_STRING_ERROR("GPIO driver set pin configuration is successful \r\n");
     // Configure the UULP GPIO pin mode, receiver enable, direction and polarity.
     status = sl_si91x_gpio_driver_set_uulp_pad_configuration(&uulp_pad);
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("sl_si91x_gpio_driver_set_uulp_pad_configuration, Error code: %lu\r\n", status);
+      SL_PRINT_STRING_ERROR("sl_si91x_gpio_driver_set_uulp_pad_configuration, "
+                            "Error code: %lu\r\n",
+                            status);
       break;
     }
-    DEBUGOUT("GPIO driver set uulp pad configuration is successful \r\n");
+    SL_PRINT_STRING_ERROR("GPIO driver set uulp pad configuration is successful \r\n");
     // Configure uulp pin interrupt. The pin interrupt in this application is performed using external triggering from button.
     // Press button0 for triggering UULP GPIO instance pin interrupt based on event selected.
     status = sl_gpio_driver_configure_interrupt(&sl_gpio_pin_config1.port_pin,
@@ -96,10 +104,10 @@ void gpio_uulp_example_init(void)
                                                 (sl_gpio_irq_callback_t)&gpio_uulp_pin_interrupt_callback,
                                                 AVL_INTR_NO);
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("sl_gpio_configure_interrupt, Error code: %lu\r\n", status);
+      SL_PRINT_STRING_ERROR("sl_gpio_configure_interrupt, Error code: %lu\r\n", status);
       break;
     }
-    DEBUGOUT("GPIO driver configure uulp interrupt is successful \r\n");
+    SL_PRINT_STRING_ERROR("GPIO driver configure uulp interrupt is successful \r\n");
   } while (false);
 }
 /*******************************************************************************
@@ -116,6 +124,6 @@ static void gpio_uulp_pin_interrupt_callback(uint32_t pin_intr)
 {
   if (pin_intr == UULP_GPIO_INTR_2) {
     // This is with respect to ISR context. Debugout might cause issues sometimes.
-    DEBUGOUT("gpio uulp pin interrupt2\r\n");
+    SL_PRINT_STRING_ERROR("gpio uulp pin interrupt2\r\n");
   }
 }

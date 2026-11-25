@@ -75,6 +75,7 @@ void sl_si91x_simple_rgb_led_init(const sl_rgb_led_t *handle)
 {
   /* Check for null pointer */
   if (handle == NULL || handle->red == NULL || handle->green == NULL || handle->blue == NULL) {
+    SL_PRINT_STRING_ERROR("si91x_rgb_led: init failed, NULL handle");
     return; // Exit if any handle is null
   }
 
@@ -215,6 +216,7 @@ uint8_t sl_si91x_simple_rgb_led_get_current_state(const sl_rgb_led_t *handle)
 {
   /* Check for null pointer */
   if (handle == NULL || handle->red == NULL || handle->green == NULL || handle->blue == NULL) {
+    SL_PRINT_STRING_ERROR("sl_si91x_simple_rgb_led_get_current_state: get current state failed, NULL handle");
     return INVALID_HANDLE; // Exit if any handle is null
   }
 
@@ -228,6 +230,7 @@ void sl_si91x_simple_rgb_led_get_colour(const sl_rgb_led_t *handle, uint16_t *re
 {
   /* Check for null pointer */
   if (handle == NULL || handle->red == NULL || handle->green == NULL || handle->blue == NULL) {
+    SL_PRINT_STRING_ERROR("sl_si91x_simple_rgb_led_get_colour: get colour failed, NULL handle");
     return; // Exit if any handle is null
   }
 

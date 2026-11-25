@@ -37,5 +37,5 @@ template_contribution:
       uart-conf?:
         handler: uart_conf_query_command_handler
 config_file:
-  - path: uart_at_commands_config.h
+  - path: config/uart_at_commands_config.h
     file_id: uart_at_commands_config

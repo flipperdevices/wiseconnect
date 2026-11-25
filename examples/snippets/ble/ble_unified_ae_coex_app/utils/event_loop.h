@@ -84,7 +84,7 @@ typedef struct generic_task_cb_s {
 } generic_task_cb_t;
 
 /*=======================================================================*/
-//   ! Fucntion declarations
+//   ! Function declarations
 /*=======================================================================*/
 int32_t rsi_app_pending_event_handling(generic_task_cb_t *generic_task_cb);
 void rsi_app_pending_command_handling(generic_task_cb_t *generic_task_cb);
@@ -93,7 +93,7 @@ rsi_app_pkt_t *rsi_app_get_pending_msg_highest_pri_que(app_queue_t *event_queue,
 int32_t rsi_app_common_event_loop(generic_task_cb_t *generic_task_cb);
 
 /*=======================================================================*/
-//   ! Extern Fucntions
+//   ! Extern Functions
 /*=======================================================================*/
 extern int32_t rsi_app_common_event_loop(generic_task_cb_t *generic_task_cb);
 #endif

@@ -23,6 +23,7 @@
 #include "sl_board_configuration.h"
 #include "sl_constants.h"
 #include "sl_wifi.h"
+#include "sl_si91x_driver.h"
 #include "sl_wifi_callback_framework.h"
 #include "cmsis_os2.h"
 #include "sl_utility.h"
@@ -70,6 +71,19 @@
 #define RSI_BLE_TESTMODE_RECEIVE  2
 #define RSI_CONFIG_TEST_MODE      RSI_BLE_TESTMODE_TRANSMIT
 
+#if (defined(SLI_SI91X_MCU_INTERFACE) || defined(SLI_SI91X_NCP_INTERFACE))
+/*
+ * FreeRTOS idle hook: drains the logger ring buffer via sl_log_flush().
+ * Active only for backends that emit the proprietary stream (IOStream
+ * Compact over UART/VCOM and the proprietary UART backend); a no-op for
+ * IOStream Compact over RTT, IOStream Formatted, SystemView, and Log None.
+ */
+void vApplicationIdleHook(void)
+{
+  sl_log_flush();
+}
+#endif
+
 static const sl_wifi_device_configuration_t config = {
   .boot_option = LOAD_NWP_FW,
   .mac_address = NULL,
@@ -89,14 +103,14 @@ static const sl_wifi_device_configuration_t config = {
 #endif
                       | (SL_SI91X_EXT_FEAT_BT_CUSTOM_FEAT_ENABLE)),
                    .bt_feature_bit_map         = (SL_SI91X_BT_RF_TYPE | SL_SI91X_ENABLE_BLE_PROTOCOL),
-                   .ext_tcp_ip_feature_bit_map = (SL_SI91X_CONFIG_FEAT_EXTENTION_VALID),
+                   .ext_tcp_ip_feature_bit_map = (SL_SI91X_CONFIG_FEAT_EXTENSION_VALID),
                    //!ENABLE_BLE_PROTOCOL in bt_feature_bit_map
                    .ble_feature_bit_map =
                      ((SL_SI91X_BLE_MAX_NBR_PERIPHERALS(RSI_BLE_MAX_NBR_PERIPHERALS)
                        | SL_SI91X_BLE_MAX_NBR_CENTRALS(RSI_BLE_MAX_NBR_CENTRALS)
                        | SL_SI91X_BLE_MAX_NBR_ATT_SERV(RSI_BLE_MAX_NBR_ATT_SERV)
                        | SL_SI91X_BLE_MAX_NBR_ATT_REC(RSI_BLE_MAX_NBR_ATT_REC))
-                      | SL_SI91X_FEAT_BLE_CUSTOM_FEAT_EXTENTION_VALID | SL_SI91X_BLE_PWR_INX(RSI_BLE_PWR_INX)
+                      | SL_SI91X_FEAT_BLE_CUSTOM_FEAT_EXTENSION_VALID | SL_SI91X_BLE_PWR_INX(RSI_BLE_PWR_INX)
                       | SL_SI91X_BLE_PWR_SAVE_OPTIONS(RSI_BLE_PWR_SAVE_OPTIONS)
                       | SL_SI91X_916_BLE_COMPATIBLE_FEAT_ENABLE
 #if RSI_BLE_GATT_ASYNC_ENABLE
@@ -122,7 +136,10 @@ static const sl_wifi_device_configuration_t config = {
                       | SL_SI91X_BLE_GATT_INIT
 #endif
                       ),
-                   .config_feature_bit_map = (SL_SI91X_FEAT_SLEEP_GPIO_SEL_BITMAP) }
+                   .config_feature_bit_map = (SL_SI91X_FEAT_SLEEP_GPIO_SEL_BITMAP) },
+  .ta_pool         = { .tx_ratio_in_buffer_pool = 0, .rx_ratio_in_buffer_pool = 0, .global_ratio_in_buffer_pool = 0 },
+  .efuse_data_type = SL_SI91X_EFUSE_MFG_SW_VERSION,
+  .nwp_fw_image_number = SL_SI91X_NWP_FW_IMAGE_NUMBER_0
 };
 const osThreadAttr_t thread_attributes = {
   .name       = "application_thread",
@@ -133,8 +150,20 @@ const osThreadAttr_t thread_attributes = {
   .stack_size = 3072,
   .priority   = osPriorityNormal,
   .tz_module  = 0,
-  .reserved   = 0,
 };
+
+#ifdef SL_WDT_MANAGER_PRESENT
+/*
+ * Test mode runs continuously in the controller, so the application thread has
+ * nothing left to do once it is started. Returning from a FreeRTOS task lands
+ * in the port's prvTaskExitError(), which disables interrupts permanently; the
+ * WDT interrupt would then never reach the WDT manager task that kicks the
+ * watchdog, and the device would be reset. This semaphore is never released -
+ * acquiring it parks the thread so the watchdog keeps being serviced.
+ */
+static osSemaphoreId_t ble_testmode_sem = NULL;
+#endif
+
 /*==============================================*/
 /**
  * @fn         rsi_ble_testmode
@@ -147,49 +176,78 @@ const osThreadAttr_t thread_attributes = {
 void ble_testmodes(void)
 {
   int32_t status                                             = 0;
-  sl_wifi_firmware_version_t fw_version                      = { 0 };
+  sl_si91x_firmware_version_t fw_version                     = { 0 };
   static uint8_t rsi_app_resp_get_dev_addr[RSI_DEV_ADDR_LEN] = { 0 };
   uint8_t local_dev_addr[LOCAL_DEV_ADDR_LEN]                 = { 0 };
 
   //! Wi-Fi initialization
   status = sl_wifi_init(&config, NULL, sl_wifi_default_event_handler);
   if (status != SL_STATUS_OK) {
-    LOG_PRINT("\r\n Wi-Fi Initialization Failed, Error Code : 0x%lX\r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "Wi-Fi Initialization Failed, Error Code : 0x%lX\r\n", status);
     return;
   }
-  printf("\r\n Wi-Fi initialization is successful\n");
+  SL_DEBUG_LOG_V2(INFO, "Wi-Fi initialization is successful\r\n");
 
   //! Firmware version Prints
-  status = sl_wifi_get_firmware_version(&fw_version);
+  status = sl_si91x_get_firmware_version(&fw_version);
   if (status != SL_STATUS_OK) {
-    LOG_PRINT("\r\nFirmware version Failed, Error Code : 0x%lX\r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "Firmware version Failed, Error Code : 0x%lX\r\n", status);
   } else {
-    print_firmware_version(&fw_version);
+    printf("\r\nFirmware version is: %x%x.%d.%d.%d.%d.%d.%d\r\n",
+           fw_version.chip_id,
+           fw_version.rom_id,
+           fw_version.major,
+           fw_version.minor,
+           fw_version.security_version,
+           fw_version.patch_num,
+           fw_version.customer_id,
+           fw_version.build_num);
   }
 
   //! get the local device MAC address.
   status = rsi_bt_get_local_device_address(rsi_app_resp_get_dev_addr);
   if (status != RSI_SUCCESS) {
-    LOG_PRINT("\r\n Get local device address failed = %lx\r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "Get local device address failed = %lx\r\n", status);
     return;
   } else {
     rsi_6byte_dev_address_to_ascii(local_dev_addr, rsi_app_resp_get_dev_addr);
-    LOG_PRINT("\r\n Local device address %s \r\n", local_dev_addr);
+    SL_DEBUG_LOG_V2(INFO, "Local device address %s \r\n", (uintptr_t)(local_dev_addr));
   }
 
   if (RSI_CONFIG_TEST_MODE == RSI_BLE_TESTMODE_TRANSMIT) {
     //! start the tx test mode in controller
-    rsi_ble_tx_test_mode(RSI_BLE_TX_CHANNEL,       /* channel number*/
-                         RSI_BLE_TX_PHY,           /* phy - 1Mbps selected */
-                         RSI_BLE_TX_PAYLOAD_LEN,   //255,  /* data_length */
-                         RSI_BLE_TX_PAYLOAD_TYPE); /* packet payload sequence */
+    status = rsi_ble_tx_test_mode(RSI_BLE_TX_CHANNEL,       /* channel number*/
+                                  RSI_BLE_TX_PHY,           /* phy - 1Mbps selected */
+                                  RSI_BLE_TX_PAYLOAD_LEN,   //255,  /* data_length */
+                                  RSI_BLE_TX_PAYLOAD_TYPE); /* packet payload sequence */
+    if (status != RSI_SUCCESS) {
+      SL_DEBUG_LOG_V2(ERROR, "BLE TX test mode failed, Error Code: 0x%lX\r\n", status);
+    } else {
+      SL_DEBUG_LOG_V2(INFO, "BLE TX test mode started successfully\r\n");
+    }
 
   } else if (RSI_CONFIG_TEST_MODE == RSI_BLE_TESTMODE_RECEIVE) {
 
-    rsi_ble_rx_test_mode(RSI_BLE_RX_CHANNEL, /* channel number*/
-                         RSI_BLE_RX_PHY,     /* phy - 1Mbps selected */
-                         0x00);              /* standard modulation */
+    status = rsi_ble_rx_test_mode(RSI_BLE_RX_CHANNEL, /* channel number*/
+                                  RSI_BLE_RX_PHY,     /* phy - 1Mbps selected */
+                                  0x00);              /* standard modulation */
+    if (status != RSI_SUCCESS) {
+      SL_DEBUG_LOG_V2(ERROR, "BLE RX test mode failed, Error Code: 0x%lX\r\n", status);
+    } else {
+      SL_DEBUG_LOG_V2(INFO, "BLE RX test mode started successfully\r\n");
+    }
   }
+
+#ifdef SL_WDT_MANAGER_PRESENT
+  ble_testmode_sem = osSemaphoreNew(1, 0, NULL);
+  if (ble_testmode_sem == NULL) {
+    SL_DEBUG_LOG_V2(ERROR, "Test mode semaphore creation failed\r\n");
+    return;
+  }
+  /*Waiting on this sempahore so that this thread doesn't exit and other threads 
+  gets opportunity to run. this sempahore is not released anywhere.*/
+  osSemaphoreAcquire(ble_testmode_sem, osWaitForever);
+#endif
 }
 
 void app_init(void)

@@ -9,6 +9,7 @@
 #pragma once
 #include <stdint.h>
 #include <stdio.h>
+#include "iot_socket.h"
 
 #define IOT_SOCKET_NO_ERROR 0
 #define NO_FLAGS            0

@@ -47,6 +47,3 @@ template_contribution:
       include: "sl_adc_instances.h"
 requires:
   - name: sl_adc
-documentation:
-    docset: wiseconnect
-    document: wiseconnect-api-reference-guide-si91x-peripherals/adc

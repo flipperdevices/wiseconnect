@@ -1,8 +1,8 @@
 id: sl_si91x_fwup
 package: wifi
 description: >
-    The Firmware Upgrade component provides APIs for firmware upgrade from Host or Module on Si91x device.
-label: Firmware Upgrade (Si91x)
+    The Firmware Upgrade component provides APIs for firmware upgrade from Host or Module on SiWx91x device.
+label: Firmware Upgrade (SiWx91x)
 category: Device|Si91x|Wireless|Firmware Upgrade
 quality: production
 metadata:

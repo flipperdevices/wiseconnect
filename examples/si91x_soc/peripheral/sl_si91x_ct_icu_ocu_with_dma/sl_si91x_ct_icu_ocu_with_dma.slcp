@@ -5,7 +5,7 @@ description: 'Demonstrates the Config Timer Input Capture and Output Compare fea
   '
 category: example|peripheral
 quality: production
-label: SL Si91x - Config Timer ICU and OCU with DMA
+label: SiWx91x Platform - Config Timer ICU and OCU with DMA
 readme:
 - path: readme.md
 source:
@@ -15,12 +15,20 @@ source:
 - path: config_timer_icu_ocu_example.h
 toolchain_settings:
 - option: gcc_compiler_option
-  value: -Wall -Werror
+  value: -Wall -Werror -Wno-error=deprecated-declarations
+- option: llvm_compiler_option
+  value: -Wall -Werror -Wno-error=deprecated-declarations
 component:
 - id: sl_main
 - id: status
 - id: syscalls
 - id: si917_memory_default_config
+- id: si91x_log
+- id: si91x_log_iostream_formatted
+- id: iostream_si91x
+- id: iostream_uart_si91x
+  instance:
+  - vcom
 - id: sl_config_timer
 other_file:
 - path: resources/readme/image502e.png
@@ -32,13 +40,26 @@ ui_hints:
   highlight:
   - path: readme.md
     focus: true
+filter:
+- name: Device Type
+  value:
+  - SoC
+- name: MCU
+  value:
+  - 32-bit MCU
+- name: Level
+  value:
+  - Beginner
+- name: Wireless Technology
+  value:
+  - Wi-Fi
 post_build:
   profile: wiseconnect_soc
 sdk_extension:
 - id: wiseconnect3_sdk
   vendor: silabs
-  version: 4.0.1
+  version: 4.1.2
 sdk:
   id: simplicity_sdk
   vendor: silabs
-  version: 2025.12.2
+  version: 2026.6.2

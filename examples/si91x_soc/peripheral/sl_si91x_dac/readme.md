@@ -1,8 +1,8 @@
-# SL DAC
+# SiWx91x Platform DAC
 
 ## Table of Contents
 
-- [SL DAC](#sl-dac)
+- [SiWx91x Platform DAC](#platform-siwx91x-dac)
   - [Table of Contents](#table-of-contents)
   - [Purpose/Scope](#purposescope)
   - [Overview](#overview)
@@ -15,6 +15,9 @@
     - [Application Configuration Parameters](#application-configuration-parameters)
     - [Pin Configuration](#pin-configuration)
   - [Test the Application](#test-the-application)
+  - [Troubleshooting](#troubleshooting)
+  - [Resources](#resources)
+  - [Report Bugs/Support](#report-bugssupport)
 
 ## Purpose/Scope
 
@@ -40,7 +43,7 @@ This application demonstrate the DAC peripheral, including:
 ### Hardware Requirements
 
 - Windows PC
-- Silicon Labs Si917 Evaluation Kit [[BRD4002](https://www.silabs.com/development-tools/wireless/wireless-pro-kit-mainboard?tab=overview) + [BRD4338A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-rb4338a-wifi-6-bluetooth-le-soc-radio-board?tab=overview) / [BRD4342A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx91x-rb4342a-wifi-6-bluetooth-le-soc-radio-board?tab=overview) / [BRD4343A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4343a-wi-fi-6-bluetooth-le-8mb-flash-radio-board-for-module?tab=overview)]
+- Silicon Labs SiWx91x Evaluation Kit [[BRD4002](https://www.silabs.com/development-tools/wireless/wireless-pro-kit-mainboard?tab=overview) + [BRD4338A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-rb4338a-wifi-6-bluetooth-le-soc-radio-board?tab=overview) / [BRD4342A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx91x-rb4342a-wifi-6-bluetooth-le-soc-radio-board?tab=overview) / [BRD4343A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4343a-wi-fi-6-bluetooth-le-8mb-flash-radio-board-for-module?tab=overview) / [BRD4343C](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4343c-wi-fi-6-bluetooth-le-8mb-flash-radio-board-for-module?tab=overview)]
 - SiWx917 AC1 Module Explorer Kit [BRD2708A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-ek2708a-explorer-kit)
 
 ### Software Requirements
@@ -69,6 +72,19 @@ For details on the project folder structure, see the [WiSeConnect Examples](http
 
 ### Application Configuration Parameters
 
+- Configure the following macros in the [`dac_example.c`](dac_example.c) file and update/modify following macros, if required.
+
+- `STATIC_MODE`: Selects the DAC operation mode. Set to 1 for Static mode (constant output voltage) or 0 for FIFO mode (continuous waveform output). By default, it is set to 1.
+
+  ```c
+    #define STATIC_MODE           1         // For static mode set this macro value as '1'
+  ```
+
+- `BUFFER_SIZE`: Size of the DAC sample buffer. Use 1 for Static mode and the number of samples to be played (up to 1024) for FIFO mode. By default, it is set to 1024.
+
+  ```c
+    #define BUFFER_SIZE           1024      // For FIFO mode (set to 1 for static mode)
+  ```
 - Configure UC from the slcp component.
 - Open the **sl_si91x_dac.slcp** project file, select the **Software Component** tab, and search for **DAC** in the search bar.
 - Use the configuration wizard to configure different parameters. Below are the configuration screen, where user can select as per requirement.
@@ -93,7 +109,7 @@ For details on the project folder structure, see the [WiSeConnect Examples](http
   | --- | --- | --- |
   | DAC0 | ULP_GPIO_4 | NA |
   | DAC1 | GPIO_30 | [P35] |
-  
+
 - Because of the GPIO workarounds described below, the DAC output in BRD4338a is read internally, supplied to OPAMP1, and allows the user to see the OPAMP1 output on the GPIO_30[P35] pin.
 
 > **Note:**
@@ -131,11 +147,27 @@ Refer to the instructions [here](https://docs.silabs.com/wiseconnect/latest/wise
        ![Figure: dac_fifo_analyzer_output](resources/readme/dac_fifo_analyzer_output.png)
 
 > **Note:**
-> - In the [`dac_example.c`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.1-content-for-docs/examples/si91x_soc/peripheral/sl_si91x_dac/dac_example.c) file, locate the 'STATIC_MODE' macro. If the DAC operation mode is set to Static, make sure to set the value to '1' for this macro. If the FIFO mode is selected, substitute '0' for this macro.
-> - BUFFER_SIZE should be '1' for DAC static mode in [`dac_example.c`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.1-content-for-docs/examples/si91x_soc/peripheral/sl_si91x_dac/dac_example.c).
+> - In the [`dac_example.c`](dac_example.c) file, locate the 'STATIC_MODE' macro. If the DAC operation mode is set to Static, make sure to set the value to '1' for this macro. If the FIFO mode is selected, substitute '0' for this macro.
+> - BUFFER_SIZE should be '1' for DAC static mode in [`dac_example.c`](dac_example.c).
 > - Use following formula to find equivalent output analog voltage of DAC
 >
 >         DAC_output = ((input sample/(2^10)) * Vref Voltage);
 >
 > - If input sample value is '0x33A' and voltage reference is 2.8v, then DAC_output = ((0x33A/1024) * 2.8).
 > - Interrupt handlers are implemented in the driver layer, and user callbacks are provided for custom code. If you want to write your own interrupt handler instead of using the default one, make the driver interrupt handler a weak handler. Then, copy the necessary code from the driver handler to your custom interrupt handler.
+
+## Troubleshooting
+
+- If the project does not build, ensure Simplicity Studio and the WiSeConnect extension are installed and the board is connected.
+- If the device is not detected, reinstall the connectivity firmware and check USB drivers.
+
+## Resources
+
+- [WiSeConnect Getting Started](https://docs.silabs.com/wiseconnect/latest/wiseconnect-getting-started/)
+- [WiSeConnect Examples](https://docs.silabs.com/wiseconnect/latest/wiseconnect-examples/)
+- [SiWx91x SoC Documentation](https://docs.silabs.com/wiseconnect/latest/)
+
+## Report Bugs/Support
+
+For issues and support, use the Silicon Labs Community or your normal support channel.
+

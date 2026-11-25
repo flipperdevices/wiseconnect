@@ -40,8 +40,11 @@
 #include "aws_client_certificate.pem.crt.h"
 #include "aws_client_private_key.pem.key.h"
 #include "sl_si91x_driver.h"
+#include "sl_wifi_constants.h"
 
 #include <stdio.h>
+#include <stdint.h>
+#include <inttypes.h>
 #include <string.h>
 #include <stdbool.h>
 
@@ -74,6 +77,11 @@
 #define ADV_PASSIVE_SCAN_DURATION    20
 #define ADV_MULTIPROBE               0
 #define ADV_SCAN_PERIODICITY         10
+
+/* Defaults aligned with example apps (sl_wifi_filter_broadcast migration). */
+#define BCAST_FILTER_ENABLE (1U)
+#define MCAST_FILTER_ENABLE (1U)
+#define FILTER_MODE         (0U)
 
 #define MAX_RECEIVE_STATS_COUNT 5
 
@@ -168,10 +176,13 @@ static const sl_wifi_device_configuration_t sl_wifi_default_client_configuration
                    .bt_feature_bit_map = 0,
                    .ext_tcp_ip_feature_bit_map =
                      (SL_SI91X_EXT_TCP_IP_WINDOW_SCALING | SL_SI91X_EXT_TCP_IP_TOTAL_SELECTS(10)
-                      | SL_SI91X_CONFIG_FEAT_EXTENTION_VALID),
+                      | SL_SI91X_CONFIG_FEAT_EXTENSION_VALID),
                    .ble_feature_bit_map     = 0,
                    .ble_ext_feature_bit_map = 0,
-                   .config_feature_bit_map  = (SL_SI91X_FEAT_SLEEP_GPIO_SEL_BITMAP | SL_WIFI_ENABLE_ENHANCED_MAX_PSP) }
+                   .config_feature_bit_map  = (SL_SI91X_FEAT_SLEEP_GPIO_SEL_BITMAP | SL_WIFI_ENABLE_ENHANCED_MAX_PSP) },
+  .ta_pool         = { .tx_ratio_in_buffer_pool = 0, .rx_ratio_in_buffer_pool = 0, .global_ratio_in_buffer_pool = 0 },
+  .efuse_data_type = SL_SI91X_EFUSE_MFG_SW_VERSION,
+  .nwp_fw_image_number = SL_SI91X_NWP_FW_IMAGE_NUMBER_0
 };
 
 /// Wi-Fi AP configuration for Wireless Test
@@ -199,7 +210,10 @@ static const sl_wifi_device_configuration_t sl_wifi_default_ap_configuration_cli
                    .ext_tcp_ip_feature_bit_map = 0,
                    .ble_feature_bit_map        = 0,
                    .ble_ext_feature_bit_map    = 0,
-                   .config_feature_bit_map     = 0 }
+                   .config_feature_bit_map     = 0 },
+  .ta_pool         = { .tx_ratio_in_buffer_pool = 0, .rx_ratio_in_buffer_pool = 0, .global_ratio_in_buffer_pool = 0 },
+  .efuse_data_type = SL_SI91X_EFUSE_MFG_SW_VERSION,
+  .nwp_fw_image_number = SL_SI91X_NWP_FW_IMAGE_NUMBER_0
 };
 
 /// Wi-Fi concurrent (AP + STATION) configuration for Wireless Test
@@ -223,10 +237,13 @@ static const sl_wifi_device_configuration_t sl_wifi_default_concurrent_configura
 #endif
                                                   ),
                    .bt_feature_bit_map         = 0,
-                   .ext_tcp_ip_feature_bit_map = SL_SI91X_CONFIG_FEAT_EXTENTION_VALID,
+                   .ext_tcp_ip_feature_bit_map = SL_SI91X_CONFIG_FEAT_EXTENSION_VALID,
                    .ble_feature_bit_map        = 0,
                    .ble_ext_feature_bit_map    = 0,
-                   .config_feature_bit_map     = SL_SI91X_FEAT_SLEEP_GPIO_SEL_BITMAP }
+                   .config_feature_bit_map     = SL_SI91X_FEAT_SLEEP_GPIO_SEL_BITMAP },
+  .ta_pool         = { .tx_ratio_in_buffer_pool = 0, .rx_ratio_in_buffer_pool = 0, .global_ratio_in_buffer_pool = 0 },
+  .efuse_data_type = SL_SI91X_EFUSE_MFG_SW_VERSION,
+  .nwp_fw_image_number = SL_SI91X_NWP_FW_IMAGE_NUMBER_0
 };
 
 /// Wi-Fi enterprise client configuration for Wireless Test
@@ -255,7 +272,10 @@ static const sl_wifi_device_configuration_t sl_wifi_default_enterprise_client_co
                      (SL_SI91X_EXT_TCP_IP_WINDOW_SCALING | SL_SI91X_EXT_TCP_IP_TOTAL_SELECTS(10)),
                    .ble_feature_bit_map     = 0,
                    .ble_ext_feature_bit_map = 0,
-                   .config_feature_bit_map  = 0 }
+                   .config_feature_bit_map  = 0 },
+  .ta_pool         = { .tx_ratio_in_buffer_pool = 0, .rx_ratio_in_buffer_pool = 0, .global_ratio_in_buffer_pool = 0 },
+  .efuse_data_type = SL_SI91X_EFUSE_MFG_SW_VERSION,
+  .nwp_fw_image_number = SL_SI91X_NWP_FW_IMAGE_NUMBER_0
 };
 
 /// Wi-Fi transmit configuration for Wireless Test
@@ -281,31 +301,37 @@ static const sl_wifi_device_configuration_t sl_wifi_transmit_test_configuration_
 #endif
                                                   ),
                    .bt_feature_bit_map         = SL_SI91X_BT_RF_TYPE,
-                   .ext_tcp_ip_feature_bit_map = SL_SI91X_CONFIG_FEAT_EXTENTION_VALID,
+                   .ext_tcp_ip_feature_bit_map = SL_SI91X_CONFIG_FEAT_EXTENSION_VALID,
                    .ble_feature_bit_map        = 0,
                    .ble_ext_feature_bit_map    = 0,
-                   .config_feature_bit_map     = SL_SI91X_FEAT_SLEEP_GPIO_SEL_BITMAP }
+                   .config_feature_bit_map     = SL_SI91X_FEAT_SLEEP_GPIO_SEL_BITMAP },
+  .ta_pool         = { .tx_ratio_in_buffer_pool = 0, .rx_ratio_in_buffer_pool = 0, .global_ratio_in_buffer_pool = 0 },
+  .efuse_data_type = SL_SI91X_EFUSE_MFG_SW_VERSION,
+  .nwp_fw_image_number = SL_SI91X_NWP_FW_IMAGE_NUMBER_0
 };
 
 extern const sl_wifi_device_configuration_t sl_wifi_ble_configuration_cli;
 
 sl_wifi_device_configuration_t si91x_init_configuration = {
-  .boot_option = LOAD_NWP_FW,
-  .mac_address = NULL,
-  .band        = SL_SI91X_WIFI_BAND_2_4GHZ,
-  .boot_config = { .oper_mode              = SL_SI91X_CLIENT_MODE,
-                   .coex_mode              = SL_SI91X_WLAN_ONLY_MODE,
-                   .feature_bit_map        = (SL_WIFI_FEAT_EAP_LEAP_IN_COEX),
-                   .tcp_ip_feature_bit_map = (SL_SI91X_TCP_IP_FEAT_LOAD_PUBLIC_PRIVATE_CERTS),
-                   .custom_feature_bit_map = SL_SI91X_CUSTOM_FEAT_HTTP_HTTPS_AUTH,
-                   .ext_custom_feature_bit_map =
-                     (SL_SI91X_EXT_FEAT_1P8V_SUPPORT | SL_SI91X_EXT_FEAT_UART_SEL_FOR_DEBUG_PRINTS
+  .boot_option     = LOAD_NWP_FW,
+  .mac_address     = NULL,
+  .band            = SL_SI91X_WIFI_BAND_2_4GHZ,
+  .boot_config     = { .oper_mode              = SL_SI91X_CLIENT_MODE,
+                       .coex_mode              = SL_SI91X_WLAN_ONLY_MODE,
+                       .feature_bit_map        = (SL_WIFI_FEAT_EAP_LEAP_IN_COEX),
+                       .tcp_ip_feature_bit_map = (SL_SI91X_TCP_IP_FEAT_LOAD_PUBLIC_PRIVATE_CERTS),
+                       .custom_feature_bit_map = SL_SI91X_CUSTOM_FEAT_HTTP_HTTPS_AUTH,
+                       .ext_custom_feature_bit_map =
+                         (SL_SI91X_EXT_FEAT_1P8V_SUPPORT | SL_SI91X_EXT_FEAT_UART_SEL_FOR_DEBUG_PRINTS
                       | SL_SI91X_EXT_FEAT_XTAL_CLK),
-                   .bt_feature_bit_map         = 0,
-                   .ext_tcp_ip_feature_bit_map = 0,
-                   .ble_feature_bit_map        = 0,
-                   .ble_ext_feature_bit_map    = 0,
-                   .config_feature_bit_map     = (SL_SI91X_FEAT_DVS_SEL_CONFIG_3 | SL_SI91X_XTAL_GOODTIME_2000us) }
+                       .bt_feature_bit_map         = 0,
+                       .ext_tcp_ip_feature_bit_map = 0,
+                       .ble_feature_bit_map        = 0,
+                       .ble_ext_feature_bit_map    = 0,
+                       .config_feature_bit_map     = (SL_SI91X_FEAT_DVS_SEL_CONFIG_3 | SL_SI91X_XTAL_GOODTIME_2000us) },
+  .ta_pool         = { .tx_ratio_in_buffer_pool = 0, .rx_ratio_in_buffer_pool = 0, .global_ratio_in_buffer_pool = 0 },
+  .efuse_data_type = SL_SI91X_EFUSE_MFG_SW_VERSION,
+  .nwp_fw_image_number = SL_SI91X_NWP_FW_IMAGE_NUMBER_0
 };
 
 static sl_net_wifi_eap_credential_entry_t wifi_client_enterprise_eap_credential = {
@@ -566,7 +592,7 @@ sl_status_t wifi_init_command_handler(console_args_t *arguments)
       config = sl_wifi_ble_configuration_cli;
       break;
     default:
-      printf("Selected Wi-Fi mode is not supported. Try 'help'");
+      SL_DEBUG_LOG_V2(ERROR, "Selected Wi-Fi mode is not supported. Try 'help'");
       return SL_STATUS_WIFI_UNKNOWN_INTERFACE;
   }
 
@@ -577,22 +603,22 @@ sl_status_t wifi_init_command_handler(console_args_t *arguments)
 
   switch (mode) {
     case WIFI_MODE_STA:
-      printf("Started client mode");
+      SL_DEBUG_LOG_V2(INFO, "Started client mode");
       break;
     case WIFI_MODE_AP:
-      printf("Started AP mode");
+      SL_DEBUG_LOG_V2(INFO, "Started AP mode");
       break;
     case WIFI_MODE_APSTA:
-      printf("Started STA + AP mode");
+      SL_DEBUG_LOG_V2(INFO, "Started STA + AP mode");
       break;
     case WIFI_MODE_EAP:
-      printf("Started enterprise client mode");
+      SL_DEBUG_LOG_V2(INFO, "Started enterprise client mode");
       break;
     case WIFI_MODE_BLE_COEX:
-      printf("Started BLE Coex mode");
+      SL_DEBUG_LOG_V2(INFO, "Started BLE Coex mode");
       break;
     case BLE_MODE:
-      printf("Started BLE mode");
+      SL_DEBUG_LOG_V2(INFO, "Started BLE mode");
       break;
     default:
       break;
@@ -614,27 +640,32 @@ static sl_status_t show_scan_results(sl_wifi_scan_result_t *scan_result)
   SL_WIFI_ARGS_CHECK_NULL_POINTER(scan_result);
   uint8_t *bssid = NULL;
 
-  printf("%lu scan results:\n", scan_result->scan_count);
-  if (scan_result->scan_count)
-    printf("\n   %s %24s %s", "SSID", "SECURITY", "NETWORK");
-  printf("%12s %12s %s\n", "BSSID", "CHANNEL", "RSSI");
+  SL_DEBUG_LOG_V2(INFO, "%lu scan results:\r\n", scan_result->scan_count);
+  if (scan_result->scan_count) {
+    SL_DEBUG_LOG_V2(INFO, "   %s %24s %s", (uintptr_t) "SSID", (uintptr_t) "SECURITY", (uintptr_t) "NETWORK");
+  }
+  SL_DEBUG_LOG_V2(INFO, "%12s %12s %s\r\n", (uintptr_t) "BSSID", (uintptr_t) "CHANNEL", (uintptr_t) "RSSI");
   for (unsigned int a = 0; a < scan_result->scan_count; ++a) {
     bssid = (uint8_t *)&scan_result->scan_info[a].bssid;
-    printf("%-24s %4u,  %4u, ",
-           scan_result->scan_info[a].ssid,
-           scan_result->scan_info[a].security_mode,
-           scan_result->scan_info[a].network_type);
-    printf("  %02x:%02x:%02x:%02x:%02x:%02x, %4u,  -%u\n",
-           bssid[0],
-           bssid[1],
-           bssid[2],
-           bssid[3],
-           bssid[4],
-           bssid[5],
-           scan_result->scan_info[a].rf_channel,
-           scan_result->scan_info[a].rssi_val);
+    SL_DEBUG_LOG_V2(INFO,
+                    "%-24s %4u,  %4u, ",
+                    (uintptr_t)scan_result->scan_info[a].ssid,
+                    (uintptr_t)scan_result->scan_info[a].security_mode,
+                    (uintptr_t)scan_result->scan_info[a].network_type);
+    char wifi_cmd_scan_bssid_log[48];
+    snprintf(wifi_cmd_scan_bssid_log,
+             sizeof(wifi_cmd_scan_bssid_log),
+             "  %02x:%02x:%02x:%02x:%02x:%02x, ",
+             bssid[0],
+             bssid[1],
+             bssid[2],
+             bssid[3],
+             bssid[4],
+             bssid[5]);
+    SL_DEBUG_LOG_V2(INFO, "%s", (uintptr_t)wifi_cmd_scan_bssid_log);
+    SL_DEBUG_LOG_V2(INFO, "%4u,  -%u\r\n", scan_result->scan_info[a].rf_channel, scan_result->scan_info[a].rssi_val);
   }
-  printf("End");
+  SL_DEBUG_LOG_V2(INFO, "End");
 
   return SL_STATUS_OK;
 }
@@ -682,8 +713,12 @@ sl_status_t wifi_stats_receive_handler(sl_wifi_event_t event,
   if (event == SL_WIFI_STATS_ASYNC_EVENT) {
     sl_wifi_async_stats_response_t *result = (sl_wifi_async_stats_response_t *)reponse;
 
-    printf("%s: WIFI STATS Recieved packet# %d\n", __func__, stats_count);
-    printf("stats : crc_pass %d, crc_fail %d, cal_rssi :%d\n", result->crc_pass, result->crc_fail, result->cal_rssi);
+    SL_DEBUG_LOG_V2(DEBUG, "%s: WIFI STATS Received packet# %d\r\n", (uintptr_t) __func__, stats_count);
+    SL_DEBUG_LOG_V2(DEBUG,
+                    "stats : crc_pass %d, crc_fail %d, cal_rssi :%d",
+                    result->crc_pass,
+                    result->crc_fail,
+                    result->cal_rssi);
     stats_count++;
 
     float p = result->crc_pass;
@@ -715,7 +750,7 @@ sl_status_t wifi_get_signal_strength_command_handler(console_args_t *arguments)
   status = sl_wifi_get_signal_strength(interface, &signal_strength);
   VERIFY_STATUS_AND_RETURN(status);
 
-  printf("%ld", signal_strength);
+  SL_DEBUG_LOG_V2(INFO, "%ld", signal_strength);
   return status;
 }
 
@@ -774,7 +809,7 @@ sl_status_t wifi_scan_command_handler(console_args_t *arguments)
   }
 
   if (SL_STATUS_IN_PROGRESS == status) {
-    printf("Scanning...\r\n");
+    SL_DEBUG_LOG_V2(INFO, "Scanning...\r\n");
     const uint32_t start = osKernelGetTickCount();
 
     while (!scan_results_complete && (osKernelGetTickCount() - start) <= WIFI_SCAN_TIMEOUT) {
@@ -795,12 +830,12 @@ sl_status_t join_callback_handler(sl_wifi_event_t event,
 {
   UNUSED_PARAMETER(arg);
   if (SL_WIFI_CHECK_IF_EVENT_FAILED(event)) {
-    printf("F: Join Event received with %lu bytes payload\n", result_length);
+    SL_DEBUG_LOG_V2(ERROR, "F: Join Event received with %lu bytes payload\r\n", result_length);
     callback_status = status_code;
     return status_code;
   }
 
-  printf("%c: Join Event received with %lu bytes payload\n", *result, result_length);
+  SL_DEBUG_LOG_V2(INFO, "%c: Join Event received with %lu bytes payload\r\n", *result, result_length);
 
   callback_status = SL_STATUS_OK;
   return SL_STATUS_OK;
@@ -822,8 +857,8 @@ sl_status_t wifi_get_tx_power_command_handler(console_args_t *arguments)
   sl_status_t status                  = sl_wifi_get_max_tx_power(SL_WIFI_CLIENT_2_4GHZ_INTERFACE, &max_tx_power);
 
   if (status == SL_STATUS_OK) {
-    printf("Scan Power value: %d", max_tx_power.scan_tx_power);
-    printf("Join Power value: %d", max_tx_power.join_tx_power);
+    SL_DEBUG_LOG_V2(INFO, "Scan Power value: %d", max_tx_power.scan_tx_power);
+    SL_DEBUG_LOG_V2(INFO, "Join Power value: %d", max_tx_power.join_tx_power);
   }
   return status;
 }
@@ -847,11 +882,11 @@ sl_status_t wifi_connect_command_handler(console_args_t *arguments)
   sl_wifi_interface_t interface =
     GET_OPTIONAL_COMMAND_ARG(arguments, 10, SL_WIFI_CLIENT_2_4GHZ_INTERFACE, sl_wifi_interface_t);
 
-  SL_DEBUG_LOG("ssid=%s\n", ssid);
-  SL_DEBUG_LOG("secType=%u\n", security_type);
-  SL_DEBUG_LOG("encType=%u\n", encryption_type);
-  SL_DEBUG_LOG("userName=%s\n", user_name);
-  SL_DEBUG_LOG("pwd=%s\n", password);
+  SL_DEBUG_LOG_V2(DEBUG, "ssid=%s\r\n", (uintptr_t)ssid);
+  SL_DEBUG_LOG_V2(DEBUG, "secType=%u\r\n", security_type);
+  SL_DEBUG_LOG_V2(DEBUG, "encType=%u\r\n", encryption_type);
+  SL_DEBUG_LOG_V2(DEBUG, "userName=%s\r\n", (uintptr_t)user_name);
+  SL_DEBUG_LOG_V2(DEBUG, "pwd=%s\r\n", (uintptr_t)password);
 
   if (timeout_ms == 0) {
     sl_wifi_set_join_callback_v2(join_callback_handler, NULL);
@@ -868,7 +903,7 @@ sl_status_t wifi_connect_command_handler(console_args_t *arguments)
         sl_net_set_credential(SL_NET_WIFI_EAP_CLIENT_CREDENTIAL_ID, SL_NET_CERTIFICATE, wifiuser, sizeof(wifiuser) - 1);
       VERIFY_STATUS_AND_RETURN(status);
 
-      SL_DEBUG_LOG("Certificate set\n");
+      SL_DEBUG_LOG_V2(INFO, "Certificate set\r\n");
     }
 
     wifi_client_enterprise_eap_credential.data.certificate_id = id;
@@ -883,7 +918,7 @@ sl_status_t wifi_connect_command_handler(console_args_t *arguments)
     if (security_type != SL_WIFI_OPEN) {
       status = sl_net_set_credential(id, SL_NET_WIFI_PSK, password, strlen(password));
       VERIFY_STATUS_AND_RETURN(status);
-      SL_DEBUG_LOG("Credentials set\n");
+      SL_DEBUG_LOG_V2(INFO, "Credentials set\r\n");
     }
   }
 
@@ -892,7 +927,7 @@ sl_status_t wifi_connect_command_handler(console_args_t *arguments)
   ap.encryption    = encryption_type;
   ap.credential_id = id;
 
-  SL_DEBUG_LOG("Connecting\n");
+  SL_DEBUG_LOG_V2(INFO, "Connecting\r\n");
   status = sl_wifi_connect(interface, &ap, timeout_ms);
   if (status == SL_STATUS_IN_PROGRESS) {
     callback_status = SL_STATUS_IN_PROGRESS;
@@ -915,12 +950,28 @@ sl_status_t wifi_disconnect_command_handler(console_args_t *arguments)
 sl_status_t wifi_get_firmware_version_command_handler(console_args_t *arguments)
 {
   UNUSED_PARAMETER(arguments);
-  sl_wifi_firmware_version_t version = { 0 };
+  sl_si91x_firmware_version_t version = { 0 };
 
-  sl_status_t status = sl_wifi_get_firmware_version(&version);
+  sl_status_t status = sl_si91x_get_firmware_version(&version);
   VERIFY_STATUS_AND_RETURN(status);
 
-  print_firmware_version(&version);
+  printf("\r\nFirmware version is: %x%x.%d.%d.%d.%d.%d.%d\r\n",
+
+         version.chip_id,
+
+         version.rom_id,
+
+         version.major,
+
+         version.minor,
+
+         version.security_version,
+
+         version.patch_num,
+
+         version.customer_id,
+
+         version.build_num);
   return status;
 }
 
@@ -933,13 +984,13 @@ sl_status_t wifi_get_statistics_command_handler(console_args_t *arguments)
   status = sl_wifi_get_statistics(SL_WIFI_CLIENT_INTERFACE, &wifi_stats);
   VERIFY_STATUS_AND_RETURN(status);
 
-  printf("beacon_lost_count: %lu\r\n", wifi_stats.beacon_lost_count);
-  printf("beacon_rx_count: %lu\r\n", wifi_stats.beacon_rx_count);
-  printf("mcast_rx_count: %lu\r\n", wifi_stats.mcast_rx_count);
-  printf("mcast_tx_count: %lu\r\n", wifi_stats.mcast_tx_count);
-  printf("overrun_count: %lu\r\n", wifi_stats.overrun_count);
-  printf("ucast_rx_count: %lu\r\n", wifi_stats.ucast_rx_count);
-  printf("ucast_tx_count: %lu", wifi_stats.ucast_tx_count);
+  SL_DEBUG_LOG_V2(INFO, "beacon_lost_count: %lu\r\n", wifi_stats.beacon_lost_count);
+  SL_DEBUG_LOG_V2(INFO, "beacon_rx_count: %lu\r\n", wifi_stats.beacon_rx_count);
+  SL_DEBUG_LOG_V2(INFO, "mcast_rx_count: %lu\r\n", wifi_stats.mcast_rx_count);
+  SL_DEBUG_LOG_V2(INFO, "mcast_tx_count: %lu\r\n", wifi_stats.mcast_tx_count);
+  SL_DEBUG_LOG_V2(INFO, "overrun_count: %lu\r\n", wifi_stats.overrun_count);
+  SL_DEBUG_LOG_V2(INFO, "ucast_rx_count: %lu\r\n", wifi_stats.ucast_rx_count);
+  SL_DEBUG_LOG_V2(INFO, "ucast_tx_count: %lu", wifi_stats.ucast_tx_count);
   return status;
 }
 
@@ -952,11 +1003,11 @@ sl_status_t wifi_get_operational_statistics_command_handler(console_args_t *argu
   status = sl_wifi_get_operational_statistics(SL_WIFI_CLIENT_INTERFACE, &operational_statistics);
   VERIFY_STATUS_AND_RETURN(status);
 
-  printf("Operating mode: %d\r\n", operational_statistics.operating_mode);
-  printf("Dtim period: %d\r\n", operational_statistics.dtim_period);
-  printf("Ideal beacon info: %d\r\n", operational_statistics.ideal_beacon_info[0]);
-  printf("Busy beacon info: %d\r\n", operational_statistics.busy_beacon_info[0]);
-  printf("Busy interval: %d\r\n", operational_statistics.beacon_interval[0]);
+  SL_DEBUG_LOG_V2(INFO, "Operating mode: %d\r\n", operational_statistics.operating_mode);
+  SL_DEBUG_LOG_V2(INFO, "Dtim period: %d\r\n", operational_statistics.dtim_period);
+  SL_DEBUG_LOG_V2(INFO, "Ideal beacon info: %d\r\n", operational_statistics.ideal_beacon_info[0]);
+  SL_DEBUG_LOG_V2(INFO, "Busy beacon info: %d\r\n", operational_statistics.busy_beacon_info[0]);
+  SL_DEBUG_LOG_V2(INFO, "Busy interval: %d\r\n", operational_statistics.beacon_interval[0]);
   return status;
 }
 
@@ -984,11 +1035,12 @@ void wifi_statistic_thread(const void *arg)
       if (stats_count == max_receive_stats_count && callback_status != SL_STATUS_IN_PROGRESS) {
         stop_wifi_statistic_report = true;
 
-        printf("\r\nCRC Average pass%% = %.6f,         CRC Average fail%% = %.6f \r\n",
-               pass_avg / max_receive_stats_count,
-               fail_avg / max_receive_stats_count);
-        printf("Total : total_crc_pass %d, total_crc_fail %d \n", total_crc_pass, total_crc_fail);
-        printf("%s: Stop Statistics Report\n", __func__);
+        SL_DEBUG_LOG_V2(INFO,
+                        "CRC Average pass%% = %.6f,         CRC Average fail%% = %.6f ",
+                        pass_avg / max_receive_stats_count,
+                        fail_avg / max_receive_stats_count);
+        SL_DEBUG_LOG_V2(INFO, "Total : total_crc_pass %d, total_crc_fail %d ", total_crc_pass, total_crc_fail);
+        SL_DEBUG_LOG_V2(INFO, "%s: Stop Statistics Report", (uintptr_t) __func__);
         pass_avg       = 0;
         fail_avg       = 0;
         total_crc_pass = 0;
@@ -1030,11 +1082,12 @@ sl_status_t wifi_stop_statistic_report_command_handler(console_args_t *arguments
   sl_status_t status            = SL_STATUS_OK;
   sl_wifi_interface_t interface = GET_OPTIONAL_COMMAND_ARG(arguments, 0, SL_WIFI_CLIENT_INTERFACE, sl_wifi_interface_t);
 
-  printf("\r\n CRC Average pass%% = %.6f,         CRC Average fail%% = %.6f \r\n",
-         pass_avg / max_receive_stats_count,
-         fail_avg / max_receive_stats_count);
-  printf("Total : total_crc_pass %d, total_crc_fail %d \n", total_crc_pass, total_crc_fail);
-  printf("%s: Stop Statistics Report\n", __func__);
+  SL_DEBUG_LOG_V2(INFO,
+                  " CRC Average pass%% = %.6f,         CRC Average fail%% = %.6f ",
+                  pass_avg / max_receive_stats_count,
+                  fail_avg / max_receive_stats_count);
+  SL_DEBUG_LOG_V2(INFO, "Total : total_crc_pass %d, total_crc_fail %d ", total_crc_pass, total_crc_fail);
+  SL_DEBUG_LOG_V2(INFO, "%s: Stop Statistics Report", (uintptr_t) __func__);
   pass_avg       = 0;
   fail_avg       = 0;
   total_crc_pass = 0;
@@ -1054,13 +1107,17 @@ sl_status_t wifi_get_mac_address_command_handler(console_args_t *arguments)
   status = sl_wifi_get_mac_address(interface, &mac_addr);
   VERIFY_STATUS_AND_RETURN(status);
 
-  printf("%x:%x:%x:%x:%x:%x",
-         mac_addr.octet[0],
-         mac_addr.octet[1],
-         mac_addr.octet[2],
-         mac_addr.octet[3],
-         mac_addr.octet[4],
-         mac_addr.octet[5]);
+  char wifi_cmd_mac_log[48];
+  snprintf(wifi_cmd_mac_log,
+           sizeof(wifi_cmd_mac_log),
+           "%x:%x:%x:%x:%x:%x",
+           mac_addr.octet[0],
+           mac_addr.octet[1],
+           mac_addr.octet[2],
+           mac_addr.octet[3],
+           mac_addr.octet[4],
+           mac_addr.octet[5]);
+  SL_DEBUG_LOG_V2(INFO, "%s", (uintptr_t)wifi_cmd_mac_log);
   return status;
 }
 
@@ -1074,7 +1131,7 @@ sl_status_t wifi_set_channel_command_handler(console_args_t *arguments)
   status = sl_wifi_set_channel(interface, channel_info);
   VERIFY_STATUS_AND_RETURN(status);
 
-  printf("Channel is set to: %d\r\n", channel);
+  SL_DEBUG_LOG_V2(INFO, "Channel is set to: %d\r\n", channel);
   return status;
 }
 
@@ -1099,7 +1156,7 @@ sl_status_t wifi_get_channel_command_handler(console_args_t *arguments)
       band_string = "Auto Band";
       break;
   }
-  printf("The operating channel: %d and band: %s\r\n", channel_info.channel, band_string);
+  SL_DEBUG_LOG_V2(INFO, "The operating channel: %d and band: %s\r\n", channel_info.channel, (uintptr_t)band_string);
   return status;
 }
 
@@ -1126,20 +1183,24 @@ sl_status_t wifi_get_ap_client_info_command_handler(console_args_t *argument)
   status = sl_wifi_get_ap_client_info(SL_WIFI_AP_INTERFACE, &client_info);
 
   if (client_info.client_count <= 0) {
-    printf("No clients!!");
+    SL_DEBUG_LOG_V2(INFO, "No clients!!");
     return status;
   }
 
   for (uint16_t station_info_index = 0; station_info_index < client_info.client_count; station_info_index++) {
     sl_wifi_client_info_t *station_info = &client_info.client_info[station_info_index];
-    printf("%d) MAC Address is %x:%x:%x:%x:%x:%x",
-           station_info_index + 1,
-           station_info->mac_adddress.octet[0],
-           station_info->mac_adddress.octet[1],
-           station_info->mac_adddress.octet[2],
-           station_info->mac_adddress.octet[3],
-           station_info->mac_adddress.octet[4],
-           station_info->mac_adddress.octet[5]);
+    char wifi_cmd_ap_client_mac_log[80];
+    snprintf(wifi_cmd_ap_client_mac_log,
+             sizeof(wifi_cmd_ap_client_mac_log),
+             "%u) MAC Address is %x:%x:%x:%x:%x:%x",
+             (unsigned)(station_info_index + 1),
+             station_info->mac_adddress.octet[0],
+             station_info->mac_adddress.octet[1],
+             station_info->mac_adddress.octet[2],
+             station_info->mac_adddress.octet[3],
+             station_info->mac_adddress.octet[4],
+             station_info->mac_adddress.octet[5]);
+    SL_DEBUG_LOG_V2(INFO, "%s", (uintptr_t)wifi_cmd_ap_client_mac_log);
 
     print_sl_ip_address(&station_info->ip_address);
   }
@@ -1165,7 +1226,7 @@ sl_status_t wifi_get_performance_profile_command_handler(console_args_t *argumen
   status = sl_wifi_get_performance_profile_v2(&performance_profile);
   VERIFY_STATUS_AND_RETURN(status);
 
-  printf("%s", get_performance_profile_name(performance_profile.profile));
+  SL_DEBUG_LOG_V2(INFO, "%s", (uintptr_t)get_performance_profile_name(performance_profile.profile));
 
   return status;
 }
@@ -1275,13 +1336,13 @@ sl_status_t wifi_load_certificate_handler(console_args_t *arguments)
 
     case AZURE_SERVER:
     default:
-      printf("Unsupported Server type");
+      SL_DEBUG_LOG_V2(ERROR, "Unsupported Server type");
       return SL_STATUS_FAIL;
   }
 
 exit:
   if (status != SL_STATUS_OK) {
-    printf("Loading TLS certificate Failed, Error Code : 0x%lX", status);
+    SL_DEBUG_LOG_V2(ERROR, "Loading TLS certificate Failed, Error Code : 0x%" PRIx32, (uint32_t)status);
   }
   return status;
 }
@@ -1291,10 +1352,10 @@ sl_status_t wifi_is_interface_up_command_handler(console_args_t *arguments)
   sl_wifi_interface_t interface = (sl_wifi_interface_t)GET_COMMAND_ARG(arguments, 0);
 
   if (sl_wifi_is_interface_up(interface)) {
-    printf("Yes");
+    SL_DEBUG_LOG_V2(INFO, "Yes");
     return SL_STATUS_OK;
   } else {
-    printf("No");
+    SL_DEBUG_LOG_V2(INFO, "No");
     return SL_STATUS_WIFI_INTERFACE_NOT_UP;
   }
 }
@@ -1308,7 +1369,7 @@ sl_status_t wifi_get_default_interface_command_handler(console_args_t *arguments
     return SL_STATUS_NOT_INITIALIZED;
   }
 
-  printf("%s", get_wifi_interface_name(interface));
+  SL_DEBUG_LOG_V2(INFO, "%s", (uintptr_t)get_wifi_interface_name(interface));
 
   return SL_STATUS_OK;
 }
@@ -1332,9 +1393,9 @@ sl_status_t wifi_set_transmit_rate_command_handler(console_args_t *arguments)
   sl_status_t status = sl_wifi_set_transmit_rate(interface, rate_protocol, mask);
 
   if (status != SL_STATUS_OK) {
-    printf("\n Failed to configure transmit rate!\n");
+    SL_DEBUG_LOG_V2(ERROR, " Failed to configure transmit rate!\r\n");
   } else {
-    printf("\n Transmit rate configured successfully!\n");
+    SL_DEBUG_LOG_V2(INFO, " Transmit rate configured successfully!\r\n");
   }
 
   return status;
@@ -1364,9 +1425,10 @@ sl_status_t wifi_get_transmit_rate_command_handler(console_args_t *arguments)
   sl_status_t status = sl_wifi_get_transmit_rate(interface, &rate_protocol, &mask);
 
   if (status == SL_STATUS_OK) {
-    printf("\n wifi protocol is: %s\n wifi rate is: %s\n",
-           get_sl_wifi_protocol_name(rate_protocol),
-           get_sl_wifi_rate_name(mask));
+    SL_DEBUG_LOG_V2(INFO,
+                    " wifi protocol is: %s wifi rate is: %s",
+                    (uintptr_t)get_sl_wifi_protocol_name(rate_protocol),
+                    (uintptr_t)get_sl_wifi_rate_name(mask));
   }
 
   return status;
@@ -1381,16 +1443,20 @@ sl_status_t wifi_get_ap_client_list_command_handler(console_args_t *arguments)
 
   status = sl_wifi_get_ap_client_list(interface, SL_WIFI_MAX_CLIENT_COUNT, client_list);
 
-  printf("Mac address list of clients connected to AP:");
+  SL_DEBUG_LOG_V2(INFO, "Mac address list of clients connected to AP:");
   for (uint16_t index = 0; client_list[index].octet[0] != 0; index++) {
-    printf("\n %d -> %x:%x:%x:%x:%x:%x",
-           index,
-           client_list[index].octet[0],
-           client_list[index].octet[1],
-           client_list[index].octet[2],
-           client_list[index].octet[3],
-           client_list[index].octet[4],
-           client_list[index].octet[5]);
+    char wifi_cmd_ap_list_mac_log[80];
+    snprintf(wifi_cmd_ap_list_mac_log,
+             sizeof(wifi_cmd_ap_list_mac_log),
+             " %u -> %x:%x:%x:%x:%x:%x",
+             (unsigned)index,
+             client_list[index].octet[0],
+             client_list[index].octet[1],
+             client_list[index].octet[2],
+             client_list[index].octet[3],
+             client_list[index].octet[4],
+             client_list[index].octet[5]);
+    SL_DEBUG_LOG_V2(INFO, "%s", (uintptr_t)wifi_cmd_ap_list_mac_log);
   }
 
   return status;
@@ -1406,7 +1472,7 @@ sl_status_t wifi_get_ap_client_count_command_handler(console_args_t *arguments)
   status = sl_wifi_get_ap_client_count(interface, &client_list_count);
 
   if (status == SL_STATUS_OK) {
-    printf("Client count = %lu\n", client_list_count);
+    SL_DEBUG_LOG_V2(INFO, "Client count = %lu\r\n", client_list_count);
   }
 
   return status;
@@ -1420,7 +1486,7 @@ sl_status_t wifi_generate_wps_pin_command_handler(console_args_t *arguments)
   sl_status_t status = sl_wifi_generate_wps_pin(&wps_pin);
 
   if (status == SL_STATUS_OK) {
-    printf("\n wps pin: %s\n", wps_pin.digits);
+    SL_DEBUG_LOG_V2(INFO, " wps pin: %s\r\n", (uintptr_t)wps_pin.digits);
   }
 
   return status;
@@ -1428,18 +1494,32 @@ sl_status_t wifi_generate_wps_pin_command_handler(console_args_t *arguments)
 
 sl_status_t wifi_start_wps(console_args_t *arguments)
 {
-  sl_wifi_wps_pin_t pin         = { 0 };
   sl_wifi_interface_t interface = arguments->arg[0];
   sl_wifi_wps_mode_t wps_mode   = arguments->arg[1];
+  char *wps_pin                 = GET_OPTIONAL_COMMAND_ARG(arguments, 2, NULL, char *);
 
-  char *wps_pin = GET_OPTIONAL_COMMAND_ARG(arguments, 2, NULL, char *);
-
-  if (wps_pin != NULL) {
-    memcpy(pin.digits, wps_pin, sizeof(pin.digits));
+  if ((interface & SL_WIFI_CLIENT_INTERFACE) == 0) {
+    SL_DEBUG_LOG_V2(INFO, "wifi_start_wps: WPS v2 is supported on client (STA) interfaces only.\r\n");
+    return SL_STATUS_NOT_SUPPORTED;
   }
 
-  return sl_wifi_start_wps(interface, wps_mode, wps_pin == NULL ? NULL : &pin);
+  if (wps_mode != SL_WIFI_WPS_PUSH_BUTTON_MODE) {
+    SL_DEBUG_LOG_V2(INFO, "wifi_start_wps: WPS v2 supports push-button (PBC) mode only on this stack.\r\n");
+    return SL_STATUS_NOT_SUPPORTED;
+  }
+
+  if (wps_pin != NULL) {
+    SL_DEBUG_LOG_V2(INFO, "wifi_start_wps: optional PIN argument is not used with v2 PBC enrollee.\r\n");
+  }
+
+  sl_wifi_wps_config_t config     = { .role         = SL_WIFI_WPS_ENROLLEE_ROLE,
+                                      .mode         = wps_mode,
+                                      .optional_pin = { 0 },
+                                      .auto_connect = true };
+  sl_wifi_wps_response_t response = { 0 };
+  return sl_wifi_start_wps_v2(interface, config, &response);
 }
+
 sl_status_t sl_wifi_set_advanced_scan_configuration_command_handler(console_args_t *arguments)
 {
   sl_status_t status                                                = SL_STATUS_OK;
@@ -1468,13 +1548,16 @@ sl_status_t sl_wifi_get_advanced_scan_configuration_command_handler(console_args
   sl_status_t status = sl_wifi_get_advanced_scan_configuration(&advanced_scan_configuration);
 
   if (status == SL_STATUS_OK) {
-    printf("\nAdvanced scan configurations:\n active channel time: %d\n passive channel time: %d\n trigger "
-           "level: %d\n trigger level change: %lu\n enable multi probe: %d\n",
-           advanced_scan_configuration.active_channel_time,
-           advanced_scan_configuration.passive_channel_time,
-           (int)advanced_scan_configuration.trigger_level,
-           advanced_scan_configuration.trigger_level_change,
-           advanced_scan_configuration.enable_multi_probe);
+    SL_DEBUG_LOG_V2(INFO,
+                    "Advanced scan configurations: active channel time: %d passive channel time: %d trigger "
+                    "level: %d",
+                    advanced_scan_configuration.active_channel_time,
+                    advanced_scan_configuration.passive_channel_time,
+                    (int)advanced_scan_configuration.trigger_level);
+    SL_DEBUG_LOG_V2(INFO,
+                    " trigger level change: %lu enable multi probe: %d",
+                    advanced_scan_configuration.trigger_level_change,
+                    advanced_scan_configuration.enable_multi_probe);
   }
 
   return status;
@@ -1496,18 +1579,25 @@ sl_status_t wifi_get_ap_configuration_command_handler(console_args_t *arguments)
   status = sl_wifi_get_ap_configuration(interface, &configuration);
   VERIFY_STATUS_AND_RETURN(status);
 
-  printf("SSID: %s\nsecurity: %d\nencryption: %d\nchannel: %d\nrate_protocol: %d\noptions: %d\ncredential_id: "
-         "%lu\nclient idle timeout: %lu\ndtim beacon count: %d\nmaximum client: %d\n",
-         configuration.ssid.value,
-         configuration.security,
-         configuration.encryption,
-         configuration.channel.channel,
-         configuration.rate_protocol,
-         configuration.options,
-         configuration.credential_id,
-         configuration.client_idle_timeout,
-         configuration.dtim_beacon_count,
-         configuration.maximum_clients);
+  SL_DEBUG_LOG_V2(INFO,
+                  "SSID: %ssecurity: %dencryption: %d",
+                  (uintptr_t)configuration.ssid.value,
+                  configuration.security,
+                  configuration.encryption);
+  SL_DEBUG_LOG_V2(INFO,
+                  "channel: %drate_protocol: %doptions: %d",
+                  configuration.channel.channel,
+                  configuration.rate_protocol,
+                  configuration.options);
+  SL_DEBUG_LOG_V2(INFO,
+                  "credential_id: "
+                  "%luclient idle timeout: %lu",
+                  configuration.credential_id,
+                  configuration.client_idle_timeout);
+  SL_DEBUG_LOG_V2(INFO,
+                  "dtim beacon count: %dmaximum client: %d",
+                  configuration.dtim_beacon_count,
+                  configuration.maximum_clients);
   return SL_STATUS_OK;
 }
 
@@ -1624,7 +1714,7 @@ sl_status_t sl_wifi_send_raw_data_command_handler(console_args_t *arguments)
   //version and header length
   buffer[14] = 0x45;
 
-  //total lenght
+  //total length
   buffer[17] = 0x26;
 
   //identification
@@ -1718,59 +1808,59 @@ static sl_status_t twt_callback_handler(sl_wifi_event_t event,
 
   switch (event) {
     case SL_WIFI_TWT_RESPONSE_EVENT:
-      printf("TWT Setup success");
+      SL_DEBUG_LOG_V2(INFO, "TWT Setup success");
       break;
     case SL_WIFI_TWT_UNSOLICITED_SESSION_SUCCESS_EVENT:
-      printf("Unsolicited TWT Setup success");
+      SL_DEBUG_LOG_V2(INFO, "Unsolicited TWT Setup success");
       break;
     case SL_WIFI_TWT_AP_REJECTED_EVENT:
-      printf("TWT Setup Failed. TWT Setup rejected by AP");
+      SL_DEBUG_LOG_V2(ERROR, "TWT Setup Failed. TWT Setup rejected by AP");
       break;
     case SL_WIFI_TWT_OUT_OF_TOLERANCE_EVENT:
-      printf("TWT Setup Failed. TWT response out of tolerance limits");
+      SL_DEBUG_LOG_V2(ERROR, "TWT Setup Failed. TWT response out of tolerance limits");
       break;
     case SL_WIFI_TWT_RESPONSE_NOT_MATCHED_EVENT:
-      printf("TWT Setup Failed. TWT Response not matched with the request parameters");
+      SL_DEBUG_LOG_V2(ERROR, "TWT Setup Failed. TWT Response not matched with the request parameters");
       break;
     case SL_WIFI_TWT_UNSUPPORTED_RESPONSE_EVENT:
-      printf("TWT Setup Failed. TWT Response Unsupported");
+      SL_DEBUG_LOG_V2(ERROR, "TWT Setup Failed. TWT Response Unsupported");
       break;
     case SL_WIFI_TWT_FAIL_MAX_RETRIES_REACHED_EVENT:
-      printf("TWT Setup Failed. Max retries reached");
+      SL_DEBUG_LOG_V2(ERROR, "TWT Setup Failed. Max retries reached");
       break;
     case SL_WIFI_TWT_INACTIVE_DUE_TO_ROAMING_EVENT:
-      printf("TWT session inactive due to roaming");
+      SL_DEBUG_LOG_V2(WARN, "TWT session inactive due to roaming");
       break;
     case SL_WIFI_TWT_INACTIVE_DUE_TO_DISCONNECT_EVENT:
-      printf("TWT session inactive due to wlan disconnection");
+      SL_DEBUG_LOG_V2(WARN, "TWT session inactive due to wlan disconnection");
       break;
     case SL_WIFI_TWT_TEARDOWN_SUCCESS_EVENT:
-      printf("TWT session teardown success");
+      SL_DEBUG_LOG_V2(INFO, "TWT session teardown success");
       break;
     case SL_WIFI_TWT_AP_TEARDOWN_SUCCESS_EVENT:
-      printf("TWT session teardown from AP");
+      SL_DEBUG_LOG_V2(INFO, "TWT session teardown from AP");
       break;
     case SL_WIFI_TWT_INACTIVE_NO_AP_SUPPORT_EVENT:
-      printf("Connected AP Does not support TWT");
+      SL_DEBUG_LOG_V2(ERROR, "Connected AP Does not support TWT");
       break;
     default:
-      printf("TWT Setup Failed.");
+      SL_DEBUG_LOG_V2(ERROR, "TWT Setup Failed.");
   }
   if (event < SL_WIFI_TWT_TEARDOWN_SUCCESS_EVENT) {
-    printf("\r\n wake duration : 0x%X", result->wake_duration);
-    printf("\r\n wake_duration_unit: 0x%X", result->wake_duration_unit);
-    printf("\r\n wake_int_exp : 0x%X", result->wake_int_exp);
-    printf("\r\n negotiation_type : 0x%X", result->negotiation_type);
-    printf("\r\n wake_int_mantissa : 0x%X", result->wake_int_mantissa);
-    printf("\r\n implicit_twt : 0x%X", result->implicit_twt);
-    printf("\r\n un_announced_twt : 0x%X", result->un_announced_twt);
-    printf("\r\n triggered_twt : 0x%X", result->triggered_twt);
-    printf("\r\n twt_channel : 0x%X", result->twt_channel);
-    printf("\r\n twt_protection : 0x%X", result->twt_protection);
-    printf("\r\n twt_flow_id : 0x%X\r\n", result->twt_flow_id);
+    SL_DEBUG_LOG_V2(DEBUG, " wake duration : 0x%X", result->wake_duration);
+    SL_DEBUG_LOG_V2(DEBUG, " wake_duration_unit: 0x%X", result->wake_duration_unit);
+    SL_DEBUG_LOG_V2(DEBUG, " wake_int_exp : 0x%X", result->wake_int_exp);
+    SL_DEBUG_LOG_V2(DEBUG, " negotiation_type : 0x%X\r\n", result->negotiation_type);
+    SL_DEBUG_LOG_V2(DEBUG, " wake_int_mantissa : 0x%X", result->wake_int_mantissa);
+    SL_DEBUG_LOG_V2(DEBUG, " implicit_twt : 0x%X", result->implicit_twt);
+    SL_DEBUG_LOG_V2(DEBUG, " un_announced_twt : 0x%X", result->un_announced_twt);
+    SL_DEBUG_LOG_V2(DEBUG, " triggered_twt : 0x%X", result->triggered_twt);
+    SL_DEBUG_LOG_V2(DEBUG, " twt_channel : 0x%X", result->twt_channel);
+    SL_DEBUG_LOG_V2(DEBUG, " twt_protection : 0x%X", result->twt_protection);
+    SL_DEBUG_LOG_V2(DEBUG, " twt_flow_id : 0x%X\r\n", result->twt_flow_id);
   } else if (event <= SL_WIFI_TWT_AP_TEARDOWN_SUCCESS_EVENT) {
-    printf("\r\n twt_flow_id : 0x%X", result->twt_flow_id);
-    printf("\r\n negotiation_type : 0x%X\r\n", result->negotiation_type);
+    SL_DEBUG_LOG_V2(DEBUG, " twt_flow_id : 0x%X\r\n", result->twt_flow_id);
+    SL_DEBUG_LOG_V2(DEBUG, " negotiation_type : 0x%X\r\n", result->negotiation_type);
   }
   return SL_STATUS_OK;
 }
@@ -1778,11 +1868,16 @@ static sl_status_t twt_callback_handler(sl_wifi_event_t event,
 sl_status_t sl_wifi_filter_broadcast_command_handler(console_args_t *arguments)
 {
   UNUSED_PARAMETER(arguments);
-  sl_status_t status                     = SL_STATUS_OK;
-  uint16_t beacon_drop_threshold         = 5000;
-  uint8_t filter_bcast_in_tim            = 1;
-  uint8_t filter_bcast_tim_till_next_cmd = 1;
-  status = sl_wifi_filter_broadcast(beacon_drop_threshold, filter_bcast_in_tim, filter_bcast_tim_till_next_cmd);
+  sl_status_t status                                        = SL_STATUS_OK;
+  uint16_t beacon_drop_threshold                            = 5000;
+  sl_wifi_groupcast_filter_config_t groupcast_filter_config = { 0 };
+  groupcast_filter_config.enable_bcast_filter               = (uint8_t)BCAST_FILTER_ENABLE;
+  groupcast_filter_config.enable_mcast_filter               = (uint8_t)MCAST_FILTER_ENABLE;
+  groupcast_filter_config.filter_mode                       = (uint8_t)FILTER_MODE;
+
+  status = sl_wifi_set_groupcast_filter_config(&groupcast_filter_config);
+  VERIFY_STATUS_AND_RETURN(status);
+  status = sl_wifi_set_beacon_drop_threshold(SL_WIFI_CLIENT_INTERFACE, beacon_drop_threshold);
   VERIFY_STATUS_AND_RETURN(status);
   return SL_STATUS_OK;
 }
@@ -1847,14 +1942,20 @@ sl_status_t sl_wifi_update_gain_table_command_handler(console_args_t *arguments)
 
 sl_status_t sl_wifi_set_11ax_config_command_handler(console_args_t *arguments)
 {
-  sl_status_t status     = SL_STATUS_OK;
-  uint8_t guard_interval = (uint8_t)GET_COMMAND_ARG(arguments, 0);
-  status                 = sl_wifi_set_11ax_config(guard_interval);
-  VERIFY_STATUS_AND_RETURN(status);
+  sl_status_t status                              = SL_STATUS_OK;
+  sl_wifi_11ax_config_params_t config_11ax_params = { 0 };
+  config_11ax_params.gi_ltf                       = (sl_wifi_gi_ltf_t)GET_COMMAND_ARG(arguments, 0);
+  config_11ax_params.dcm_enable =
+    GET_OPTIONAL_COMMAND_ARG(arguments, 1, SL_WIFI_DCM_ENABLE_DISABLED, sl_wifi_dcm_enable_t);
+  config_11ax_params.beamformee_support =
+    GET_OPTIONAL_COMMAND_ARG(arguments, 2, SL_WIFI_BEAMFORMEE_SUPPORT_ENABLED, sl_wifi_beamformee_support_t);
+  config_11ax_params.config_er_su =
+    GET_OPTIONAL_COMMAND_ARG(arguments, 3, SL_WIFI_CONFIG_ER_SU_NO, sl_wifi_config_er_su_t);
 
+  status = sl_wifi_set_11ax_config_v2(&config_11ax_params);
+  VERIFY_STATUS_AND_RETURN(status);
   return SL_STATUS_OK;
 }
-
 sl_status_t sl_si91x_get_ram_log_command_handler(console_args_t *arguments)
 {
   uint32_t address = (uint32_t)GET_COMMAND_ARG(arguments, 0);
@@ -1958,11 +2059,11 @@ sl_status_t wifi_get_pairwise_master_key_command_handler(console_args_t *argumen
 
 sl_status_t wifi_configure_timeout_command_handler(console_args_t *arguments)
 {
-  sl_status_t status                         = SL_STATUS_OK;
-  const sl_si91x_timeout_type_t timeout_type = (sl_si91x_timeout_type_t)GET_COMMAND_ARG(arguments, 0);
-  const uint16_t timeout_value               = (uint16_t)GET_COMMAND_ARG(arguments, 1);
+  sl_status_t status                        = SL_STATUS_OK;
+  const sl_wifi_timeout_type_t timeout_type = (sl_wifi_timeout_type_t)GET_COMMAND_ARG(arguments, 0);
+  const uint16_t timeout_value              = (uint16_t)GET_COMMAND_ARG(arguments, 1);
 
-  status = sl_si91x_configure_timeout(timeout_type, timeout_value);
+  status = sl_wifi_configure_timeout(SL_WIFI_CLIENT_INTERFACE, timeout_type, timeout_value);
   VERIFY_STATUS_AND_RETURN(status);
   return SL_STATUS_OK;
 }
@@ -2000,14 +2101,13 @@ sl_status_t sl_si91x_calibration_read_command_handler(console_args_t *arguments)
 
   status = sl_si91x_calibration_read(target, &calib_read_pkt);
   if (status == SL_STATUS_OK) {
-    printf("target %d, reserved:%d "
-           "gain_offset_low:%d, gain_offset_2:%d, gain_offset_3:%d,xo_tune:%d\r\n",
-           calib_read_pkt.target,
-           calib_read_pkt.reserved0[0],
-           calib_read_pkt.gain_offset[0],
-           calib_read_pkt.gain_offset[1],
-           calib_read_pkt.gain_offset[2],
-           calib_read_pkt.xo_ctune);
+    SL_DEBUG_LOG_V2(INFO, "target %d, reserved:%d ", calib_read_pkt.target, calib_read_pkt.reserved0[0]);
+    SL_DEBUG_LOG_V2(INFO,
+                    "gain_offset_low:%d, gain_offset_2:%d, gain_offset_3:%d",
+                    calib_read_pkt.gain_offset[0],
+                    calib_read_pkt.gain_offset[1],
+                    calib_read_pkt.gain_offset[2]);
+    SL_DEBUG_LOG_V2(INFO, ",xo_tune:%d", calib_read_pkt.xo_ctune);
   }
   VERIFY_STATUS_AND_RETURN(status);
   return SL_STATUS_OK;
@@ -2055,7 +2155,7 @@ sl_status_t set_region_configuration_handler(console_args_t *arguments)
       set_region_config.operation_mode = SL_SI91X_CLIENT_MODE;
       break;
     default:
-      printf("Selected Wi-Fi mode is not supported. Try 'help'");
+      SL_DEBUG_LOG_V2(ERROR, "Selected Wi-Fi mode is not supported. Try 'help'");
       return SL_STATUS_WIFI_UNKNOWN_INTERFACE;
   }
   status =
@@ -2069,13 +2169,15 @@ sl_status_t wifi_config_pll_mode_handler(console_args_t *arguments)
   sl_status_t status          = SL_STATUS_OK;
   sl_wifi_pll_mode_t pll_mode = GET_COMMAND_ARG(arguments, 0);
 
-  printf("Configuring WiFi PLL mode to: %s\n",
-         (pll_mode == SL_WIFI_PLL_MODE_20MHZ) ? "PLL_MODE_20MHZ (20MHz)" : "PLL_MODE_40MHZ (40MHz)");
+  SL_DEBUG_LOG_V2(
+    INFO,
+    "Configuring WiFi PLL mode to: %s",
+    (uintptr_t)((pll_mode == SL_WIFI_PLL_MODE_20MHZ) ? "PLL_MODE_20MHZ (20MHz)" : "PLL_MODE_40MHZ (40MHz)"));
 
   status = sl_wifi_config_pll_mode(pll_mode);
   VERIFY_STATUS_AND_RETURN(status);
 
-  printf("WiFi PLL mode configured successfully\n");
+  SL_DEBUG_LOG_V2(INFO, "WiFi PLL mode configured successfully");
   return SL_STATUS_OK;
 }
 
@@ -2084,12 +2186,13 @@ sl_status_t wifi_config_power_chain_handler(console_args_t *arguments)
   sl_status_t status                = SL_STATUS_OK;
   sl_wifi_power_chain_t power_chain = GET_COMMAND_ARG(arguments, 0);
 
-  printf("Configuring WiFi power chain to: %s\n",
-         (power_chain == SL_WIFI_HP_CHAIN) ? "HP_CHAIN (High Power)" : "LP_CHAIN (Low Power)");
+  SL_DEBUG_LOG_V2(INFO,
+                  "Configuring WiFi power chain to: %s",
+                  (uintptr_t)((power_chain == SL_WIFI_HP_CHAIN) ? "HP_CHAIN (High Power)" : "LP_CHAIN (Low Power)"));
 
   status = sl_wifi_config_power_chain(power_chain);
   VERIFY_STATUS_AND_RETURN(status);
 
-  printf("WiFi power chain configured successfully\n");
+  SL_DEBUG_LOG_V2(INFO, "WiFi power chain configured successfully");
   return SL_STATUS_OK;
 }

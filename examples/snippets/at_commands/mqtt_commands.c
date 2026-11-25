@@ -136,8 +136,13 @@ static void mqtt_client_event_handler(void *client, sl_mqtt_client_event_t event
       break;
 
     case SL_MQTT_CLIENT_ERROR_EVENT: {
-      sl_mqtt_client_error_status_t *error = (sl_mqtt_client_error_status_t *)event_data;
-      AT_PRINTF("at+MQTT_CLIENT_ERROR=%d,%d\r\n>\r\n", mqtt_client_inst_id, *error);
+      sl_mqtt_client_error_info_t *error = (sl_mqtt_client_error_info_t *)event_data;
+      if (error != NULL) {
+        AT_PRINTF("at+MQTT_CLIENT_ERROR=%d,%d,0x%lx\r\n>\r\n",
+                  mqtt_client_inst_id,
+                  error->error_status,
+                  (unsigned long)error->status_code);
+      }
     } break;
 
     default:
@@ -456,7 +461,7 @@ sl_status_t mqtt_client_opt_command_handler(console_args_t *arguments)
   }
 
   uint8_t clean_session          = GET_OPTIONAL_COMMAND_ARG(arguments, 5, 1, uint8_t);
-  sl_mqtt_version_t mqtt_version = GET_OPTIONAL_COMMAND_ARG(arguments, 6, SL_MQTT_VERSION_3, sl_mqtt_version_t);
+  sl_mqtt_version_t mqtt_version = GET_OPTIONAL_COMMAND_ARG(arguments, 6, SL_MQTT_VERSION_3_1_1, sl_mqtt_version_t);
   uint16_t client_port           = GET_OPTIONAL_COMMAND_ARG(arguments, 7, MQTT_CLIENT_PORT, uint16_t);
   sl_net_credential_id_t credential_id =
     GET_OPTIONAL_COMMAND_ARG(arguments, 8, SL_NET_INVALID_CREDENTIAL_ID, sl_net_credential_id_t);

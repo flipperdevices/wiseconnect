@@ -316,7 +316,7 @@ static void reset_i2c_state_machine(void)
   ******************************************************************************/
 static void handle_i2c_send_error(sl_i2c_status_t status)
 {
-  DEBUGOUT("\r\n Send FAILED, Error Code: %u\r\n", status);
+  DEBUGOUT("\r\n Send FAILED, Error Code: %u\r\n", (unsigned int)status);
 
   if (status == SL_I2C_TIMEOUT) {
     DEBUGOUT("\r\n TIMEOUT: No response from LM75 sensor\r\n");
@@ -334,7 +334,7 @@ static void handle_i2c_send_error(sl_i2c_status_t status)
   ******************************************************************************/
 static void handle_i2c_receive_error(sl_i2c_status_t status)
 {
-  DEBUGOUT("\r\n Receive FAILED, Error Code: %u\r\n", status);
+  DEBUGOUT("\r\n Receive FAILED, Error Code: %u\r\n", (unsigned int)status);
 
   if (status == SL_I2C_TIMEOUT) {
     DEBUGOUT("\r\n TIMEOUT: No data received from LM75\r\n");

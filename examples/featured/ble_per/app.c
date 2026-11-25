@@ -40,6 +40,7 @@
 #include "rsi_common_apis.h"
 
 #include <string.h>
+#include "sl_constants.h"
 #if SL_SI91X_TICKLESS_MODE == 0 && defined(SLI_SI91X_MCU_INTERFACE)
 #include "sl_si91x_m4_ps.h"
 #include "sl_si91x_power_manager.h"
@@ -263,6 +264,19 @@ static rsi_ble_per_transmit_t rsi_ble_per_tx;
 static rsi_ble_per_receive_t rsi_ble_per_rx;
 static rsi_bt_per_stats_t per_stats;
 
+#if (defined(SLI_SI91X_MCU_INTERFACE) || defined(SLI_SI91X_NCP_INTERFACE))
+/*
+ * FreeRTOS idle hook: drains the logger ring buffer via sl_log_flush().
+ * Active only for backends that emit the proprietary stream (IOStream
+ * Compact over UART/VCOM and the proprietary UART backend); a no-op for
+ * IOStream Compact over RTT, IOStream Formatted, SystemView, and Log None.
+ */
+void vApplicationIdleHook(void)
+{
+  sl_log_flush();
+}
+#endif
+
 static const sl_wifi_device_configuration_t config = {
   .boot_option = LOAD_NWP_FW,
   .mac_address = NULL,
@@ -289,10 +303,10 @@ static const sl_wifi_device_configuration_t config = {
                       | SL_SI91X_EXT_FEAT_BT_CUSTOM_FEAT_ENABLE),
                    .bt_feature_bit_map = (RSI_BT_FEATURE_BITMAP),
 #ifdef RSI_PROCESS_MAX_RX_DATA
-                   .ext_tcp_ip_feature_bit_map = (RSI_EXT_TCPIP_FEATURE_BITMAP | SL_SI91X_CONFIG_FEAT_EXTENTION_VALID
+                   .ext_tcp_ip_feature_bit_map = (RSI_EXT_TCPIP_FEATURE_BITMAP | SL_SI91X_CONFIG_FEAT_EXTENSION_VALID
                                                   | SL_SI91X_EXT_TCP_MAX_RECV_LENGTH),
 #else
-                   .ext_tcp_ip_feature_bit_map = (RSI_EXT_TCPIP_FEATURE_BITMAP | SL_SI91X_CONFIG_FEAT_EXTENTION_VALID),
+                   .ext_tcp_ip_feature_bit_map = (RSI_EXT_TCPIP_FEATURE_BITMAP | SL_SI91X_CONFIG_FEAT_EXTENSION_VALID),
 #endif
                    //!ENABLE_BLE_PROTOCOL in bt_feature_bit_map
                    .ble_feature_bit_map =
@@ -300,7 +314,7 @@ static const sl_wifi_device_configuration_t config = {
                        | SL_SI91X_BLE_MAX_NBR_CENTRALS(RSI_BLE_MAX_NBR_CENTRALS)
                        | SL_SI91X_BLE_MAX_NBR_ATT_SERV(RSI_BLE_MAX_NBR_ATT_SERV)
                        | SL_SI91X_BLE_MAX_NBR_ATT_REC(RSI_BLE_MAX_NBR_ATT_REC))
-                      | SL_SI91X_FEAT_BLE_CUSTOM_FEAT_EXTENTION_VALID | SL_SI91X_BLE_PWR_INX(RSI_BLE_PWR_INX)
+                      | SL_SI91X_FEAT_BLE_CUSTOM_FEAT_EXTENSION_VALID | SL_SI91X_BLE_PWR_INX(RSI_BLE_PWR_INX)
                       | SL_SI91X_BLE_PWR_SAVE_OPTIONS(RSI_BLE_PWR_SAVE_OPTIONS)
                       | SL_SI91X_916_BLE_COMPATIBLE_FEAT_ENABLE
 #if RSI_BLE_GATT_ASYNC_ENABLE
@@ -327,7 +341,10 @@ static const sl_wifi_device_configuration_t config = {
                       | SL_SI91X_BLE_GATT_INIT
 #endif
                       ),
-                   .config_feature_bit_map = (SL_SI91X_FEAT_SLEEP_GPIO_SEL_BITMAP | RSI_CONFIG_FEATURE_BITMAP) }
+                   .config_feature_bit_map = (SL_SI91X_FEAT_SLEEP_GPIO_SEL_BITMAP | RSI_CONFIG_FEATURE_BITMAP) },
+  .ta_pool         = { .tx_ratio_in_buffer_pool = 0, .rx_ratio_in_buffer_pool = 0, .global_ratio_in_buffer_pool = 0 },
+  .efuse_data_type = SL_SI91X_EFUSE_MFG_SW_VERSION,
+  .nwp_fw_image_number = SL_SI91X_NWP_FW_IMAGE_NUMBER_0
 };
 
 const osThreadAttr_t thread_attributes = {
@@ -339,7 +356,6 @@ const osThreadAttr_t thread_attributes = {
   .stack_size = 3072,
   .priority   = osPriorityNormal,
   .tz_module  = 0,
-  .reserved   = 0,
 };
 /**
  * @fn         ble_per
@@ -353,65 +369,73 @@ void ble_per(void *unused)
 {
   UNUSED_PARAMETER(unused);
   sl_status_t status;
-  sl_wifi_firmware_version_t version         = { 0 };
+  sl_si91x_firmware_version_t version        = { 0 };
   uint8_t local_dev_addr[LOCAL_DEV_ADDR_LEN] = { 0 };
 
   //! Wi-Fi initialization
   status = sl_wifi_init(&config, NULL, sl_wifi_default_event_handler);
   if (status != SL_STATUS_OK) {
-    LOG_PRINT("\r\nWireless Initialization Failed, Error Code : 0x%lX\r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "Wireless Initialization Failed, Error Code : 0x%lX\r\n", status);
     return;
   }
-  LOG_PRINT("\r\nWireless Initialization Success\n");
+  SL_DEBUG_LOG_V2(INFO, "Wireless Initialization Success\r\n");
 
 #ifndef SL_SI91X_ACX_MODULE
   //! set region support
   status = sl_si91x_set_device_region(config.boot_config.oper_mode, config.band, config.region_code);
   if (status != SL_STATUS_OK) {
-    LOG_PRINT("\r\nSet Region Failed, Error Code : %ld\r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "Set Region Failed, Error Code : %ld\r\n", status);
   } else {
-    LOG_PRINT("\r\nSet Region Success\r\n");
+    SL_DEBUG_LOG_V2(INFO, "Set Region Success\r\n");
   }
 #endif
 
   //!  WLAN radio deinit
   status = sl_si91x_disable_radio();
   if (status != SL_STATUS_OK) {
-    LOG_PRINT("\r\n  Failed to disable WLAN radio, Error Code : %ld\r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "Failed to disable WLAN radio, Error Code : %ld\r\n", status);
   } else {
-    LOG_PRINT("\r\n Disable WLAN radio success\r\n");
+    SL_DEBUG_LOG_V2(INFO, "Disable WLAN radio success\r\n");
   }
 
   //! Firmware version Prints
-  status = sl_wifi_get_firmware_version(&version);
+  status = sl_si91x_get_firmware_version(&version);
   if (status != SL_STATUS_OK) {
-    LOG_PRINT("\r\nFailed to fetch firmware version: 0x%lx\r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "Failed to fetch firmware version: 0x%lx\r\n", status);
   } else {
-    print_firmware_version(&version);
+    printf("\r\nFirmware version is: %x%x.%d.%d.%d.%d.%d.%d\r\n",
+           version.chip_id,
+           version.rom_id,
+           version.major,
+           version.minor,
+           version.security_version,
+           version.patch_num,
+           version.customer_id,
+           version.build_num);
   }
 
   //! get the local device MAC address.
   status = rsi_bt_get_local_device_address(rsi_app_resp_get_dev_addr);
   if (status != RSI_SUCCESS) {
-    LOG_PRINT("\r\n Get local device address failed = %lx\r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "Get local device address failed = %lx\r\n", status);
     return;
   } else {
     rsi_6byte_dev_address_to_ascii(local_dev_addr, rsi_app_resp_get_dev_addr);
-    LOG_PRINT("\r\n Local device address : %s \r\n ", local_dev_addr);
+    SL_DEBUG_LOG_V2(INFO, "Local device address : %s \r\n ", (uintptr_t)(local_dev_addr));
   }
 
   //! set the local device name
   status = rsi_bt_set_local_name(RSI_BLE_LOCAL_NAME);
   if (status != RSI_SUCCESS) {
-    LOG_PRINT("\r\n Set Local Name Failed = %lx\r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "Set Local Name Failed = %lx\r\n", status);
   }
 
   //! get the local device name
   status = rsi_bt_get_local_name(&rsi_app_resp_get_local_name);
   if (status != RSI_SUCCESS) {
-    LOG_PRINT("\r\n Get Local Name Failed = %lx\r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "Get Local Name Failed = %lx\r\n", status);
   }
-  LOG_PRINT("Local name set to: %s\n", rsi_app_resp_get_local_name.name);
+  SL_DEBUG_LOG_V2(INFO, "Local name set to: %s\r\n", (uintptr_t)(rsi_app_resp_get_local_name.name));
 
 #if GAIN_TABLE_AND_MAX_POWER_UPDATE_ENABLE
 
@@ -421,9 +445,9 @@ void ble_per(void *unused)
                                                           Si917_BLE_REGION_BASED_MAXPOWER_XX,
                                                           BLE_GAIN_TABLE_MAXPOWER_UPDATE);
   if (status != RSI_SUCCESS) {
-    LOG_PRINT("\r\n Failed to update gain table for max power with status = %lx\r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "Failed to update gain table for max power with status = %lx\r\n", status);
   } else {
-    LOG_PRINT("\r\n Updation of gain table max tx power command is successful \r\n");
+    SL_DEBUG_LOG_V2(INFO, "Updation of gain table max tx power command is successful \r\n");
   }
 
   //! structure update for the MAXPOWER OFFSET
@@ -432,9 +456,9 @@ void ble_per(void *unused)
                                                           Si917_BLE_REGION_BASED_MAXPOWER_VS_OFFSET_XX,
                                                           BLE_GAIN_TABLE_OFFSET_UPDATE);
   if (status != RSI_SUCCESS) {
-    LOG_PRINT("\r\n Failed to update gain table offset with status = %lx\r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "Failed to update gain table offset with status = %lx\r\n", status);
   } else {
-    LOG_PRINT("\r\n Updation of gain table offset command is successful \r\n");
+    SL_DEBUG_LOG_V2(INFO, "Updation of gain table offset command is successful \r\n");
   }
 
   //! structure update for the LP_CHAIN 0dBm OFFSET
@@ -443,9 +467,9 @@ void ble_per(void *unused)
                                                           Si917_BLE_REGION_BASED_LP_CHAIN_0DBM_OFFSET_XX,
                                                           BLE_GAIN_TABLE_LP_CHAIN_0DBM_OFFSET_UPDATE);
   if (status != RSI_SUCCESS) {
-    LOG_PRINT("\r\n Failed to update gain table LP-Chain 0dBm offset with status = %lx\r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "Failed to update gain table LP-Chain 0dBm offset with status = %lx\r\n", status);
   } else {
-    LOG_PRINT("\r\n Updation of gain table LP-Chain 0dBm offset command is successful \r\n");
+    SL_DEBUG_LOG_V2(INFO, "Updation of gain table LP-Chain 0dBm offset command is successful \r\n");
   }
 
   //! structure update for the LP_CHAIN 10dBm OFFSET
@@ -454,9 +478,9 @@ void ble_per(void *unused)
                                                           Si917_BLE_REGION_BASED_LP_CHAIN_10DBM_OFFSET_XX,
                                                           BLE_GAIN_TABLE_LP_CHAIN_10DBM_OFFSET_UPDATE);
   if (status != RSI_SUCCESS) {
-    LOG_PRINT("\r\n Failed to update gain table LP-Chain 10dBm offset with status = %lx\r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "Failed to update gain table LP-Chain 10dBm offset with status = %lx\r\n", status);
   } else {
-    LOG_PRINT("\r\n Updation of gain table LP-Chain 10dBm offset command is successful \r\n");
+    SL_DEBUG_LOG_V2(INFO, "Updation of gain table LP-Chain 10dBm offset command is successful \r\n");
   }
 
 #endif
@@ -486,46 +510,28 @@ void ble_per(void *unused)
     //! start the Transmit PER functionality
     status = rsi_ble_per_transmit(&rsi_ble_per_tx);
     if (status != RSI_SUCCESS) {
-      LOG_PRINT("\n per transmit cmd failed : 0x%lX \n", status);
+      SL_DEBUG_LOG_V2(ERROR, "per transmit cmd failed : 0x%lX \r\n", status);
       return;
     } else {
-      LOG_PRINT("\nRSI_BLE_PER_TRANSMIT_MODE \n"
-                "cmd id: 0x%X \n"
-                "enable: %d \n"
-                "access_addr: 0x%lX \n"
-                "pkt_len: %d \n"
-                "phy_rate: %d \n"
-                "rx_chnl_num: %d \n"
-                "tx_chnl_num: %d \n"
-                "scrambler_seed: %d \n"
-                "payload_type: %d \n"
-                "le_chnl_type: %d \n"
-                "tx_power: %d \n"
-                "transmit_mode: %d \n"
-                "freq_hop_en: %d \n"
-                "ant_sel: %d \n"
-                "inter_pkt_gap: %d \n"
-                "pll_mode: %d \n"
-                "rf_type: %d \n"
-                "rf_chain: %d \n",
-                rsi_ble_per_tx.cmd_ix,
-                rsi_ble_per_tx.transmit_enable,
-                *(uint32_t *)&rsi_ble_per_tx.access_addr[0],
-                (*(uint16_t *)&rsi_ble_per_tx.pkt_len[0]),
-                rsi_ble_per_tx.phy_rate,
-                rsi_ble_per_tx.rx_chnl_num,
-                rsi_ble_per_tx.tx_chnl_num,
-                rsi_ble_per_tx.scrambler_seed,
-                rsi_ble_per_tx.payload_type,
-                rsi_ble_per_tx.le_chnl_type,
-                rsi_ble_per_tx.tx_power,
-                rsi_ble_per_tx.transmit_mode,
-                rsi_ble_per_tx.freq_hop_en,
-                rsi_ble_per_tx.ant_sel,
-                rsi_ble_per_tx.inter_pkt_gap,
-                rsi_ble_per_tx.pll_mode,
-                rsi_ble_per_tx.rf_type,
-                rsi_ble_per_tx.rf_chain);
+      SL_DEBUG_LOG_V2(DEBUG, "RSI_BLE_PER_TRANSMIT_MODE \r\n");
+      SL_DEBUG_LOG_V2(DEBUG, "cmd id: 0x%X ", rsi_ble_per_tx.cmd_ix);
+      SL_DEBUG_LOG_V2(DEBUG, "enable: %d ", rsi_ble_per_tx.transmit_enable);
+      SL_DEBUG_LOG_V2(DEBUG, "access_addr: 0x%lX ", *(uint32_t *)&rsi_ble_per_tx.access_addr[0]);
+      SL_DEBUG_LOG_V2(DEBUG, "pkt_len: %d ", (*(uint16_t *)&rsi_ble_per_tx.pkt_len[0]));
+      SL_DEBUG_LOG_V2(DEBUG, "phy_rate: %d ", rsi_ble_per_tx.phy_rate);
+      SL_DEBUG_LOG_V2(DEBUG, "rx_chnl_num: %d ", rsi_ble_per_tx.rx_chnl_num);
+      SL_DEBUG_LOG_V2(DEBUG, "tx_chnl_num: %d ", rsi_ble_per_tx.tx_chnl_num);
+      SL_DEBUG_LOG_V2(DEBUG, "scrambler_seed: %d ", rsi_ble_per_tx.scrambler_seed);
+      SL_DEBUG_LOG_V2(DEBUG, "payload_type: %d ", rsi_ble_per_tx.payload_type);
+      SL_DEBUG_LOG_V2(DEBUG, "le_chnl_type: %d ", rsi_ble_per_tx.le_chnl_type);
+      SL_DEBUG_LOG_V2(DEBUG, "tx_power: %d ", rsi_ble_per_tx.tx_power);
+      SL_DEBUG_LOG_V2(DEBUG, "transmit_mode: %d ", rsi_ble_per_tx.transmit_mode);
+      SL_DEBUG_LOG_V2(DEBUG, "freq_hop_en: %d ", rsi_ble_per_tx.freq_hop_en);
+      SL_DEBUG_LOG_V2(DEBUG, "ant_sel: %d ", rsi_ble_per_tx.ant_sel);
+      SL_DEBUG_LOG_V2(DEBUG, "inter_pkt_gap: %d ", rsi_ble_per_tx.inter_pkt_gap);
+      SL_DEBUG_LOG_V2(DEBUG, "pll_mode: %d ", rsi_ble_per_tx.pll_mode);
+      SL_DEBUG_LOG_V2(DEBUG, "rf_type: %d ", rsi_ble_per_tx.rf_type);
+      SL_DEBUG_LOG_V2(DEBUG, "rf_chain: %d ", rsi_ble_per_tx.rf_chain);
     }
   } else if (RSI_CONFIG_PER_MODE == RSI_BLE_PER_RECEIVE_MODE) {
     rsi_ble_per_rx.cmd_ix                       = BLE_RECEIVE_CMD_ID;
@@ -547,67 +553,46 @@ void ble_per(void *unused)
     //! start the Receive PER functionality
     status = rsi_ble_per_receive(&rsi_ble_per_rx);
     if (status != RSI_SUCCESS) {
-      LOG_PRINT("\n per receive cmd failed : %lx \n", status);
+      SL_DEBUG_LOG_V2(ERROR, "per receive cmd failed : %lx \r\n", status);
       return;
     } else {
-      LOG_PRINT("\nRSI_BLE_PER_RECEIVE_MODE \n"
-                "cmd id: 0x%X \n"
-                "enable: %d \n"
-                "access_addr: 0x%lX \n"
-                "ext_data_len_indication: %d \n"
-                "phy_rate: %d \n"
-                "rx_chnl_num: %d \n"
-                "tx_chnl_num: %d \n"
-                "scrambler_seed: %d \n"
-                "le_chnl_type: %d \n"
-                "loop_back_mode: %d \n"
-                "freq_hop_en: %d \n"
-                "ant_sel: %d \n"
-                "duty_cycling_en: %d \n"
-                "pll_mode: %d \n"
-                "rf_type: %d \n"
-                "rf_chain: %d \n",
-                rsi_ble_per_rx.cmd_ix,
-                rsi_ble_per_rx.receive_enable,
-                *(uint32_t *)&rsi_ble_per_rx.access_addr[0],
-                rsi_ble_per_rx.ext_data_len_indication,
-                rsi_ble_per_rx.phy_rate,
-                rsi_ble_per_rx.rx_chnl_num,
-                rsi_ble_per_rx.tx_chnl_num,
-                rsi_ble_per_rx.scrambler_seed,
-                rsi_ble_per_rx.le_chnl_type,
-                rsi_ble_per_rx.loop_back_mode,
-                rsi_ble_per_rx.freq_hop_en,
-                rsi_ble_per_rx.ant_sel,
-                rsi_ble_per_rx.duty_cycling_en,
-                rsi_ble_per_rx.pll_mode,
-                rsi_ble_per_rx.rf_type,
-                rsi_ble_per_rx.rf_chain);
+      SL_DEBUG_LOG_V2(INFO, "RSI_BLE_PER_RECEIVE_MODE \r\n");
+      SL_DEBUG_LOG_V2(INFO, "cmd id: 0x%X ", rsi_ble_per_rx.cmd_ix);
+      SL_DEBUG_LOG_V2(INFO, "enable: %d ", rsi_ble_per_rx.receive_enable);
+      SL_DEBUG_LOG_V2(INFO, "access_addr: 0x%lX ", *(uint32_t *)&rsi_ble_per_rx.access_addr[0]);
+      SL_DEBUG_LOG_V2(INFO, "ext_data_len_indication: %d ", rsi_ble_per_rx.ext_data_len_indication);
+      SL_DEBUG_LOG_V2(INFO, "phy_rate: %d ", rsi_ble_per_rx.phy_rate);
+      SL_DEBUG_LOG_V2(INFO, "rx_chnl_num: %d ", rsi_ble_per_rx.rx_chnl_num);
+      SL_DEBUG_LOG_V2(INFO, "tx_chnl_num: %d ", rsi_ble_per_rx.tx_chnl_num);
+      SL_DEBUG_LOG_V2(INFO, "scrambler_seed: %d ", rsi_ble_per_rx.scrambler_seed);
+      SL_DEBUG_LOG_V2(INFO, "le_chnl_type: %d ", rsi_ble_per_rx.le_chnl_type);
+      SL_DEBUG_LOG_V2(INFO, "loop_back_mode: %d ", rsi_ble_per_rx.loop_back_mode);
+      SL_DEBUG_LOG_V2(INFO, "freq_hop_en: %d ", rsi_ble_per_rx.freq_hop_en);
+      SL_DEBUG_LOG_V2(INFO, "ant_sel: %d ", rsi_ble_per_rx.ant_sel);
+      SL_DEBUG_LOG_V2(INFO, "duty_cycling_en: %d ", rsi_ble_per_rx.duty_cycling_en);
+      SL_DEBUG_LOG_V2(INFO, "pll_mode: %d ", rsi_ble_per_rx.pll_mode);
+      SL_DEBUG_LOG_V2(INFO, "rf_type: %d ", rsi_ble_per_rx.rf_type);
+      SL_DEBUG_LOG_V2(INFO, "rf_chain: %d ", rsi_ble_per_rx.rf_chain);
     }
   }
 
   while (1) {
     status = rsi_bt_per_stats(BT_PER_STATS_CMD_ID, &per_stats);
     if (status != RSI_SUCCESS) {
-      LOG_PRINT("\n per stats cmd failed : %lx \n", status);
+      SL_DEBUG_LOG_V2(ERROR, "per stats cmd failed : %lx ", status);
     } else {
-      LOG_PRINT("\nPER Stats \n"
-                "crc_fail_cnt : %d \n"
-                "crc_pass_cnt: %d \n"
-                "tx_dones: %d \n"
-                "rssi: %d \n"
-                "id_pkts_rcvd :%d \n",
-                per_stats.crc_fail_cnt,
-                per_stats.crc_pass_cnt,
-                per_stats.tx_dones,
-                per_stats.rssi,
-                per_stats.id_pkts_rcvd);
+      SL_DEBUG_LOG_V2(ERROR, "PER Stats ");
+      SL_DEBUG_LOG_V2(ERROR, "crc_fail_cnt : %d ", per_stats.crc_fail_cnt);
+      SL_DEBUG_LOG_V2(ERROR, "crc_pass_cnt: %d ", per_stats.crc_pass_cnt);
+      SL_DEBUG_LOG_V2(ERROR, "tx_dones: %d ", per_stats.tx_dones);
+      SL_DEBUG_LOG_V2(ERROR, "rssi: %d ", per_stats.rssi);
+      SL_DEBUG_LOG_V2(ERROR, "id_pkts_rcvd :%d ", per_stats.id_pkts_rcvd);
     }
 #if ((SL_SI91X_TICKLESS_MODE == 0) && SLI_SI91X_MCU_INTERFACE && ENABLE_NWP_POWER_SAVE)
     if (!(P2P_STATUS_REG & TA_wakeup_M4)) {
       P2P_STATUS_REG &= ~M4_wakeup_TA;
-      LOG_PRINT("\r\n M4 sleep");
-      sl_si91x_power_manager_sleep();
+      SL_DEBUG_LOG_V2(INFO, "M4 sleep");
+      sli_si91x_power_manager_sleep();
     }
 #else
     //To get tx_done logs properly and to avoid application hang issue due to continuous stats added 1sec delay.

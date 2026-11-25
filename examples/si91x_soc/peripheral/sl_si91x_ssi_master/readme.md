@@ -1,8 +1,8 @@
-# SL SSI MASTER
+# SiWx91x Platform SSI Master
 
 ## Table of Contents
 
-- [SL SSI MASTER](#sl-ssi-master)
+- [SiWx91x Platform SSI Master](#platform-siwx91x-ssi-master)
   - [Purpose/Scope](#purposescope)
   - [Overview](#overview)
   - [About Example Code](#about-example-code)
@@ -15,6 +15,9 @@
     - [Application Configuration Parameters](#application-configuration-parameters)
     - [Pin Configuration](#pin-configuration)
   - [Test the Application](#test-the-application)
+  - [Troubleshooting](#troubleshooting)
+  - [Resources](#resources)
+  - [Report Bugs/Support](#report-bugssupport)
 
 ## Purpose/Scope
 
@@ -27,7 +30,7 @@ This application demonstrates the use of Synchronous Serial Interface (SSI) for 
 - SSI is a synchronous four-wire interface consisting of two data pins (MOSI, MISO), a device select pin (CSN), and a gated clock pin(SCLK).
 - With the two data pins, it allows for full-duplex operation with other SSI-compatible devices.
 - It supports full-duplex, single-bit SPI master mode.
-- It supports 6 modes:  
+- It supports 6 modes:
   - Mode 0: Clock Polarity is zero and Clock Phase is zero.
   - Mode 1: Clock Polarity is zero and Clock Phase is one.
   - Mode 2: Clock Polarity is one and Clock Phase is zero.
@@ -51,15 +54,15 @@ This application demonstrates the use of Synchronous Serial Interface (SSI) for 
 This example demonstrates SSI transfer (full-duplex communication) and SSI send/SSI receive (half-duplex communication).
 
 - Various parameters like SSI clock mode, Bit-width, Manual cs pin, and SSI baud rate can be configured using the UC. Also, Master or Slave or ULP Master DMA can be configured using the UC.
-- The [`sl_si91x_ssi_config.h`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.1-content-for-docs/components/device/silabs/si91x/mcu/drivers/unified_api/config/sl_si91x_ssi_config.h) file contains the control configurations, and [`sl_si91x_ssi_common_config.h`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.1-content-for-docs/components/device/silabs/si91x/mcu/drivers/unified_api/config/sl_si91x_ssi_common_config.h) contains DMA configuration selection.
+- The [`sl_si91x_ssi_config.h`](https://github.com/SiliconLabs/wiseconnect/blob/v4.1.2-content-for-docs/components/device/silabs/si91x/mcu/drivers/unified_api/config/sl_si91x_ssi_config.h) file contains the control configurations, and [`sl_si91x_ssi_common_config.h`](https://github.com/SiliconLabs/wiseconnect/blob/v4.1.2-content-for-docs/components/device/silabs/si91x/mcu/drivers/unified_api/config/sl_si91x_ssi_common_config.h) contains DMA configuration selection.
 - In the example code, first the output buffer is filled with some data which is transferred to the slave.
 - The firmware version of API is fetched using [sl_si91x_ssi_get_version](https://docs.silabs.com/wiseconnect/latest/wiseconnect-api-reference-guide-si91x-peripherals/ssi#sl-si91x-ssi-get-version) and includes the release version, major version, and minor version [sl_ssi_version_t](https://docs.silabs.com/wiseconnect/latest/wiseconnect-api-reference-guide-si91x-peripherals/sl-ssi-version-t).
 - [sl_si91x_ssi_init](https://docs.silabs.com/wiseconnect/latest/wiseconnect-api-reference-guide-si91x-peripherals/ssi#sl-si91x-ssi-init) is used to initialize the peripheral, that includes pin configuration and it powers up the module.
 - SSI instance must be passed in init function to get the instance handle [sl_ssi_instance_t](https://docs.silabs.com/wiseconnect/latest/wiseconnect-api-reference-guide-si91x-peripherals/ssi#sl-ssi-instance-t), which is used in other APIs.
 - All the necessary parameters are configured using [sl_si91x_ssi_set_configuration](https://docs.silabs.com/wiseconnect/latest/wiseconnect-api-reference-guide-si91x-peripherals/ssi#sl-si91x-ssi-set-configuration) API. It expects a structure with required parameters [sl_ssi_control_config_t](https://docs.silabs.com/wiseconnect/latest/wiseconnect-api-reference-guide-si91x-peripherals/sl-ssi-control-config-t).
 - After configuration, a callback register API is called to register the callback at the time of events [sl_si91x_ssi_register_event_callback](https://docs.silabs.com/wiseconnect/latest/wiseconnect-api-reference-guide-si91x-peripherals/ssi#sl-si91x-ssi-register-event-callback).
-- The State machine code is implemented for transfer, send and receive data, the current mode is determined by ssi_mode_enum_t which is declared in [`ssi_master_example.c`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.1-content-for-docs/examples/si91x_soc/peripheral/sl_si91x_ssi_master/ssi_master_example.c) file.
-- Four serial slaves can be connected using this SSI master. For validation, you should change the slave number range from 0 to 3 in [ssi_master_example.c](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.1-content-for-docs/examples/si91x_soc/peripheral/sl_si91x_ssi_master/ssi_master_example.c) file and should enable the respective macro (for example, M4_SSI_CS0 for slave 0) in the `RTE_Device_917.h` file. (path: /$project/config/RTE_Device_917.h)
+- The State machine code is implemented for transfer, send and receive data, the current mode is determined by ssi_mode_enum_t which is declared in [`ssi_master_example.c`](ssi_master_example.c) file.
+- Four serial slaves can be connected using this SSI master. For validation, you should change the slave number range from 0 to 3 in [ssi_master_example.c](ssi_master_example.c) file and should enable the respective macro (for example, M4_SSI_CS0 for slave 0) in the `RTE_Device_917.h` file. (path: /$project/config/RTE_Device_917.h)
 
 >**Note:** The frequency of the SSI master bit-rate clock is one-half the frequency of SSI master input clock.
 
@@ -88,7 +91,7 @@ This example demonstrates SSI transfer (full-duplex communication) and SSI send/
 ### Hardware Requirements
 
 - Windows PC
-- Silicon Labs Si917 Evaluation Kit [[BRD4002](https://www.silabs.com/development-tools/wireless/wireless-pro-kit-mainboard?tab=overview) + [BRD4338A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-rb4338a-wifi-6-bluetooth-le-soc-radio-board?tab=overview) / [BRD4342A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx91x-rb4342a-wifi-6-bluetooth-le-soc-radio-board?tab=overview) / [BRD4343A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4343a-wi-fi-6-bluetooth-le-8mb-flash-radio-board-for-module?tab=overview)]
+- Silicon Labs SiWx91x Evaluation Kit [[BRD4002](https://www.silabs.com/development-tools/wireless/wireless-pro-kit-mainboard?tab=overview) + [BRD4338A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-rb4338a-wifi-6-bluetooth-le-soc-radio-board?tab=overview) / [BRD4342A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx91x-rb4342a-wifi-6-bluetooth-le-soc-radio-board?tab=overview) / [BRD4343A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4343a-wi-fi-6-bluetooth-le-8mb-flash-radio-board-for-module?tab=overview) / [BRD4343C](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4343c-wi-fi-6-bluetooth-le-8mb-flash-radio-board-for-module?tab=overview)]
 - SiWx917 AC1 Module Explorer Kit [BRD2708A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-ek2708a-explorer-kit)
 
 ### Software Requirements
@@ -120,7 +123,7 @@ For details on the project folder structure, see the [WiSeConnect Examples](http
 - Configure UC from the slcp component.
 - Open the **sl_si91x_ssi_master.slcp** project file, select the **Software component** tab, and search for **SSI** in the search bar.
 - You can use the configuration wizard to configure different parameters like:
-  
+
    ![Figure: UC image](resources/uc_screen/ssi_uc_screen.png)
 
   - **SSI Primary(Master) Configuration**
@@ -137,44 +140,94 @@ For details on the project folder structure, see the [WiSeConnect Examples](http
     - Rx FIFO Threshold: Receive FIFO Threshold. It controls the level of entries (or below) at which the receive FIFO controller triggers an interrupt. The configuration range from 0 to 15.
 - Configuration files are generated in **config folder**. If the values are not changed, the code will run on default UC values.
 
-- Configure the following macros in the [`ssi_master_example.h`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.1-content-for-docs/examples/si91x_soc/peripheral/sl_si91x_ssi_master/ssi_master_example.h) file and update/modify following macros, if required.
+- Configure the following macros in the [`ssi_master_example.h`](ssi_master_example.h) file and update/modify following macros, if required.
 
 - `SSI_MASTER_TRANSFER`: This macro is enabled default. It sends and receives data in full-duplex.
 
-  ```C
+  ```c
     #define SSI_MASTER_TRANSFER ENABLE    // To use the transfer API
   ```
 
 - `SSI_MASTER_SEND (or) SSI_MASTER_RECEIVE`: If SSI_MASTER_RECEIVE or SSI_MASTER_SEND is enabled, the SSI slave will receive and send data in half-duplex respectively.
 
-  ```C
+  ```c
     #define SSI_MASTER_SEND     DISABLE   // To use the send API
     #define SSI_MASTER_RECEIVE  DISABLE   // To use the receive API
   ```
 
 - By default, an 8-bit unsigned integer is declared for data buffer. If using a data-width more than 8 bit, update the variable to a 16-bit unsigned integer.
 
-  ```C
+  ```c
   // For data-width less than equal to 8
-  static uint8_t ssi_master_tx_buffer[SSI_MASTER_BUFFER_SIZE] = { '\0' }; 
+  static uint8_t ssi_master_tx_buffer[SSI_MASTER_BUFFER_SIZE] = { '\0' };
   static uint8_t ssi_master_rx_buffer[SSI_MASTER_BUFFER_SIZE] = { '\0' };
   // For data-width greater than 8
-  static uint16_t ssi_master_tx_buffer[SSI_MASTER_BUFFER_SIZE] = { '\0' }; 
+  static uint16_t ssi_master_tx_buffer[SSI_MASTER_BUFFER_SIZE] = { '\0' };
   static uint16_t ssi_master_rx_buffer[SSI_MASTER_BUFFER_SIZE] = { '\0' };
   ```
 
-- By default, CS0 is selected in the pintool. To use a different chip select (CS), update the corresponding slave number in the [`ssi_master_example.c`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.1-content-for-docs/examples/si91x_soc/peripheral/sl_si91x_ssi_master/ssi_master_example.c) file after configuring the desired CS in the pintool.
+- By default, CS0 is selected in the pintool. To use a different chip select (CS), update the corresponding slave number in the [`ssi_master_example.c`](ssi_master_example.c) file after configuring the desired CS in the pintool.
 
-  ```C
+  ```c
   // For CS2_
   // For CS0
-  static uint32_t ssi_slave_number = SSI_SLAVE_0; 
+  static uint32_t ssi_slave_number = SSI_SLAVE_0;
   // For CS1
-  static uint32_t ssi_slave_number = SSI_SLAVE_1; 
+  static uint32_t ssi_slave_number = SSI_SLAVE_1;
   // For CS2
   static uint32_t ssi_slave_number = SSI_SLAVE_2;
   // For CS3
-  static uint32_t ssi_slave_number = SSI_SLAVE_3;  
+  static uint32_t ssi_slave_number = SSI_SLAVE_3;
+  ```
+
+- Configure the following macros in [`ssi_master_example.c`](ssi_master_example.c) if required:
+
+- `SSI_MASTER_BUFFER_SIZE`: Defines the length of data (in data-width units) to be sent or received through SPI. By default, it is set to 1024.
+
+  ```c
+  #define SSI_MASTER_BUFFER_SIZE          1024     // Length of data to be sent through SPI
+  ```
+
+- `SSI_MASTER_BIT_WIDTH`: Defines the SSI data bit width used for each transfer frame. By default, it is set to 8.
+
+  ```c
+  #define SSI_MASTER_BIT_WIDTH            8        // SSI bit width
+  ```
+
+- `SSI_MASTER_BAUDRATE`: Defines the SSI master baud rate (bit rate) in bits per second. By default, it is set to 10000000 (10 Mbps).
+
+  ```c
+  #define SSI_MASTER_BAUDRATE             10000000 // SSI baudrate
+  ```
+
+- `SSI_MASTER_MAX_BIT_WIDTH`: Defines the maximum supported SSI bit width used for buffer type selection. By default, it is set to 16.
+
+  ```c
+  #define SSI_MASTER_MAX_BIT_WIDTH        16       // Maximum Bit width
+  ```
+
+- `SSI_MASTER_RECEIVE_SAMPLE_DELAY`: Defines the RX sample delay (in SSI clock cycles) applied to the receive data line. By default, it is set to 0.
+
+  ```c
+  #define SSI_MASTER_RECEIVE_SAMPLE_DELAY 0        // By default sample delay is 0
+  ```
+
+- `INITIAL_COUNT`: Defines the initial count value configured at timer initialization. By default, it is set to 7000.
+
+  ```c
+  #define INITIAL_COUNT                   7000     // Count configured at timer init
+  ```
+
+- `SYNC_TIME`: Defines the delay value used to synchronize master and slave before starting the transfer. By default, it is set to 5000.
+
+  ```c
+  #define SYNC_TIME                       5000     // Delay to sync master and slave
+  ```
+
+- `RECEIVE_SYNC_TIME`: Defines the delay value used to settle the slave after a send operation completes. By default, it is set to 500.
+
+  ```c
+  #define RECEIVE_SYNC_TIME               500      // Delay to settle the slave after send
   ```
 
 - To unregister a user event callback for a specific instance, use the API [sl_si91x_ssi_per_instance_unregister_event_callback](https://docs.silabs.com/wiseconnect/latest/wiseconnect-api-reference-guide-si91x-peripherals/ssi#sl-si91x-ssi-per-instance-unregister-event-callback). Alternatively, to unregister callbacks for all instances simultaneously, use the API [sl_si91x_ssi_unregister_event_callback](https://docs.silabs.com/wiseconnect/latest/wiseconnect-api-reference-guide-si91x-peripherals/ssi#sl-si91x-ssi-unregister-event-callback).
@@ -185,14 +238,14 @@ For details on the project folder structure, see the [WiSeConnect Examples](http
 >
 > Where F<sub>sclk_out</sub> is the bit rate output from the master. Make sure the SSI Primary (Master) peripheral clock (F<sub>ssi_clk</sub>) is set accordingly. Incorrect clock configuration may result in communication errors or unreliable data transfer.
 >
-> **SSI Secondary (Slave) Setup:** For instructions on configuring the SSI slave, refer to the [SSI slave](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.1-content-for-docs/examples/si91x_soc/peripheral/sl_si91x_ssi_slave/readme.md) to ensure correct setup and operation.
+> **SSI Secondary (Slave) Setup:** For instructions on configuring the SSI slave, refer to the [SSI slave](https://github.com/SiliconLabs/wiseconnect/blob/v4.1.2-content-for-docs/examples/si91x_soc/peripheral/sl_si91x_ssi_slave/readme.md) to ensure correct setup and operation.
 
 ### Pin Configuration
 
 | GPIO pin       | Explorer kit GPIO |  Description             |
 | -------------- | ----------------- | ----------------------- |
-|  GPIO_25 [P25] |   GPIO_25 [SCK]   | RTE_SSI_MASTER_SCK_PIN  |
-|  GPIO_28 [P31] |   GPIO_28 [CS]    | RTE_SSI_MASTER_CS0_PIN  |
+|  GPIO_25 [P25] |   GPIO_25 [SCK]   | RTE_SSI_MASTER_SCK_PIN  |
+|  GPIO_28 [P31] |   GPIO_28 [CS]    | RTE_SSI_MASTER_CS0_PIN  |
 |  GPIO_26 [P27] |   GPIO_26 [MOSI]  | RTE_SSI_MASTER_MOSI_PIN |
 |  GPIO_27 [P29] |   GPIO_27 [MISO]  | RTE_SSI_MASTER_MISO_PIN |
 
@@ -215,5 +268,22 @@ Refer to the instructions [here](https://docs.silabs.com/wiseconnect/latest/wise
    ![Figure: output](resources/readme/output.png)
 
 > **Note:**
+> - If DMA is enabled for the SSI master, enable DMA in the SSI slave project as well.
 >
 > - Interrupt handlers are implemented in the driver layer, and user callbacks are provided for custom code. If you want to write your own interrupt handler instead of using the default one, make the driver interrupt handler a weak handler. Then, copy the necessary code from the driver handler to your custom interrupt handler.
+
+## Troubleshooting
+
+- If the project does not build, ensure Simplicity Studio and the WiSeConnect extension are installed and the board is connected.
+- If the device is not detected, reinstall the connectivity firmware and check USB drivers.
+
+## Resources
+
+- [WiSeConnect Getting Started](https://docs.silabs.com/wiseconnect/latest/wiseconnect-getting-started/)
+- [WiSeConnect Examples](https://docs.silabs.com/wiseconnect/latest/wiseconnect-examples/)
+- [SiWx91x SoC Documentation](https://docs.silabs.com/wiseconnect/latest/)
+
+## Report Bugs/Support
+
+For issues and support, use the Silicon Labs Community or your normal support channel.
+

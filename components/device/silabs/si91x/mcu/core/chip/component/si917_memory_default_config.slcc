@@ -2,7 +2,7 @@ id: si917_memory_default_config
 label: 'Default RAM Memory Configuration'
 package: platform_siwx91x
 description: >
-  Provides default RAM memory configuration for the Si91x.
+  This component provides default RAM memory configuration for the SiWx91x.
 category: Device|Si91x|Memory Configuration
 quality: production
 metadata:

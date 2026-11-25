@@ -7,7 +7,7 @@ metadata:
     license: MSLA
 category: Device|Si91x|MCU|Core
 component_root_path: components/device/silabs/si91x/mcu/core/chip
-description: 'Si91x SoC PSRAM configuration header files.
+description: 'This component provides SiWx91x SoC PSRAM configuration header files.
 
   '
 provides:

@@ -3,12 +3,18 @@ package: platform_siwx91x_app
 description: "This application demonstrates how to use the I2C interface on the Si91x SoC device using the transfer API. \nIt focuses on configuring the I2C peripheral for communication and using the transfer API for sending and receiving data, \nproviding an efficient, non-blocking way to handle I2C transactions.\n"
 category: example|peripheral
 quality: production
-label: SI91x - SL_I2C_driver_Leader_Using_Transfer_Api
+label: SiWx91x Platform - I2C Driver Leader Using Transfer API
 component:
 - id: sl_main
 - id: status
 - id: syscalls
 - id: si91x_memory_default_config
+- id: si91x_log
+- id: si91x_log_iostream_formatted
+- id: iostream_si91x
+- id: iostream_uart_si91x
+  instance:
+  - vcom
 - id: sl_gpio_peripheral
 - id: i2c_instance
   instance:
@@ -24,7 +30,9 @@ include:
   - path: i2c_leader_example.h
 toolchain_settings:
 - option: gcc_compiler_option
-  value: -Wall -Werror
+  value: -Wall -Werror -Wno-error=deprecated-declarations
+- option: llvm_compiler_option
+  value: -Wall -Werror -Wno-error=deprecated-declarations
 other_file:
 - path: resources/readme/setupdiagram.png
 - path: resources/readme/image507d.png
@@ -37,13 +45,26 @@ ui_hints:
     focus: true
 readme:
 - path: readme.md
+filter:
+- name: Device Type
+  value:
+  - SoC
+- name: MCU
+  value:
+  - 32-bit MCU
+- name: Level
+  value:
+  - Beginner
+- name: Wireless Technology
+  value:
+  - Wi-Fi
 post_build:
   profile: wiseconnect_soc
 sdk_extension:
 - id: wiseconnect3_sdk
   vendor: silabs
-  version: 4.0.1
+  version: 4.1.2
 sdk:
   id: simplicity_sdk
   vendor: silabs
-  version: 2025.12.2
+  version: 2026.6.2

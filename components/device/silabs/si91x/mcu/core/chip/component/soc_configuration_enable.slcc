@@ -1,5 +1,5 @@
 id: soc_configuration_enable
-label: ENABLE USER CONFIGURATION
+label: Enable User Configuration
 package: platform_siwx91x
 quality: production
 metadata:
@@ -7,7 +7,7 @@ metadata:
     license: Zlib
 category: Device|Si91x|MCU|Core
 description: >
-  Si91x SoC enable user configuration MACROS.
+  This component enables SiWx91x SoC user configuration macros.
 define:
   - name: USER_CONFIGURATION_ENABLE
     value: '1'

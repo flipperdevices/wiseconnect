@@ -22,3 +22,5 @@ include:
 requires:
     - name: sli_queue_manager
     - name: sli_buffer_manager
+    - name: log_none
+      condition: ["device_si91x"]

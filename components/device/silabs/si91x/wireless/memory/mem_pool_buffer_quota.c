@@ -95,7 +95,7 @@ sl_status_t sli_si91x_host_deinit_buffer_manager(void)
 
   // If some buffers are still not freed, log an error and return failure
   if (!result) {
-    SL_DEBUG_LOG("\r\n Invalid operation, some buffers are not freed");
+    SL_DEBUG_LOG_V2(ERROR, "\r\n Invalid operation, some buffers are not freed");
     return SL_STATUS_FAIL;
   }
 
@@ -193,7 +193,7 @@ static sl_status_t sl_si91x_check_for_valid_config(const sl_wifi_buffer_configur
   if (config->control_buffer_quota < SLI_WATERMARKLEVEL || config->rx_buffer_quota < SLI_WATERMARKLEVEL
       || config->tx_buffer_quota < SLI_WATERMARKLEVEL) {
     CORE_EXIT_CRITICAL();
-    SL_DEBUG_LOG("Quota for buffer types should be atleast 10");
+    SL_DEBUG_LOG_V2(WARN, "Quota for buffer types should be atleast 10");
     return SL_STATUS_INVALID_PARAMETER;
   }
   CORE_EXIT_CRITICAL();

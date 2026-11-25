@@ -1,11 +1,10 @@
 id: iostream_si91x
-label: IO Stream Si91x
+label: IO Stream
 package: platform_siwx91x
 description: >
-  The IO Stream component allows to read/write data using a variety of physical
-  communication interfaces, or Streams. This allows for standardized data 
-  transfer operations while abstracting the underlying interface.
-  This component provides an IO Stream implementation for the Si91x.
+  This component enables read/write operations using a variety of physical
+  communication interfaces, or Streams. It provides standardized data transfer
+  operations while abstracting the underlying interface for SiWx91x.
 category: Device|Si91x|MCU|Service
 quality: production
 metadata:
@@ -27,6 +26,8 @@ template_file:
   - path: init/sl_iostream_init_si91x_uart.c.jinja
   - path: init/sl_iostream_init_si91x_uart.h.jinja
 template_contribution:
+  - name: component_catalog
+    value: iostream_si91x
   - name: event_handler
     value:
       event: iostream_instance_init_stage_1
@@ -44,6 +45,9 @@ define:
   - name: _SI91X_DEVICE
 provides:
   - name: iostream_si91x
+  - name: si91x_iostream_transport
+    allow_multiple: true
+    condition: [si91x_log_iostream]  
 requires:
   - name: sl_usart_iostream
   - name: iostream_retarget_stdio

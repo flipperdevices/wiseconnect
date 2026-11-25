@@ -40,7 +40,7 @@ extern "C" {
 #include "rsi_power_save.h"
 #include "rsi_wwdt.h"
 #include "base_types.h"
-
+#include "sl_log_helper.h"
 /** @cond DO_NOT_INCLUDE_WITH_DOXYGEN */
 #ifndef UNUSED_VARIABLE
 #define UNUSED_VARIABLE(x) (void)(x)

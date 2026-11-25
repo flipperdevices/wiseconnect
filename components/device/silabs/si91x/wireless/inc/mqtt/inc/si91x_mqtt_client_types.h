@@ -29,6 +29,7 @@
 
 #pragma once
 #include "stdint.h"
+#include "sl_constants.h"
 #include "sl_common.h"
 
 //Note: Please go through http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html
@@ -40,6 +41,8 @@
 #define SLI_SI91X_MQTT_CLIENT_ID_MAXIMUM_LENGTH   62  // This size is including the NULL terminating character.
 #define SI91X_MQTT_CLIENT_USERNAME_MAXIMUM_LENGTH 122 // This size is including the NULL terminating character.
 #define SI91X_MQTT_CLIENT_PASSWORD_MAXIMUM_LENGTH 512 // This size is including the NULL terminating character.
+
+#define SI91X_MQTT_CLIENT_SNI_HOST_NAME_MIN_LENGTH 1 // This size is excluding the NULL terminating character.
 
 #define SLI_SI91X_MQTT_CLIENT_INIT_COMMAND        1
 #define SLI_SI91X_MQTT_CLIENT_CONNECT_COMMAND     2
@@ -57,8 +60,8 @@ typedef struct {
   // IP version
   uint32_t ip_version;
   union {
-    uint8_t ipv4_address[4];
-    uint8_t ipv6_address[16];
+    uint8_t ipv4_address[SL_IPV4_ADDRESS_LENGTH];
+    uint8_t ipv6_address[SL_IPV6_ADDRESS_LENGTH];
   } server_ip_address;
 } sli_si91x_mqtt_client_ip_address_t;
 
@@ -94,6 +97,14 @@ typedef struct SL_ATTRIBUTE_PACKED {
 #endif
   //! MQTT ping retries.
   uint16_t keep_alive_retries;
+  //! TCP keepalive initial timeout in seconds
+  uint16_t tcp_keepalive_initial_time_sec;
+  //! Max TCP retransmission retry count
+  uint8_t tcp_max_retry_count;
+  //! TLS 1.2 and below cipher suite bitmap
+  uint32_t ssl_ciphers_bitmap;
+  //! TLS 1.3 cipher suite bitmap
+  uint32_t ssl_ext_ciphers_bitmap;
 } si91x_mqtt_client_init_request_t;
 
 typedef struct SL_ATTRIBUTE_PACKED {
@@ -165,9 +176,26 @@ typedef struct {
 
 } sli_si91x_mqtt_client_command_request_t;
 
+// Structure for the first chunk or single MQTT message from firmware
 typedef struct SL_ATTRIBUTE_PACKED {
+  // MQTT flags containing retained status (bit 0), QoS level (bits 1-2), duplicate flag (bit 3), and more data indicator (bit 4)
   uint16_t mqtt_flags;
+  // Length of payload in this chunk
   uint16_t current_chunk_length;
+  // Length of topic string (only present in first chunk)
   uint16_t topic_length;
+  // Total payload length across all chunks (only present in first chunk)
+  uint32_t total_length;
+  // Flexible array member containing topic followed by payload chunk
   uint8_t data[];
 } sli_si91x_mqtt_client_received_message_t;
+
+// Structure for subsequent chunks (2nd onwards) of a fragmented MQTT message
+typedef struct SL_ATTRIBUTE_PACKED {
+  // MQTT flags containing retained status (bit 0), QoS level (bits 1-2), duplicate flag (bit 3), and more data indicator (bit 4)
+  uint16_t mqtt_flags;
+  // Length of payload in this chunk
+  uint16_t current_chunk_length;
+  // Flexible array member containing payload chunk only (no topic in subsequent chunks)
+  uint8_t data[];
+} sli_si91x_mqtt_client_received_chunk_t;

@@ -24,7 +24,7 @@
 #include "base_types.h"
 #include "stdint.h"
 #include "sl_status.h"
-
+#include "sl_log_helper.h"
 #ifdef __cplusplus
 extern "C" {
 #endif

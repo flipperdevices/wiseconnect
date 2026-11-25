@@ -25,6 +25,7 @@ define:
 
 requires:
 - name: sl_si91x_internal_stack
+- name: log_none
 
 template_contribution:
 - name: console_enums

@@ -59,16 +59,10 @@ static ps_transition transition = ADD_REQ;
 static boolean_t change_state   = false;
 osSemaphoreId_t timer_semaphore;
 // Thread attributes which are required for creating a thread
-const osThreadAttr_t thread_attributes = {
+static const osThreadAttr_t thread_attributes = {
   .name       = "app",
-  .attr_bits  = 0,
-  .cb_mem     = 0,
-  .cb_size    = 0,
-  .stack_mem  = 0,
   .stack_size = 3072,
   .priority   = osPriorityLow,
-  .tz_module  = 0,
-  .reserved   = 0,
 };
 
 /*******************************************************************************
@@ -117,20 +111,29 @@ static void application_start(void *argument)
   // Initialize the wireless interface and put the NWP in Standby with RAM retention mode.
   status = initialize_wireless();
   if (status != SL_STATUS_OK) {
+    /* Note: All status messages in this example — both success and failure — are
+ * intentionally emitted via SL_PRINT_STRING_ERROR so that they remain visible
+ * on the console at the default log level. This is a demonstration choice, not
+ * a recommendation: in production code, ERROR severity should be reserved for
+ * actual failures, with successful operations logged via SL_PRINT_STRING_INFO
+ * (or SL_PRINT_STRING_DEBUG for verbose trace). */
+
     // If status is not OK, display the error info.
-    DEBUGOUT("Wireless API initialization failed, Error Code: 0x%lX \n", status);
+    SL_PRINT_STRING_ERROR("Wireless API initialization failed, Error Code: 0x%lX \n", status);
     return;
   }
-  DEBUGOUT("Wireless is successfully initialized and NWP is in Sleep \n");
+  SL_PRINT_STRING_ERROR("Wireless is successfully initialized and NWP is in Sleep \n");
 
   // Subscribe the state transition callback events, the ored value of flag and function pointer is passed in this API.
   status = sl_si91x_power_manager_subscribe_ps_transition_event(&handle, &info);
   if (status != SL_STATUS_OK) {
     // If status is not OK, display the error info.
-    DEBUGOUT("Power Manager transition event subscription failed, Error Code: 0x%lX \n", status);
+    SL_PRINT_STRING_ERROR("Power Manager transition event subscription failed, "
+                          "Error Code: 0x%lX \n",
+                          status);
     return;
   }
-  DEBUGOUT("Power Manager transition event is subscribed \n");
+  SL_PRINT_STRING_ERROR("Power Manager transition event is subscribed \n");
 
   change_state = false;
 
@@ -182,39 +185,54 @@ static sl_status_t initialize_wireless(void)
 #endif
                                                     ),
                      .bt_feature_bit_map         = 0,
-                     .ext_tcp_ip_feature_bit_map = SL_SI91X_CONFIG_FEAT_EXTENTION_VALID,
+                     .ext_tcp_ip_feature_bit_map = SL_SI91X_CONFIG_FEAT_EXTENSION_VALID,
                      .ble_feature_bit_map        = 0,
                      .ble_ext_feature_bit_map    = 0,
-                     .config_feature_bit_map = (SL_SI91X_FEAT_SLEEP_GPIO_SEL_BITMAP | SL_WIFI_ENABLE_ENHANCED_MAX_PSP) }
+                     .config_feature_bit_map =
+                       (SL_SI91X_FEAT_SLEEP_GPIO_SEL_BITMAP | SL_WIFI_ENABLE_ENHANCED_MAX_PSP) },
+    .ta_pool         = { .tx_ratio_in_buffer_pool = 0, .rx_ratio_in_buffer_pool = 0, .global_ratio_in_buffer_pool = 0 },
+    .efuse_data_type = SL_SI91X_EFUSE_MFG_SW_VERSION,
+    .nwp_fw_image_number = SL_SI91X_NWP_FW_IMAGE_NUMBER_0
   };
   sl_status_t status;
-  sl_wifi_firmware_version_t version = { 0 };
-  sl_mac_address_t mac_addr          = { 0 };
+  sl_si91x_firmware_version_t version = { 0 };
+  sl_mac_address_t mac_addr           = { 0 };
   // Initialize the wifi interface.
   status = sl_net_init(SL_NET_WIFI_CLIENT_INTERFACE, &station_init_configuration, NULL, NULL);
   if (status != SL_STATUS_OK) {
-    DEBUGOUT("Failed to start Wi-Fi Client interface: 0x%lx\r\n", status);
+    SL_PRINT_STRING_ERROR("Failed to start Wi-Fi Client interface: 0x%lx\r\n", status);
     return status;
   }
   // Get the mac address.
   status = sl_wifi_get_mac_address(SL_WIFI_CLIENT_INTERFACE, &mac_addr);
   if (status == SL_STATUS_OK) {
-    DEBUGOUT("Device MAC address: %x:%x:%x:%x:%x:%x\r\n",
-             mac_addr.octet[0],
-             mac_addr.octet[1],
-             mac_addr.octet[2],
-             mac_addr.octet[3],
-             mac_addr.octet[4],
-             mac_addr.octet[5]);
+    /* MAC is 6 bytes but the formatted backend caps args/line at
+     * SL_LOG_CONFIG_ARG (default 3), so split into a high and low half. */
+    SL_PRINT_STRING_ERROR("Device MAC address (high): %x:%x:%x",
+                          (uint32_t)mac_addr.octet[0],
+                          (uint32_t)mac_addr.octet[1],
+                          (uint32_t)mac_addr.octet[2]);
+    SL_PRINT_STRING_ERROR("Device MAC address (low) : %x:%x:%x",
+                          (uint32_t)mac_addr.octet[3],
+                          (uint32_t)mac_addr.octet[4],
+                          (uint32_t)mac_addr.octet[5]);
   } else {
-    DEBUGOUT("Failed to get mac address: 0x%lx\r\n", status);
+    SL_PRINT_STRING_ERROR("Failed to get mac address: 0x%lx\r\n", status);
   }
   // Get the firmware version.
-  status = sl_wifi_get_firmware_version(&version);
+  status = sl_si91x_get_firmware_version(&version);
   if (status != SL_STATUS_OK) {
-    DEBUGOUT("\r\nFailed to fetch firmware version: 0x%lx\r\n", status);
+    SL_PRINT_STRING_ERROR("\r\nFailed to fetch firmware version: 0x%lx\r\n", status);
   } else {
-    print_firmware_version(&version);
+    printf("\r\nFirmware version is: %x%x.%d.%d.%d.%d.%d.%d\r\n",
+           version.chip_id,
+           version.rom_id,
+           version.major,
+           version.minor,
+           version.security_version,
+           version.patch_num,
+           version.customer_id,
+           version.build_num);
   }
   // Wireless Sleep with ram retention
   wireless_sleep(true);
@@ -236,7 +254,7 @@ static void wireless_sleep(boolean_t sleep_with_retention)
   status = sl_wifi_set_performance_profile_v2(&ta_performance_profile);
   if (status != SL_STATUS_OK) {
     // If status is not OK, display the error info.
-    DEBUGOUT("sl_wifi_set_performance_profile_v2 failed, Error Code: 0x%lX \n", status);
+    SL_PRINT_STRING_ERROR("sl_wifi_set_performance_profile_v2 failed, Error Code: 0x%lX \n", status);
     return;
   }
   if (sleep_with_retention) {
@@ -249,7 +267,7 @@ static void wireless_sleep(boolean_t sleep_with_retention)
   status = sl_wifi_set_performance_profile_v2(&ta_performance_profile);
   if (status != SL_STATUS_OK) {
     // If status is not OK, display the error info.
-    DEBUGOUT("sl_wifi_set_performance_profile_v2 failed, Error Code: 0x%lX \n", status);
+    SL_PRINT_STRING_ERROR("sl_wifi_set_performance_profile_v2 failed, Error Code: 0x%lX \n", status);
     return;
   }
 }
@@ -263,7 +281,7 @@ void power_manager_example_process_action(void)
   switch (transition) {
     case ADD_REQ:
       if (change_state) {
-        DEBUGOUT("Current State: PS%d \n", sl_si91x_power_manager_get_current_state());
+        SL_PRINT_STRING_ERROR("Current State: PS%d \n", sl_si91x_power_manager_get_current_state());
         if (sl_si91x_power_manager_get_current_state() == SL_SI91X_POWER_MANAGER_PS2) {
 #if !SL_SI91X_STANDBY
           if (sl_si91x_power_manager_get_ps1_state_status() == false) {
@@ -273,7 +291,7 @@ void power_manager_example_process_action(void)
             status = sl_si91x_power_manager_request_ps1_state();
             if (status != SL_STATUS_OK) {
               // If status is not OK, display the error info.
-              DEBUGOUT("Error Code: 0x%lX, Power State Transition Failed \n", status);
+              SL_PRINT_STRING_ERROR("Error Code: 0x%lX, Power State Transition Failed \n", status);
             }
             // Configure the ULP timer to wake up from PS1.
             set_ulp_timer_configuration();
@@ -284,7 +302,7 @@ void power_manager_example_process_action(void)
             status = sl_si91x_power_manager_remove_ps1_state_request();
             if (status != SL_STATUS_OK) {
               // If status is not OK, display the error info.
-              DEBUGOUT("Error Code: 0x%lX, Power State Transition Failed \n", status);
+              SL_PRINT_STRING_ERROR("Error Code: 0x%lX, Power State Transition Failed \n", status);
             }
             // Clear the ULP timer wakeup source.
             clear_ulp_timer_configuration();
@@ -292,7 +310,7 @@ void power_manager_example_process_action(void)
             status = sl_si91x_power_manager_add_ps_requirement(SL_SI91X_POWER_MANAGER_PS4);
             if (status != SL_STATUS_OK) {
               // If status is not OK, display the error info.
-              DEBUGOUT("Error Code: 0x%lX, Power State Transition Failed \n", status);
+              SL_PRINT_STRING_ERROR("Error Code: 0x%lX, Power State Transition Failed \n", status);
             }
 #if !SL_SI91X_STANDBY
             // Closing bracket for removing the PS1 state request. This should only be active when Standby mode is disabled.
@@ -302,7 +320,7 @@ void power_manager_example_process_action(void)
           status = sl_si91x_power_manager_add_ps_requirement(SL_SI91X_POWER_MANAGER_PS3);
           if (status != SL_STATUS_OK) {
             // If status is not OK, display the error info.
-            DEBUGOUT("Error Code: 0x%lX, Power State Transition Failed \n", status);
+            SL_PRINT_STRING_ERROR("Error Code: 0x%lX, Power State Transition Failed \n", status);
           }
         } else if (sl_si91x_power_manager_get_current_state() == SL_SI91X_POWER_MANAGER_PS3) {
           while (!sl_si91x_power_manager_ps2_pre_check()) {
@@ -312,7 +330,7 @@ void power_manager_example_process_action(void)
           status = sl_si91x_power_manager_add_ps_requirement(SL_SI91X_POWER_MANAGER_PS2);
           if (status != SL_STATUS_OK) {
             // If status is not OK, display the error info.
-            DEBUGOUT("Error Code: 0x%lX, Power State Transition Failed \n", status);
+            SL_PRINT_STRING_ERROR("Error Code: 0x%lX, Power State Transition Failed \n", status);
           }
         }
         // Next transition is from PS3 to PS4 state.
@@ -322,11 +340,11 @@ void power_manager_example_process_action(void)
       break;
     case REM_REQ:
       if (change_state) {
-        DEBUGOUT("Current State: PS%d \n", sl_si91x_power_manager_get_current_state());
+        SL_PRINT_STRING_ERROR("Current State: PS%d \n", sl_si91x_power_manager_get_current_state());
         status = sl_si91x_power_manager_remove_ps_requirement(sl_si91x_power_manager_get_current_state());
         if (status != SL_STATUS_OK) {
           // If status is not OK, display the error info.
-          DEBUGOUT("Error Code: 0x%lX, Power State Transition Failed \n", status);
+          SL_PRINT_STRING_ERROR("Error Code: 0x%lX, Power State Transition Failed \n", status);
         }
         change_state = false;
         // Next transition is from PS4 to PS3 state.
@@ -341,19 +359,19 @@ void power_manager_example_process_action(void)
   status = sl_si91x_power_manager_request_standby_state();
   if (status != SL_STATUS_OK) {
     // If status is not OK, display the error info.
-    DEBUGOUT("Error Code: 0x%lX, Power State Transition Failed \n", status);
+    SL_PRINT_STRING_ERROR("Error Code: 0x%lX, Power State Transition Failed \n", status);
   }
 #endif
   sl_sem_status = osSemaphoreAcquire(timer_semaphore, osWaitForever);
   if (sl_sem_status != osOK) {
-    DEBUGOUT("\r\n osSemaphoreAcquire failed :%d \r\n", sl_sem_status);
+    SL_PRINT_STRING_ERROR("\r\n osSemaphoreAcquire failed :%d \r\n", sl_sem_status);
   }
 #if SL_SI91X_STANDBY
   // Remove the standby state request in the power manager.
   status = sl_si91x_power_manager_remove_standby_state_request();
   if (status != SL_STATUS_OK) {
     // If status is not OK, display the error info.
-    DEBUGOUT("Error Code: 0x%lX, Power State Transition Failed \n", status);
+    SL_PRINT_STRING_ERROR("Error Code: 0x%lX, Power State Transition Failed \n", status);
   }
 #endif
 }
@@ -371,27 +389,27 @@ static void transition_callback(sl_power_state_t from, sl_power_state_t to)
   switch (from) {
     case SL_SI91X_POWER_MANAGER_PS4:
       // Previous state was PS4
-      DEBUGOUT("Leaving PS4 State \n");
+      SL_PRINT_STRING_ERROR("Leaving PS4 State \n");
       break;
     case SL_SI91X_POWER_MANAGER_PS3:
       // Previous state was PS3
-      DEBUGOUT("Leaving PS3 State \n");
+      SL_PRINT_STRING_ERROR("Leaving PS3 State \n");
       break;
     case SL_SI91X_POWER_MANAGER_PS2:
       // Previous state was PS2
-      DEBUGOUT("Leaving PS2 State \n");
+      SL_PRINT_STRING_ERROR("Leaving PS2 State \n");
       break;
     case SL_SI91X_POWER_MANAGER_PS1:
       // Wakeup from PS1
-      DEBUGOUT("Leaving PS1 State \n");
+      SL_PRINT_STRING_ERROR("Leaving PS1 State \n");
       break;
     case SL_SI91X_POWER_MANAGER_SLEEP:
       // Wakeup from sleep
-      DEBUGOUT("Leaving Sleep State \n");
+      SL_PRINT_STRING_ERROR("Leaving Sleep State \n");
       break;
     case SL_SI91X_POWER_MANAGER_STANDBY:
       // Wakeup from standby
-      DEBUGOUT("Leaving Standby State \n");
+      SL_PRINT_STRING_ERROR("Leaving Standby State \n");
       break;
     default:
       break;
@@ -400,19 +418,19 @@ static void transition_callback(sl_power_state_t from, sl_power_state_t to)
   switch (to) {
     case SL_SI91X_POWER_MANAGER_PS4:
       // Current state is PS4
-      DEBUGOUT("Entering PS4 State \n");
+      SL_PRINT_STRING_ERROR("Entering PS4 State \n");
       break;
     case SL_SI91X_POWER_MANAGER_PS3:
       // Current state is PS3
-      DEBUGOUT("Entering PS3 State \n");
+      SL_PRINT_STRING_ERROR("Entering PS3 State \n");
       break;
     case SL_SI91X_POWER_MANAGER_PS2:
       // Current state is PS2
-      DEBUGOUT("Entering PS2 State \n");
+      SL_PRINT_STRING_ERROR("Entering PS2 State \n");
       break;
     case SL_SI91X_POWER_MANAGER_PS1:
       // Current state is PS2
-      DEBUGOUT("Entering PS1 State \n");
+      SL_PRINT_STRING_ERROR("Entering PS1 State \n");
       break;
     default:
       break;
@@ -430,7 +448,7 @@ void pm_timer_callback(TimerHandle_t xTimer)
 
   sl_sem_status = osSemaphoreRelease(timer_semaphore);
   if (sl_sem_status != osOK) {
-    DEBUGOUT("\r\nosSemaphoreRelease failed :%d \r\n", sl_sem_status);
+    SL_PRINT_STRING_ERROR("\r\nosSemaphoreRelease failed :%d \r\n", sl_sem_status);
   }
 }
 
@@ -450,7 +468,7 @@ static void set_ulp_timer_configuration(void)
   status = sl_si91x_ulp_timer_init(&sl_timer_clk_handle);
   if (status != SL_STATUS_OK) {
     // If status is not OK, display the error info.
-    DEBUGOUT("sl_si91x_ulp_timer_init failed, Error Code: 0x%lX \n", status);
+    SL_PRINT_STRING_ERROR("sl_si91x_ulp_timer_init failed, Error Code: 0x%lX \n", status);
     return;
   }
   // Match value is set to 2 seconds.
@@ -459,21 +477,23 @@ static void set_ulp_timer_configuration(void)
   status = sl_si91x_ulp_timer_set_configuration(&sl_timer_handle_timer0);
   if (status != SL_STATUS_OK) {
     // If status is not OK, display the error info.
-    DEBUGOUT("sl_si91x_ulp_timer_set_configuration failed, Error Code: 0x%lX \n", status);
+    SL_PRINT_STRING_ERROR("sl_si91x_ulp_timer_set_configuration failed, Error Code: 0x%lX \n", status);
     return;
   }
   // Callback is registered to enable the timer interrupt.
   status = sl_si91x_ulp_timer_register_timeout_callback(ULP_TIMER_INSTANCE, ulp_timer_callback);
   if (status != SL_STATUS_OK) {
     // If status is not OK, display the error info.
-    DEBUGOUT("sl_si91x_ulp_timer_register_timeout_callback failed, Error Code: 0x%lX \n", status);
+    SL_PRINT_STRING_ERROR("sl_si91x_ulp_timer_register_timeout_callback "
+                          "failed, Error Code: 0x%lX \n",
+                          status);
     return;
   }
   // ULP Timer is started for timer 0.
   status = sl_si91x_ulp_timer_start(ULP_TIMER_INSTANCE);
   if (status != SL_STATUS_OK) {
     // If status is not OK, display the error info.
-    DEBUGOUT("sl_si91x_ulp_timer_start failed, Error Code: 0x%lX \n", status);
+    SL_PRINT_STRING_ERROR("sl_si91x_ulp_timer_start failed, Error Code: 0x%lX \n", status);
     return;
   }
 }
@@ -489,21 +509,25 @@ static void clear_ulp_timer_configuration(void)
   status = sl_si91x_ulp_timer_stop(ULP_TIMER_INSTANCE);
   if (status != SL_STATUS_OK) {
     // If status is not OK, display the error info.
-    DEBUGOUT("sl_si91x_ulp_timer_stop failed, Error Code: 0x%lX \n", status);
+    SL_PRINT_STRING_ERROR("sl_si91x_ulp_timer_stop failed, Error Code: 0x%lX \n", status);
     return;
   }
   // After waking up, ulp timer callback is unregistered.
   status = sl_si91x_ulp_timer_unregister_timeout_callback(ULP_TIMER_INSTANCE);
   if (status != SL_STATUS_OK) {
     // If status is not OK, display the error info.
-    DEBUGOUT("sl_si91x_ulp_timer_unregister_timeout_callback failed, Error Code: 0x%lX \n", status);
+    SL_PRINT_STRING_ERROR("sl_si91x_ulp_timer_unregister_timeout_callback "
+                          "failed, Error Code: 0x%lX \n",
+                          status);
     return;
   }
   // Once the sleep-wakeup is completed, ulp based wakeup source is removed.
   status = sl_si91x_power_manager_set_wakeup_sources(SL_SI91X_POWER_MANAGER_ULPSS_WAKEUP, false);
   if (status != SL_STATUS_OK) {
     // If status is not OK, display the error info.
-    DEBUGOUT("sl_si91x_power_manager_set_wakeup_sources failed, Error Code: 0x%lX \n", status);
+    SL_PRINT_STRING_ERROR("sl_si91x_power_manager_set_wakeup_sources failed, "
+                          "Error Code: 0x%lX \n",
+                          status);
     return;
   }
 }
@@ -520,7 +544,7 @@ static void ulp_timer_callback(void)
   transition    = ADD_REQ;
   sl_sem_status = osSemaphoreRelease(timer_semaphore);
   if (sl_sem_status != osOK) {
-    DEBUGOUT("\r\nosSemaphoreRelease failed :%d \r\n", sl_sem_status);
+    SL_PRINT_STRING_ERROR("\r\nosSemaphoreRelease failed :%d \r\n", sl_sem_status);
   }
 }
 #endif

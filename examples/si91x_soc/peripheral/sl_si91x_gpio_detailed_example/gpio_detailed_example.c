@@ -82,17 +82,23 @@ void gpio_detailed_example_init(void)
     status = sl_gpio_driver_init();
     if (status != SL_STATUS_OK) {
       // Prints GPIO initialization fails
-      DEBUGOUT("sl_gpio_driver_init, Error code: %lu\r\n", status);
+      /* Note: All status messages in this example — both success and failure — are
+ * intentionally emitted via SL_PRINT_STRING_ERROR so that they remain visible
+ * on the console at the default log level. This is a demonstration choice, not
+ * a recommendation: in production code, ERROR severity should be reserved for
+ * actual failures, with successful operations logged via SL_PRINT_STRING_INFO
+ * (or SL_PRINT_STRING_DEBUG for verbose trace). */
+      SL_PRINT_STRING_ERROR("sl_gpio_driver_init, Error code: %lu\r\n", status);
       break; // breaks if error occurs
     }
-    DEBUGOUT("GPIO driver initialization is successful \r\n");
+    SL_PRINT_STRING_ERROR("GPIO driver initialization is successful \r\n");
     // Configure GPIO pin 10 using driver pin configuration API.
     // Using this API by default GPIO mode is set as MODE 0. If any other mode is selected for any GPIO use
     // corresponding API sl_gpio_driver_set_pin_mode() is for mode setting.
     status = sl_gpio_set_configuration(sl_gpio_pin_config);
     if (status != SL_STATUS_OK) {
       // Prints if pin configuration fails
-      DEBUGOUT("sl_gpio_set_configuration, Error code: %lu\r\n", status);
+      SL_PRINT_STRING_ERROR("sl_gpio_set_configuration, Error code: %lu\r\n", status);
       break; // breaks if error occurs
     }
 #if (GPIO_PORT_GROUP_ABCD == 1)
@@ -101,21 +107,21 @@ void gpio_detailed_example_init(void)
       status = sl_gpio_set_configuration(gpio_multi_port_configs[i]);
       if (status != SL_STATUS_OK) {
         // Prints if pin configuration fails with port identification
-        DEBUGOUT("sl_gpio_set_configuration Port %c Pin %d, Error code: %lu\r\n",
-                 gpio_port_names[i],
-                 gpio_multi_port_configs[i].port_pin.pin,
-                 status);
+        SL_PRINT_STRING_ERROR("sl_gpio_set_configuration Port %c Pin %d, Error code: %lu\r\n",
+                              gpio_port_names[i],
+                              gpio_multi_port_configs[i].port_pin.pin,
+                              status);
         break; // breaks if error occurs
       }
-      DEBUGOUT("GPIO driver Port %c Pin %d configuration is successful \r\n",
-               gpio_port_names[i],
-               gpio_multi_port_configs[i].port_pin.pin);
+      SL_PRINT_STRING_ERROR("GPIO driver Port %c Pin %d configuration is successful \r\n",
+                            gpio_port_names[i],
+                            gpio_multi_port_configs[i].port_pin.pin);
     }
     if (status != SL_STATUS_OK) {
       break; // Exit if any multi-port configuration failed
     }
 #endif
-    DEBUGOUT("GPIO driver set pin configuration is successful \r\n");
+    SL_PRINT_STRING_ERROR("GPIO driver set pin configuration is successful \r\n");
     // Apart from above APIs, there are additional APIs that can be used as per requirement
     //  like to increase drive strength, to make pin pull up/ pull down, increase slew rate etc.
     // Set pad driver strength of GPIO pin 10 as GPIO_FOUR_MILLI_AMPS using the driver pad driver strength API.
@@ -125,19 +131,23 @@ void gpio_detailed_example_init(void)
                                                       (sl_si91x_gpio_driver_strength_select_t)GPIO_FOUR_MILLI_AMPS);
     if (status != SL_STATUS_OK) {
       // Prints if setting pad driver strength fails
-      DEBUGOUT("sl_si91x_gpio_driver_select_pad_driver_strength, Error code: %lu\r\n", status);
+      SL_PRINT_STRING_ERROR("sl_si91x_gpio_driver_select_pad_driver_strength, "
+                            "Error code: %lu\r\n",
+                            status);
       break; // breaks if error occurs
     }
-    DEBUGOUT("GPIO driver pad driver strength select is successful \r\n");
+    SL_PRINT_STRING_ERROR("GPIO driver pad driver strength select is successful \r\n");
     // Select pad driver disable state for GPIO pin 10. By default it is set to GPIO_HZ(High Impedance state). Change can be done as per one requirement.
     status = sl_si91x_gpio_driver_select_pad_driver_disable_state(sl_gpio_pin_config.port_pin.pin,
                                                                   (sl_si91x_gpio_driver_disable_state_t)GPIO_HZ);
     if (status != SL_STATUS_OK) {
       // Prints if setting pad driver disable state fails
-      DEBUGOUT("sl_si91x_gpio_driver_select_pad_driver_disable_state, Error code: %lu\r\n", status);
+      SL_PRINT_STRING_ERROR("sl_si91x_gpio_driver_select_pad_driver_disable_"
+                            "state, Error code: %lu\r\n",
+                            status);
       break; // breaks if error occurs
     }
-    DEBUGOUT("GPIO driver pad driver disable state select is successful \r\n");
+    SL_PRINT_STRING_ERROR("GPIO driver pad driver disable state select is successful \r\n");
   } while (false);
 }
 /*******************************************************************************
@@ -149,7 +159,7 @@ void gpio_detailed_example_process_action(void)
   status = sl_gpio_driver_toggle_pin(&sl_gpio_pin_config.port_pin); // Toggle HP GPIO pin 10
   if (status != SL_STATUS_OK) {
     // Prints if toggling pin fails
-    DEBUGOUT("sl_gpio_toggle_pin, Error code: %lu\r\n", status);
+    SL_PRINT_STRING_ERROR("sl_gpio_toggle_pin, Error code: %lu\r\n", status);
     return;
   }
 #if (GPIO_PORT_GROUP_ABCD == 1)
@@ -158,15 +168,15 @@ void gpio_detailed_example_process_action(void)
     status = sl_gpio_driver_toggle_pin(&gpio_multi_port_configs[i].port_pin);
     if (status != SL_STATUS_OK) {
       // Prints if toggling pin fails with port identification
-      DEBUGOUT("sl_gpio_toggle_pin Port %c Pin %d, Error code: %lu\r\n",
-               gpio_port_names[i],
-               gpio_multi_port_configs[i].port_pin.pin,
-               status);
+      SL_PRINT_STRING_ERROR("sl_gpio_toggle_pin Port %c Pin %d, Error code: %lu\r\n",
+                            gpio_port_names[i],
+                            gpio_multi_port_configs[i].port_pin.pin,
+                            status);
       return;
     }
   }
 #endif
   // Prints indicating successful pin toggle
-  DEBUGOUT("HP GPIO driver toggle pin is successful \r\n");
+  SL_PRINT_STRING_ERROR("HP GPIO driver toggle pin is successful \r\n");
   sl_si91x_delay_ms(DELAY); // Delay of 1sec
 }

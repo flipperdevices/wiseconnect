@@ -1,7 +1,7 @@
 id: brd4340b
 label: BRD4340B
 package: platform_siwx91x
-description: Board support for BRD4340B.
+description: Board support for BRD4340B(SoC).
 category: Board|Radio Board
 quality: production
 metadata:

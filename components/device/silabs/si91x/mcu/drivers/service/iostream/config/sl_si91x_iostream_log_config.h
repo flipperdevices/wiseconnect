@@ -1,6 +1,6 @@
 /***************************************************************************/ /**
  * @file
- * @brief SL_SI91X_IOSTREAM_LOG Config.
+ * @brief IO Stream Log configuration for SiWx91x.
  *******************************************************************************
  * # License
  * <b>Copyright 2019 Silicon Laboratories Inc. www.silabs.com</b>
@@ -41,6 +41,7 @@
 // <SL_SI91X_IOSTREAM_SWO_LOG=> SWO
 // <SL_SI91X_IOSTREAM_RTT_LOG=> RTT
 // <SL_SI91X_IOSTREAM_VUART_LOG=> VUART
+// <SL_SI91X_IOSTREAM_DEBUG_LOG=> DEBUG
 // <i> Default: RTT
 #define IOSTREAM_LOG_TYPE SL_SI91X_IOSTREAM_RTT_LOG
 

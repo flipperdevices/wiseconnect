@@ -1,11 +1,16 @@
 # Out of the box demo - SiWG917
 
+## High-Level Overview
+
+SiWG917 out-of-box demo: showcase WLAN, BLE, MCU peripherals, and NWP power save with minimal setup on the SiWG917 SoC boards.
+
 This application demonstrates the WLAN, BLE, MCU peripheral features and NWP (network processor) powersave capabilities of SiWG917 with a ready to go, minimal software installation experience.
 
 ## Table of Contents
 
 - [Out of the box demo - SiWG917](#out-of-the-box-demo---siwg917)
   - [Table of Contents](#table-of-contents)
+  - [High-Level Overview](#high-level-overview)
   - [Purpose/Scope](#purposescope)
   - [Prerequisites/Setup Requirements](#prerequisitessetup-requirements)
     - [Hardware Requirements](#hardware-requirements)
@@ -19,14 +24,21 @@ This application demonstrates the WLAN, BLE, MCU peripheral features and NWP (ne
     - [Update MQTT Hostname in wifi\_app.c](#update-mqtt-hostname-in-wifi_appc)
     - [Measuring the current consumption using Simplicity Studio Energy Profiler](#measuring-the-current-consumption-using-simplicity-studio-energy-profiler)
 
+  - [Troubleshooting](#troubleshooting)
+  - [Resources](#resources)
+  - [Report Bugs and Get Support](#report-bugs-and-get-support)
+
 ## Purpose/Scope
 
-The demo works with both the Wireless pro kit (WPK) and the SiWG917 dev kit. If the pro kit is used, the demo displays its status on the TFT-LCD display of the WPK baseboard. 
+The demo works with both the Wireless Pro Kit (WPK) and the SiWG917 dev kit. If the pro kit is used, the demo displays its status on the TFT-LCD display of the WPK baseboard. 
 The SiWG917 dev kit does not have an onboard display. All device activities for the pro and dev kits can be observed on the serial terminal prints. 
 
 SiWG917 establishes WLAN connectivity via BLE provisioning. SiWG917 then proceeds to ping [www.silabs.com](https://www.silabs.com) for 5 times, after which MQTT connectivity with a remote mosquitto broker [test.mosquitto.org](http://test.mosquitto.org) is established.
 Then Network processor of SiWG917 enters connected sleep state.
-If a message is published onto the topic from a MQTT client application [https://testclient-cloud.mqtt.cool/](https://testclient-cloud.mqtt.cool/) to which the module is subscribed (Si917_MQTT_RECEIVE), the NWP wakes up and displays the received data and goes back to sleep. If BTN0 on the WPK baseboard or dev kit board is pressed, SiWG917 publishes a message onto a MQTT topic named Si917_APP_STATUS. The status of application is updated on the TFT-LCD display on the WPK baseboard, the same can be observed on the serial terminal prints as well.
+
+If an MQTT client publishes a message to a topic that the module subscribes to (Si917_MQTT_RECEIVE), the network processor (NWP) wakes up, displays the received data, and then returns to sleep.
+
+When BTN0 is pressed on the WPK baseboard or development kit, SiWG917 publishes a message to the Si917_APP_STATUS MQTT topic. The application status is updated on the TFT-LCD display on the WPK baseboard. You can also view the status in the serial terminal output.
 
 ## Prerequisites/Setup Requirements
 
@@ -38,13 +50,16 @@ If a message is published onto the topic from a MQTT client application [https:/
 - A Wireless Access point with internet connectivity
 - **SoC Mode**:
   - Standalone
-    - BRD4002A Wireless pro kit mainboard [SI-MB4002A]
+    - BRD4002B Wireless Pro Kit Mainboard [SI-MB4002B](https://www.silabs.com/development-tools/wireless/wireless-pro-kit-mainboard?tab=overview)
     - Radio Boards
-      - BRD4338A [SiWx917-RB4338A]
-      - BRD4342A [SiWx917-RB4342A]
-      - BRD4343A [SiWx917-RB4343A]
+      - BRD4338A [SiWx917-RB4338A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-rb4338a-wifi-6-bluetooth-le-soc-radio-board?tab=overview)
+      - BRD4342A [SiWx917-RB4342A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx91x-rb4342a-wifi-6-bluetooth-le-soc-radio-board?tab=overview)
+      - BRD4339B [SiWx917-RB4339B](https://docs.silabs.com/wiseconnect/latest/wiseconnect-getting-started/getting-started-with-at)
+      - BRD4340A [SiWx917-RB4340A](https://docs.silabs.com/wiseconnect/latest/wiseconnect-getting-started/getting-started-with-at)
+      - BRD4343A [SiWx917-RB4343A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4343a-wi-fi-6-bluetooth-le-8mb-flash-radio-board-for-module?tab=overview)
+      - BRD4343C [SiWx917-RB4343C](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4343c-wi-fi-6-bluetooth-le-8mb-flash-radio-board-for-module?tab=overview)
   - Kits
-    - SiWG917 Dev Kit [BRD2605A]
+    - SiWG917 Dev Kit [BRD2605A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-dk2605a-wifi-6-bluetooth-le-soc-dev-kit?tab=overview)
     - SiWx917 Pro Kit [Si917-PK6031A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-pro-kit?tab=overview)
 - Android Phone or iPhone with Simplicity Connect App (formerly EFR Connect App), which is available in Play Store and App Store (or) Windows PC with windows Silicon labs connect application.
 
@@ -59,7 +74,7 @@ If a message is published onto the topic from a MQTT client application [https:/
 
 ## Upgrade application binary
 
-- Download the latest out-of-box demo binary from [the WiseConnect SDK GitHub repository](https://github.com/SiliconLabs/wiseconnect/tree/v4.0.1-content-for-docs/demos).
+- Download the latest out-of-box demo binary from [the WiseConnect SDK GitHub repository](https://github.com/SiliconLabs/wiseconnect/tree/v4.1.2-content-for-docs/demos).
 
 - Follow the instructions on the [Developing for SiWx91x Host page](https://docs.silabs.com/wiseconnect/latest/wiseconnect-developers-guide-developing-for-silabs-hosts/#install-simplicity-studio) to:
 
@@ -98,7 +113,7 @@ To view the application prints on the console, refer to [link name](https://docs
 
     To upgrade to latest application binary, refer [upgrade application binary](#upgrade-application-binary) section.
 
-    Also, upgrade the connectivity firmware (NWP firmware) to the latest version to avoid compatibility issues with application binary. Download the latest connectivity firmware from [Wiseconnect github repository](https://github.com/SiliconLabs/wiseconnect/tree/v4.0.1-content-for-docs/connectivity_firmware) and refer [Upgrade SiWx91x Connectivity Firmware](https://docs.silabs.com/wiseconnect/latest/wiseconnect-developers-guide-developing-for-silabs-hosts/#upgrade-si-wx91x-connectivity-firmware)  to upgrade the connectivity firmware.
+    Also, upgrade the connectivity firmware (NWP firmware) to the latest version to avoid compatibility issues with application binary. Download the latest connectivity firmware from [Wiseconnect github repository](https://github.com/SiliconLabs/wiseconnect/tree/v4.1.2-content-for-docs/connectivity_firmware) and refer [Upgrade SiWx91x Connectivity Firmware](https://docs.silabs.com/wiseconnect/latest/wiseconnect-developers-guide-developing-for-silabs-hosts/#upgrade-si-wx91x-connectivity-firmware)  to upgrade the connectivity firmware.
 
     If the messages being displayed on the LCD display on WPK or the serial terminal prints indicate versioning information (Si917 OOB Demo v2.0 - as show in the following image)
 
@@ -181,55 +196,13 @@ To view the application prints on the console, refer to [link name](https://docs
 
 - If you are using a different MQTT broker, replace "test.mosquitto.org" with the appropriate hostname.
 
-- To check if the MQTT broker is working, you can use the online MQTT client available at the below link.
-
-  >**NOTE :**
-  >
-  > If the default MQTT broker link is not working, you can try using other MQTT brokers listed on the webpage. For example, if "test.mosquitto.org" is not functioning, you can use "broker.mqtt.cool" as an alternative. Follow the steps mentioned above to update the MQTT hostname.
-
-- Go to the browser and open the [online mqtt client](https://testclient-cloud.mqtt.cool/).
-
-  ![MQTT test client image-1](resources/readme/MQTT_testclient1.png)
-
-- Click on the dropdown option and select 'tcp://test.mosquitto.org:1883'.
-
-  ![MQTT test client image-2](resources/readme/MQTT_testclient2.png)
-
-- Click on "connect" to connect to the mosquitto broker.
-
-  ![MQTT test client image-3](resources/readme/MQTT_testclient3.png)
-
-- Enter "Si917_MQTT_RECEIVE" in the Publish section.
-
-  ![MQTT test client image-4](resources/readme/MQTT_testclient4.png)
-
-- Enter the data to be sent to the SiWG917 (can be any random text) in the publish section and click on the publish button, the online client then publishes data on the "Si917_MQTT_RECEIVE" topic.
-
-  If the application binary version is older than v2.0, the MQTT data received by SiWG917 will be displayed in the application prints on the serial console.
-
-  If the application binary version is v2.0, the MQTT data received by SiWG917 will be displayed on the TFT-LCD display of the WPK board and the application prints on the serial console.
-
-  ![Here is the image of LCD with the status prints](resources/readme/status_lcd4.png)
-
-  ![Here is the image of serial terminal prints](resources/readme/status_print_message_received.png)
-
-- If the application binary version is v2.0, please proceed with the following steps, if not please refer [Measuring the current consumption using Simplicity Studio Energy Profiler](#measuring-the-current-consumption-using-simplicity-studio-energy-profiler) section for using the energy profiler tool to measure the current consumption of the SiWG917.
-
-- Enter "Si917_APP_STATUS" in the Subscriptions sections as shown in the following image and click on Subscribe.
-
-  ![MQTT test client image-5](resources/readme/MQTT_testclient5.png)
-
-  After clicking the subscribe button, Si917_APP_STATUS can be observed under the subscribed topics section.
-
-  ![MQTT test client image-6](resources/readme/MQTT_testclient6.png)
+- To check if the MQTT broker is working, you can use the online MQTT client.
 
 - Press BTN0 on the WPK baseboard or dev kit. When BTN0 is pressed, SiWG917 publishes a MQTT message saying "Button is pressed" onto the topic "Si917_APP_STATUS". The same can be observed in the LCD display of the baseboard and the MQTT client page.
 
   ![Here is the image of LCD with the published messages](resources/readme/status_lcd5.png)
 
   ![Here is the image of serial terminal prints](resources/readme/status_print_button_pressed.png)
-
-  ![MQTT test client image-7](resources/readme/MQTT_testclient7.png)
 
 - The current consumption of SiWG917 can observed using the energy profiler tool integrated within the Simplicity Studio. Refer the [Measuring the current consumption using Simplicity Studio Energy Profiler](#measuring-the-current-consumption-using-simplicity-studio-energy-profiler) section for using the energy profiler to measure the current consumption of the module.
 
@@ -274,3 +247,23 @@ To open the energy profiler:
   - Current consumption would be in the range of 8mA-9mA since M4 is in active state.
   - The above energy consumption plots are for reference and the power consumption number would vary based on the on air traffic, environment and the access point used.
 
+## Troubleshooting
+
+If you encounter issues while running this example, check the following:
+
+- Use the SiWG917 dev kit or WPK with the correct pre-built binary for your board.
+- Update the MQTT hostname in `wifi_app.c` as described in [Update MQTT Hostname in wifi_app.c](#update-mqtt-hostname-in-wifi_appc).
+- For Energy Profiler measurements, follow the steps in [Measuring the current consumption using Simplicity Studio Energy Profiler](#measuring-the-current-consumption-using-simplicity-studio-energy-profiler).
+
+
+## Resources
+
+- [WiSeConnect Getting Started Guide](https://docs.silabs.com/wiseconnect/latest/wiseconnect-getting-started/)
+- [WiSeConnect Examples](https://docs.silabs.com/wiseconnect/latest/wiseconnect-examples/#example-folder-structure)
+- [WiSeConnect Recommended Settings Guide](https://docs.silabs.com/wiseconnect/latest/wiseconnect-developers-guide-prog-recommended-settings/)
+
+## Report Bugs and Get Support
+
+Report issues and get help from the Silicon Labs community:
+
+- [Silicon Labs Community](https://www.silabs.com/community)

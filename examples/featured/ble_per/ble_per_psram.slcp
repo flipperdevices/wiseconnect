@@ -1,18 +1,24 @@
 project_name: ble_per_psram
 package: bluetooth_le_siwx91x_app
 quality: production
-label: ble_per_psram
+label: BLE PSRAM PER FreeRTOS
 category: Example|BLE
-description: 'This application demonstrates how to configure the necessary parameters to start transmitting or receiving BLE PER packets.
+description: 'Demonstrates BLE Packet Error Rate (PER) TX/RX testing on SiWx91x with PSRAM in SoC FreeRTOS. Demonstrated by configuring parameters to transmit or receive PER packets.
 
   '
 filter:
 - name: Wireless Technology
   value:
   - BLE
+- name: Device Type
+  value:
+  - SoC
 - name: Project Difficulty
   value:
   - Beginner
+- name: Quality
+  value:
+  - Production
 source:
 - path: app.c
 include:
@@ -45,23 +51,30 @@ component:
 - id: network_manager
 - id: basic_network_config_manager
 - id: psram_core
-- id: psram_aps6404l_sqh
 - id: text_segment_in_psram
 - id: data_segment_in_psram
 - id: si91x_memory_default_config
 - id: syscalls
 - id: udma_linker_config
-- id: sl_si91x_mem_pool_buffers_with_quota
 - id: sl_power_manager
 - id: wireless_wakeup_ulp_component
 - id: calendar_ulp_component
+- id: log_none
+- id: si91x_log
+- id: si91x_log_iostream_formatted
+- id: iostream_si91x
+- id: iostream_uart_si91x
+  instance:
+  - vcom
 requires:
 - name: device_needs_ram_execution
   condition:
   - si91x_common_flash
 toolchain_settings:
 - option: gcc_compiler_option
-  value: -Wall -Werror
+  value: -Wall -Werror -Wno-error=deprecated-declarations
+- option: llvm_compiler_option
+  value: -Wall -Werror -Wno-error=deprecated-declarations
 configuration:
 - name: SL_BOARD_ENABLE_VCOM
   value: '1'
@@ -87,8 +100,8 @@ post_build:
 sdk_extension:
 - id: wiseconnect3_sdk
   vendor: silabs
-  version: 4.0.1
+  version: 4.1.2
 sdk:
   id: simplicity_sdk
   vendor: silabs
-  version: 2025.12.2
+  version: 2026.6.2

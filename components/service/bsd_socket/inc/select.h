@@ -125,19 +125,45 @@ typedef	struct fd_set {
  * is NULL, select will block until a file descriptor becomes ready.  If the
  * timeout parameter is not NULL, select will return after the specified time
  * has elapsed, even if no file descriptors are ready.
+ *
+ * @pre Pre-conditions:
+ * - All descriptors placed in the fd sets must be valid sockets created via @ref socket() / @ref accept().
+ * - The firmware select capacity must be configured via
+ *   [SL_SI91X_EXT_TCP_IP_TOTAL_SELECTS](../wiseconnect-api-reference-guide-si91x-driver/si91-x-extended-tcp-ip-feature-bitmap#sl-si91-x-ext-tcp-ip-total-selects).
+ *
+ * @post Post-conditions:
+ * - On success the input fd sets are updated in place: only the descriptors that are ready remain set.
+ * - On timeout all sets are cleared and 0 is returned.
+ * - On error the fd sets contents are undefined and @c errno is set.
+ *
  * @param __n
- *   The highest file descriptor number in any of the sets plus one.
+ *   The highest file descriptor number in any of the sets plus one. Must be in the range @c (0, @c FD_SETSIZE].
  * @param __readfds
- *      The set of file descriptors to check for being ready to read.
+ *      The set of file descriptors to check for being ready to read. May be NULL if not interested.
  * @param __writefds
- *     The set of file descriptors to check for being ready to write.
+ *     The set of file descriptors to check for being ready to write. May be NULL if not interested.
  * @param __exceptfds
- *    The set of file descriptors to check for error conditions pending.
+ *    The set of file descriptors to check for error conditions pending. May be NULL; not currently supported.
  * @param __timeout
- *   The maximum time to wait for the file descriptors to become ready.
+ *   The maximum time to wait for the file descriptors to become ready. NULL means block indefinitely.
+ *
  * @return
- *   On succcess returns total number of file descriptors contained in the three returned descriptor sets, which may be zero if the timeout expires.
+ *   On success returns total number of file descriptors contained in the three returned descriptor sets, which may be zero if the timeout expires.
  *   On error, -1 is returned, and errno is set appropriately.
+ *
+ * @retval >0              Number of ready descriptors across the sets.
+ * @retval 0               Timeout expired before any descriptor was ready.
+ * @retval -1/EBADF       One of the supplied descriptors is invalid.
+ * @retval -1/EINVAL      @c __n is negative or exceeds @c FD_SETSIZE, or @c __timeout has invalid values.
+ * @retval -1/EPERM       Select capacity is not configured in firmware (see note below).
+ *
+ * @note Thread safety:
+ * - Not thread-safe on the same fd sets. A single thread should own the select loop for a given set of sockets.
+ *
+ * @note Side effects:
+ * - Modifies the supplied fd sets in place.
+ * - Consumes one firmware select-slot for the duration of the call.
+ *
  * @note
  * The select function modifies the sets passed to it, so if the function
  * is to be called again, the sets must be reinitialized.
@@ -146,6 +172,35 @@ typedef	struct fd_set {
  * If the number of select requests is not configured, the select() API will fail and return -1, with the errno being set to EPERM (Operation not permitted).
  * @note 
  * The number of select operations the device can handle can be configured using the [SL_SI91X_EXT_TCP_IP_TOTAL_SELECTS](../wiseconnect-api-reference-guide-si91x-driver/si91-x-extended-tcp-ip-feature-bitmap#sl-si91-x-ext-tcp-ip-total-selects).
+ *
+ * @see socket(), recv(), send(), FD_SET, FD_CLR, FD_ISSET, FD_ZERO
+ *
+ * @par Example
+ * Wait up to 5 seconds for data to arrive on two different sockets, then
+ * call recv()/recvfrom() on whichever socket(s) are flagged as ready:
+ * @code{.c}
+ * fd_set          read_fds;
+ * struct timeval  timeout = { .tv_sec = 5, .tv_usec = 0 };
+ *
+ * FD_ZERO(&read_fds);
+ * FD_SET(sock1, &read_fds);
+ * FD_SET(sock2, &read_fds);
+ *
+ * int max_fd = (sock1 > sock2 ? sock1 : sock2) + 1;
+ * int ready  = select(max_fd, &read_fds, NULL, NULL, &timeout);
+ * if (ready < 0) {
+ *   printf("select() failed, errno = %d\r\n", errno);
+ * } else if (ready == 0) {
+ *   printf("select() timed out\r\n");
+ * } else {
+ *   if (FD_ISSET(sock1, &read_fds)) {
+ *     ...
+ *   }
+ *   if (FD_ISSET(sock2, &read_fds)) {
+ *     ...
+ *   }
+ * }
+ * @endcode
  */
 #ifndef __ZEPHYR__
 int select(int __n, fd_set *__readfds, fd_set *__writefds,

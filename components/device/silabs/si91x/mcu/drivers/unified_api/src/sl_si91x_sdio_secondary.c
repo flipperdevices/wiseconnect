@@ -38,10 +38,29 @@
 /*******************************************************************************
  ***************************  DEFINES / MACROS   ********************************
  ******************************************************************************/
-#define SDIO_SECONDARY_RELEASE_VERSION 0    // SDIO Secondary Release version
-#define SDIO_SECONDARY_SQA_VERSION     0    // SDIO Secondary SQA version
-#define SDIO_SECONDARY_DEV_VERSION     2    // SDIO Secondary Developer version
-#define MAX_DESCRIPTOR_SIZE            4095 // Maximum DMA transfer size per descriptor (12-bit field)
+#define SDIO_SECONDARY_RELEASE_VERSION 0 // SDIO Secondary Release version
+#define SDIO_SECONDARY_SQA_VERSION     0 // SDIO Secondary SQA version
+#define SDIO_SECONDARY_DEV_VERSION     2 // SDIO Secondary Developer version
+
+// The RX path reads the SDIO write FIFO as 32-bit words in 4-beat bursts, so both the
+// buffer address and every descriptor's transfer size must complete whole bursts;
+// otherwise the GPDMA raises a transfer-size/burst-size mismatch error. 4095 is the
+// largest value the 12-bit size field holds, rounded down here to a burst multiple.
+#define SLI_SDIO_RX_BURST_ALIGNMENT 16U
+#define SLI_MAX_DESCRIPTOR_SIZE     4080U
+
+// Receive FIFO depth in bytes, used to bound the drain loop.
+#define SLI_SDIO_RX_FIFO_DEPTH 256
+
+#if (SL_SI91X_SDIO_SECONDARY_MAX_RX_SIZE != (NUMGPDMADESC * SLI_MAX_DESCRIPTOR_SIZE))
+#error "SL_SI91X_SDIO_SECONDARY_MAX_RX_SIZE must match the descriptor chain capacity"
+#endif
+
+// Servicing an interrupt masks its source, so every unmask has to restore the error
+// sources as well. Leaving them masked would stop the error condition from being
+// cleared, which can hold off the SDIO data path indefinitely.
+#define SLI_SDIO_RX_UNMASK_FLAGS (SL_SDIO_WR_INT_UNMSK | SL_SDIO_CMD52_INT_UNMSK | SL_SDIO_ERROR_INT_UNMSK)
+#define SLI_SDIO_TX_UNMASK_FLAGS (SL_SDIO_RD_INT_UNMSK | SL_SDIO_CMD52_INT_UNMSK | SL_SDIO_ERROR_INT_UNMSK)
 /*******************************************************************************
  ******************************   VARIABLES   **********************************
  ******************************************************************************/
@@ -80,9 +99,9 @@ extern __INLINE void sl_si91x_sdio_secondary_clear_interrupts(uint32_t flags);
  *********************   LOCAL FUNCTION PROTOTYPES   ***************************
  ******************************************************************************/
 static sl_status_t sl_si91x_gpdma_init();
-static void sl_si91x_fill_rx_descriptors(uint8_t *data_buf);
+static void sl_si91x_fill_rx_descriptors(uint8_t *data_buf, uint32_t length);
 static void sl_si91x_fill_tx_descriptors(uint8_t *data_buff, uint8_t num_of_blocks);
-static void sl_si91x_setup_rx_channel_desc(uint8_t *data_buf);
+static void sl_si91x_setup_rx_channel_desc(uint8_t *data_buf, uint32_t length);
 static void sl_si91x_setup_tx_channel_desc(uint8_t *data_buf, uint8_t num_of_blocks);
 void GPDMATransferComplete(RSI_GPDMA_HANDLE_T GPDMAHandle_p, RSI_GPDMA_DESC_T *pTranDesc, uint32_t dmaCh);
 void GPDMATransferDescComplete(RSI_GPDMA_HANDLE_T GPDMAHandle_p, RSI_GPDMA_DESC_T *pTranDesc, uint32_t dmaCh);
@@ -92,6 +111,10 @@ void GPDMATransferDescFetchComplete(RSI_GPDMA_HANDLE_T GPDMAHandle_p, RSI_GPDMA_
 /*******************************************************************************
  ***************************  LOCAL VARIABLES   ********************************
  ******************************************************************************/
+// Hardware state latched by the error paths for sl_si91x_sdio_secondary_get_last_error().
+static volatile sl_sdio_secondary_error_info_t sdio_last_error = { 0 };
+static volatile uint8_t sdio_error_recorded                    = 0;
+
 static sl_sdio_secondary_callback_t user_callback = NULL; // SDIO Secondary user callback function variable
 static sl_sdio_secondary_gpdma_callback_t user_gpdma_callback =
   NULL; // SDIO Secondary user gpdma callback function varialbe
@@ -101,6 +124,26 @@ volatile RSI_GPDMA_DESC_T XferCfg;
 /*******************************************************************************
  ***************************   LOCAL FUNCTIONS   *******************************
  ******************************************************************************/
+
+/*******************************************************************************
+ * @fn          void si91x_sdio_capture_error(uint32_t intr_status, uint8_t dma_channel)
+ * @brief       Latches the hardware state at the point a transfer failed
+ * @param[in]   intr_status : Raw function 1 interrupt status, or 0 for a GPDMA abort
+ * @param[in]   dma_channel : Aborting GPDMA channel, or 0xFF when not applicable
+ * @return      None
+ ******************************************************************************/
+static void si91x_sdio_capture_error(uint32_t intr_status, uint8_t dma_channel)
+{
+  // The error condition state register latches how far the transfer had progressed,
+  // which is what separates a FIFO overrun from a CRC or abort at the end of a block.
+  sdio_last_error.intr_status       = intr_status;
+  sdio_last_error.fifo_status       = SDIO->SDIO_FIFO_STATUS_REG;
+  sdio_last_error.fifo_occupancy    = SDIO->SDIO_FIFO_OCC_REG;
+  sdio_last_error.error_byte_count  = (uint16_t)SDIO->SDIO_ERROR_COND_STATE_REG_b.SDIO_ERROR_BYTE_CNT;
+  sdio_last_error.error_block_count = (uint8_t)SDIO->SDIO_ERROR_COND_STATE_REG_b.SDIO_ERROR_BLK_CNT;
+  sdio_last_error.dma_channel       = dma_channel;
+  sdio_error_recorded               = 1;
+}
 
 /*******************************************************************************
  * @fn     void GPDMA_Handler(void)
@@ -125,37 +168,52 @@ void SDIO_Handler(void)
 {
   uint8_t events       = 0;
   uint32_t intr_status = SDIO->SDIO_INTR_FN1_STATUS_CLEAR_REG;
+  uint32_t handled     = 0;
 
-  // Handle receive event
-  if (intr_status & HOST_INTR_RECEIVE_EVENT) {
-    sl_si91x_sdio_secondary_clear_interrupts(SL_SDIO_WR_INT_MSK);
+  // The status register bit positions (SL_SDIO_*_MSK) are not the same as the
+  // application-facing event codes (HOST_INTR_*), so the status has to be decoded
+  // against the hardware bits and then translated.
+
+  // CMD53 write from the host: data is arriving
+  if (intr_status & SL_SDIO_WR_INT_MSK) {
+    handled |= SL_SDIO_WR_INT_MSK;
     events |= HOST_INTR_RECEIVE_EVENT;
   }
 
-  // Handle send event (can happen simultaneously)
-  if (intr_status & HOST_INTR_SEND_EVENT) {
-    sl_si91x_sdio_secondary_clear_interrupts(SL_SDIO_RD_INT_MSK);
+  // CMD53 read from the host: data is being requested (can happen simultaneously)
+  if (intr_status & SL_SDIO_RD_INT_MSK) {
+    handled |= SL_SDIO_RD_INT_MSK;
     events |= HOST_INTR_SEND_EVENT;
   }
 
-  // Handle CMD52 event (can happen simultaneously)
-  if (intr_status & HOST_INTR_CMD52_EVENT) {
-    sl_si91x_sdio_secondary_clear_interrupts(SL_SDIO_CMD52_INT_MSK);
+  // CMD52 register access (can happen simultaneously)
+  if (intr_status & SL_SDIO_CMD52_INT_MSK) {
+    handled |= SL_SDIO_CMD52_INT_MSK;
     events |= HOST_INTR_CMD52_EVENT;
   }
 
-  // Handle error events
-  if (intr_status & HOST_INTR_ERROR_EVENT) // Check if this event exists in your defines
-  {
-    sl_si91x_sdio_secondary_clear_interrupts(SL_SDIO_ERROR_INT_MSK); // Define this mask
+  // CRC error, host abort or read-FIFO timeout. These must be reported: the SDIO
+  // error-condition control register can hold off the DMA data path until the
+  // corresponding interrupt is cleared.
+  if (intr_status & SL_SDIO_ERROR_INT_MSK) {
+    handled |= (intr_status & SL_SDIO_ERROR_INT_MSK);
     events |= HOST_INTR_ERROR_EVENT;
+    // Capture before clearing, while the status and counters still hold the failure.
+    si91x_sdio_capture_error(intr_status, SL_SI91X_SDIO_SECONDARY_DMA_CHANNEL_NONE);
   }
-  // Call user callback only if events are present
-  if (events != 0) {
-    user_callback(events);
+
+  // Clear only the sources that were actually pending. Clearing the full byte would
+  // also mask the CMD53 interrupts, which are re-enabled solely from the GPDMA
+  // completion path and would therefore stay masked for good.
+  if (handled != 0) {
+    sl_si91x_sdio_secondary_clear_interrupts(handled);
   } else {
-    // Handle unknown events - no recognized events, clear all interrupts as safety measure
-    sl_si91x_sdio_secondary_clear_interrupts(0xFF); // or appropriate mask
+    // Unrecognised source: clear whatever is pending without touching the rest.
+    sl_si91x_sdio_secondary_clear_interrupts(intr_status & 0xFFU);
+  }
+
+  if ((events != 0) && (user_callback != NULL)) {
+    user_callback(events);
   }
 }
 
@@ -170,9 +228,18 @@ void GPDMATransferComplete(RSI_GPDMA_HANDLE_T GPDMAHandle_p, RSI_GPDMA_DESC_T *p
 {
   (void)pTranDesc;
   (void)GPDMAHandle_p;
-  user_gpdma_callback((uint8_t)dmaCh);
-  // Re-enable SDIO interrupts after transfer completion
-  sl_si91x_sdio_secondary_set_interrupts(SL_SDIO_WR_INT_UNMSK | SL_SDIO_RD_INT_UNMSK | SL_SDIO_CMD52_INT_UNMSK);
+  if (user_gpdma_callback != NULL) {
+    user_gpdma_callback((uint8_t)dmaCh);
+  }
+  if (dmaCh == GPDMA_CHNL1) {
+    // The CMD53 write interrupt is deliberately left masked here. It is unmasked by
+    // sl_si91x_sdio_secondary_receive_with_length() once the next buffer is armed, so
+    // the host can never have a write accepted while no descriptor chain is active.
+    // Above the 256-byte FIFO that window would otherwise overflow the FIFO.
+    sl_si91x_sdio_secondary_set_interrupts(SL_SDIO_CMD52_INT_UNMSK | SL_SDIO_ERROR_INT_UNMSK);
+  } else {
+    sl_si91x_sdio_secondary_set_interrupts(SLI_SDIO_TX_UNMASK_FLAGS);
+  }
 }
 
 /*******************************************************************************
@@ -200,7 +267,26 @@ void GPDMATransferError(RSI_GPDMA_HANDLE_T GPDMAHandle_p, RSI_GPDMA_DESC_T *pTra
 {
   (void)pTranDesc;
   (void)GPDMAHandle_p;
-  (void)dmaCh;
+
+  si91x_sdio_capture_error(0, (uint8_t)dmaCh);
+
+  // The GPDMA interrupt handler has already aborted the channel, so no completion
+  // callback follows and nothing else would ever restore the interrupt state. Without
+  // this path an aborted transfer silences the interface for good.
+  if (dmaCh == GPDMA_CHNL1) {
+    // As in the completion path, the write interrupt is re-enabled only when the
+    // application arms the next receive.
+    sl_si91x_sdio_secondary_set_interrupts(SL_SDIO_CMD52_INT_UNMSK | SL_SDIO_ERROR_INT_UNMSK);
+  } else {
+    sl_si91x_sdio_secondary_set_interrupts(SLI_SDIO_TX_UNMASK_FLAGS);
+  }
+
+  // SL_PRINT_STRING_ERROR("GPDMATransferError: SDIO transfer aborted on channel %d\r\n", (int)dmaCh);
+
+  // Report to the application so it can re-arm the transfer or re-initialise.
+  if (user_callback != NULL) {
+    user_callback(HOST_INTR_ERROR_EVENT);
+  }
 }
 
 /*******************************************************************************
@@ -218,34 +304,27 @@ void GPDMATransferDescFetchComplete(RSI_GPDMA_HANDLE_T GPDMAHandle_p, RSI_GPDMA_
 }
 
 /*******************************************************************************
- * @fn          void sl_si91x_fill_rx_descriptors(uint8_t *data_buf)
+ * @fn          void sl_si91x_fill_rx_descriptors(uint8_t *data_buf, uint32_t length)
  * @brief       Filled RX GPDMA descriptor
  * @param[in]   data_buf : Pointer to RX buffer
+ * @param[in]   length   : Number of bytes to receive. Validated by the caller.
  * @return      None
  ******************************************************************************/
-void sl_si91x_fill_rx_descriptors(uint8_t *data_buf)
+void sl_si91x_fill_rx_descriptors(uint8_t *data_buf, uint32_t length)
 {
   RSI_GPDMA_DESC_T *pPrevDesc;
   uint32_t no_of_desc      = 0;
-  uint32_t block_len       = 0;
-  uint32_t block_cnt       = 0;
-  uint32_t total_bytes     = 0;
   uint32_t remaining_bytes = 0;
   uint32_t current_offset  = 0;
 
-  // Get the SDIO block count and block length from the last received CMD53
-  block_cnt   = sl_si91x_sdio_secondary_get_block_cnt();
-  block_len   = sl_si91x_sdio_secondary_get_block_len();
-  total_bytes = block_cnt * block_len;
-
   // Calculate the minimum number of descriptors needed to transfer all data
-  // Each descriptor can handle up to 4095 bytes, so we divide total bytes
-  // and round up if there's a remainder
-  no_of_desc = total_bytes / MAX_DESCRIPTOR_SIZE;
-  if (total_bytes % MAX_DESCRIPTOR_SIZE != 0) {
+  // Each descriptor can handle up to MAX_DESCRIPTOR_SIZE bytes, so we divide the
+  // length and round up if there's a remainder
+  no_of_desc = length / SLI_MAX_DESCRIPTOR_SIZE;
+  if (length % SLI_MAX_DESCRIPTOR_SIZE != 0) {
     no_of_desc++;
   }
-  remaining_bytes = total_bytes;
+  remaining_bytes = length;
 
   // Configure channel control settings (common for all descriptors)
   // These settings are set once outside the loop for better performance
@@ -276,13 +355,13 @@ void sl_si91x_fill_rx_descriptors(uint8_t *data_buf)
   rx_XferCfg.miscChnlCtrlConfig.memoryFillEn  = 0;
   rx_XferCfg.miscChnlCtrlConfig.memoryOneFill = 0;
 
-  // Create descriptor chain - each descriptor handles up to 4095 bytes
+  // Create descriptor chain - each descriptor handles up to MAX_DESCRIPTOR_SIZE bytes
   for (uint32_t j = 0; j < no_of_desc; j++) {
     // Calculate transfer size for this descriptor (either max size or remaining bytes)
-    uint32_t transfer_size = (remaining_bytes > MAX_DESCRIPTOR_SIZE) ? MAX_DESCRIPTOR_SIZE : remaining_bytes;
+    uint32_t transfer_size = (remaining_bytes > SLI_MAX_DESCRIPTOR_SIZE) ? SLI_MAX_DESCRIPTOR_SIZE : remaining_bytes;
 
     // Set the transfer size for this specific descriptor
-    rx_XferCfg.chnlCtrlConfig.transSize = (transfer_size & 0xfff);
+    rx_XferCfg.chnlCtrlConfig.transSize = transfer_size;
 
     // Set destination address (offset into the user buffer)
     rx_XferCfg.dest = (data_buf + current_offset);
@@ -307,6 +386,32 @@ void sl_si91x_fill_rx_descriptors(uint8_t *data_buf)
 }
 
 /*******************************************************************************
+ * @fn          sl_status_t validate_rx_transfer(const uint8_t *data_buf, uint32_t length)
+ * @brief       Validates an RX request against the GPDMA and descriptor-chain limits
+ * @param[in]   data_buf : Pointer to RX buffer
+ * @param[in]   length   : Number of bytes to receive
+ * @return      SL_STATUS_OK if the request can be programmed, error code otherwise
+ ******************************************************************************/
+static sl_status_t validate_rx_transfer(const uint8_t *data_buf, uint32_t length)
+{
+  if (data_buf == NULL) {
+    return SL_STATUS_NULL_POINTER;
+  }
+  if ((length == 0) || (length > SL_SI91X_SDIO_SECONDARY_MAX_RX_SIZE)) {
+    return SL_STATUS_INVALID_PARAMETER;
+  }
+  // A partial burst at either end of the transfer is reported by the GPDMA as a
+  // transfer-size/burst-size mismatch, which aborts the channel.
+  if ((length % SLI_SDIO_RX_BURST_ALIGNMENT) != 0) {
+    return SL_STATUS_INVALID_PARAMETER;
+  }
+  if (((uint32_t)data_buf & 0x3U) != 0) {
+    return SL_STATUS_INVALID_PARAMETER;
+  }
+  return SL_STATUS_OK;
+}
+
+/*******************************************************************************
  * @fn          void sl_si91x_fill_tx_descriptors(uint8_t *data_buff, uint8_t num_of_blocks)
  * @brief       Filled TX GPDMA descriptor
  * @param[in]   data_buf      : Pointer to TX buffer
@@ -328,8 +433,8 @@ void sl_si91x_fill_tx_descriptors(uint8_t *data_buff, uint8_t num_of_blocks)
   // Calculate the minimum number of descriptors needed to transfer all data
   // Each descriptor can handle up to 4095 bytes, so we divide total bytes
   // and round up if there's a remainder
-  no_of_desc = total_bytes / MAX_DESCRIPTOR_SIZE;
-  if (total_bytes % MAX_DESCRIPTOR_SIZE != 0) {
+  no_of_desc = total_bytes / SLI_MAX_DESCRIPTOR_SIZE;
+  if (total_bytes % SLI_MAX_DESCRIPTOR_SIZE != 0) {
     no_of_desc++;
   }
   remaining_bytes = total_bytes;
@@ -341,7 +446,7 @@ void sl_si91x_fill_tx_descriptors(uint8_t *data_buff, uint8_t num_of_blocks)
   XferCfg.chnlCtrlConfig.mastrIfFetchSel  = MASTER0_FETCH_IFSEL;
   XferCfg.chnlCtrlConfig.mastrIfSendSel   = MASTER0_SEND_IFSEL;
   XferCfg.chnlCtrlConfig.destDataWidth    = DST_32_DATA_WIDTH;
-  XferCfg.chnlCtrlConfig.srcDataWidth     = SRC_8_DATA_WIDTH;
+  XferCfg.chnlCtrlConfig.srcDataWidth     = SRC_32_DATA_WIDTH;
   XferCfg.chnlCtrlConfig.srcAlign         = 0;
   XferCfg.chnlCtrlConfig.linkListOn       = 1;
   XferCfg.chnlCtrlConfig.linkListMstrSel  = LINK_MASTER_0_FTCH;
@@ -366,7 +471,7 @@ void sl_si91x_fill_tx_descriptors(uint8_t *data_buff, uint8_t num_of_blocks)
   pPrevDesc = NULL;
   for (uint32_t j = 0; j < no_of_desc; j++) {
     // Calculate transfer size for this descriptor (either max size or remaining bytes)
-    uint32_t transfer_size = (remaining_bytes > MAX_DESCRIPTOR_SIZE) ? MAX_DESCRIPTOR_SIZE : remaining_bytes;
+    uint32_t transfer_size = (remaining_bytes > SLI_MAX_DESCRIPTOR_SIZE) ? SLI_MAX_DESCRIPTOR_SIZE : remaining_bytes;
 
     // Set the transfer size for this specific descriptor
     XferCfg.chnlCtrlConfig.transSize = transfer_size;
@@ -394,12 +499,13 @@ void sl_si91x_fill_tx_descriptors(uint8_t *data_buff, uint8_t num_of_blocks)
 }
 
 /*******************************************************************************
- * @fn          void sl_si91x_setup_rx_channel_desc(uint8_t *data_buf)
+ * @fn          void sl_si91x_setup_rx_channel_desc(uint8_t *data_buf, uint32_t length)
  * @brief       Setup GPDMA RX channel descriptor
  * @param[in]   data_buf : Pointer to RX buffer
+ * @param[in]   length   : Number of bytes to receive
  * @return      None
  ******************************************************************************/
-void sl_si91x_setup_rx_channel_desc(uint8_t *data_buf)
+void sl_si91x_setup_rx_channel_desc(uint8_t *data_buf, uint32_t length)
 {
   RSI_GPDMA_CHA_CFG_T chaCfg;
 
@@ -412,7 +518,7 @@ void sl_si91x_setup_rx_channel_desc(uint8_t *data_buf)
 
   RSI_GPDMA_SetupChannel(GPDMAHandle, (RSI_GPDMA_CHA_CFG_T *)&chaCfg);
 
-  sl_si91x_fill_rx_descriptors(data_buf);
+  sl_si91x_fill_rx_descriptors(data_buf, length);
 
   RSI_GPDMA_SetupChannelTransfer(GPDMAHandle, GPDMA_CHNL1, rx_GPDMADesc);
 }
@@ -472,6 +578,7 @@ sl_status_t sl_si91x_gpdma_init()
   // Initialize driver
   GPDMAHandle = RSI_GPDMA_Init(devMem_p, &GPDMAInit);
   if (GPDMAHandle == NULL) {
+    SL_PRINT_STRING_ERROR("sl_si91x_gpdma_init: handle NULL,line no : %d\r\n", (int)__LINE__);
     return SL_STATUS_NULL_POINTER;
   }
 
@@ -525,6 +632,8 @@ sl_status_t sl_si91x_sdio_secondary_register_event_callback(sl_sdio_secondary_ca
     // Validates the null pointer, if true returns error code
     if (callback_event == NULL) {
       status = SL_STATUS_NULL_POINTER;
+      SL_PRINT_STRING_ERROR("sl_si91x_sdio_secondary_register_event_callback: handle NULL,line no : %d\r\n",
+                            (int)__LINE__);
       break;
     }
     //Enable and set the SDIO interrupt
@@ -535,6 +644,9 @@ sl_status_t sl_si91x_sdio_secondary_register_event_callback(sl_sdio_secondary_ca
     // returns an error code
     if (user_callback != NULL) {
       status = SL_STATUS_BUSY;
+      SL_PRINT_STRING_ERROR("sl_si91x_sdio_secondary_register_event_callback: error status=0x%04lX,line no : %d\r\n",
+                            (unsigned long)(SL_STATUS_BUSY),
+                            (int)__LINE__);
       break;
     }
     // User callback address is passed to the static variable which is called at the time of
@@ -577,12 +689,18 @@ sl_status_t sl_si91x_sdio_secondary_gpdma_register_event_callback(sl_sdio_second
     // Validates the null pointer, if true returns error code
     if (callback_event == NULL) {
       status = SL_STATUS_NULL_POINTER;
+      SL_PRINT_STRING_ERROR("sl_si91x_sdio_secondary_gpdma_register_event_callback: handle NULL,line no : %d\r\n",
+                            (int)__LINE__);
       break;
     }
     // To validate the function pointer if the parameters is not NULL then, it
     // returns an error code
     if (user_gpdma_callback != NULL) {
       status = SL_STATUS_BUSY;
+      SL_PRINT_STRING_ERROR(
+        "sl_si91x_sdio_secondary_gpdma_register_event_callback: error status=0x%04lX,line no : %d\r\n",
+        (unsigned long)(SL_STATUS_BUSY),
+        (int)__LINE__);
       break;
     }
     // User callback address is passed to the static variable which is called at the time of
@@ -613,12 +731,88 @@ void sl_si91x_sdio_secondary_gpdma_unregister_event_callback(void)
  ******************************************************************************/
 void sl_si91x_sdio_secondary_receive(uint8_t *data_buf)
 {
-  sl_si91x_setup_rx_channel_desc(data_buf);
+  // The block registers hold the parameters of the *last received* CMD53, so this
+  // legacy entry point can only size a transfer once one has already been seen, and
+  // it assumes the next one is identical. Use
+  // sl_si91x_sdio_secondary_receive_with_length() for anything larger than the
+  // 256-byte FIFO, where the channel must be armed with the correct length before
+  // the host starts the transfer.
+  uint32_t length = sl_si91x_sdio_secondary_get_block_cnt() * sl_si91x_sdio_secondary_get_block_len();
 
-  // Trigger channel
+  (void)sl_si91x_sdio_secondary_receive_with_length(data_buf, length);
+}
+
+/*******************************************************************************
+ * This API arms the gpdma receive descriptors for an explicitly supplied length
+ * and triggers the channel, so the transfer does not depend on the block registers
+ * of the previously received CMD53.
+ ******************************************************************************/
+sl_status_t sl_si91x_sdio_secondary_receive_with_length(uint8_t *data_buf, uint32_t length)
+{
+  sl_status_t status = validate_rx_transfer(data_buf, length);
+
+  if (status != SL_STATUS_OK) {
+    // SL_PRINT_STRING_ERROR("sl_si91x_sdio_secondary_receive_with_length: invalid request len=%lu st=0x%04lX,line no "
+    //                       ": %d\r\n",
+    //                       (unsigned long)length,
+    //                       (unsigned long)status,
+    //                       (int)__LINE__);
+    return status;
+  }
+
+  sl_si91x_setup_rx_channel_desc(data_buf, length);
+
+  // Trigger channel. The descriptor chain is now live on the FIFO, so the host's
+  // CMD53 write can be accepted.
   RSI_GPDMA_DMAChannelTrigger(GPDMAHandle, GPDMA_CHNL1);
-  // Enable the SDIO write interrupt
-  // sl_si91x_sdio_secondary_set_interrupts(SL_SDIO_WR_INT_UNMSK);
+
+  // Unmask the write interrupt only now that a buffer is armed.
+  sl_si91x_sdio_secondary_set_interrupts(SLI_SDIO_RX_UNMASK_FLAGS);
+
+  return SL_STATUS_OK;
+}
+
+/*******************************************************************************
+ * Drains any bytes an aborted transfer left behind in the receive FIFO. The
+ * peripheral has no FIFO reset, so the only way to clear it is to read it out.
+ ******************************************************************************/
+uint32_t sl_si91x_sdio_secondary_flush_rx_fifo(void)
+{
+  volatile uint32_t *fifo = (volatile uint32_t *)(RX_SOURCE_ADDR);
+  uint32_t words          = 0;
+
+  // Bounded by the FIFO depth so a stuck occupancy count cannot spin forever.
+  while ((SDIO->SDIO_FIFO_OCC_REG_b.SDIO_WFIFO_OCC != 0) && (words < (SLI_SDIO_RX_FIFO_DEPTH / sizeof(uint32_t)))) {
+    (void)*fifo;
+    words++;
+  }
+
+  return (words * (uint32_t)sizeof(uint32_t));
+}
+
+/*******************************************************************************
+ * Returns the hardware state latched when the last transfer failed and clears
+ * the record, so each failure is reported once.
+ ******************************************************************************/
+sl_status_t sl_si91x_sdio_secondary_get_last_error(sl_sdio_secondary_error_info_t *error_info)
+{
+  if (error_info == NULL) {
+    return SL_STATUS_NULL_POINTER;
+  }
+  if (sdio_error_recorded == 0) {
+    return SL_STATUS_EMPTY;
+  }
+
+  error_info->intr_status       = sdio_last_error.intr_status;
+  error_info->fifo_status       = sdio_last_error.fifo_status;
+  error_info->fifo_occupancy    = sdio_last_error.fifo_occupancy;
+  error_info->error_byte_count  = sdio_last_error.error_byte_count;
+  error_info->error_block_count = sdio_last_error.error_block_count;
+  error_info->dma_channel       = sdio_last_error.dma_channel;
+
+  sdio_error_recorded = 0;
+
+  return SL_STATUS_OK;
 }
 
 /*******************************************************************************

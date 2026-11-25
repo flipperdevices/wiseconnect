@@ -240,6 +240,7 @@ memp_init(void)
 #endif /* MEMP_OVERFLOW_CHECK >= 2 */
 }
 
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 static void *
 #if !MEMP_OVERFLOW_CHECK
 do_memp_malloc_pool(const struct memp_desc *desc)
@@ -306,6 +307,7 @@ do_memp_malloc_pool_fn(const struct memp_desc *desc, const char *file, const int
  *
  * @return a pointer to the allocated memory or a NULL pointer on error
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 void *
 #if !MEMP_OVERFLOW_CHECK
 memp_malloc_pool(const struct memp_desc *desc)
@@ -332,6 +334,7 @@ memp_malloc_pool_fn(const struct memp_desc *desc, const char *file, const int li
  *
  * @return a pointer to the allocated memory or a NULL pointer on error
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 void *
 #if !MEMP_OVERFLOW_CHECK
 memp_malloc(memp_t type)
@@ -355,6 +358,7 @@ memp_malloc_fn(memp_t type, const char *file, const int line)
   return memp;
 }
 
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 static void
 do_memp_free_pool(const struct memp_desc *desc, void *mem)
 {
@@ -416,6 +420,7 @@ memp_free_pool(const struct memp_desc *desc, void *mem)
  * @param type the pool where to put mem
  * @param mem the memp element to free
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 void
 memp_free(memp_t type, void *mem)
 {

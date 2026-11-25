@@ -38,6 +38,4 @@ requires:
   - name: rsilib_gspi
   - name: cmsis_gspi
   - name: sl_dma
-documentation:
-    docset: wiseconnect
-    document: wiseconnect-api-reference-guide-si91x-peripherals/gspi
+  - name: log_none

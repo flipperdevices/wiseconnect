@@ -34,6 +34,7 @@ extern "C" {
 #endif
 
 #include "sl_status.h"
+#include "sl_log_helper.h"
 
 /***************************************************************************/
 /**
@@ -48,6 +49,13 @@ extern "C" {
  ******************************************************************************/
 
 #define NUMGPDMADESC 10 ///< Number of GPDMA Descriptors
+
+/// Value of sl_sdio_secondary_error_info_t::dma_channel when the error was not a GPDMA abort.
+#define SL_SI91X_SDIO_SECONDARY_DMA_CHANNEL_NONE 0xFF
+
+/// Largest single receive supported by the GPDMA descriptor chain (10 descriptors of
+/// 4080 bytes). Requests above 4080 bytes are split across several descriptors.
+#define SL_SI91X_SDIO_SECONDARY_MAX_RX_SIZE (NUMGPDMADESC * 4080U)
 
 /// Events for HIF irq handler
 #define HOST_INTR_RECEIVE_EVENT BIT(0) ///< Host interrupt receive event.
@@ -69,6 +77,24 @@ typedef enum {
   HOST_INTR_NOT_RECEIVED = 0, ///< Host interrupt not received.
   HOST_INTR_RECEIVED     = 1, ///< Host interrupt received.
 } sl_sdio_slave_rx_intr_status_t;
+
+/**
+ * @brief Snapshot of the hardware state captured when a transfer fails.
+ *
+ * Populated when an SDIO error interrupt or a GPDMA abort occurs, and retrieved with
+ * @ref sl_si91x_sdio_secondary_get_last_error. The byte and block counts come from the
+ * SDIO error condition state register and indicate how far the transfer had progressed,
+ * which distinguishes a FIFO overrun part-way through a block from a CRC or abort at the
+ * end of one.
+ */
+typedef struct {
+  uint32_t intr_status;      ///< Raw function 1 interrupt status at the time of the error. Zero for a GPDMA abort.
+  uint32_t fifo_status;      ///< SDIO FIFO status register snapshot.
+  uint32_t fifo_occupancy;   ///< SDIO FIFO occupancy register snapshot.
+  uint16_t error_byte_count; ///< Byte count when the error condition occurred.
+  uint8_t error_block_count; ///< Block count when the error condition occurred.
+  uint8_t dma_channel;       ///< GPDMA channel that aborted, or 0xFF if the error came from the SDIO interrupt.
+} sl_sdio_secondary_error_info_t;
 
 /**
  * @brief Structure to hold the version numbers of the SDIO secondary API.
@@ -143,9 +169,84 @@ void sl_si91x_sdio_secondary_send(uint8_t num_of_blocks, uint8_t *data_buf);
  * @details This API receives data from the host/primary device and stores it in the provided destination buffer.
  * The transfer is done in non-blocking mode using GPDMA.
  * 
+ * The transfer length is taken from the block length and block count registers, which hold
+ * the parameters of the *last received* CMD53. This is only safe for a stream of
+ * identically sized transfers that fit within the 256-byte SDIO FIFO. For transfers larger
+ * than the FIFO, the channel has to be armed with the correct length before the host starts
+ * the transfer, so use @ref sl_si91x_sdio_secondary_receive_with_length instead.
+ * 
  * @param[in] data_buf Reference to the destination buffer where the received data will be stored.
  ******************************************************************************/
 void sl_si91x_sdio_secondary_receive(uint8_t *data_buf);
+
+/***************************************************************************/
+/**
+ * @brief To receive a known number of bytes on the SDIO secondary in non-blocking mode using GPDMA.
+ * 
+ * @details This API arms the GPDMA receive channel for an explicitly supplied length instead of
+ * deriving it from the previously received CMD53, which allows the channel to be armed before the
+ * host starts the transfer. This is required for transfers larger than the 256-byte SDIO FIFO
+ * (for example 512-byte blocks), because the FIFO cannot buffer the whole transfer and the GPDMA
+ * has to drain it while the transfer is on the bus.
+ * 
+ * The host must not start the CMD53 transfer until this call has returned. Signal readiness with
+ * @ref sl_si91x_sdio_secondary_request_to_send or a CMD52-readable status byte.
+ * 
+ * @pre Pre-condition:
+ *      - \ref sl_si91x_sdio_secondary_init must be called prior.
+ * 
+ * @param[in] data_buf Reference to the destination buffer. Must be 4-byte aligned.
+ * @param[in] length Number of bytes to receive. Must be non-zero, a multiple of 16, and no
+ *                   greater than @ref SL_SI91X_SDIO_SECONDARY_MAX_RX_SIZE.
+ * 
+ * @return sl_status_t Status of the operation:
+ *         - SL_STATUS_OK  - Receive armed successfully.
+ *         - SL_STATUS_NULL_POINTER  - data_buf is NULL.
+ *         - SL_STATUS_INVALID_PARAMETER  - length or buffer alignment is not supported.
+ * 
+ * For more information on status codes, see [SL STATUS DOCUMENTATION](https://docs.silabs.com/gecko-platform/latest/platform-common/status).
+ ******************************************************************************/
+sl_status_t sl_si91x_sdio_secondary_receive_with_length(uint8_t *data_buf, uint32_t length);
+
+/***************************************************************************/
+/**
+ * @brief To retrieve the hardware state captured when the last transfer failed.
+ *
+ * @details Returns the snapshot taken when @ref HOST_INTR_ERROR_EVENT was reported or a GPDMA
+ * transfer aborted, then clears the record. Intended to be called from the application after an
+ * error event, to identify the cause:
+ *   - An error byte count well short of the expected transfer size, with the receive FIFO at full
+ *     occupancy, indicates the DMA was not draining the FIFO in time.
+ *   - A byte count at the end of the transfer with the CRC bit set points to signal integrity or
+ *     an SDIO clock that is too fast for the configured SoC clock.
+ *   - The abort bit indicates the host gave up and issued an abort, so the host started the
+ *     transfer before the secondary was armed.
+ *
+ * @param[out] error_info Reference to the structure that receives the snapshot.
+ *
+ * @return sl_status_t Status of the operation:
+ *         - SL_STATUS_OK  - An error was recorded and copied out.
+ *         - SL_STATUS_NULL_POINTER  - error_info is NULL.
+ *         - SL_STATUS_EMPTY  - No error has been recorded since the last call.
+ *
+ * For more information on status codes, see [SL STATUS DOCUMENTATION](https://docs.silabs.com/gecko-platform/latest/platform-common/status).
+ ******************************************************************************/
+sl_status_t sl_si91x_sdio_secondary_get_last_error(sl_sdio_secondary_error_info_t *error_info);
+
+/***************************************************************************/
+/**
+ * @brief To discard any data left in the receive FIFO by an aborted transfer.
+ *
+ * @details A transfer aborted part-way through a block can leave bytes in the receive FIFO.
+ * Those bytes would be consumed as the start of the next transfer, silently misaligning the
+ * payload, so they must be discarded before re-arming. The peripheral provides no FIFO reset,
+ * so this reads the FIFO out; the loop is bounded by the FIFO depth.
+ *
+ * Call this from the error path before re-arming a receive.
+ *
+ * @return uint32_t Number of bytes discarded.
+ ******************************************************************************/
+uint32_t sl_si91x_sdio_secondary_flush_rx_fifo(void);
 
 /***************************************************************************/
 /**

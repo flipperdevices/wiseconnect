@@ -1,18 +1,28 @@
 # BLE - Unified AE Coex App
 
+## High-Level Overview
+
+SiWx91x BLE unified extended advertising coex example: configure central and peripheral Extended Advertising with multiple sets using Simplicity Studio on SoC, PSRAM, and NCP modes.
+
 ## Table of Contents
 
 - [BLE - Unified AE Coex App](#ble---unified-ae-coex-app)
+  - [High-Level Overview](#high-level-overview)
   - [Table of Contents](#table-of-contents)
   - [Purpose/Scope](#purposescope)
   - [Prerequisites/Setup Requirements](#prerequisitessetup-requirements)
     - [Hardware Requirements](#hardware-requirements)
     - [Software Requirements](#software-requirements)
+    - [NCP mode: host application and project files](#ncp-mode-host-application-and-project-files)
     - [Setup Diagram](#setup-diagram)
-  - [Getting Started](#getting-started)
-  - [Application Build Environment](#application-build-environment)
-  - [Test the Application](#test-the-application)
-
+  - [Steps to Run Demo](#steps-to-run-demo)
+    - [Getting Started](#getting-started)
+    - [Configuration and Setup](#configuration-and-setup)
+    - [Steps for Execution](#steps-for-execution)
+  - [Troubleshooting](#troubleshooting)
+  - [Resources](#resources)
+  - [Report Bugs and Get Support](#report-bugs-and-get-support)
+  - [Limitations for this App](#limitations-for-this-app)
 ## Purpose/Scope
 
 This application demonstrates how to configure SiWx91x in Extended Advertising mode (Central/Peripheral).
@@ -23,20 +33,20 @@ This application demonstrates how to configure SiWx91x in Extended Advertising m
 
 - Windows PC
 - SoC Mode:
-  - Silicon Labs [BRD4325A, BRD4325B, BRD4325C, BRD4325G, BRD4338A, BRD4339B, BRD4343A](https://www.silabs.com/)
+  - Silicon Labs [[BRD4002B](https://www.silabs.com/development-tools/wireless/wireless-pro-kit-mainboard?tab=overview) + [BRD4338A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-rb4338a-wifi-6-bluetooth-le-soc-radio-board?tab=overview) / [BRD4343A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4343a-wi-fi-6-bluetooth-le-8mb-flash-radio-board-for-module?tab=overview) / [BRD4343C](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4343c-wi-fi-6-bluetooth-le-8mb-flash-radio-board-for-module?tab=overview)]
   - Kits
-    - SiWx917 AC1 Module Explorer Kit (BRD2708A)
+    - SiWG917 Dev Kit [BRD2605B]
+    - SiWx917 AC1 Module Explorer Kit [BRD2708A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-ek2708a-explorer-kit)
 - PSRAM Mode:  
-  - Silicon Labs [BRD4340A, BRD4342A, BRD4325G](https://www.silabs.com/)
+  - Silicon Labs [[BRD4002B](https://www.silabs.com/development-tools/wireless/wireless-pro-kit-mainboard?tab=overview) + [BRD4342A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx91x-rb4342a-wifi-6-bluetooth-le-soc-radio-board?tab=overview)]
 - NCP Mode:
-  - Silicon Labs [BRD4180B](https://www.silabs.com/);
+  - Silicon Labs [BRD4186C](https://www.silabs.com/development-tools/wireless/xg24-rb4186c-efr32xg24-wireless-gecko-radio-board?tab=overview)
   - Host MCU Eval Kit. This example has been tested with:
     - Silicon Labs [WSTK + EFR32MG21](https://www.silabs.com/development-tools/wireless/efr32xg21-bluetooth-starter-kit)
-    - NCP Expansion Kit with NCP Radio boards
-      - (BRD4346A + BRD8045A) [SiWx917-EB4346A]
-      - (BRD4357A + BRD8045A) [SiWx917-EB4357A]
-  - Interface and Host MCU Supported 
-    - SPI - EFR32 
+- NCP Expansion Kit with NCP Radio boards
+     - [[BRD8045A](https://www.silabs.com/development-tools/wireless/wi-fi/expansion-adapter-board-for-co-processor-radio-boards?tab=overview) + [BRD4346A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-rb4346a-wifi-6-bluetooth-le-soc-4mb-flash-radio-board?tab=overview) / [BRD4357A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4357a-wi-fi-6-bluetooth-le-4mb-flash-radio-board-for-rcp-and-ncp-modules?tab=overview) / [BRD4357C](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4357c-wi-fi-6-bluetooth-le-4mb-flash-radio-board-for-rcp-and-ncp-modules?tab=overview)]
+  - Interface and host MCU supported 
+    - SPI : EFR32
 - Smartphone configured as BLE peripheral
 
 ### Software Requirements
@@ -45,11 +55,23 @@ This application demonstrates how to configure SiWx91x in Extended Advertising m
 
 - Download and install the Silicon Labs [Simplicity Connect App(formerly EFR Connect App) or other BLE Central/Peripheral app.](https://www.silabs.com/developers/simplicity-connect-mobile-app ) in the android smart phones for testing BLE applications. Users can also use their choice of BLE apps available in Android/iOS smart phones.
 
+### NCP mode: host application and project files
+
+| Mode      | Host / target                                                                           | Project file (this example folder)     |
+|-----------|-----------------------------------------------------------------------------------------|----------------------------------------|
+| SoC       | Application runs on SiWx91x.                                                            | `ble_unified_ae_coex_app_soc.slcp`     |
+| PSRAM     | Application runs on SiWx91x with PSRAM-capable radio board.                             | `ble_unified_ae_coex_app_psram.slcp`   |
+| NCP (SPI) | Application runs on **EFR32** host; SiWx917 is the network co-processor over **SPI**.   | `ble_unified_ae_coex_app_ncp.slcp`     |
+
+Open the `.slcp` for your kit from `examples/snippets/ble/ble_unified_ae_coex_app/` in Simplicity Studio. For NCP, follow [Getting started with NCP mode](https://docs.silabs.com/wiseconnect/latest/wiseconnect-getting-started/getting-started-with-ncp-mode).
+
 ### Setup Diagram
 
   ![Figure: Setup Diagram NCP and SOC Mode for BLE Unified AE Coex Example](resources/readme/ble_unified_ae_coex_ncp_soc.png)	
    		
-## Getting Started
+## Steps to Run Demo
+
+### Getting Started
 
 Refer to the instructions [here](https://docs.silabs.com/wiseconnect/latest/wiseconnect-getting-started/) to:
 
@@ -61,7 +83,7 @@ Refer to the instructions [here](https://docs.silabs.com/wiseconnect/latest/wise
 
 For details on the project folder structure, see the [WiSeConnect Examples](https://docs.silabs.com/wiseconnect/latest/wiseconnect-examples/#example-folder-structure) page.
 
-## Application Build Environment
+### Configuration and Setup
 
 The application can be configured to suit your requirements and development environment. Read through the following sections and make any changes needed.
 
@@ -271,7 +293,7 @@ The application can be configured to suit your requirements and development envi
 
 > **Note**: For recommended settings, please refer the [recommendations guide](https://docs.silabs.com/wiseconnect/latest/wiseconnect-developers-guide-prog-recommended-settings/).
 
-## Test the Application
+### Steps for Execution
 
 Refer to the instructions [here](https://docs.silabs.com/wiseconnect/latest/wiseconnect-getting-started/) to:
 
@@ -294,3 +316,30 @@ Follow the steps as mentioned for the successful execution of the application:
      ![Prints in docklight window](resources/readme/output2.png) 
      ![Prints in docklight window](resources/readme/output3.png)
      ![Prints in docklight window](resources/readme/output4.png)
+
+## Troubleshooting
+
+If you encounter issues while running the BLE Unified AE Coex example, check the following:
+
+- Ensure `ADV_ENABLED_DEFAULT` and `SCAN_ENABLED_DEFAULT` are configured according to the role you intend to test.
+- Verify `RSI_BLE_MAX_NBR_PERIPHERALS` and `RSI_BLE_MAX_NBR_CENTRALS` do not exceed the maximum supported connections (1 each).
+- Confirm the remote device name in `RSI_REMOTE_DEVICE_NAME1` matches the peripheral being scanned.
+- Ensure the **remote** supports **Extended Advertising** (Advertising Extensions): peers must use stacks/hardware that advertise or scan extended sets as this app does; centrals need **extended scanning** to discover extended advertisers. Legacy-only advertising/scanning cannot validate this example.
+- If SMP fails, check that `SMP_ENABLE_M1` / `SMP_ENABLE_S1` are enabled on both sides.
+- If power save causes instability, disable it by setting `ENABLE_NWP_POWER_SAVE` to `0` while debugging.
+
+## Resources
+
+- [WiSeConnect Getting Started Guide](https://docs.silabs.com/wiseconnect/latest/wiseconnect-getting-started/)
+- [WiSeConnect API Reference Guide](https://docs.silabs.com/wiseconnect/latest/wiseconnect-api-reference-guide-si91x-driver/)
+- [Simplicity Connect Mobile App](https://www.silabs.com/developers/simplicity-connect-mobile-app)
+
+## Report Bugs and Get Support
+
+Report issues and get help from the Silicon Labs community:
+
+- [Silicon Labs Community](https://www.silabs.com/community)
+
+## Limitations for this App
+
+- The SL logging framework is not supported for AE feature.

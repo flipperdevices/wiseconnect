@@ -21,4 +21,4 @@ provides:
     - name: sli_wifi_per_mode
 requires:
   - name: wifi
-  - name: sli_wifi
+  - name: sl_siwx3xx_wireless

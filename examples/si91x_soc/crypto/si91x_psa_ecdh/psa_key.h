@@ -153,26 +153,6 @@ psa_status_t derive_key_attr(uint8_t storage_type,
 psa_status_t derive_key(psa_key_derivation_operation_t *operation);
 
 /***************************************************************************/ /**
- * Derive a symmetric key using Silicon Labs custom API.
- *
- * @param algo The key derivation algorithm.
- * @param master_id The key identifier for the master key.
- * @param kdf_info An optional information string for the HKDF.
- * @param info_len The length of the information string.
- * @param kdf_salt An optional salt value for both HKDF and PBKDF2.
- * @param salt_len The length of the salt value.
- * @param iterations The number of iterations (maximum 16384) for PBKDF2.
- * @returns Returns PSA error code, @ref crypto_values.h.
- ******************************************************************************/
-psa_status_t sl_derive_key(psa_algorithm_t algo,
-                           psa_key_id_t master_id,
-                           const uint8_t *kdf_info,
-                           size_t info_len,
-                           const uint8_t *kdf_salt,
-                           size_t salt_len,
-                           size_t iterations);
-
-/***************************************************************************/ /**
  * Free any auxiliary resources that the object might contain.
  ******************************************************************************/
 void reset_key_attr(void);

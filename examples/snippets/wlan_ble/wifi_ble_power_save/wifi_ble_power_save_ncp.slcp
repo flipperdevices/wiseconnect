@@ -1,7 +1,7 @@
 project_name: wifi_ble_power_save_ncp
 package: multi_protocol_siwx91x_app
 quality: production
-label: wifi_station_ble_power_save_ncp
+label: Wi-Fi Coex - Wi-Fi BLE Power Save (NCP)
 category: Example|Wi-Fi_BLE
 description: 'The coex application demonstrates the procedure about how to configure the device in WisConnect coex mode with wlan standby and ble connected power save.
 
@@ -21,6 +21,7 @@ include:
 - path: .
   file_list:
   - path: app.h
+  - path: app_config.h
   - path: ble_config.h
   - path: wifi_app.h
 define:
@@ -42,7 +43,6 @@ component:
 - id: sl_si91x_asynchronous_socket
 - id: sl_si91x_internal_stack
 - id: sl_si91x_spi_bus
-- id: sl_si91x_basic_buffers
 - id: wifi_resources
 - id: ble
 - id: iostream_retarget_stdio
@@ -51,9 +51,17 @@ component:
 - id: device_init
 - id: emlib_common
 - id: emlib_ldma
+- id: log_none
+- id: log_backend_iostream
+- id: log_backend_iostream_formatted
+- id: log_platform_specific
 toolchain_settings:
+- option: gcc_compiler_option
+  value: -Wall -Werror -Wno-error=deprecated-declarations
 - option: gcc_linker_option
   value: -u _printf_float
+- option: llvm_compiler_option
+  value: -Wall -Werror -Wno-error=deprecated-declarations
 configuration:
 - name: SL_BOARD_ENABLE_VCOM
   value: '1'
@@ -63,6 +71,8 @@ configuration:
   value: '1'
 - name: configTIMER_TASK_PRIORITY
   value: '55'
+- name: SL_LOG_CONFIG_LEVEL_COMPILE_TIME
+  value: SL_LOG_CONFIG_LEVEL_INFO
 readme:
 - path: readme.md
 other_file:
@@ -99,8 +109,8 @@ ui_hints:
 sdk_extension:
 - id: wiseconnect3_sdk
   vendor: silabs
-  version: 4.0.1
+  version: 4.1.2
 sdk:
   id: simplicity_sdk
   vendor: silabs
-  version: 2025.12.2
+  version: 2026.6.2

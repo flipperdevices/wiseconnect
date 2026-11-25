@@ -32,6 +32,7 @@
  ******************************************************************************/
 
 #include "rsi_d_cache.h"
+#include "sl_code_classification.h"
 
 DCache_Reg_Type *DCACHE = (DCache_Reg_Type *)M4SS_DCACHE_BASE_ADDR; // DCache register access handle
 
@@ -41,6 +42,7 @@ DCache_Reg_Type *DCACHE = (DCache_Reg_Type *)M4SS_DCACHE_BASE_ADDR; // DCache re
  * @brief This API is used to enable the data cache and sets it to write-through mode
  * @return None
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_RSILIB_DCACHE, SL_CODE_CLASS_TIME_CRITICAL)
 void rsi_d_cache_enable(void)
 {
   /*Enable the Cache and write through*/
@@ -56,6 +58,7 @@ void rsi_d_cache_enable(void)
  * @brief This API is used to disable the data cache
  * @return None
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_RSILIB_DCACHE, SL_CODE_CLASS_TIME_CRITICAL)
 void rsi_d_cache_disable(void)
 {
   /*Disable the Cache*/
@@ -70,6 +73,7 @@ void rsi_d_cache_disable(void)
  * @brief This API is used to invalidate all cache lines, forcing data to be fetched from memory on subsequent accesses
  * @return None
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_RSILIB_DCACHE, SL_CODE_CLASS_TIME_CRITICAL)
 void rsi_d_cache_invalidate_all(void)
 {
 
@@ -89,8 +93,7 @@ void rsi_d_cache_invalidate_all(void)
   /*Wait until the operation is finished*/
   while ((DCACHE->MAINT_STATUS & DCACHE_MAINT_STATUS_ONGOING_MAINT) != 0x0)
     ;
-  /*Disable HPORT allocation signal*/
-  DCACHE_CTRL_AND_STATUS &= ~(HPORT_ALLOCATE_SIGNAL);
+  rsi_d_cache_disable();
 }
 
 /*==============================================*/
@@ -99,6 +102,7 @@ void rsi_d_cache_invalidate_all(void)
  * @brief This API is used to write back all modified cache lines to memory, ensuring data consistency
  * @return None
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_RSILIB_DCACHE, SL_CODE_CLASS_TIME_CRITICAL)
 void rsi_d_cache_clean_up_all(void)
 {
   /*Wait until ongoing cache op is done, wait for ONGOING_EN_DIS,ONGOING_MAINT and ONGOING_PWR_MAINT*/
@@ -125,6 +129,7 @@ void rsi_d_cache_clean_up_all(void)
  * @param[in]  address: The memory address whose cache line needs to be invalidated.
  * @return     None
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_RSILIB_DCACHE, SL_CODE_CLASS_TIME_CRITICAL)
 void rsi_d_cache_invalidate_address(uint32_t address)
 {
 
@@ -156,6 +161,7 @@ void rsi_d_cache_invalidate_address(uint32_t address)
  * @param[in]  address: The memory address whose cache line needs to be cleaned.
  * @return     None
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_RSILIB_DCACHE, SL_CODE_CLASS_TIME_CRITICAL)
 void rsi_d_cache_clean_up_address(uint32_t address)
 {
   /*Wait until ongoing cache op is done, wait for ONGOING_EN_DIS,ONGOING_MAINT and ONGOING_PWR_MAINT*/
@@ -184,6 +190,7 @@ void rsi_d_cache_clean_up_address(uint32_t address)
  * @brief This API is used to enable the data cache statistics counter and reset its value to zero
  * @return None
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_RSILIB_DCACHE, SL_CODE_CLASS_TIME_CRITICAL)
 void rsi_d_cache_enable_stats(void)
 {
   /*Clear Pending all interrupts, if needs to be served, clear after Interrupt serve*/
@@ -202,6 +209,7 @@ void rsi_d_cache_enable_stats(void)
  * @brief This API is used to disable the data cache statistics counter
  * @return None
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_RSILIB_DCACHE, SL_CODE_CLASS_TIME_CRITICAL)
 void rsi_d_cache_disable_stats(void)
 {
   /*Clear Pending all interrupts, if needs to be served, clear after Interrupt serve*/
@@ -220,6 +228,7 @@ void rsi_d_cache_disable_stats(void)
  *
  * @note This function returns 0 for both hit and miss counts if the counters are saturated.
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_RSILIB_DCACHE, SL_CODE_CLASS_TIME_CRITICAL)
 int rsi_d_cache_get_stats(int *hit_count, int *miss_count)
 {
 
@@ -240,6 +249,7 @@ int rsi_d_cache_get_stats(int *hit_count, int *miss_count)
  * @brief This API is used to reset the data cache statistics counter to zero.
  * @return None
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_RSILIB_DCACHE, SL_CODE_CLASS_TIME_CRITICAL)
 void rsi_d_cache_clear_stats(void)
 {
   /*Reset Statistic counter*/

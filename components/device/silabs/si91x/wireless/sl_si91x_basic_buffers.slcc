@@ -1,10 +1,15 @@
 id: sl_si91x_basic_buffers
 package: wifi
 description: >
-  This component implements a malloc-based buffer system for the Si91x
+  This component implements a malloc-based buffer system for the SiWx91x
+
+  Deprecated: This component is retained only for backward compatibility and
+  should not be added to new applications. It has been superseded by
+  `sli_buffer_manager`, which is pulled in automatically by the
+  `sl_si91x_wireless` component, so no explicit inclusion is required.
 label: Basic Buffer Manager
 category: Device|Si91x|Wireless|Buffer Manager
-quality: production
+quality: deprecated
 metadata:
   sbom:
     license: Zlib

@@ -29,7 +29,6 @@
  ******************************************************************************/
 #include "sl_si91x_joystick.h"
 #include "clock_update.h"
-
 #include "sl_adc_instances.h"
 
 /*******************************************************************************
@@ -74,16 +73,28 @@ sl_status_t sl_si91x_joystick_init(void)
     //Initialize ADC
     status = sl_si91x_adc_init(sl_adc_channel_config, sl_adc_config, vref_value);
     if (status != SL_STATUS_OK) {
+      SL_PRINT_STRING_ERROR("sl_si91x_joystick_init: adc initialization "
+                            "failed, status=0x%04lX,line no : %d",
+                            (unsigned long)status,
+                            __LINE__);
       break;
     }
     //Configure ADC channel
     status = sl_si91x_adc_set_channel_configuration(sl_adc_channel_config, sl_adc_config);
     if (status != SL_STATUS_OK) {
+      SL_PRINT_STRING_ERROR("sl_si91x_joystick_init: adc channel configuration "
+                            "failed, status=0x%04lX,line no : %d",
+                            (unsigned long)status,
+                            __LINE__);
       break;
     }
     //Register ADC conversion completion event callback function.
     status = sl_si91x_adc_register_event_callback(callback_event);
     if (status != SL_STATUS_OK) {
+      SL_PRINT_STRING_ERROR("sl_si91x_joystick_init: adc event callback "
+                            "registration failed, status=0x%04lX,line no : %d",
+                            (unsigned long)status,
+                            __LINE__);
       break;
     }
   } while (false);
@@ -112,6 +123,10 @@ sl_status_t sl_si91x_joystick_get_position(sl_joystick_state_t state, sl_joystic
       //Read the ADC sampling data.
       status = sl_si91x_adc_read_data_static(sl_adc_channel_config, sl_adc_config, &adc_value);
       if (status != SL_STATUS_OK) {
+        SL_PRINT_STRING_ERROR("sl_si91x_joystick_get_position: adc read data "
+                              "failed, status=0x%04lX,line no : %d",
+                              (unsigned long)status,
+                              __LINE__);
         break;
       }
       if (adc_value & AUXADC_DATA_TWELFTH) {
@@ -156,11 +171,19 @@ sl_status_t sl_si91x_joystick_start(sl_joystick_state_t state)
   do {
     if (state == SL_JOYSTICK_DISABLED) {
       status = SL_STATUS_ABORT;
+      SL_PRINT_STRING_ERROR("sl_si91x_joystick_start: joystick disabled, "
+                            "status=0x%04lX,line no : %d",
+                            (unsigned long)status,
+                            __LINE__);
       break;
     }
     //Start/Enable the ADC peripheral
     status = sl_si91x_adc_start(sl_adc_config);
     if (status != SL_STATUS_OK) {
+      SL_PRINT_STRING_ERROR("sl_si91x_joystick_start: adc start failed, "
+                            "status=0x%04lX,line no : %d",
+                            (unsigned long)status,
+                            __LINE__);
       break;
     }
   } while (false);
@@ -177,11 +200,19 @@ sl_status_t sl_si91x_joystick_stop(sl_joystick_state_t state)
   do {
     if (state == SL_JOYSTICK_ENABLED) {
       status = SL_STATUS_BUSY;
+      SL_PRINT_STRING_ERROR("sl_si91x_joystick_stop: joystick enabled, "
+                            "status=0x%04lX,line no : %d",
+                            (unsigned long)status,
+                            __LINE__);
       break;
     }
     //Stop/Disable the ADC peripheral
     status = sl_si91x_adc_stop(sl_adc_config);
     if (status != SL_STATUS_OK) {
+      SL_PRINT_STRING_ERROR("sl_si91x_joystick_stop: adc stop failed, "
+                            "status=0x%04lX,line no : %d",
+                            (unsigned long)status,
+                            __LINE__);
       break;
     }
   } while (false);

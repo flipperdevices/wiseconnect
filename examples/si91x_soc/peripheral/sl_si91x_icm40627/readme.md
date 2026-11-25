@@ -1,8 +1,8 @@
-# SL ICM40627
+# SiWx91x Platform ICM40627
 
 ## Table of Contents
 
-- [SL ICM40627](#sl-icm40627)
+- [SiWx91x Platform ICM40627](#platform-siwx91x-icm40627)
   - [Table of Contents](#table-of-contents)
   - [Purpose/Scope](#purposescope)
   - [About Example Code](#about-example-code)
@@ -13,6 +13,9 @@
   - [Getting Started](#getting-started)
   - [Application Build Environment](#application-build-environment)
   - [Test the Application](#test-the-application)
+  - [Troubleshooting](#troubleshooting)
+  - [Resources](#resources)
+  - [Report Bugs/Support](#report-bugssupport)
 
 ## Purpose/Scope
 
@@ -28,6 +31,7 @@ This example demonstrates the measurement of acceleration in 3 axes, gyroscope i
 
 - Windows PC
 - Silicon Labs SiWx917 Development Kit [BRD2605A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-dk2605a-wifi-6-bluetooth-le-soc-dev-kit?tab=overview)
+- Silicon Labs SiWx917 Development Kit [BRD2605B](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-dk2605b-wifi-6-bluetooth-le-soc-dev-kit?tab=overview)
 
 ### Software Requirements
 
@@ -51,11 +55,11 @@ Refer to the instructions [here](https://docs.silabs.com/wiseconnect/latest/wise
 
 ## Application Build Environment
 
-- Configure the following macros in the [`icm40627_example.c`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.1-content-for-docs/examples/si91x_soc/peripheral/sl_si91x_icm40627/icm40627_example.c) file and update/modify following macros, if required.
+- Configure the following macros in the [`icm40627_example.c`](icm40627_example.c) file and update/modify following macros, if required.
 
 - `DELAY_PERIODIC_MS1`: Select the delay for data display. By default, the delay is kept as 2 seconds.
 
-    ```C
+    ```c
     #define DELAY_PERIODIC_MS1  2000      //sleeptimer1 periodic timeout in ms
     ```
 
@@ -69,3 +73,19 @@ Refer to the instructions [here](https://docs.silabs.com/wiseconnect/latest/wise
 3. After successful program execution the prints in serial console looks as shown below.
 
    ![Figure: output1](resources/readme/output1.png)
+
+## Troubleshooting
+
+- If the project does not build, ensure Simplicity Studio and the WiSeConnect extension are installed and the board is connected.
+- If the device is not detected, reinstall the connectivity firmware and check USB drivers.
+
+## Resources
+
+- [WiSeConnect Getting Started](https://docs.silabs.com/wiseconnect/latest/wiseconnect-getting-started/)
+- [WiSeConnect Examples](https://docs.silabs.com/wiseconnect/latest/wiseconnect-examples/)
+- [SiWx91x SoC Documentation](https://docs.silabs.com/wiseconnect/latest/)
+
+## Report Bugs/Support
+
+For issues and support, use the Silicon Labs Community or your normal support channel.
+

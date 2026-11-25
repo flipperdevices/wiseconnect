@@ -2,7 +2,7 @@ id: sl_icm40627
 label: ICM40627 6-axis Inertial Sensor (IMU)
 package: platform_siwx91x
 description: >
-  Provides a driver implementation to control the ICM40627 6-axis Inertial Sensor (IMU).
+  This component provides a driver implementation to control the ICM40627 6-axis Inertial Sensor (IMU).
 category: Device|Si91x|MCU|Hardware
 quality: production
 metadata:
@@ -22,3 +22,4 @@ provides:
   - name: sl_icm40627
 requires:
   - name: sl_ssi
+  - name: log_none

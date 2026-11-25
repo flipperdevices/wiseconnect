@@ -72,6 +72,7 @@
  * @param n u16_t in host byte order
  * @return n in network byte order
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 u16_t
 lwip_htons(u16_t n)
 {
@@ -86,6 +87,7 @@ lwip_htons(u16_t n)
  * @param n u32_t in host byte order
  * @return n in network byte order
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_LWIP, SL_CODE_CLASS_TIME_CRITICAL)
 u32_t
 lwip_htonl(u32_t n)
 {

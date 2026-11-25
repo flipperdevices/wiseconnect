@@ -40,10 +40,7 @@ class SimpleHandler(BaseHTTPRequestHandler):
         ts = time.strftime("%Y-%m-%d %H:%M:%S")
         print("[%s] %s - " % (ts, client) + (fmt % args))
 
-    # Minimal helper to send a response and close the connection robustly.
-    # NOTE: For HTTPS we avoid calling socket.shutdown() because on an
-    # SSL/TLS socket that can trigger a full TLS close_notify handshake,
-    # which is slow and can make the script appear "behind" the host.
+    # Minimal helper to send a response; TLS close_notify is done in finish().
     def _send(self, status, body_bytes=b"", content_type=None):
         self.send_response(status)
         if content_type:
@@ -60,8 +57,52 @@ class SimpleHandler(BaseHTTPRequestHandler):
                     pass
             except Exception as e:
                 print("write failed:", e)
-        # Do not call shutdown() on TLS sockets; just mark connection closed.
         self.close_connection = True
+
+    def finish(self):
+        """Flush output, perform TLS shutdown (close_notify) when enabled, then close streams.
+
+        Set HTTPS_GRACEFUL_TLS_CLOSE=0 to restore the old abrupt-close behavior.
+        """
+        conn = getattr(self, "connection", None)
+        env = os.environ.get("HTTPS_GRACEFUL_TLS_CLOSE", "1").strip().lower()
+        graceful = env not in ("0", "false", "no", "off")
+
+        try:
+            wfile = getattr(self, "wfile", None)
+            if wfile is not None and not wfile.closed:
+                wfile.flush()
+        except Exception:
+            pass
+
+        if graceful and conn is not None:
+            try:
+                if isinstance(conn, ssl.SSLSocket):
+                    try:
+                        plain = conn.unwrap()
+                        try:
+                            plain.close()
+                        except Exception:
+                            pass
+                    except (ssl.SSLError, OSError, ValueError, AttributeError):
+                        try:
+                            conn.close()
+                        except Exception:
+                            pass
+                    for stream in (
+                        getattr(self, "wfile", None),
+                        getattr(self, "rfile", None),
+                    ):
+                        if stream is not None and not getattr(stream, "closed", True):
+                            try:
+                                stream.close()
+                            except Exception:
+                                pass
+                    return
+            except Exception:
+                pass
+
+        BaseHTTPRequestHandler.finish(self)
 
     def do_PUT(self):
         print("\n----------- REQUEST METHOD: ", "PUT ------------")
@@ -216,7 +257,6 @@ class SimpleHandler(BaseHTTPRequestHandler):
         self.send_header("Content-Length", "0")
         self.send_header("Connection", "close")
         self.end_headers()
-        # As with _send, avoid shutdown() on TLS sockets.
         self.close_connection = True
 
 
@@ -280,7 +320,8 @@ if __name__ == "__main__":
         print("Usage: simple_https_server.py <port #> [<port2> ...]")
         print(
             "Env: PUT_SUCCESS_STATUS=200 PUT_RESPONSE_BODY=json|text|empty "
-            "HTTPS_CERT_FILE=server-cert.pem HTTPS_KEY_FILE=server-key.pem"
+            "HTTPS_CERT_FILE=server-cert.pem HTTPS_KEY_FILE=server-key.pem "
+            "HTTPS_GRACEFUL_TLS_CLOSE=1 (0=abrupt close)"
         )
         sys.exit(1)
     ports = [int(arg) for arg in sys.argv[1:]]

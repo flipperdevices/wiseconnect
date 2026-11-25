@@ -34,6 +34,7 @@
 #include "stdint.h"
 #include "rsi_bt_common_apis.h"
 #include "rsi_common_apis.h"
+#include "sl_constants.h"
 
 /*==============================================*/
 /**
@@ -51,19 +52,19 @@ int32_t rsi_app_common_event_loop(generic_task_cb_t *generic_task_cb)
   //! creating module specific mutex
   status = (int32_t)osMutexNew((osMutexAttr_t *)&generic_task_cb->event_mutex);
   if (status != RSI_SUCCESS) {
-    LOG_PRINT("failed to create event mutex object, error = %lx \r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "failed to create event mutex object, error = %lx \r\n", status);
     return status;
   }
   status = (int32_t)osMutexNew((osMutexAttr_t *)&generic_task_cb->cmd_mutex);
   if (status != RSI_SUCCESS) {
-    LOG_PRINT("failed to create cmd mutex object, error = %lx \r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "failed to create cmd mutex object, error = %lx \r\n", status);
     return status;
   }
 
   //! creating module specific semaphore
   generic_task_cb->semaphore = osSemaphoreNew(1, 0, NULL);
   if (status != RSI_SUCCESS) {
-    LOG_PRINT("\r\n failed to create semaphore object, error = %lx  \r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "failed to create semaphore object, error = %lx  \r\n", status);
     return status;
   }
 
@@ -72,7 +73,7 @@ int32_t rsi_app_common_event_loop(generic_task_cb_t *generic_task_cb)
     //! Initialize the specifi module
     status = generic_task_cb->init_hook();
     if (status != RSI_SUCCESS) {
-      LOG_PRINT("\r\n Module init hook fails with error status = 0X%lx  \r\n", status);
+      SL_DEBUG_LOG_V2(ERROR, "Module init hook fails with error status = 0X%lx  \r\n", status);
       return status;
     }
   }

@@ -2,8 +2,8 @@ id: bod_ulp_component
 label: PM ULP BOD
 package: platform_siwx91x
 description: >
-  ULP BOD component will enable BOD in the low-power state. It moves all the peripheral dependencies in RAM. 
-  It also installs the peripheral component if already not installed. 
+  This component enables BOD in low-power state. It moves peripheral dependencies to RAM
+  and installs the peripheral component if not already installed. 
 category: Device|Si91x|MCU|Service|Power Manager|ULP Peripheral
 quality: production
 metadata:

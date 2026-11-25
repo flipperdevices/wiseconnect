@@ -13,10 +13,12 @@ provides:
 - name: sl_si91x_ccm
 source:
 - path: src/sl_si91x_ccm.c
+- path: src/sl_si91x_mp_ccm.c
 include:
 - path: inc
   file_list:
     - path: sl_si91x_ccm.h
+    - path: sl_si91x_mp_ccm.h
 
 requires:
 - name: sl_si91x_crypto

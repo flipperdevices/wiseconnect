@@ -1,18 +1,24 @@
 project_name: bt_stack_bypass
 package: bluetooth_le_siwx91x_app
 quality: production
-label: BLE - BT_STACK_BYPASS
+label: BLE - BT_STACK_BYPASS FreeRTOS
 category: Example|BLE
-description: 'Demonstrates how to configure the Raw HCI commands through uart.
+description: 'Demonstrates raw BLE HCI over UART on SiWx91x in SoC FreeRTOS for low-level controller testing. Demonstrated by bypassing the host stack with direct HCI.
 
   '
 filter:
 - name: Wireless Technology
   value:
   - BLE
+- name: Device Type
+  value:
+  - SoC
 - name: Project Difficulty
   value:
   - Beginner
+- name: Quality
+  value:
+  - Production
 source:
 - path: app.c
 include:
@@ -34,6 +40,10 @@ component:
 - id: syscalls
 - id: sl_usart
 - id: sl_clock_manager
+- id: log_none
+- id: si91x_log
+- id: si91x_log_iostream_formatted
+- id: iostream_rtt_si91x
 requires:
 - name: sl_main
 - name: network_manager
@@ -42,7 +52,6 @@ requires:
 - name: wifi
 - name: ble
 - name: sl_si91x_internal_stack
-- name: sl_si91x_basic_buffers
 - name: wifi_resources
 - name: freertos
 - name: freertos_heap_4
@@ -69,7 +78,11 @@ requires:
 - name: device_needs_ram_execution
   condition:
   - si91x_common_flash
-toolchain_settings: []
+toolchain_settings:
+- option: gcc_compiler_option
+  value: -Wall -Werror -Wno-error=deprecated-declarations
+- option: llvm_compiler_option
+  value: -Wall -Werror -Wno-error=deprecated-declarations
 configuration:
 - name: SL_BOARD_ENABLE_VCOM
   value: '1'
@@ -79,7 +92,13 @@ readme:
 - path: readme.md
 other_file:
 - path: resources/readme/blenewappsoc.png
-- path: resources/readme/consoleprints.png
+- path: resources/readme/LinuxLogs1.png
+- path: resources/readme/LinuxLogs2.png
+- path: resources/readme/LinuxLogs3.png
+- path: resources/readme/Mobile.png
+- path: resources/readme/NCPConsoleLogs.png
+- path: resources/readme/RTTLogs.png
+- path: resources/readme/SOCConsoleLogs.png
 ui_hints:
   highlight:
   - path: readme.md
@@ -89,8 +108,8 @@ post_build:
 sdk_extension:
 - id: wiseconnect3_sdk
   vendor: silabs
-  version: 4.0.1
+  version: 4.1.2
 sdk:
   id: simplicity_sdk
   vendor: silabs
-  version: 2025.12.2
+  version: 2026.6.2

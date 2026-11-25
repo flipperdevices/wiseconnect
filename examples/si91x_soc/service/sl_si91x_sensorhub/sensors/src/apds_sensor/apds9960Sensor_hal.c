@@ -92,7 +92,7 @@ static const sl_apds9960_sensor_impl_t *find_implementation(int id)
   const sl_apds9960_sensor_impl_t *active_driver = NULL;
   int count = sizeof(apds9960_sensor_implementations) / sizeof(sl_apds9960_sensor_impl_t);
   for (int i = 0; i < count; i++) {
-    if (apds9960_sensor_implementations[i].id == id) {
+    if ((int)apds9960_sensor_implementations[i].id == id) {
       active_driver = &apds9960_sensor_implementations[i];
       break;
     }
@@ -226,14 +226,13 @@ sl_apds9960_error_t sl_si91x_apds9960_sample_proximity_sensor(sl_sensor_apds9960
  ******************************************************************************/
 sl_apds9960_error_t sl_si91x_apds9960_sample_gesture_sensor(sl_sensor_apds9960_handle_t sensor, float *gesture)
 {
-  sl_apds9960_error_t ret;
   if (sensor == NULL || gesture == NULL) {
     return RSI_FAIL;
   }
   sl_sensor_apds9960_t *p_sensor = (sl_sensor_apds9960_t *)(sensor);
   (void)p_sensor;
-  //ret           = p_sensor->impl->sample_gesture(gesture);
-  return ret;
+  // ret = p_sensor->impl->sample_gesture(gesture);
+  return RSI_FAIL;
 }
 
 /*******************************************************************************

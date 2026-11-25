@@ -28,6 +28,7 @@
 #include "sl_si91x_driver.h"
 #include <string.h>
 #include <stdint.h>
+#include <inttypes.h>
 #include "rsi_debug.h"
 #include "sl_si91x_fw_fallback.h"
 
@@ -54,10 +55,12 @@ sl_wifi_device_configuration_t sl_wifi_firmware_update_configuration = {
 #endif
                                                   ),
                    .bt_feature_bit_map         = 0,
-                   .ext_tcp_ip_feature_bit_map = SL_SI91X_CONFIG_FEAT_EXTENTION_VALID,
+                   .ext_tcp_ip_feature_bit_map = SL_SI91X_CONFIG_FEAT_EXTENSION_VALID,
                    .ble_feature_bit_map        = 0,
                    .ble_ext_feature_bit_map    = 0,
-                   .config_feature_bit_map = (SL_SI91X_FEAT_SLEEP_GPIO_SEL_BITMAP | SL_WIFI_ENABLE_ENHANCED_MAX_PSP) }
+                   .config_feature_bit_map = (SL_SI91X_FEAT_SLEEP_GPIO_SEL_BITMAP | SL_WIFI_ENABLE_ENHANCED_MAX_PSP) },
+  .ta_pool         = { .tx_ratio_in_buffer_pool = 0, .rx_ratio_in_buffer_pool = 0, .global_ratio_in_buffer_pool = 0 },
+  .efuse_data_type = SL_SI91X_EFUSE_MFG_SW_VERSION,
 };
 /**
  * @brief Structure to hold active slot information for both M4 and NWP
@@ -75,27 +78,19 @@ sl_status_t sl_si91x_app_get_active_slot_addresses(sl_si91x_active_slot_info_t *
 /******************************************************
   *               Variable Definitions
   ******************************************************/
-
-const osThreadAttr_t thread_attributes = {
+#define APP_THREAD_STACK_SIZE (4 * 1024) // 4KB stack size for the application thread
+static const osThreadAttr_t thread_attributes = {
   .name       = "app",
-  .attr_bits  = 0,
-  .cb_mem     = 0,
-  .cb_size    = 0,
-  .stack_mem  = 0,
-  .stack_size = 3072,
+  .stack_size = APP_THREAD_STACK_SIZE,
   .priority   = osPriorityLow,
-  .tz_module  = 0,
-  .reserved   = 0,
 };
 
 /*
   * @brief Application initialization function
-  * @param unused Pointer to the unused parameter
   * @return None
   */
-void app_init(const void *unused)
+void app_init(void)
 {
-  UNUSED_PARAMETER(unused);
   osThreadNew((osThreadFunc_t)application_start, NULL, &thread_attributes);
 }
 /*
@@ -107,7 +102,7 @@ static void application_start(void *argument)
 {
   UNUSED_PARAMETER(argument);
   sl_status_t status;
-  sl_wifi_firmware_version_t version           = { 0 };
+  sl_si91x_firmware_version_t version          = { 0 };
   sl_si91x_active_slot_info_t active_slot_info = { 0 };
   sl_si91x_fw_ab_slot_management_t app_ab_slot_info;
 
@@ -135,31 +130,39 @@ static void application_start(void *argument)
   // Initialize the Wi-Fi client interface
   status = sl_net_init(SL_NET_WIFI_CLIENT_INTERFACE, &sl_wifi_firmware_update_configuration, NULL, NULL);
   if (status != SL_STATUS_OK) {
-    DEBUGOUT("Failed to start Wi-Fi Client interface: 0x%lx\r\n", status);
+    DEBUGOUT("Failed to start Wi-Fi Client interface: 0x%x\r\n", (unsigned int)status);
     return;
   }
 
   // Get the firmware version
-  status = sl_wifi_get_firmware_version(&version);
+  status = sl_si91x_get_firmware_version(&version);
   if (status != SL_STATUS_OK) {
-    DEBUGOUT("\r\nFailed to fetch firmware version: 0x%lx\r\n", status);
+    DEBUGOUT("\r\nFailed to fetch firmware version: 0x%x\r\n", (unsigned int)status);
     while (1)
       ; // Halt execution in case of failure
   } else {
-    print_firmware_version(&version);
+    printf("\r\nFirmware version is: %x%x.%d.%d.%d.%d.%d.%d\r\n",
+           version.chip_id,
+           version.rom_id,
+           version.major,
+           version.minor,
+           version.security_version,
+           version.patch_num,
+           version.customer_id,
+           version.build_num);
   }
 
   // Get active slot addresses
   status = sl_si91x_app_get_active_slot_addresses(&active_slot_info);
   if (status != SL_STATUS_OK) {
-    DEBUGOUT("\r\nFailed to get active slot addresses: 0x%lx\r\n", status);
+    DEBUGOUT("\r\nFailed to get active slot addresses: 0x%x\r\n", (unsigned int)status);
     while (1)
       ; // Halt execution in case of failure
   } else {
-    DEBUGOUT("\r\nActive M4 Slot: %s (Address: 0x%08lx)\r\n",
+    DEBUGOUT("\r\nActive M4 Slot: %s (Address: 0x%08" PRIx32 ")\r\n",
              (active_slot_info.m4_active_slot == SLOT_A) ? "A" : "B",
              active_slot_info.m4_active_slot_address);
-    DEBUGOUT("Active NWP Slot: %s (Address: 0x%08lx)\r\n",
+    DEBUGOUT("Active NWP Slot: %s (Address: 0x%08" PRIx32 ")\r\n",
              (active_slot_info.nwp_active_slot == SLOT_A) ? "A" : "B",
              active_slot_info.nwp_active_slot_address);
   }
@@ -167,31 +170,37 @@ static void application_start(void *argument)
   // Verify the image for the NWP active slot
   status = sl_si91x_verify_image(active_slot_info.nwp_active_slot_address);
   if (status != SL_STATUS_SI91X_FW_UPDATE_DONE) {
-    DEBUGOUT("\r\nFailed to verify image: 0x%lx 0x%lx\r\n", status, active_slot_info.nwp_active_slot_address);
+    DEBUGOUT("\r\nFailed to verify image: 0x%x 0x%x\r\n",
+             (unsigned int)status,
+             (unsigned int)active_slot_info.nwp_active_slot_address);
     while (1)
       ; // Halt execution in case of failure
   } else {
-    DEBUGOUT("\r\nImage verified successfully: 0x%lx\r\n", active_slot_info.nwp_active_slot_address);
+    DEBUGOUT("\r\nImage verified successfully: 0x%x\r\n", (unsigned int)active_slot_info.nwp_active_slot_address);
   }
 
   // Verify the image for the M4 active slot
   status = sl_si91x_verify_image(active_slot_info.m4_active_slot_address);
   if (status != SL_STATUS_SI91X_FW_UPDATE_DONE) {
-    DEBUGOUT("\r\nFailed to verify image: 0x%lx 0x%lx\r\n", status, active_slot_info.m4_active_slot_address);
+    DEBUGOUT("\r\nFailed to verify image: 0x%x 0x%x\r\n",
+             (unsigned int)status,
+             (unsigned int)active_slot_info.m4_active_slot_address);
     while (1)
       ; // Halt execution in case of failure
   } else {
-    DEBUGOUT("\r\nImage verified successfully: 0x%lx\r\n", active_slot_info.m4_active_slot_address);
+    DEBUGOUT("\r\nImage verified successfully: 0x%x\r\n", (unsigned int)active_slot_info.m4_active_slot_address);
   }
 
   //Request to load QSPI keys
   status = sl_si91x_fallback_load_qspi_keys(active_slot_info.m4_active_slot_address);
   if (status != SL_STATUS_OK) {
-    DEBUGOUT("\r\nFailed to load keys: 0x%lx 0x%lx\r\n", status, active_slot_info.m4_active_slot_address);
+    DEBUGOUT("\r\nFailed to load keys: 0x%x 0x%x\r\n",
+             (unsigned int)status,
+             (unsigned int)active_slot_info.m4_active_slot_address);
     while (1)
       ; // Halt execution in case of failure
   } else {
-    DEBUGOUT("\r\nLoad Keys successfully: 0x%lx\r\n", active_slot_info.m4_active_slot_address);
+    DEBUGOUT("\r\nLoad Keys successfully: 0x%x\r\n", (unsigned int)active_slot_info.m4_active_slot_address);
   }
 
   // Perform a soft reset NWP FW

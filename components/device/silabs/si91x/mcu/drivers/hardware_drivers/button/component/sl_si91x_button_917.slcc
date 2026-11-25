@@ -27,6 +27,7 @@ source:
 requires:
   - name: rsilib_egpio
   - name: sl_gpio
+  - name: log_none
 provides:
   - name: sl_si91x_button_917
 template_file:

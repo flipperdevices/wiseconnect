@@ -102,11 +102,13 @@ sl_status_t sl_log_hal_backend_init(void)
 
   status = sl_si91x_usart_init(ULPUART, &uart_handle);
   if (status != SL_STATUS_OK) {
+
     return status;
   }
   // Configure the UART configurations
   status = sl_si91x_usart_set_configuration(uart_handle, &uart_config);
   if (status != SL_STATUS_OK) {
+
     return status;
   }
   NVIC_DisableIRQ(ULPSS_UART_IRQn);
@@ -131,28 +133,33 @@ sl_status_t sl_log_hal_backend_write(sl_log_event_t *buffer, uint32_t read_index
   sl_status_t status = SL_STATUS_OK;
 
   if (event_count == 0) {
+
     return SL_STATUS_INVALID_PARAMETER;
   }
 
   /* Validate parameters */
   if ((read_index >= SL_LOG_NUMBER_OF_EVENTS) || (buffer == NULL)) {
+
     return SL_STATUS_INVALID_PARAMETER;
   }
 
   if (event_count <= SL_LOG_NUMBER_OF_EVENTS - read_index) {
     /* contiguous block */
     status = sli_si91x_usart_send_data_blocking(uart_handle, &buffer[read_index], event_count * sizeof(sl_log_event_t));
+
     return status;
   } else {
     /* first chunk: from read_index to end */
     uint32_t first_chunk = SL_LOG_NUMBER_OF_EVENTS - read_index;
     status = sli_si91x_usart_send_data_blocking(uart_handle, &buffer[read_index], first_chunk * sizeof(sl_log_event_t));
     if (status != SL_STATUS_OK) {
+
       return status;
     }
     /* remaining events after wrap-around */
     uint32_t second_chunk = event_count - first_chunk; /* equals event_count + read_index - SL_LOG_NUMBER_OF_EVENTS */
     status = sli_si91x_usart_send_data_blocking(uart_handle, buffer, second_chunk * sizeof(sl_log_event_t));
+
     return status;
   }
 }
@@ -171,6 +178,7 @@ sl_status_t sl_log_hal_backend_deinit(void)
 {
   sl_status_t status = SL_STATUS_OK;
   status             = sl_si91x_usart_deinit(uart_handle);
+
   return status;
 }
 

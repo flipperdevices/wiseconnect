@@ -200,7 +200,7 @@ sl_status_t sli_queue_manager_dequeue(sli_queue_t *handle, void **data)
 
 sl_status_t sli_queue_manager_remove_node_from_queue(sli_queue_t *handle,
                                                      sli_queue_manager_node_match_handler_t id_handler,
-                                                     void *node_match_data,
+                                                     const void *node_match_data,
                                                      void **data)
 {
   if (NULL == handle) {
@@ -320,7 +320,10 @@ sl_status_t sli_queue_manager_flush_nodes_from_queue(sli_queue_t *handle,
       }
 
       status = sli_buffer_manager_free_buffer((sli_buffer_t)element);
-      VERIFY_STATUS_AND_RETURN(status);
+      if (status != SL_STATUS_OK) {
+        CORE_ExitAtomic(state);
+        return status;
+      }
       element = NULL;
     }
   }
@@ -333,7 +336,9 @@ sl_status_t sli_queue_manager_flush_nodes_from_queue(sli_queue_t *handle,
   return SL_STATUS_OK;
 }
 
-sl_status_t sli_queue_manager_flush_queue(sli_queue_t *handle, sli_queue_manager_flush_handler_t flush_handler)
+sl_status_t sli_queue_manager_flush_queue(sli_queue_t *handle,
+                                          sli_queue_manager_flush_handler_t flush_handler,
+                                          void *context)
 {
   if (NULL == handle) {
     return SL_STATUS_INVALID_PARAMETER;
@@ -360,18 +365,23 @@ sl_status_t sli_queue_manager_flush_queue(sli_queue_t *handle, sli_queue_manager
     }
 
     if (flush_handler) {
-      flush_handler(handle, node->data, NULL);
+      flush_handler(handle, node->data, context);
     }
 
     status = sli_buffer_manager_free_buffer((sli_buffer_t)node);
-    VERIFY_STATUS_AND_RETURN(status);
+    if (status != SL_STATUS_OK) {
+      CORE_ExitAtomic(state);
+      return status;
+    }
   }
 
   CORE_ExitAtomic(state);
   return SL_STATUS_OK;
 }
 
-sl_status_t sli_queue_manager_deinit(sli_queue_t *handle, sli_queue_manager_flush_handler_t flush_handler)
+sl_status_t sli_queue_manager_deinit(sli_queue_t *handle,
+                                     sli_queue_manager_flush_handler_t flush_handler,
+                                     void *context)
 {
-  return sli_queue_manager_flush_queue(handle, flush_handler);
+  return sli_queue_manager_flush_queue(handle, flush_handler, context);
 }

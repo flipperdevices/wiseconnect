@@ -2,8 +2,8 @@ id: sl_bjt_temperature_sensor
 label: BJT Temperature Sensor
 package: platform_siwx91x
 description: >
-  By taking use of its temperature-dependent characteristics, a Bipolar Junction Transistor (BJT)
-  can be utilized as a temperature sensor.
+  This component uses a Bipolar Junction Transistor (BJT) as a temperature sensor,
+  leveraging its temperature-dependent characteristics.
   By switching the current temperature mode, one can also obtain the temperature value in kelvin and fahrenheit.
 category: Device|Si91x|MCU|Peripheral
 quality: production
@@ -22,6 +22,4 @@ provides:
 requires:
   - name: sl_adc
   - name: rsilib_opamp
-documentation:
-    docset: wiseconnect
-    document: wiseconnect-api-reference-guide-si91x-peripherals/bjttempsensor
+  - name: log_none

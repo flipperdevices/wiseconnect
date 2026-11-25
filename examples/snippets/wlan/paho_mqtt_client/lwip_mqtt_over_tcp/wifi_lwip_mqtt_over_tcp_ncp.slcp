@@ -3,7 +3,7 @@ package: wifi_app
 quality: production
 label: Wi-Fi - Paho LwIP MQTT OVER TCP (NCP)
 category: Example|Wi-Fi
-description: 'Demonstrates how SiWx91x device is configured as an MQTT client over TCP, connects to an MQTT broker, subscribes to a topic, and publishes messages on a particular MQTT topic using the Paho MQTT library with lwip support
+description: 'Demonstrates how SiWx91x device is configured as an MQTT client over TCP, connects to an MQTT broker, subscribes to a topic, and publishes messages on a particular MQTT topic using the Paho MQTT library with lwip support.
 
   '
 filter:
@@ -61,14 +61,19 @@ component:
 - id: wifi_resources
 - id: network_manager
 - id: basic_network_config_manager
-- id: sl_si91x_mem_pool_buffers_with_quota
 - id: paho_mqtt_embedded
 - id: spidrv
   instance:
   - exp
+- id: log_none
+- id: log_backend_iostream
+- id: log_backend_iostream_formatted
+- id: log_platform_specific
 toolchain_settings:
 - option: gcc_compiler_option
-  value: -Wall -Werror
+  value: -Wall -Werror -Wno-error=deprecated-declarations
+- option: llvm_compiler_option
+  value: -Wall -Werror -Wno-error=deprecated-declarations
 configuration:
 - name: SL_BOARD_ENABLE_VCOM
   value: '1'
@@ -92,6 +97,8 @@ configuration:
   value: '51200'
 - name: configTIMER_TASK_PRIORITY
   value: '55'
+- name: SL_LOG_CONFIG_LEVEL_COMPILE_TIME
+  value: SL_LOG_CONFIG_LEVEL_INFO
 readme:
 - path: readme.md
 other_file:
@@ -119,8 +126,8 @@ ui_hints:
 sdk_extension:
 - id: wiseconnect3_sdk
   vendor: silabs
-  version: 4.0.1
+  version: 4.1.2
 sdk:
   id: simplicity_sdk
   vendor: silabs
-  version: 2025.12.2
+  version: 2026.6.2

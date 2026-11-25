@@ -194,7 +194,7 @@ sl_adc_error_t sl_si91x_adc_sensor_delete(sl_sensor_adc_handle_t *sensor);
  *         \ref SL_STATUS_FAIL  - The function is failed
  *         \ref SL_STATUS_NOT_INITIALIZED  - Clock is not initialized
  ******************************************************************************/
-sl_status_t sl_si91x_adc_sensor_sample_static();
+sl_status_t sl_si91x_adc_sensor_sample_static(uint16_t *adc_value);
 
 /*******************************************************************************
  * @fn        sl_status_t sl_si91x_sensor_sample(uint8_t channel)

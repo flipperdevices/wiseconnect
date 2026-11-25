@@ -35,8 +35,6 @@
 
 #include <stdint.h>
 #include "rsi_error.h"
-#include <stdint.h>
-#include "rsi_error.h"
 #include "rsi_timers.h"
 #include "rsi_ulpss_clk.h"
 #include "rsi_pll.h"
@@ -45,14 +43,12 @@
 #include "rsi_fim.h"
 #include "rsi_crc.h"
 #include "rsi_efuse.h"
-#include "rsi_ulpss_clk.h"
 #include "rsi_pwm.h"
 #include "rsi_qspi_proto.h"
 #include "rsi_qspi.h"
 #include "rsi_rng.h"
 #include "rsi_gpdma.h"
 #include "rsi_ct.h"
-#include "rsi_timers.h"
 #include "rsi_udma.h"
 #include "rsi_reg_spi.h"
 #include "rsi_processor_sensor.h"
@@ -60,7 +56,6 @@
 #include "rsi_temp_sensor.h"
 #include "rsi_time_period.h"
 #include "rsi_wwdt.h"
-#include "rsi_efuse.h"
 #include "rsi_ipmu.h"
 
 #include "rsi_udma_wrapper.h"

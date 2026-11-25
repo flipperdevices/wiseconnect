@@ -16,6 +16,7 @@
 ******************************************************************************/
 
 /* Includes ------------------------------------------------------------------*/
+#include <inttypes.h>
 #include "sl_si91x_qei.h"
 #include "qei_example.h"
 #include "sl_si91x_driver_gpio.h"
@@ -117,49 +118,55 @@ void qei_example_init(void)
 
   // Get QEI version
   version = sl_si91x_qei_get_version();
-  DEBUGOUT("QEI version is fetched successfully \n");
-  DEBUGOUT("API version is %d.%d.%d\n", version.release, version.major, version.minor);
+  /* Note: All status messages in this example — both success and failure — are
+ * intentionally emitted via SL_PRINT_STRING_ERROR so that they remain visible
+ * on the console at the default log level. This is a demonstration choice, not
+ * a recommendation: in production code, ERROR severity should be reserved for
+ * actual failures, with successful operations logged via SL_PRINT_STRING_INFO
+ * (or SL_PRINT_STRING_DEBUG for verbose trace). */
+  SL_PRINT_STRING_ERROR("QEI version is fetched successfully \n");
+  SL_PRINT_STRING_ERROR("API version is %d.%d.%d\n", version.release, version.major, version.minor);
   do {
     // Initialize QEI stimulus pin mux for QEI
     qei_stimulus_pin_mux_init();
     status = sl_si91x_ulp_timer_init(&sl_timer_clk_handle);
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("sl_si91x_ulp_timer_init : Invalid Parameters, Error Code : %lu \n", status);
+      SL_PRINT_STRING_ERROR("sl_si91x_ulp_timer_init : Invalid Parameters, Error Code : %lu \n", status);
       break;
     }
-    DEBUGOUT("Successfully Configured ULP-timer clock input source \n");
+    SL_PRINT_STRING_ERROR("Successfully Configured ULP-timer clock input source \n");
     // Updating timer match-value
     sl_timer_handle_timer0.timer_match_value = SL_TIMER_MATCH_VALUE;
     status                                   = sl_si91x_ulp_timer_set_configuration(&(sl_timer_handle_timer0));
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("sl_si91x_ulp_timer_set_configuration : Invalid Parameters "
-               "Error Code : %lu \n",
-               status);
+      SL_PRINT_STRING_ERROR("sl_si91x_ulp_timer_set_configuration : Invalid Parameters "
+                            "Error Code : %lu \n",
+                            status);
       break;
     }
-    DEBUGOUT("Successfully Configured ULP-timer parameters \n");
+    SL_PRINT_STRING_ERROR("Successfully Configured ULP-timer parameters \n");
     status = sl_si91x_ulp_timer_register_timeout_callback(ULP_TIMER_INSTANCE, &(ulp_timer_callback));
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("sl_si91x_ulp_timer_timeout_callback_register : Invalid "
-               "Parameters Error Code : %lu \n",
-               status);
+      SL_PRINT_STRING_ERROR("sl_si91x_ulp_timer_timeout_callback_register : Invalid "
+                            "Parameters Error Code : %lu \n",
+                            status);
       break;
     }
-    DEBUGOUT("Successfully Registered timer instance timeout callback \n");
+    SL_PRINT_STRING_ERROR("Successfully Registered timer instance timeout callback \n");
     // Initialize QEI and set parameters
     status = sl_si91x_qei_init(&sl_qei_init);
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("Error in sl_si91x_qei_init, Error code: %lu", status);
+      SL_PRINT_STRING_ERROR("Error in sl_si91x_qei_init, Error code: %lu", status);
       break;
     }
-    DEBUGOUT("QEI initialized successfully \n");
+    SL_PRINT_STRING_ERROR("QEI initialized successfully \n");
     // Set QEI module frequency
     status = sl_si91x_qei_set_module_frequency(QEI_OPERATING_FREQ);
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("Error in sl_si91x_qei_set_module_frequency, Error code: %lu", status);
+      SL_PRINT_STRING_ERROR("Error in sl_si91x_qei_set_module_frequency, Error code: %lu", status);
       break;
     }
-    DEBUGOUT("QEI successfully set module frequency \n");
+    SL_PRINT_STRING_ERROR("QEI successfully set module frequency \n");
 #if defined(ENCODER_MODE) && (ENCODER_MODE == 1)
     sl_qei_config.config_param =
       (SL_QEI_NO_SWAP_AB << QEI_SWAP_PHASE_AB_MASK) | (SL_QEI_DIGITAL_FILTER << QEI_DIGITAL_FILTER_BYPASS_MASK)
@@ -168,10 +175,10 @@ void qei_example_init(void)
     // Set QEI configuration parameters
     status = sl_si91x_qei_set_configuration(SL_QEI_SET, &sl_qei_config);
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("Error in sl_si91x_qei_set_configuration, Error code: %lu", status);
+      SL_PRINT_STRING_ERROR("Error in sl_si91x_qei_set_configuration, Error code: %lu", status);
       break;
     }
-    DEBUGOUT("QEI configuration parameters set successfully \n");
+    SL_PRINT_STRING_ERROR("QEI configuration parameters set successfully \n");
 #endif
 #if defined(VELOCITY) && (VELOCITY == 1)
     static void *qei_callback_flag;
@@ -180,25 +187,25 @@ void qei_example_init(void)
     // Start the velocity counter for QEI
     status = sl_si91x_qei_start_velocity(SL_QEI_DELTA_TIME);
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("Error in sl_si91x_qei_start_velocity, Error code: %lu", status);
+      SL_PRINT_STRING_ERROR("Error in sl_si91x_qei_start_velocity, Error code: %lu", status);
       break;
     }
-    DEBUGOUT("QEI velocity counter started successfully \n");
+    SL_PRINT_STRING_ERROR("QEI velocity counter started successfully \n");
     // Register callback for QEI interrupts
     status = sl_si91x_qei_register_callback(qei_callback, qei_callback_flag, &qei_interrupt_flag);
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("Error in sl_si91x_qei_register_callback, Error code: %lu", status);
+      SL_PRINT_STRING_ERROR("Error in sl_si91x_qei_register_callback, Error code: %lu", status);
       break;
     }
-    DEBUGOUT("QEI interrupt callback registered successfully \n");
+    SL_PRINT_STRING_ERROR("QEI interrupt callback registered successfully \n");
 #endif
     // Starting Timer instance with default parameters
     status = sl_si91x_ulp_timer_start(ULP_TIMER_INSTANCE);
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("sl_si91x_ulp_timer_start : Invalid Parameters Error Code : %lu \n", status);
+      SL_PRINT_STRING_ERROR("sl_si91x_ulp_timer_start : Invalid Parameters Error Code : %lu \n", status);
       break;
     }
-    DEBUGOUT("Successfully started ulp-timer instance with default parameters \n");
+    SL_PRINT_STRING_ERROR("Successfully started ulp-timer instance with default parameters \n");
 
   } while (false);
 }
@@ -214,17 +221,17 @@ void qei_example_process_action(void)
   sl_qei_direction_t qei_direction;
 
   qei_position = sl_si91x_qei_get_position_counter();
-  DEBUGOUT("QEI Position:%ld\n", qei_position);
+  SL_PRINT_STRING_ERROR("QEI Position:%ld\n", qei_position);
   // Get QEI index count
   qei_index = sl_si91x_qei_get_index_counter();
-  DEBUGOUT("QEI Index:%ld\n", qei_index);
+  SL_PRINT_STRING_ERROR("QEI Index:%ld\n", qei_index);
   // Get QEI direction
   qei_direction = sl_si91x_qei_get_direction();
-  DEBUGOUT("QEI Direction:%d\n", qei_direction);
+  SL_PRINT_STRING_ERROR("QEI Direction:%d\n", qei_direction);
 #endif
 #if defined(VELOCITY) && (VELOCITY == 1)
   if (qei_callback_triggered) {
-    DEBUGOUT("qei_velocity = %ld\r\n", velocity);
+    SL_PRINT_STRING_ERROR("qei_velocity = %ld\r\n", velocity);
     qei_callback_triggered = false;
   }
 #endif

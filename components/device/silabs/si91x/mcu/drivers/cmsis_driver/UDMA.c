@@ -48,6 +48,7 @@ extern dac_config_t dac_callback_fun;
 #endif
 
 #include "rsi_udma_wrapper.h"
+#include "sli_code_classification.h"
 
 //UDMA Defines////
 RSI_UDMA_HANDLE_T udmaHandle0;
@@ -110,6 +111,9 @@ UDMA_RESOURCES UDMA1_Resources = {
 };
 #endif /* RTE_UDMA1 */
 
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_CMSIS_UDMA, SL_CODE_CLASS_TIME_CRITICAL)
+void uDMAx_IRQHandler(UDMA_RESOURCES *udma, RSI_UDMA_DESC_T *UDMA_Table, UDMA_Channel_Info *chnl_info);
+
 /*==============================================*/
 /**
  * @fn          void uDMAx_IRQHandler(UDMA_RESOURCES *udma, RSI_UDMA_DESC_T *UDMA_Table, UDMA_Channel_Info *chnl_info)
@@ -118,18 +122,18 @@ UDMA_RESOURCES UDMA1_Resources = {
  */
 void uDMAx_IRQHandler(UDMA_RESOURCES *udma, RSI_UDMA_DESC_T *UDMA_Table, UDMA_Channel_Info *chnl_info)
 {
-  volatile uint32_t size = 0;
-  volatile uint32_t intr = 0; 
-  volatile uint32_t src_inc = 0;
-  volatile uint32_t dst_inc = 0;
-  volatile uint32_t dma_len = 0;
+  uint32_t size = 0;
+  uint32_t intr = 0;
+  uint32_t src_inc = 0;
+  uint32_t dst_inc = 0;
+  uint32_t dma_len = 0;
 
   // error check, invalid instance
   if ((udma->reg != UDMA0) && (udma->reg != UDMA1)) {
     return;
   }
 
-  for (volatile uint32_t ch = 0; ch < UDMA_NUMBER_OF_CHANNELS; ch++) {
+  for (uint32_t ch = 0; ch < UDMA_NUMBER_OF_CHANNELS; ch++) {
     intr = udma->reg->UDMA_DONE_STATUS_REG;
     if (intr & (1U << ch)) {
       // Clear interrupt flag

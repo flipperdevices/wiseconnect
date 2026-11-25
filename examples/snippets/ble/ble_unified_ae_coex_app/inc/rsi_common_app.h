@@ -11,6 +11,7 @@
 
 #include "stdint.h"
 #include "stdio.h"
+#include "sl_constants.h"
 //#include "fsl_debug_console.h"
 
 int32_t ble_ae_set_1_advertising_enable(void);
@@ -31,7 +32,7 @@ int32_t ble_ext_scan_enable(void);
 #define LOG_PRINT_D(...)                                  \
   {                                                       \
     osMutexAcquire(rsi_driver_cb->debug_prints_mutex, 0); \
-    printf(__VA_ARGS__);                                  \
+    SL_DEBUG_LOG_V2(DEBUG, __VA_ARGS__);                  \
     osMutexRelease(rsi_driver_cb->debug_prints_mutex);    \
   }
 #else

@@ -37,7 +37,7 @@
 extern "C" {
 #endif
 
-#ifdef SL_CATALOG_KERNEL_PRESENT
+#if defined(SL_CATALOG_KERNEL_PRESENT) && defined(SLI_SI91X_CPC_ENABLE)
 #include "rsi_m4.h"
 #endif
 
@@ -206,7 +206,9 @@ __STATIC_INLINE void sl_si91x_sdio_secondary_disable_interrupts(uint32_t flags)
  ******************************************************************************/
 __INLINE void sl_si91x_sdio_secondary_set_interrupts(uint32_t flags)
 {
-  SDIO->SDIO_INTR_FN1_UNMASK_REG |= flags;
+  // Mask and unmask are a write-1-to-action register pair, so the requested bits are
+  // written directly. A read-modify-write would fold previously latched bits back in.
+  SDIO->SDIO_INTR_FN1_UNMASK_REG = flags;
 }
 
 /***************************************************************************/
@@ -234,8 +236,8 @@ __INLINE void sl_si91x_sdio_secondary_set_interrupts(uint32_t flags)
  ******************************************************************************/
 __INLINE void sl_si91x_sdio_secondary_clear_interrupts(uint32_t flags)
 {
-  SDIO->SDIO_INTR_FN1_MASK_REG |= flags;
-  SDIO->SDIO_INTR_FN1_STATUS_CLEAR_REG |= flags;
+  SDIO->SDIO_INTR_FN1_MASK_REG         = flags;
+  SDIO->SDIO_INTR_FN1_STATUS_CLEAR_REG = flags;
 }
 
 /***************************************************************************/

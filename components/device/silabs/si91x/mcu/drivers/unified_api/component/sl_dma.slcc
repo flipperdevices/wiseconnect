@@ -25,6 +25,7 @@ config_file:
 requires:
   - name: udma_linker_config
   - name: romdriver_udma_wrapper
+  - name: log_none
 source:
   - path: "src/sl_si91x_dma.c"
 include:
@@ -40,6 +41,3 @@ define:
 template_contribution:
   - name: udma_enable
     value: true
-documentation:
-    docset: wiseconnect
-    document: wiseconnect-api-reference-guide-si91x-peripherals/dma

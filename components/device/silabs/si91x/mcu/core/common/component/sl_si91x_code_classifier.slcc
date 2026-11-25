@@ -1,8 +1,8 @@
 id: sl_si91x_code_classifier
-label: Code Classifer
+label: PSRAM Code Classifier
 package: platform_siwx91x
 description: >
-  Provides the Si91x SoC code classifier functionalities.
+  This component provides SiWx91x SoC PSRAM code classifier functionality for memory placement optimization.
 category: Device|Si91x|MCU|Core
 quality: production
 metadata:

@@ -1,8 +1,8 @@
 id: sl_si91x_errno
-label: SL errno
+label: Errno
 package: wifi
 description: >
-  Enables thread-safe errno
+  This component enables thread-safe errno
 category: Device|Si91x|MCU|Service
 quality: production
 metadata:

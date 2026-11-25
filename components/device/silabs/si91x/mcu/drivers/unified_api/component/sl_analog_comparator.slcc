@@ -32,6 +32,4 @@ requires:
   - name: rsilib_adc
   - name: rsilib_opamp
   - name: sl_dma
-documentation:
-    docset: wiseconnect
-    document: wiseconnect-api-reference-guide-si91x-peripherals/analogcomp
+  - name: log_none

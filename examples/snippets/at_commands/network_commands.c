@@ -528,6 +528,75 @@ sl_status_t net_configure_ip_command_handler(console_args_t *arguments)
   return SL_STATUS_OK;
 }
 
+// at+net-info=<interface>
+sl_status_t net_info_command_handler(console_args_t *arguments)
+{
+  CHECK_ARGUMENT_BITMAP(arguments, 0x01);
+
+  if (!sl_si91x_is_device_initialized()) {
+    return SL_STATUS_NOT_INITIALIZED;
+  }
+
+  sl_net_interface_info_t info;
+  sl_net_interface_t interface =
+    GET_OPTIONAL_COMMAND_ARG(arguments, 0, SL_NET_WIFI_CLIENT_INTERFACE, sl_net_interface_t);
+
+  sl_status_t status = sl_net_get_interface_info(interface, &info);
+  VERIFY_STATUS_AND_RETURN(status);
+
+  char temp_buffer[46] = { 0 };
+  sl_inet_ntop6((const unsigned char *)(&info.ipv6_address), (char *)temp_buffer, sizeof(temp_buffer));
+
+  PRINT_AT_CMD_SUCCESS;
+
+  // <ipv4-address> <ipv6-address> <wlan-state> <channel-number> <ssid>
+  // <sec-type> <psk-pmk> <bssid> <wireless-mode> <mac-address>
+
+  // Print IPv4 address
+  AT_PRINTF("%d.%d.%d.%d ",
+            info.ipv4_address.bytes[0],
+            info.ipv4_address.bytes[1],
+            info.ipv4_address.bytes[2],
+            info.ipv4_address.bytes[3]);
+
+  // Print IPv6 address
+  AT_PRINTF("%s ", temp_buffer);
+
+  // Print WLAN state and channel number
+  AT_PRINTF("%d %d ", info.hw_info.wifi_info.wlan_state, info.hw_info.wifi_info.channel_number);
+
+  // Print SSID, security type
+  AT_PRINTF("%s %d ", info.hw_info.wifi_info.ssid, info.hw_info.wifi_info.sec_type);
+
+  // Print PSK/PMK
+  for (uint8_t i = 0; i < SL_WIFI_MAX_PSK_LENGTH; ++i) {
+    AT_PRINTF("%02X", info.hw_info.wifi_info.psk_pmk[i]);
+  }
+
+  // Print BSSID
+  AT_PRINTF(" %02X:%02X:%02X:%02X:%02X:%02X ",
+            info.hw_info.wifi_info.bssid[0],
+            info.hw_info.wifi_info.bssid[1],
+            info.hw_info.wifi_info.bssid[2],
+            info.hw_info.wifi_info.bssid[3],
+            info.hw_info.wifi_info.bssid[4],
+            info.hw_info.wifi_info.bssid[5]);
+
+  // Print wireless mode
+  AT_PRINTF("%d ", info.hw_info.wifi_info.wireless_mode);
+
+  // Print MAC address
+  AT_PRINTF("%02X:%02X:%02X:%02X:%02X:%02X\r\n",
+            info.hw_info.wifi_info.mac_address[0],
+            info.hw_info.wifi_info.mac_address[1],
+            info.hw_info.wifi_info.mac_address[2],
+            info.hw_info.wifi_info.mac_address[3],
+            info.hw_info.wifi_info.mac_address[4],
+            info.hw_info.wifi_info.mac_address[5]);
+
+  return SL_STATUS_OK;
+}
+
 static sl_status_t convert_string_to_sl_ipv6_address(char *line, uint16_t *ipv6)
 {
   uint8_t double_colon = 0xFF;
@@ -558,31 +627,6 @@ static sl_status_t convert_string_to_sl_ipv6_address(char *line, uint16_t *ipv6)
   return SL_STATUS_OK;
 }
 
-// ?
-sl_status_t dns_hostgetbyname_command_handler(console_args_t *arguments)
-{
-#ifdef SLI_SI91X_OFFLOAD_NETWORK_STACK
-  sl_ip_address_t ip_address = { 0 };
-  sl_status_t status;
-
-  const char *host_name  = (const char *)arguments->arg[0];
-  const uint32_t timeout = GET_OPTIONAL_COMMAND_ARG(arguments, 1, 20000, const uint32_t);
-  sl_net_dns_resolution_ip_type_t ip_type =
-    GET_OPTIONAL_COMMAND_ARG(arguments, 2, SL_NET_DNS_TYPE_IPV4, sl_net_dns_resolution_ip_type_t);
-
-  status = sl_net_dns_resolve_hostname(host_name, timeout, ip_type, &ip_address);
-  if (status == SL_STATUS_IN_PROGRESS) {
-    return SL_STATUS_OK;
-  }
-  print_sl_ip_address(&ip_address);
-
-  VERIFY_STATUS_AND_RETURN(status);
-  return status;
-#else
-  return SL_STATUS_NOT_SUPPORTED;
-#endif
-}
-
 #ifdef SLI_SI91X_OFFLOAD_NETWORK_STACK
 sl_status_t ping_response_callback_handler(sl_net_event_t event, sl_status_t status, void *data, uint32_t user_data)
 {
@@ -591,14 +635,14 @@ sl_status_t ping_response_callback_handler(sl_net_event_t event, sl_status_t sta
 
   if (SL_NET_PING_RESPONSE_EVENT == event) {
     if (status != SL_STATUS_OK) {
-      printf("\n Ping request failed! \n");
+      SL_DEBUG_LOG_V2(ERROR, " Ping request failed! \r\n");
       return status;
     } else {
-      printf(" Ping reply received from %u.%u.%u.%u \n\n",
-             response->ping_address.ipv4_address[0],
-             response->ping_address.ipv4_address[1],
-             response->ping_address.ipv4_address[2],
-             response->ping_address.ipv4_address[3]);
+      SL_DEBUG_LOG_V2(INFO,
+                      " Ping reply received from %u.%u.",
+                      response->ping_address.ipv4_address[0],
+                      response->ping_address.ipv4_address[1]);
+      SL_DEBUG_LOG_V2(INFO, "%u.%u ", response->ping_address.ipv4_address[2], response->ping_address.ipv4_address[3]);
     }
   }
 

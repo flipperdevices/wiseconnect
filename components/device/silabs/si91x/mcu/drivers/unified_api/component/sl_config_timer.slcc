@@ -31,8 +31,6 @@ requires:
   - name: udma_linker_config
   - name: rsilib_ct
   - name: sl_dma
+  - name: log_none
 define:
   - name: SL_SI91X_REQUIRES_INTF_PLL
-documentation:
-    docset: wiseconnect
-    document: wiseconnect-api-reference-guide-si91x-peripherals/config-timer

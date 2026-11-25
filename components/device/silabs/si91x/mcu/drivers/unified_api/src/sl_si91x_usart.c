@@ -129,6 +129,7 @@ static sl_status_t usart_get_handle(usart_peripheral_t usart_instance, sl_usart_
     // Check for USART instance valid
     if (usart_instance >= UARTLAST) {
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR("usart_get_handle: usart instance is invalid,line no : %d\r\n", (int)__LINE__);
       break;
     }
     // If instance is USART0 then update the USART handle USART0
@@ -219,6 +220,7 @@ sl_status_t sl_si91x_usart_init(usart_peripheral_t usart_instance, sl_usart_hand
     // Check the USART Handle for NUll
     if (usart_handle == NULL) {
       status = SL_STATUS_NULL_POINTER;
+      SL_PRINT_STRING_ERROR("sl_si91x_usart_init: handle NULL,line no : %d\r\n", (int)__LINE__);
       break;
     }
 
@@ -235,22 +237,25 @@ sl_status_t sl_si91x_usart_init(usart_peripheral_t usart_instance, sl_usart_hand
 
 #ifdef DEBUG_UART_UC
     // Check the USART instance is already used for Debug output
-    if (SL_DEBUG_INSTANCE == usart_instance) {
+    if (SL_DEBUG_INSTANCE == usart_instance && USART_GetInitState(usart_instance)) {
       status = SL_STATUS_NOT_AVAILABLE;
+      SL_PRINT_STRING_ERROR("sl_si91x_usart_init: usart instance is already used for debug output,line no : %d\r\n",
+                            (int)__LINE__);
       break;
     }
 #endif
 
-    // Get the USART Init state
     if (USART_GetInitState(usart_instance)) {
       status = SL_STATUS_BUSY;
+      SL_PRINT_STRING_ERROR("sl_si91x_usart_init: usart instance is already initialized,line no : %d\r\n",
+                            (int)__LINE__);
       break;
     }
-
     // To validate the structure pointer and usart handle, if the parameters is NULL, it
     // returns an error code
     if (*usart_handle != NULL) {
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR("sl_si91x_usart_init: usart handle is invalid,line no : %d\r\n", (int)__LINE__);
       break;
     }
     // Get the USART Handle
@@ -263,6 +268,9 @@ sl_status_t sl_si91x_usart_init(usart_peripheral_t usart_instance, sl_usart_hand
     error_status = ((sl_usart_driver_t *)usart_temp_handle)->Initialize(callback_event_handler);
     status       = convert_arm_to_sl_error_code(error_status);
     if (status != SL_STATUS_OK) {
+      SL_PRINT_STRING_ERROR("sl_si91x_usart_init: usart initialization failed,status=0x%04lX,line no : %d\r\n",
+                            (unsigned long)status,
+                            (int)__LINE__);
       return status;
     }
     // If USART Initializes success set the power mode
@@ -292,11 +300,13 @@ sl_status_t sl_si91x_usart_deinit(sl_usart_handle_t usart_handle)
     // Check for USART handle parameter, if NULL return from here
     if (usart_handle == NULL) {
       status = SL_STATUS_NULL_POINTER;
+      SL_PRINT_STRING_ERROR("sl_si91x_usart_deinit: handle NULL,line no : %d\r\n", (int)__LINE__);
       break;
     }
     // Validate USART handle
     if (!validate_usart_handle(usart_handle)) {
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR("sl_si91x_usart_deinit: usart handle is invalid,line no : %d\r\n", (int)__LINE__);
       break;
     }
     // Get the USART Insatnce
@@ -306,6 +316,12 @@ sl_status_t sl_si91x_usart_deinit(sl_usart_handle_t usart_handle)
     //Deinit the USART/UART
     error_status = ((sl_usart_driver_t *)usart_handle)->Uninitialize();
     status       = convert_arm_to_sl_error_code(error_status);
+    if (status != SL_STATUS_OK) {
+      SL_PRINT_STRING_ERROR("sl_si91x_usart_deinit: usart deinitialization failed,status=0x%04lX,line no : %d\r\n",
+                            (unsigned long)status,
+                            (int)__LINE__);
+      break;
+    }
   } while (false);
   return status;
 }
@@ -337,22 +353,30 @@ static sl_status_t sli_si91x_usart_set_power_mode(sl_usart_handle_t usart_handle
     // Check for USART handle parameter, if NULL return from here
     if (usart_handle == NULL) {
       status = SL_STATUS_NULL_POINTER;
+      SL_PRINT_STRING_ERROR("sli_si91x_usart_set_power_mode: handle NULL,line no : %d\r\n", (int)__LINE__);
       break;
     }
     // Check for power state
     if (state >= SL_POWER_MODE_LAST) {
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR("sli_si91x_usart_set_power_mode: power mode is invalid,line no : %d\r\n", (int)__LINE__);
       break;
     }
     // Validate USART handle
     if (!validate_usart_handle(usart_handle)) {
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR("sli_si91x_usart_set_power_mode: usart handle is invalid,line no : %d\r\n", (int)__LINE__);
       break;
     }
     // Set the USART power state
     error_status = ((sl_usart_driver_t *)usart_handle)->PowerControl((ARM_POWER_STATE)state);
     status       = convert_arm_to_sl_error_code(error_status);
-
+    if (status != SL_STATUS_OK) {
+      SL_PRINT_STRING_ERROR("sli_si91x_usart_set_power_mode: power mode setting failed,status=0x%04lX,line no : %d\r\n",
+                            (unsigned long)status,
+                            (int)__LINE__);
+      break;
+    }
   } while (false);
   return status;
 }
@@ -373,12 +397,16 @@ sl_status_t sl_si91x_usart_register_event_callback(sl_usart_signal_event_t callb
     // Validates the null pointer, if true returns error code
     if (callback_event == NULL) {
       status = SL_STATUS_NULL_POINTER;
+      SL_PRINT_STRING_ERROR("sl_si91x_usart_register_event_callback: handle NULL,line no : %d\r\n", (int)__LINE__);
       break;
     }
     // To validate the function pointer if the parameters is not NULL then, it
     // returns an error code
     if (user_callback[0] != NULL) {
       status = SL_STATUS_BUSY;
+      SL_PRINT_STRING_ERROR("sl_si91x_usart_register_event_callback: error status=0x%04lX,line no : %d\r\n",
+                            (unsigned long)(SL_STATUS_BUSY),
+                            (int)__LINE__);
       break;
     }
     // User callback address is passed to the static variable which is called at the time of
@@ -420,17 +448,27 @@ sl_status_t sl_si91x_usart_multiple_instance_register_event_callback(usart_perip
     // Validates the null pointer, if true returns error code
     if (callback_event == NULL) {
       status = SL_STATUS_NULL_POINTER;
+      SL_PRINT_STRING_ERROR("sl_si91x_usart_multiple_instance_register_event_callback: handle NULL,line no : %d\r\n",
+                            (int)__LINE__);
       break;
     }
     // Check for USART instance valid
     if (usart_instance >= UARTLAST) {
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR(
+        "sl_si91x_usart_multiple_instance_register_event_callback: error status=0x%04lX,line no : %d\r\n",
+        (unsigned long)(SL_STATUS_INVALID_PARAMETER),
+        (int)__LINE__);
       break;
     }
     // To validate the function pointer if the parameters is not NULL then, it
     // returns an error codex
     if (user_callback[usart_instance] != NULL) {
       status = SL_STATUS_BUSY;
+      SL_PRINT_STRING_ERROR(
+        "sl_si91x_usart_multiple_instance_register_event_callback: error status=0x%04lX,line no : %d\r\n",
+        (unsigned long)(SL_STATUS_BUSY),
+        (int)__LINE__);
       break;
     }
     // User callback address is passed to the static variable which is called at the time of
@@ -476,21 +514,30 @@ sl_status_t sl_si91x_usart_send_data(sl_usart_handle_t usart_handle, const void 
     // Check USART handle and data parameters, if NULL return from here
     if ((usart_handle == NULL) || (data == NULL)) {
       status = SL_STATUS_NULL_POINTER;
+      SL_PRINT_STRING_ERROR("sl_si91x_usart_send_data: handle NULL,line no : %d\r\n", (int)__LINE__);
       break;
     }
     // Check for data length
     if (data_length == 0) {
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR("sl_si91x_usart_send_data: data length is 0,line no : %d\r\n", (int)__LINE__);
       break;
     }
     // Validate USART handle
     if (!validate_usart_handle(usart_handle)) {
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR("sl_si91x_usart_send_data: usart handle is invalid,line no : %d\r\n", (int)__LINE__);
       break;
     }
     // Send the data available in data pointer parameter
     error_status = ((sl_usart_driver_t *)usart_handle)->Send(data, data_length);
     status       = convert_arm_to_sl_error_code(error_status);
+    if (status != SL_STATUS_OK) {
+      SL_PRINT_STRING_ERROR("sl_si91x_usart_send_data: data sending failed,status=0x%04lX,line no : %d\r\n",
+                            (unsigned long)status,
+                            (int)__LINE__);
+      break;
+    }
   } while (false);
   return status;
 }
@@ -533,10 +580,14 @@ sl_status_t sli_si91x_usart_send_data_blocking(sl_usart_handle_t usart_handle, c
 
   // Check for NULL pointers
   if ((usart_handle == NULL) || (data == NULL)) {
+    SL_PRINT_STRING_ERROR("sli_si91x_usart_send_data_blocking: handle NULL,line no : %d\r\n", (int)__LINE__);
     return SL_STATUS_NULL_POINTER;
   }
   // Check for data length
   if (data_length == 0) {
+    SL_PRINT_STRING_ERROR("sli_si91x_usart_send_data_blocking: error status=0x%04lX,line no : %d\r\n",
+                          (unsigned long)(SL_STATUS_INVALID_PARAMETER),
+                          (int)__LINE__);
     return SL_STATUS_INVALID_PARAMETER;
   }
   uart_instance = get_usart_instance(usart_handle);
@@ -567,7 +618,7 @@ sl_status_t sli_si91x_usart_send_data_blocking(sl_usart_handle_t usart_handle, c
  * To Send the data in async mode when USART/UART is configured
  *
  * @details
- * This function returns immediately and data transfer happens asyncronously. Once the data transfer compeletes ,
+ * This function returns immediately and data transfer happens asynchronously. Once the data transfer completes ,
  * registered user callback get invoked
  * It takes two arguments,
  *   - data: pointer to the data buffer which stores the data received
@@ -582,16 +633,25 @@ sl_status_t sl_si91x_usart_async_send_data(sl_usart_handle_t usart_handle, const
 
   // Validate input parameters
   if (usart_handle == NULL || data == NULL || data_length == 0) {
+    SL_PRINT_STRING_ERROR(
+      "sl_si91x_usart_async_send_data: usart handle or data or data length is NULL,line no : %d\r\n",
+      (int)__LINE__);
     return SL_STATUS_INVALID_PARAMETER;
   }
 
   status = sl_si91x_usart_get_configurations(get_usart_instance(usart_handle), &get_config);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR(
+      "sl_si91x_usart_async_send_data: usart configuration get failed,status=0x%04lX,line no : %d\r\n",
+      (unsigned long)status,
+      (int)__LINE__);
     return status;
   }
 
   // Only allow async receive in async mode
   if (get_config.mode != ARM_USART_MODE_ASYNCHRONOUS) {
+    SL_PRINT_STRING_ERROR("sl_si91x_usart_async_send_data: usart mode is not asynchronous,line no : %d\r\n",
+                          (int)__LINE__);
     return SL_STATUS_INVALID_STATE;
   }
 
@@ -618,21 +678,30 @@ sl_status_t sl_si91x_usart_receive_data(sl_usart_handle_t usart_handle, void *da
     // Check USART handle and data parameters, if NULL return from here
     if ((usart_handle == NULL) || (data == NULL)) {
       status = SL_STATUS_NULL_POINTER;
+      SL_PRINT_STRING_ERROR("sl_si91x_usart_receive_data: handle NULL,line no : %d\r\n", (int)__LINE__);
       break;
     }
     // Check for data length
     if (data_length == 0) {
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR("sl_si91x_usart_receive_data: data length is 0,line no : %d\r\n", (int)__LINE__);
       break;
     }
     // Validate USART handle
     if (!validate_usart_handle(usart_handle)) {
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR("sl_si91x_usart_receive_data: usart handle is invalid,line no : %d\r\n", (int)__LINE__);
       break;
     }
     // Receive the data from USART receiver and point it the data pointer received as argument
     error_status = ((sl_usart_driver_t *)usart_handle)->Receive(data, data_length);
     status       = convert_arm_to_sl_error_code(error_status);
+    if (status != SL_STATUS_OK) {
+      SL_PRINT_STRING_ERROR("sl_si91x_usart_receive_data: data receiving failed,status=0x%04lX,line no : %d\r\n",
+                            (unsigned long)status,
+                            (int)__LINE__);
+      break;
+    }
   } while (false);
   return status;
 }
@@ -657,16 +726,24 @@ sl_status_t sl_si91x_usart_async_receive_data(sl_usart_handle_t usart_handle, vo
 
   // Validate input parameters
   if (usart_handle == NULL || data == NULL || data_length == 0) {
+    SL_PRINT_STRING_ERROR(
+      "sl_si91x_usart_async_receive_data: usart handle or data or data length is NULL,line no : %d\r\n",
+      (int)__LINE__);
     return SL_STATUS_INVALID_PARAMETER;
   }
 
   status = sl_si91x_usart_get_configurations(get_usart_instance(usart_handle), &get_config);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si91x_usart_async_receive_data: error status=0x%04lX,line no : %d\r\n",
+                          (unsigned long)(status),
+                          (int)__LINE__);
     return status;
   }
 
   // Only allow async receive in async mode
   if (get_config.mode != ARM_USART_MODE_ASYNCHRONOUS) {
+    SL_PRINT_STRING_ERROR("sl_si91x_usart_async_receive_data: usart mode is not asynchronous,line no : %d\r\n",
+                          (int)__LINE__);
     return SL_STATUS_INVALID_STATE;
   }
 
@@ -702,22 +779,30 @@ sl_status_t sl_si91x_usart_transfer_data(sl_usart_handle_t usart_handle,
     // Check USART handle data in and data out parameters, if NULL return from here
     if ((usart_handle == NULL) || (data_in == NULL) || (data_out == NULL)) {
       status = SL_STATUS_NULL_POINTER;
+      SL_PRINT_STRING_ERROR("sl_si91x_usart_transfer_data: handle NULL,line no : %d\r\n", (int)__LINE__);
       break;
     }
     // Check for Data length
     if (data_length == 0) {
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR("sl_si91x_usart_transfer_data: data length is 0,line no : %d\r\n", (int)__LINE__);
       break;
     }
     // Validate USART handle
     if (!validate_usart_handle(usart_handle)) {
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR("sl_si91x_usart_transfer_data: usart handle is invalid,line no : %d\r\n", (int)__LINE__);
       break;
     }
     // Transfers and Receives the data in USART synch mode
     error_status = ((sl_usart_driver_t *)usart_handle)->Transfer(data_out, data_in, data_length);
     status       = convert_arm_to_sl_error_code(error_status);
-
+    if (status != SL_STATUS_OK) {
+      SL_PRINT_STRING_ERROR("sl_si91x_usart_transfer_data: data transfer failed,status=0x%04lX,line no : %d\r\n",
+                            (unsigned long)status,
+                            (int)__LINE__);
+      break;
+    }
   } while (false);
   return status;
 }
@@ -834,31 +919,51 @@ sl_status_t sl_si91x_usart_set_configuration(sl_usart_handle_t usart_handle,
     // Check USART handle and control_configuration parameter, if NULL return from here
     if ((usart_handle == NULL) || (control_configuration == NULL)) {
       status = SL_STATUS_NULL_POINTER;
+      SL_PRINT_STRING_ERROR("sl_si91x_usart_set_configuration: handle NULL,line no : %d\r\n", (int)__LINE__);
       break;
     }
     // Check for Max Baud rate supported
     if (control_configuration->baudrate > MAX_BAUDRATE) {
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR(
+        "sl_si91x_usart_set_configuration: baud rate is greater than max baud rate,line no : %d\r\n",
+        (int)__LINE__);
       break;
     }
     // Validate USART handle
     if (!validate_usart_handle(usart_handle)) {
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR("sl_si91x_usart_set_configuration: usart handle is invalid,line no : %d\r\n",
+                            (int)__LINE__);
       break;
     }
     // Configure the USART Transfer and receive line
     status = usart_set_tx_rx_configuration(usart_handle);
     if (status != SL_STATUS_OK) {
+      SL_PRINT_STRING_ERROR(
+        "sl_si91x_usart_set_configuration: tx and rx configuration failed,status=0x%04lX,line no : %d\r\n",
+        (unsigned long)status,
+        (int)__LINE__);
       break;
     }
     // Validate the control parameters and combine in single variable
     status = validate_control_parameters(control_configuration, &input_mode);
     if (status != SL_STATUS_OK) {
+      SL_PRINT_STRING_ERROR(
+        "sl_si91x_usart_set_configuration: control parameters validation failed,status=0x%04lX,line no : %d\r\n",
+        (unsigned long)status,
+        (int)__LINE__);
       break;
     }
     // Configure the USART parameters
     error_status = ((sl_usart_driver_t *)usart_handle)->Control(input_mode, control_configuration->baudrate);
     status       = convert_arm_to_sl_error_code(error_status);
+    if (status != SL_STATUS_OK) {
+      SL_PRINT_STRING_ERROR("sl_si91x_usart_set_configuration: usart control failed,status=0x%04lX,line no : %d\r\n",
+                            (unsigned long)status,
+                            (int)__LINE__);
+      break;
+    }
   } while (false);
   return status;
 }
@@ -918,31 +1023,53 @@ sl_status_t sli_si91x_usart_set_non_uc_configuration(sl_usart_handle_t usart_han
     // Check USART handle and control_configuration parameter, if NULL return from here
     if ((usart_handle == NULL) || (control_configuration == NULL)) {
       status = SL_STATUS_NULL_POINTER;
+      SL_PRINT_STRING_ERROR("sli_si91x_usart_set_non_uc_configuration: handle NULL,line no : %d\r\n", (int)__LINE__);
       break;
     }
     // Check for Max Baud rate supported
     if (control_configuration->baudrate > MAX_BAUDRATE) {
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR(
+        "sli_si91x_usart_set_non_uc_configuration: usart handle or control configuration is NULL,line no : %d\r\n",
+        (int)__LINE__);
       break;
     }
     // Validate USART handle
     if (!validate_usart_handle(usart_handle)) {
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR(
+        "sli_si91x_usart_set_non_uc_configuration: baud rate is greater than max baud rate,line no : %d\r\n",
+        (int)__LINE__);
       break;
     }
     // Configure the USART Transfer and receive line
     status = usart_set_tx_rx_configuration(usart_handle);
     if (status != SL_STATUS_OK) {
+      SL_PRINT_STRING_ERROR(
+        "sli_si91x_usart_set_non_uc_configuration: tx and rx configuration failed,status=0x%04lX,line no : %d\r\n",
+        (unsigned long)status,
+        (int)__LINE__);
       break;
     }
     // Validate the control parameters and combine in single variable
     status = validate_control_parameters(control_configuration, &input_mode);
     if (status != SL_STATUS_OK) {
+      SL_PRINT_STRING_ERROR("sli_si91x_usart_set_non_uc_configuration: control parameters validation "
+                            "failed,status=0x%04lX,line no : %d\r\n",
+                            (unsigned long)status,
+                            (int)__LINE__);
       break;
     }
     // Configure the USART parameters
     error_status = ((sl_usart_driver_t *)usart_handle)->Control(input_mode, control_configuration->baudrate);
     status       = convert_arm_to_sl_error_code(error_status);
+    if (status != SL_STATUS_OK) {
+      SL_PRINT_STRING_ERROR(
+        "sli_si91x_usart_set_non_uc_configuration: usart control failed,status=0x%04lX,line no : %d\r\n",
+        (unsigned long)status,
+        (int)__LINE__);
+      break;
+    }
   } while (false);
   return status;
 }
@@ -964,12 +1091,16 @@ static sl_status_t usart_set_tx_rx_configuration(sl_usart_handle_t usart_handle)
     // Check USART handle parameter, if NULL return from here
     if (usart_handle == NULL) {
       status = SL_STATUS_NULL_POINTER;
+      SL_PRINT_STRING_ERROR("usart_set_tx_rx_configuration: handle NULL,line no : %d\r\n", (int)__LINE__);
       break;
     }
     // Set the USART Tx control line
     error_status = ((sl_usart_driver_t *)usart_handle)->Control(SL_USART_CONTROL_TX, CONFIG_ENABLE);
     status       = convert_arm_to_sl_error_code(error_status);
     if (status != SL_STATUS_OK) {
+      SL_PRINT_STRING_ERROR("usart_set_tx_rx_configuration: error status=0x%04lX,line no : %d\r\n",
+                            (unsigned long)(status),
+                            (int)__LINE__);
       break;
     }
     // Set the USART Rx control line
@@ -1009,16 +1140,26 @@ sl_status_t sl_si91x_usart_set_modem_control(sl_usart_handle_t usart_handle, sl_
     // Check USART handle parameter, if NULL return from here
     if (usart_handle == NULL) {
       status = SL_STATUS_NULL_POINTER;
+      SL_PRINT_STRING_ERROR("sl_si91x_usart_set_modem_control: handle NULL,line no : %d\r\n", (int)__LINE__);
       break;
     }
     // Validate USART handle
     if (!validate_usart_handle(usart_handle)) {
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR("sl_si91x_usart_set_modem_control: usart handle is invalid,line no : %d\r\n",
+                            (int)__LINE__);
       break;
     }
     // Set the USART Modem control state received as argument
     error_status = ((sl_usart_driver_t *)usart_handle)->SetModemControl(control);
     status       = convert_arm_to_sl_error_code(error_status);
+    if (status != SL_STATUS_OK) {
+      SL_PRINT_STRING_ERROR(
+        "sl_si91x_usart_set_modem_control: usart modem control failed,status=0x%04lX,line no : %d\r\n",
+        (unsigned long)status,
+        (int)__LINE__);
+      break;
+    }
   } while (false);
   return status;
 }
@@ -1072,6 +1213,7 @@ sl_status_t sl_si91x_usart_get_configurations(uint8_t usart_module, sl_si91x_usa
   do {
     if (usart_config == NULL) {
       status = SL_STATUS_NULL_POINTER;
+      SL_PRINT_STRING_ERROR("sl_si91x_usart_get_configurations: handle NULL,line no : %d\r\n", (int)__LINE__);
       break;
     }
     //Get the usart operating mode
@@ -1081,11 +1223,19 @@ sl_status_t sl_si91x_usart_get_configurations(uint8_t usart_module, sl_si91x_usa
     // Get the USART parity bit set
     status = usart_get_parity(usart_module, &usart_config->parity);
     if (status != SL_STATUS_OK) {
+      SL_PRINT_STRING_ERROR(
+        "sl_si91x_usart_get_configurations: usart parity bit get failed,status=0x%04lX,line no : %d\r\n",
+        (unsigned long)status,
+        (int)__LINE__);
       break;
     }
     //Get the usart stop bit set
     status = usart_get_stop_bit(usart_module, &usart_config->stopbits);
     if (status != SL_STATUS_OK) {
+      SL_PRINT_STRING_ERROR(
+        "sl_si91x_usart_get_configurations: usart stop bit get failed,status=0x%04lX,line no : %d\r\n",
+        (unsigned long)status,
+        (int)__LINE__);
       break;
     }
   } while (false);
@@ -1129,6 +1279,7 @@ static sl_status_t usart_get_parity(uint8_t usart_module, usart_parity_typedef_t
   do {
     if (usart_module >= UARTLAST) {
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR("usart_get_parity: usart module is invalid,line no : %d\r\n", (int)__LINE__);
       break;
     }
     // Get the parity bit data
@@ -1163,6 +1314,7 @@ static sl_status_t usart_get_stop_bit(uint8_t usart_module, usart_stopbit_typede
   do {
     if (usart_module >= UARTLAST) {
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR("usart_get_stop_bit: usart module is invalid,line no : %d\r\n", (int)__LINE__);
       break;
     }
     // Get the stop bit data from h/w
@@ -1255,7 +1407,6 @@ static sl_status_t convert_arm_to_sl_error_code(int32_t error)
       break;
     default:
       status = SL_STATUS_FAIL;
-      break;
   }
   return status;
 }
@@ -1275,6 +1426,8 @@ static sl_status_t validate_control_parameters(sl_si91x_usart_control_config_t *
   sl_status_t status = SL_STATUS_FAIL;
   do {
     if ((control_configuration == NULL) || (input_mode == NULL)) {
+      SL_PRINT_STRING_ERROR("validate_control_parameters: control configuration or input mode is NULL,line no : %d\r\n",
+                            (int)__LINE__);
       status = SL_STATUS_NULL_POINTER;
     }
     // Append all the input control parameters
@@ -1324,6 +1477,7 @@ static sl_status_t configure_rs485_gpio_pin(sl_rs485_gpio_pin_config_t *pin_conf
     // Validates the null pointer, if true returns error code
     if (pin_config == NULL) {
       status = SL_STATUS_NULL_POINTER;
+      SL_PRINT_STRING_ERROR("configure_rs485_gpio_pin: handle NULL,line no : %d\r\n", (int)__LINE__);
       break;
     }
     if (pin_config->pin >= GPIO_MAX_PIN) {
@@ -1383,18 +1537,29 @@ static sl_status_t sl_si91x_uart_rs485_gpio_init(sl_uart_rs485_pin_init_t *rs485
   // Validates the null pointer, if true returns error code
   if (rs485_init == NULL) {
     status = SL_STATUS_NULL_POINTER;
+    SL_PRINT_STRING_ERROR("sl_si91x_uart_rs485_gpio_init: rs485 init is NULL,line no : %d\r\n", (int)__LINE__);
+    return status;
   } else {
     // Configure RS485 pins
     status = configure_rs485_gpio_pin(&rs485_init->de); // RS485 DE pin mux
     if (status != SL_STATUS_OK) {
+      SL_PRINT_STRING_ERROR("sl_si91x_uart_rs485_gpio_init: error status=0x%04lX,line no : %d\r\n",
+                            (unsigned long)(status),
+                            (int)__LINE__);
       return status;
     }
     status = configure_rs485_gpio_pin(&rs485_init->re); // RS485 RE pin mux
     if (status != SL_STATUS_OK) {
+      SL_PRINT_STRING_ERROR("sl_si91x_uart_rs485_gpio_init: error status=0x%04lX,line no : %d\r\n",
+                            (unsigned long)(status),
+                            (int)__LINE__);
       return status;
     }
     status = configure_rs485_gpio_pin(&rs485_init->rs485_en); // RS485 EN pin mux
     if (status != SL_STATUS_OK) {
+      SL_PRINT_STRING_ERROR("sl_si91x_uart_rs485_gpio_init: error status=0x%04lX,line no : %d\r\n",
+                            (unsigned long)(status),
+                            (int)__LINE__);
       return status;
     }
   }
@@ -1417,6 +1582,9 @@ sl_status_t sl_si91x_uart_rs485_init(usart_peripheral_t uart_instance)
     // Check for USART instance valid
     if (uart_instance >= UARTLAST) {
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR("sl_si91x_uart_rs485_init: error status=0x%04lX,line no : %d\r\n",
+                            (unsigned long)(SL_STATUS_INVALID_PARAMETER),
+                            (int)__LINE__);
       break;
     }
 
@@ -1426,6 +1594,9 @@ sl_status_t sl_si91x_uart_rs485_init(usart_peripheral_t uart_instance)
 #endif
       status = sl_si91x_uart_rs485_gpio_init(&pin_init);
       if (status != SL_STATUS_OK) {
+        SL_PRINT_STRING_ERROR("sl_si91x_uart_rs485_init: error status=0x%04lX,line no : %d\r\n",
+                              (unsigned long)(status),
+                              (int)__LINE__);
         return status;
       }
       rsi_usart_rs485_enable(UART0);
@@ -1437,6 +1608,9 @@ sl_status_t sl_si91x_uart_rs485_init(usart_peripheral_t uart_instance)
 #endif
       status = sl_si91x_uart_rs485_gpio_init(&pin_init);
       if (status != SL_STATUS_OK) {
+        SL_PRINT_STRING_ERROR("sl_si91x_uart_rs485_init: error status=0x%04lX,line no : %d\r\n",
+                              (unsigned long)(status),
+                              (int)__LINE__);
         return status;
       }
       rsi_usart_rs485_enable(UART1);
@@ -1478,6 +1652,9 @@ sl_status_t sl_si91x_uart_rs485_set_configuration(usart_peripheral_t uart_instan
     // Check for USART instance valid
     if (uart_instance >= UARTLAST) {
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR("sl_si91x_uart_rs485_set_configuration: error status=0x%04lX,line no : %d\r\n",
+                            (unsigned long)(SL_STATUS_INVALID_PARAMETER),
+                            (int)__LINE__);
       break;
     }
 
@@ -1493,6 +1670,8 @@ sl_status_t sl_si91x_uart_rs485_set_configuration(usart_peripheral_t uart_instan
       break;
     } else if (uart_instance == ULPUART) {
       status = SL_STATUS_NOT_SUPPORTED;
+      SL_PRINT_STRING_ERROR("sl_si91x_uart_rs485_set_configuration: ulpuart is not supported,line no : %d\r\n",
+                            (int)__LINE__);
     }
   } while (false);
   return status;
@@ -1509,6 +1688,9 @@ sl_status_t sl_si91x_uart_rs485_de_enable(usart_peripheral_t uart_instance, bool
     // Check for USART instance valid
     if (uart_instance >= UARTLAST) {
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR("sl_si91x_uart_rs485_de_enable: error status=0x%04lX,line no : %d\r\n",
+                            (unsigned long)(SL_STATUS_INVALID_PARAMETER),
+                            (int)__LINE__);
       break;
     }
 
@@ -1538,6 +1720,9 @@ sl_status_t sl_si91x_uart_rs485_re_enable(usart_peripheral_t uart_instance, bool
     // Check for USART instance valid
     if (uart_instance >= UARTLAST) {
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR("sl_si91x_uart_rs485_re_enable: error status=0x%04lX,line no : %d\r\n",
+                            (unsigned long)(SL_STATUS_INVALID_PARAMETER),
+                            (int)__LINE__);
       break;
     }
 
@@ -1576,11 +1761,15 @@ sl_status_t sl_si91x_uart_rs485_rx_hardware_address_set(usart_peripheral_t uart_
     // Check for USART instance valid
     if (uart_instance >= UARTLAST) {
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR("sl_si91x_uart_rs485_rx_hardware_address_set: error status=0x%04lX,line no : %d\r\n",
+                            (unsigned long)(SL_STATUS_INVALID_PARAMETER),
+                            (int)__LINE__);
       break;
     }
     // Check for rx_addr valid
     if (rx_addr == NULL) {
       status = SL_STATUS_NULL_POINTER;
+      SL_PRINT_STRING_ERROR("sl_si91x_uart_rs485_rx_hardware_address_set: handle NULL,line no : %d\r\n", (int)__LINE__);
       break;
     }
     if (uart_instance == USART_0) {
@@ -1593,6 +1782,7 @@ sl_status_t sl_si91x_uart_rs485_rx_hardware_address_set(usart_peripheral_t uart_
       break;
     } else if (uart_instance == ULPUART) {
       status = SL_STATUS_NOT_SUPPORTED;
+      SL_PRINT_STRING_ERROR("sl_si91x_uart_rs485_de_enable: ulpuart is not supported,line no : %d\r\n", (int)__LINE__);
     }
   } while (false);
   return status;
@@ -1612,6 +1802,9 @@ sl_status_t sl_si91x_uart_rs485_address_received(usart_peripheral_t uart_instanc
     // Check for USART instance valid
     if (uart_instance >= UARTLAST) {
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR("sl_si91x_uart_rs485_address_received: error status=0x%04lX,line no : %d\r\n",
+                            (unsigned long)(SL_STATUS_INVALID_PARAMETER),
+                            (int)__LINE__);
       break;
     }
 
@@ -1623,7 +1816,7 @@ sl_status_t sl_si91x_uart_rs485_address_received(usart_peripheral_t uart_instanc
       if (usart_tick_count <= TIMEOUT_EXPIRY) {
         // The loop terminated due to a timeout. Exiting the function with an error code.
         status = SL_STATUS_TIMEOUT;
-
+        SL_PRINT_STRING_ERROR("sl_si91x_uart_rs485_address_received: timeout,line no : %d\r\n", (int)__LINE__);
       } else {
         status = SL_STATUS_OK;
       }
@@ -1636,7 +1829,7 @@ sl_status_t sl_si91x_uart_rs485_address_received(usart_peripheral_t uart_instanc
       if (usart_tick_count <= TIMEOUT_EXPIRY) {
         // The loop terminated due to a timeout. Exiting the function with an error code.
         status = SL_STATUS_TIMEOUT;
-
+        SL_PRINT_STRING_ERROR("sl_si91x_uart_rs485_address_received: timeout,line no : %d\r\n", (int)__LINE__);
       } else {
         status = SL_STATUS_OK;
       }
@@ -1669,11 +1862,16 @@ sl_status_t sl_si91x_uart_rs485_transfer_hardware_address(usart_peripheral_t uar
     // Check for USART instance valid
     if (uart_instance >= UARTLAST) {
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR("sl_si91x_uart_rs485_transfer_hardware_address: error status=0x%04lX,line no : %d\r\n",
+                            (unsigned long)(SL_STATUS_INVALID_PARAMETER),
+                            (int)__LINE__);
       break;
     }
     // Check for tx_address valid
     if (tx_address == NULL) {
       status = SL_STATUS_NULL_POINTER;
+      SL_PRINT_STRING_ERROR("sl_si91x_uart_rs485_transfer_hardware_address: handle NULL,line no : %d\r\n",
+                            (int)__LINE__);
       break;
     }
     // Set the SLave address to which data wants to transmit from UC
@@ -1715,6 +1913,9 @@ sl_status_t sl_si91x_uart_rs485_resume_tx(usart_peripheral_t uart_instance, bool
     // Check for USART instance valid
     if (uart_instance >= UARTLAST) {
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR("sl_si91x_uart_rs485_resume_tx: error status=0x%04lX,line no : %d\r\n",
+                            (unsigned long)(SL_STATUS_INVALID_PARAMETER),
+                            (int)__LINE__);
       break;
     }
 
@@ -1728,6 +1929,7 @@ sl_status_t sl_si91x_uart_rs485_resume_tx(usart_peripheral_t uart_instance, bool
       break;
     } else if (uart_instance == ULPUART) {
       status = SL_STATUS_NOT_SUPPORTED;
+      SL_PRINT_STRING_ERROR("sl_si91x_uart_rs485_resume_tx: ulpuart is not supported,line no : %d\r\n", (int)__LINE__);
     }
   } while (false);
   return status;
@@ -1748,6 +1950,9 @@ sl_status_t sl_si91x_uart_rs485_deinit(usart_peripheral_t uart_instance)
     // Check for USART instance valid
     if (uart_instance >= UARTLAST) {
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR("sl_si91x_uart_rs485_deinit: error status=0x%04lX,line no : %d\r\n",
+                            (unsigned long)(SL_STATUS_INVALID_PARAMETER),
+                            (int)__LINE__);
       break;
     }
 
@@ -1761,6 +1966,7 @@ sl_status_t sl_si91x_uart_rs485_deinit(usart_peripheral_t uart_instance)
       break;
     } else if (uart_instance == ULPUART) {
       status = SL_STATUS_NOT_SUPPORTED;
+      SL_PRINT_STRING_ERROR("sl_si91x_uart_rs485_deinit: ulpuart is not supported,line no : %d\r\n", (int)__LINE__);
     }
   } while (false);
   return status;
@@ -1777,6 +1983,9 @@ sl_status_t sl_si91x_uart_rs485_control_send_address(usart_peripheral_t uart_ins
     // Check for USART instance valid
     if (uart_instance >= UARTLAST) {
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR("sl_si91x_uart_rs485_control_send_address: error status=0x%04lX,line no : %d\r\n",
+                            (unsigned long)(SL_STATUS_INVALID_PARAMETER),
+                            (int)__LINE__);
       break;
     }
 
@@ -1790,6 +1999,8 @@ sl_status_t sl_si91x_uart_rs485_control_send_address(usart_peripheral_t uart_ins
       break;
     } else if (uart_instance == ULPUART) {
       status = SL_STATUS_NOT_SUPPORTED;
+      SL_PRINT_STRING_ERROR("sl_si91x_uart_rs485_control_send_address: ulpuart is not supported,line no : %d\r\n",
+                            (int)__LINE__);
     }
   } while (false);
   return status;
@@ -1806,6 +2017,9 @@ sl_status_t sl_si91x_uart_rs485_control_address_match(usart_peripheral_t uart_in
     // Check for USART instance valid
     if (uart_instance >= UARTLAST) {
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR("sl_si91x_uart_rs485_control_address_match: error status=0x%04lX,line no : %d\r\n",
+                            (unsigned long)(SL_STATUS_INVALID_PARAMETER),
+                            (int)__LINE__);
       break;
     }
 
@@ -1819,6 +2033,8 @@ sl_status_t sl_si91x_uart_rs485_control_address_match(usart_peripheral_t uart_in
       break;
     } else if (uart_instance == ULPUART) {
       status = SL_STATUS_NOT_SUPPORTED;
+      SL_PRINT_STRING_ERROR("sl_si91x_uart_rs485_control_address_match: ulpuart is not supported,line no : %d\r\n",
+                            (int)__LINE__);
     }
   } while (false);
   return status;
@@ -1838,6 +2054,9 @@ sl_status_t sl_si91x_uart_rs485_set_de_assert_time(usart_peripheral_t uart_insta
     // Check for USART instance valid
     if (uart_instance >= UARTLAST) {
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR("sl_si91x_uart_rs485_set_de_assert_time: error status=0x%04lX,line no : %d\r\n",
+                            (unsigned long)(SL_STATUS_INVALID_PARAMETER),
+                            (int)__LINE__);
       break;
     }
 
@@ -1851,6 +2070,8 @@ sl_status_t sl_si91x_uart_rs485_set_de_assert_time(usart_peripheral_t uart_insta
       break;
     } else if (uart_instance == ULPUART) {
       status = SL_STATUS_NOT_SUPPORTED;
+      SL_PRINT_STRING_ERROR("sl_si91x_uart_rs485_set_de_assert_time: ulpuart is not supported,line no : %d\r\n",
+                            (int)__LINE__);
     }
   } while (false);
   return status;
@@ -1871,6 +2092,9 @@ sl_status_t sl_si91x_uart_rs485_set_de_deassert_time(usart_peripheral_t uart_ins
     // Check for USART instance valid
     if (uart_instance >= UARTLAST) {
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR("sl_si91x_uart_rs485_set_de_deassert_time: error status=0x%04lX,line no : %d\r\n",
+                            (unsigned long)(SL_STATUS_INVALID_PARAMETER),
+                            (int)__LINE__);
       break;
     }
 
@@ -1884,6 +2108,8 @@ sl_status_t sl_si91x_uart_rs485_set_de_deassert_time(usart_peripheral_t uart_ins
       break;
     } else if (uart_instance == ULPUART) {
       status = SL_STATUS_NOT_SUPPORTED;
+      SL_PRINT_STRING_ERROR("sl_si91x_uart_rs485_set_de_deassert_time: ulpuart is not supported,line no : %d\r\n",
+                            (int)__LINE__);
     }
   } while (false);
   return status;
@@ -1904,6 +2130,9 @@ sl_status_t sl_si91x_uart_rs485_set_de_re_turnaround_time(usart_peripheral_t uar
     // Check for USART instance valid
     if (uart_instance >= UARTLAST) {
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR("sl_si91x_uart_rs485_set_de_re_turnaround_time: error status=0x%04lX,line no : %d\r\n",
+                            (unsigned long)(SL_STATUS_INVALID_PARAMETER),
+                            (int)__LINE__);
       break;
     }
 
@@ -1917,6 +2146,8 @@ sl_status_t sl_si91x_uart_rs485_set_de_re_turnaround_time(usart_peripheral_t uar
       break;
     } else if (uart_instance == ULPUART) {
       status = SL_STATUS_NOT_SUPPORTED;
+      SL_PRINT_STRING_ERROR("sl_si91x_uart_rs485_set_de_re_turnaround_time: ulpuart is not supported,line no : %d\r\n",
+                            (int)__LINE__);
     }
   } while (false);
   return status;
@@ -1937,6 +2168,9 @@ sl_status_t sl_si91x_uart_rs485_set_re_de_turnaround_time(usart_peripheral_t uar
     // Check for USART instance valid
     if (uart_instance >= UARTLAST) {
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR("sl_si91x_uart_rs485_set_re_de_turnaround_time: error status=0x%04lX,line no : %d\r\n",
+                            (unsigned long)(SL_STATUS_INVALID_PARAMETER),
+                            (int)__LINE__);
       break;
     }
 
@@ -1950,6 +2184,8 @@ sl_status_t sl_si91x_uart_rs485_set_re_de_turnaround_time(usart_peripheral_t uar
       break;
     } else if (uart_instance == ULPUART) {
       status = SL_STATUS_NOT_SUPPORTED;
+      SL_PRINT_STRING_ERROR("sl_si91x_uart_rs485_set_re_de_turnaround_time: ulpuart is not supported,line no : %d\r\n",
+                            (int)__LINE__);
     }
   } while (false);
   return status;
@@ -1968,6 +2204,9 @@ sl_status_t sl_si91x_uart_rs485_set_de_polarity(usart_peripheral_t uart_instance
     // Check for USART instance valid
     if (uart_instance >= UARTLAST) {
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR("sl_si91x_uart_rs485_set_de_polarity: error status=0x%04lX,line no : %d\r\n",
+                            (unsigned long)(SL_STATUS_INVALID_PARAMETER),
+                            (int)__LINE__);
       break;
     }
 
@@ -1981,6 +2220,8 @@ sl_status_t sl_si91x_uart_rs485_set_de_polarity(usart_peripheral_t uart_instance
       break;
     } else if (uart_instance == ULPUART) {
       status = SL_STATUS_NOT_SUPPORTED;
+      SL_PRINT_STRING_ERROR("sl_si91x_uart_rs485_set_de_polarity: ulpuart is not supported,line no : %d\r\n",
+                            (int)__LINE__);
     }
   } while (false);
   return status;
@@ -1999,6 +2240,9 @@ sl_status_t sl_si91x_uart_rs485_set_re_polarity(usart_peripheral_t uart_instance
     // Check for USART instance valid
     if (uart_instance >= UARTLAST) {
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR("sl_si91x_uart_rs485_set_re_polarity: error status=0x%04lX,line no : %d\r\n",
+                            (unsigned long)(SL_STATUS_INVALID_PARAMETER),
+                            (int)__LINE__);
       break;
     }
 

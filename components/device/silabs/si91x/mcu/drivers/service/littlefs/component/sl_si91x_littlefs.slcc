@@ -20,6 +20,7 @@ requires:
   - name: littlefs_si91x
   - name: romdriver_qspi
   - name: sl_gpio
+  - name: log_none
 template_contribution:
   - name: littlefs_enable
     value: true

@@ -33,6 +33,7 @@
 #include <stdbool.h>
 #include "sl_status.h"
 #include "sl_si91x_ssi.h"
+#include "sl_log_helper.h"
 
 #ifdef __cplusplus
 extern "C" {

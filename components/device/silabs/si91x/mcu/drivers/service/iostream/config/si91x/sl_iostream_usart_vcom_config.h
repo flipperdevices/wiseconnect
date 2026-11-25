@@ -1,6 +1,6 @@
 /***************************************************************************/ /**
  * @file
- * @brief IOSTREAM_USART Config.
+ * @brief IO Stream USART VCOM configuration for SiWx91x.
  *******************************************************************************
  * # License
  * <b>Copyright 2023 Silicon Laboratories Inc. www.silabs.com</b>
@@ -79,10 +79,11 @@
 // <i> Default: 1
 #define SL_SI91X_VCOM_ENABLE 1
 
-#define USART0_MODULE   0
-#define UART1_MODULE    1
+#define USART0_MODULE 0
+#define UART1_MODULE  1
+#ifndef ULP_UART_MODULE
 #define ULP_UART_MODULE 2
-
+#endif
 #if SL_SI91X_VCOM_ENABLE
 #define SL_USART_MODULE ULP_UART_MODULE
 #else

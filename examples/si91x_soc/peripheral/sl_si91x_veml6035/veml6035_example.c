@@ -70,32 +70,38 @@ void veml6035_example_init(void)
       // Enable GPIO ULP_CLK
       status = sl_si91x_gpio_driver_enable_clock((sl_si91x_gpio_select_clock_t)ULPCLK_GPIO);
       if (status != SL_STATUS_OK) {
-        DEBUGOUT("sl_si91x_gpio_driver_enable_clock, Error code: %lu", status);
+        /* Note: All status messages in this example — both success and failure — are
+ * intentionally emitted via SL_PRINT_STRING_ERROR so that they remain visible
+ * on the console at the default log level. This is a demonstration choice, not
+ * a recommendation: in production code, ERROR severity should be reserved for
+ * actual failures, with successful operations logged via SL_PRINT_STRING_INFO
+ * (or SL_PRINT_STRING_DEBUG for verbose trace). */
+        SL_PRINT_STRING_ERROR("sl_si91x_gpio_driver_enable_clock, Error code: %lu\r\n", status);
         break;
       }
-      DEBUGOUT("GPIO driver clock enable is successful \n");
+      SL_PRINT_STRING_ERROR("GPIO driver clock enable is successful \r\n");
       // Set NPSS GPIO pin MUX
       status = sl_si91x_gpio_driver_set_uulp_npss_pin_mux(SENSOR_ENABLE_GPIO_PIN, NPSS_GPIO_PIN_MUX_MODE0);
       if (status != SL_STATUS_OK) {
-        DEBUGOUT("sl_si91x_gpio_driver_set_uulp_npss_pin_mux, Error code: %lu", status);
+        SL_PRINT_STRING_ERROR("sl_si91x_gpio_driver_set_uulp_npss_pin_mux, Error code: %lu\r\n", status);
         break;
       }
-      DEBUGOUT("GPIO driver uulp pin mux selection is successful \n");
+      SL_PRINT_STRING_ERROR("GPIO driver uulp pin mux selection is successful \r\n");
       // Set NPSS GPIO pin direction
       status =
         sl_si91x_gpio_driver_set_uulp_npss_direction(SENSOR_ENABLE_GPIO_PIN, (sl_si91x_gpio_direction_t)GPIO_OUTPUT);
       if (status != SL_STATUS_OK) {
-        DEBUGOUT("sl_si91x_gpio_driver_set_uulp_npss_direction, Error code: %lu", status);
+        SL_PRINT_STRING_ERROR("sl_si91x_gpio_driver_set_uulp_npss_direction, Error code: %lu\r\n", status);
         break;
       }
-      DEBUGOUT("GPIO driver uulp pin direction selection is successful \n");
+      SL_PRINT_STRING_ERROR("GPIO driver uulp pin direction selection is successful \r\n");
       // Set UULP GPIO pin
       status = sl_si91x_gpio_driver_set_uulp_npss_pin_value(SENSOR_ENABLE_GPIO_PIN, SET);
       if (status != SL_STATUS_OK) {
-        DEBUGOUT("sl_si91x_gpio_driver_set_uulp_npss_pin_value, Error code: %lu", status);
+        SL_PRINT_STRING_ERROR("sl_si91x_gpio_driver_set_uulp_npss_pin_value, Error code: %lu\r\n", status);
         break;
       }
-      DEBUGOUT("GPIO driver set uulp pin value is successful \n");
+      SL_PRINT_STRING_ERROR("GPIO driver set uulp pin value is successful \r\n");
     }
 #else
     sl_gpio_t sensor_enable_port_pin = { SENSOR_ENABLE_GPIO_PORT, SENSOR_ENABLE_GPIO_PIN };
@@ -103,7 +109,7 @@ void veml6035_example_init(void)
 
     status = sl_gpio_driver_get_pin(&sensor_enable_port_pin, &pin_value);
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("sl_gpio_driver_get_pin, Error code: %lu", status);
+      SL_PRINT_STRING_ERROR("sl_gpio_driver_get_pin, Error code: %lu\r\n", status);
       break;
     }
     if (pin_value != 1) {
@@ -114,33 +120,33 @@ void veml6035_example_init(void)
       status = sl_si91x_gpio_driver_enable_clock((sl_si91x_gpio_select_clock_t)M4CLK_GPIO);
 #endif
       if (status != SL_STATUS_OK) {
-        DEBUGOUT("sl_si91x_gpio_driver_enable_clock, Error code: %lu", status);
+        SL_PRINT_STRING_ERROR("sl_si91x_gpio_driver_enable_clock, Error code: %lu\r\n", status);
         break;
       }
-      DEBUGOUT("GPIO driver clock enable is successful \n");
+      SL_PRINT_STRING_ERROR("GPIO driver clock enable is successful \r\n");
 
       // Set the pin mode for GPIO pins.
       status = sl_gpio_driver_set_pin_mode(&sensor_enable_port_pin, MODE_0, OUTPUT_VALUE);
       if (status != SL_STATUS_OK) {
-        DEBUGOUT("sl_gpio_driver_set_pin_mode, Error code: %lu", status);
+        SL_PRINT_STRING_ERROR("sl_gpio_driver_set_pin_mode, Error code: %lu\r\n", status);
         break;
       }
-      DEBUGOUT("GPIO driver pin mode select is successful \n");
+      SL_PRINT_STRING_ERROR("GPIO driver pin mode select is successful \r\n");
       // Select the direction of GPIO pin whether Input/ Output
       status = sl_si91x_gpio_driver_set_pin_direction(SENSOR_ENABLE_GPIO_PORT,
                                                       SENSOR_ENABLE_GPIO_PIN,
                                                       (sl_si91x_gpio_direction_t)GPIO_OUTPUT);
       if (status != SL_STATUS_OK) {
-        DEBUGOUT("sl_si91x_gpio_driver_set_pin_direction, Error code: %lu", status);
+        SL_PRINT_STRING_ERROR("sl_si91x_gpio_driver_set_pin_direction, Error code: %lu\r\n", status);
         break;
       }
       // Set GPIO pin
       status = sl_gpio_driver_set_pin(&sensor_enable_port_pin); // Set ULP GPIO pin
       if (status != SL_STATUS_OK) {
-        DEBUGOUT("sl_gpio_driver_set_pin, Error code: %lu", status);
+        SL_PRINT_STRING_ERROR("sl_gpio_driver_set_pin, Error code: %lu\r\n", status);
         break;
       }
-      DEBUGOUT("GPIO driver set pin value is successful \n");
+      SL_PRINT_STRING_ERROR("GPIO driver set pin value is successful \r\n");
     }
 #endif
     //Start 2000 ms periodic timer
@@ -154,26 +160,27 @@ void veml6035_example_init(void)
     // Initialize I2C bus
     status = sl_i2c_driver_init(I2C, &i2c_config);
     if (status != SL_I2C_SUCCESS) {
-      DEBUGOUT("sl_i2c_driver_init : Invalid Parameters, Error Code: 0x%ld \n", status);
+      SL_PRINT_STRING_ERROR("sl_i2c_driver_init : Invalid Parameters, Error Code: 0x%ld \r\n", status);
       break;
     } else {
-      DEBUGOUT("Successfully initialized and configured i2c leader\n");
+      SL_PRINT_STRING_ERROR("Successfully initialized and configured i2c leader\r\n");
     }
     status = sl_i2c_driver_configure_fifo_threshold(I2C, TX_THRESHOLD, RX_THRESHOLD);
     if (status != SL_I2C_SUCCESS) {
-      DEBUGOUT("sl_i2c_driver_configure_fifo_threshold : Invalid Parameters, Error Code: 0x%ld \n", status);
+      SL_PRINT_STRING_ERROR("sl_i2c_driver_configure_fifo_threshold : Invalid Parameters, Error Code: 0x%ld \r\n",
+                            status);
       break;
     } else {
-      DEBUGOUT("Successfully configured i2c TX & RX FIFO thresholds\n");
+      SL_PRINT_STRING_ERROR("Successfully configured i2c TX & RX FIFO thresholds\r\n");
     }
 
     // Initializes sensor and reads electronic ID 1st byte
     status = sl_si91x_veml6035_init(I2C, VEML6035_ADDR, true);
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("Sensor initialization un-successful, Error Code: 0x%ld \n", status);
+      SL_PRINT_STRING_ERROR("Sensor initialization un-successful, Error Code: 0x%ld \r\n", status);
       break;
     } else {
-      DEBUGOUT("Successfully initialized sensor\n");
+      SL_PRINT_STRING_ERROR("Successfully initialized sensor\r\n");
     }
   } while (false);
 }
@@ -191,18 +198,18 @@ void veml6035_example_process_action(void)
 
     status = veml6035_measure_als_lux();
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("lux measurement failed, error Code: 0x%ld \n\n", status);
+      SL_PRINT_STRING_ERROR("lux measurement failed, error Code: 0x%ld \n\r\n", status);
     } else {
-      DEBUGOUT("lux measurement successful\n");
+      SL_PRINT_STRING_ERROR("lux measurement successful\r\n");
     }
 
     delay(SYNC_TIME);
 
     status = veml6035_measure_white_ch_lux();
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("lux measurement failed, error Code: 0x%ld \n\n", status);
+      SL_PRINT_STRING_ERROR("lux measurement failed, error Code: 0x%ld \n\r\n", status);
     } else {
-      DEBUGOUT("lux measurement successful\n\n");
+      SL_PRINT_STRING_ERROR("lux measurement successful\n\r\n");
     }
   }
 }
@@ -216,10 +223,10 @@ static sl_status_t veml6035_measure_white_ch_lux(void)
 
   status = sl_si91x_veml6035_get_white_lux(I2C, VEML6035_ADDR, &lux);
   if (status != SL_STATUS_OK) {
-    DEBUGOUT("white ch lux measurement failed, error Code: 0x%ld \n", status);
+    SL_PRINT_STRING_ERROR("white ch lux measurement failed, error Code: 0x%ld \r\n", status);
     return status;
   } else {
-    DEBUGOUT("measured white ch lux value: %.2f \r\n", (double)lux);
+    SL_PRINT_STRING_ERROR("measured white ch lux value: %.2f \r\n", (double)lux);
   }
   return status;
 }
@@ -233,10 +240,10 @@ static sl_status_t veml6035_measure_als_lux(void)
 
   status = sl_si91x_veml6035_get_als_lux(I2C, VEML6035_ADDR, &lux);
   if (status != SL_STATUS_OK) {
-    DEBUGOUT("als lux measurement failed, error Code: 0x%ld \n", status);
+    SL_PRINT_STRING_ERROR("als lux measurement failed, error Code: 0x%ld \r\n", status);
     return status;
   } else {
-    DEBUGOUT("measured als lux value: %.2lf\r\n", (double)lux);
+    SL_PRINT_STRING_ERROR("measured als lux value: %.2lf\r\n", (double)lux);
   }
   return status;
 }

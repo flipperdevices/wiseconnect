@@ -13,7 +13,12 @@ define:
 provides:
   - name: data_segment_in_psram
 requires:
-  - name: wiseconnect_toolchain_psram_linker  
+  - name: wiseconnect_toolchain_psram_linker
+root_path: "components/device/silabs/si91x/mcu/drivers/unified_api"
+include:
+  - path: inc
+    file_list:
+      - path: sl_si91x_psram_retained_data.h
 template_contribution:
   - name: data_segment_in_psram
     value: 1

@@ -35,9 +35,10 @@
 extern "C" {
 #endif
 
-#include "sl_status.h"
+#include "sl_log_helper.h"
 #include "sl_si91x_adc.h"
 #include "sl_si91x_joystick_config.h"
+#include "sl_status.h"
 
 /***************************************************************************/
 /**

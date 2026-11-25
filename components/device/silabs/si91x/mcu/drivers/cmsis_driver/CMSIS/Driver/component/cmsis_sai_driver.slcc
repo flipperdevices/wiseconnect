@@ -2,7 +2,7 @@ id: cmsis_sai_driver
 label: CMSIS SAI DRIVER
 package: platform_siwx91x
 description: >
-  CMSIS SAI Driver include path
+  This component includes CMSIS SAI drive path for the SiWx91x.
 category: Device|Si91x|MCU|Internal|CMSIS Drivers
 quality: production
 metadata:

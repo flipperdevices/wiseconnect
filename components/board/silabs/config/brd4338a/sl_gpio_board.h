@@ -29,6 +29,7 @@ extern "C" {
  * @{
  */
 #include "em_device.h"
+#include "sl_si91x_gpio_hp_pin_config.h"
 
 #define SL_SI91X_GPIO_6_PORT RTE_GPIO_6_PORT
 #define SL_SI91X_GPIO_6_PAD  RTE_GPIO_6_PAD

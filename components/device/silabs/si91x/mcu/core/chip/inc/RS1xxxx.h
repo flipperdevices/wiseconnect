@@ -233,7 +233,7 @@ typedef struct {
         SRC_ADDR_CONTIGUOUS : 1; /*!< [25..25] Indicates Address is contiguous from previous                    */
       __IOM uint32_t
         DEST_ADDR_CONTIGUOUS : 1; /*!< [26..26] Indicates Address is contiguous from previous                    */
-      __IOM uint32_t RETRY_ON_ERROR : 1; /*!< [27..27] When this bit is set, if we recieve HRESPERR, We will
+      __IOM uint32_t RETRY_ON_ERROR : 1; /*!< [27..27] When this bit is set, if we receive HRESPERR, We will
                                                      retry the DMA for that channel.                                           */
       __IOM uint32_t LINK_INTERRUPT : 1; /*!< [28..28] This bit is set in link list descriptor.Hard ware will
                                                      send an interrupt when the DMA transfer is done for the
@@ -10204,7 +10204,7 @@ typedef struct { /*!< (@ 0x24048300) MCU_WDT Structure                          
 
 /*end of MCU WDT */
 
-/*MCU Calender */
+/*MCU Calendar */
 typedef struct {
 
   /*0x00*/
@@ -10217,7 +10217,7 @@ typedef struct {
   __IM uint32_t RESERVED[7];
   /*0x1C*/
   union {
-    __IOM uint32_t MCU_CAL_ALARM_PROG_1; /*!< (@ 0x0000001C) MCU calender alarm prog register 1*/
+    __IOM uint32_t MCU_CAL_ALARM_PROG_1; /*!< (@ 0x0000001C) MCU calendar alarm prog register 1*/
 
     struct {
       __IOM uint32_t PROG_ALARM_MSEC : 10; /*!< (@ 0x00000000) milli seconds value of alarm time*/
@@ -10229,7 +10229,7 @@ typedef struct {
   };
   /*0x20*/
   union {
-    __IOM uint32_t MCU_CAL_ALARM_PROG_2; /*!< (@ 0x00000020) MCU calender alarm prog register 2 */
+    __IOM uint32_t MCU_CAL_ALARM_PROG_2; /*!< (@ 0x00000020) MCU calendar alarm prog register 2 */
 
     struct {
       __IOM uint32_t PROG_ALARM_DAY : 5;     /*!< (@ 0x00000000) day count in alarm time 1-31      */
@@ -10244,11 +10244,19 @@ typedef struct {
   };
   /*0x24*/
   union {
-    __IOM uint32_t MCU_CAL_POWERGATE_REG; /*!< (@ 0x00000024) MCU calender powergate register */
-    struct {
-      __IOM uint32_t PG_EN_CALENDER : 1;        /*!< (@ 0x00000000) Start calender block      */
-      __IOM uint32_t ENABLE_CALENDER_COMBI : 1; /*!< (@ 0x00000001) Enable calender combitional logic block */
-      __IM uint32_t RES : 30;                   /*!< (@ 0x00000002) reser */
+    __IOM uint32_t MCU_CAL_POWERGATE_REG; /*!< (@ 0x00000024) MCU calendar powergate register */
+    union {
+      struct {
+        __IOM uint32_t PG_EN_CALENDAR : 1;        /*!< (@ 0x00000000) Start calendar block      */
+        __IOM uint32_t ENABLE_CALENDAR_COMBI : 1; /*!< (@ 0x00000001) Enable calendar combinational logic block */
+        __IM uint32_t RES : 30;                   /*!< (@ 0x00000002) reser */
+      };
+      struct {
+        __IOM uint32_t PG_EN_CALENDER : 1; /*!< (@ 0x00000000) Legacy SDK spelling; alias of PG_EN_CALENDAR */
+        __IOM uint32_t
+          ENABLE_CALENDER_COMBI : 1; /*!< (@ 0x00000001) Legacy SDK spelling; alias of ENABLE_CALENDAR_COMBI */
+        __IM uint32_t : 30;          /*!< (@ 0x00000002) Reserved; same bits as RES */
+      };
     } MCU_CAL_POWERGATE_REG_b;
   };
   /*0x28*/
@@ -10343,7 +10351,7 @@ typedef struct {
   };
 } RTC_Type; /*!< Size = 68 (0x44)        */
 
-/*End of MCU Calender*/
+/*End of MCU Calendar*/
 
 /*start MCU battery Flip Flops */
 

@@ -99,6 +99,19 @@ static volatile uint32_t ble_app_event_map1;
 
 sl_wifi_performance_profile_v2_t wifi_profile = { .profile = ASSOCIATED_POWER_SAVE_LOW_LATENCY };
 #endif
+#if (defined(SLI_SI91X_MCU_INTERFACE) || defined(SLI_SI91X_NCP_INTERFACE))
+/*
+ * FreeRTOS idle hook: drains the logger ring buffer via sl_log_flush().
+ * Active only for backends that emit the proprietary stream (IOStream
+ * Compact over UART/VCOM and the proprietary UART backend); a no-op for
+ * IOStream Compact over RTT, IOStream Formatted, SystemView, and Log None.
+ */
+void vApplicationIdleHook(void)
+{
+  sl_log_flush();
+}
+#endif
+
 static const sl_wifi_device_configuration_t config = {
   .boot_option = LOAD_NWP_FW,
   .mac_address = NULL,
@@ -122,14 +135,14 @@ static const sl_wifi_device_configuration_t config = {
 #endif
                       | SL_SI91X_EXT_FEAT_BT_CUSTOM_FEAT_ENABLE),
                    .bt_feature_bit_map         = (SL_SI91X_BT_RF_TYPE | SL_SI91X_ENABLE_BLE_PROTOCOL),
-                   .ext_tcp_ip_feature_bit_map = (SL_SI91X_CONFIG_FEAT_EXTENTION_VALID),
+                   .ext_tcp_ip_feature_bit_map = (SL_SI91X_CONFIG_FEAT_EXTENSION_VALID),
                    //!ENABLE_BLE_PROTOCOL in bt_feature_bit_map
                    .ble_feature_bit_map =
                      ((SL_SI91X_BLE_MAX_NBR_PERIPHERALS(RSI_BLE_MAX_NBR_PERIPHERALS)
                        | SL_SI91X_BLE_MAX_NBR_CENTRALS(RSI_BLE_MAX_NBR_CENTRALS)
                        | SL_SI91X_BLE_MAX_NBR_ATT_SERV(RSI_BLE_MAX_NBR_ATT_SERV)
                        | SL_SI91X_BLE_MAX_NBR_ATT_REC(RSI_BLE_MAX_NBR_ATT_REC))
-                      | SL_SI91X_FEAT_BLE_CUSTOM_FEAT_EXTENTION_VALID | SL_SI91X_BLE_PWR_INX(RSI_BLE_PWR_INX)
+                      | SL_SI91X_FEAT_BLE_CUSTOM_FEAT_EXTENSION_VALID | SL_SI91X_BLE_PWR_INX(RSI_BLE_PWR_INX)
                       | SL_SI91X_BLE_PWR_SAVE_OPTIONS(RSI_BLE_PWR_SAVE_OPTIONS)
                       | SL_SI91X_916_BLE_COMPATIBLE_FEAT_ENABLE
 #if RSI_BLE_GATT_ASYNC_ENABLE
@@ -156,7 +169,10 @@ static const sl_wifi_device_configuration_t config = {
                       | SL_SI91X_BLE_GATT_INIT
 #endif
                       ),
-                   .config_feature_bit_map = (SL_SI91X_FEAT_SLEEP_GPIO_SEL_BITMAP | SL_WIFI_ENABLE_ENHANCED_MAX_PSP) }
+                   .config_feature_bit_map = (SL_SI91X_FEAT_SLEEP_GPIO_SEL_BITMAP | SL_WIFI_ENABLE_ENHANCED_MAX_PSP) },
+  .ta_pool         = { .tx_ratio_in_buffer_pool = 0, .rx_ratio_in_buffer_pool = 0, .global_ratio_in_buffer_pool = 0 },
+  .efuse_data_type = SL_SI91X_EFUSE_MFG_SW_VERSION,
+  .nwp_fw_image_number = SL_SI91X_NWP_FW_IMAGE_NUMBER_0
 };
 
 const osThreadAttr_t thread_attributes = {
@@ -168,7 +184,6 @@ const osThreadAttr_t thread_attributes = {
   .stack_size = 3072,
   .priority   = osPriorityNormal,
   .tz_module  = 0,
-  .reserved   = 0,
 };
 /*==============================================*/
 /**
@@ -336,7 +351,7 @@ void rsi_ble_acceptlist_on_disconnect_event(rsi_ble_event_disconnect_t *resp_dis
   UNUSED_PARAMETER(reason); //This statement is added only to resolve compilation warning, value is unchanged
   memcpy(&rsi_app_disconnected_device, resp_disconnect, sizeof(rsi_ble_event_disconnect_t));
   rsi_6byte_dev_address_to_ascii(str_remote_address, resp_disconnect->dev_addr);
-  LOG_PRINT("Dis-connected - str_remote_address : %s \r\n", str_remote_address);
+  SL_DEBUG_LOG_V2(INFO, "Dis-connected - str_remote_address : %s \r\n", (uintptr_t)(str_remote_address));
 
   rsi_ble_app_set_event(RSI_APP_EVENT_DISCONNECTED);
 }
@@ -360,20 +375,20 @@ void ble_acceptlist(void *argument)
 
   status = sl_wifi_init(&config, NULL, sl_wifi_default_event_handler);
   if (status != SL_STATUS_OK) {
-    LOG_PRINT("\r\nWi-Fi Initialization Failed, Error Code : 0x%lX\r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "Wi-Fi Initialization Failed, Error Code : 0x%lX\r\n", status);
     return;
   } else {
-    LOG_PRINT("\r\n Wi-Fi Initialization Success\n");
+    SL_DEBUG_LOG_V2(INFO, "Wi-Fi Initialization Success\r\n");
   }
 
   //! get the local device MAC address.
   status = rsi_bt_get_local_device_address(rsi_app_resp_get_dev_addr);
   if (status != RSI_SUCCESS) {
-    LOG_PRINT("\r\n Get local device address failed = %lx\r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "Get local device address failed = %lx\r\n", status);
     return;
   } else {
     rsi_6byte_dev_address_to_ascii(local_dev_addr, rsi_app_resp_get_dev_addr);
-    LOG_PRINT("\r\n Local device address %s \r\n", local_dev_addr);
+    SL_DEBUG_LOG_V2(INFO, "Local device address %s \r\n", (uintptr_t)(local_dev_addr));
   }
 
   //! BLE register GAP callbacks
@@ -390,7 +405,7 @@ void ble_acceptlist(void *argument)
   //! create ble main task if ble protocol is selected
   ble_main_task_sem = osSemaphoreNew(1, 0, NULL);
   if (ble_main_task_sem == NULL) {
-    LOG_PRINT("Failed to create ble_main_task_sem semaphore\r\n");
+    SL_DEBUG_LOG_V2(ERROR, "Failed to create ble_main_task_sem semaphore\r\n");
   }
 
   //! initialize the event map
@@ -399,14 +414,14 @@ void ble_acceptlist(void *argument)
   //! add device 1 to accept list
   status = rsi_ble_addto_acceptlist((int8_t *)ble_acceptlist_addr1, RSI_BLE_ACCEPTLIST_DEV_ADDR1_TYPE);
   if (status != RSI_SUCCESS) {
-    LOG_PRINT("\r\n BLE add to acceptlist failed, Error Code : 0x%lx\r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "BLE add to acceptlist failed, Error Code : 0x%lx\r\n", status);
     return;
   }
 
   //! add device 2 to accept list
   status = rsi_ble_addto_acceptlist((int8_t *)ble_acceptlist_addr2, RSI_BLE_ACCEPTLIST_DEV_ADDR2_TYPE);
   if (status != RSI_SUCCESS) {
-    LOG_PRINT("\r\n BLE add to acceptlist failed, Error Code : 0x%lX\r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "BLE add to acceptlist failed, Error Code : 0x%lX\r\n", status);
     return;
   }
 
@@ -414,7 +429,7 @@ void ble_acceptlist(void *argument)
   //! delete the device 2 from acceptlist
   status = rsi_ble_deletefrom_acceptlist(ble_acceptlist_addr2, RSI_BLE_ACCEPTLIST_DEV_ADDR2_TYPE);
   if (status != RSI_SUCCESS) {
-    LOG_PRINT("\r\n BLE delete from accept list failed, Error Code : 0x%lX\r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "BLE delete from accept list failed, Error Code : 0x%lX\r\n", status);
     return;
   }
 #endif
@@ -423,7 +438,7 @@ void ble_acceptlist(void *argument)
   //! start clear
   status = rsi_ble_clear_acceptlist();
   if (status != RSI_SUCCESS) {
-    LOG_PRINT("\r\n BLE clear acceptlist failed, Error Code : 0x%lX\r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "BLE clear acceptlist failed, Error Code : 0x%lX\r\n", status);
     return;
   }
 #endif
@@ -432,25 +447,25 @@ void ble_acceptlist(void *argument)
   if (status != RSI_SUCCESS) {
     return;
   }
-  LOG_PRINT("\n BLE start scanning \n");
-  LOG_PRINT("\n BLE remote device name to connect to : %s\n", RSI_REMOTE_DEVICE_NAME);
+  SL_DEBUG_LOG_V2(INFO, "BLE start scanning \r\n");
+  SL_DEBUG_LOG_V2(INFO, "BLE remote device name to connect to : %s\r\n", (uintptr_t)(RSI_REMOTE_DEVICE_NAME));
 #if ENABLE_NWP_POWER_SAVE
-  LOG_PRINT("\r\n keep module in to power save \r\n");
+  SL_DEBUG_LOG_V2(INFO, "keep module in to power save \r\n");
   //! initiating power save in BLE mode
   status = rsi_bt_power_save_profile(PSP_MODE, PSP_TYPE);
   if (status != RSI_SUCCESS) {
-    LOG_PRINT("\r\n Failed to initiate power save in BLE mode \r\n");
+    SL_DEBUG_LOG_V2(ERROR, "Failed to initiate power save in BLE mode \r\n");
     return;
   }
 
   //! initiating power save in wlan mode
   status = sl_wifi_set_performance_profile_v2(&wifi_profile);
   if (status != SL_STATUS_OK) {
-    LOG_PRINT("\r\n Failed to initiate power save in Wi-Fi mode :%lx\r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "Failed to initiate power save in Wi-Fi mode :%lx\r\n", status);
     return;
   }
 
-  LOG_PRINT("\r\n Module is in power save \r\n");
+  SL_DEBUG_LOG_V2(INFO, "Module is in power save \r\n");
 #endif
   while (1) {
     //! Application main loop
@@ -458,28 +473,20 @@ void ble_acceptlist(void *argument)
     temp_event_map = rsi_ble_app_get_event();
     if (temp_event_map == RSI_FAILURE) {
       //! if events are not received, loop will be continued
-#if ((SL_SI91X_TICKLESS_MODE == 0) && SLI_SI91X_MCU_INTERFACE && ENABLE_NWP_POWER_SAVE)
-      //! if events are not received loop will be continued.
-      if ((!(P2P_STATUS_REG & TA_wakeup_M4))) {
-        P2P_STATUS_REG &= ~M4_wakeup_TA;
-        sl_si91x_power_manager_sleep();
-      }
-#else
       osSemaphoreAcquire(ble_main_task_sem, osWaitForever);
-#endif
       continue;
     }
 
     switch (temp_event_map) {
       case RSI_APP_EVENT_ADV_REPORT: {
         //! advertise report event.
-        LOG_PRINT("\r\n In Advertising Event\r\n");
+        SL_DEBUG_LOG_V2(INFO, "In Advertising Event\r\n");
         //! clear the advertise report event.
         rsi_ble_app_clear_event(RSI_APP_EVENT_ADV_REPORT);
 
         status = rsi_ble_connect(remote_addr_type, (int8_t *)remote_dev_bd_addr);
         if (status != RSI_SUCCESS) {
-          LOG_PRINT("\n Connect status: 0x%lX\r\n", status);
+          SL_DEBUG_LOG_V2(INFO, "Connect status: 0x%lX\r\n", status);
         }
 
       } break;
@@ -487,7 +494,7 @@ void ble_acceptlist(void *argument)
       case RSI_APP_EVENT_CONNECTED: {
         //! remote device connected event
         rsi_6byte_dev_address_to_ascii(str_remote_address, rsi_app_connected_device.dev_addr);
-        LOG_PRINT("\r\n Module connected to address : %s \r\n", str_remote_address);
+        SL_DEBUG_LOG_V2(INFO, "Module connected to address : %s \r\n", (uintptr_t)(str_remote_address));
 
         //! clear the connected event.
         rsi_ble_app_clear_event(RSI_APP_EVENT_CONNECTED);
@@ -498,13 +505,13 @@ void ble_acceptlist(void *argument)
 
         //! clear the disconnected event.
         rsi_ble_app_clear_event(RSI_APP_EVENT_DISCONNECTED);
-        LOG_PRINT("\r\n Module got disconnected\r\n");
+        SL_DEBUG_LOG_V2(INFO, "Module got disconnected\r\n");
 #if ENABLE_NWP_POWER_SAVE
-        LOG_PRINT("\r\n keep module in to active state \r\n");
+        SL_DEBUG_LOG_V2(INFO, "keep module in to active state \r\n");
         //! initiating Active mode in BT mode
         status = rsi_bt_power_save_profile(RSI_ACTIVE, PSP_TYPE);
         if (status != RSI_SUCCESS) {
-          LOG_PRINT("\r\n Failed to keep Module in ACTIVE mode \r\n");
+          SL_DEBUG_LOG_V2(ERROR, "Failed to keep Module in ACTIVE mode \r\n");
           return;
         }
 
@@ -512,7 +519,7 @@ void ble_acceptlist(void *argument)
         wifi_profile.profile = HIGH_PERFORMANCE;
         status               = sl_wifi_set_performance_profile_v2(&wifi_profile);
         if (status != SL_STATUS_OK) {
-          LOG_PRINT("\r\n Failed to keep module in HIGH_PERFORMANCE mode \r\n");
+          SL_DEBUG_LOG_V2(ERROR, "Failed to keep module in HIGH_PERFORMANCE mode \r\n");
           return;
         }
 #endif
@@ -521,11 +528,11 @@ void ble_acceptlist(void *argument)
         //! start scanning
         status = rsi_ble_start_scanning();
         if (status != RSI_SUCCESS) {
-          LOG_PRINT("\n start_scanning status: 0x%lX\r\n", status);
+          SL_DEBUG_LOG_V2(INFO, "start_scanning status: 0x%lX\r\n", status);
         }
-        LOG_PRINT("\n BLE start scanning \n");
+        SL_DEBUG_LOG_V2(INFO, "BLE start scanning \r\n");
 #if ENABLE_NWP_POWER_SAVE
-        LOG_PRINT("\r\n keep module in to power save \r\n");
+        SL_DEBUG_LOG_V2(INFO, "keep module in to power save \r\n");
         status = rsi_bt_power_save_profile(PSP_MODE, PSP_TYPE);
         if (status != RSI_SUCCESS) {
           return;
@@ -535,10 +542,10 @@ void ble_acceptlist(void *argument)
         wifi_profile.profile = ASSOCIATED_POWER_SAVE;
         status               = sl_wifi_set_performance_profile_v2(&wifi_profile);
         if (status != SL_STATUS_OK) {
-          LOG_PRINT("\r\n Failed to keep module in power save \r\n");
+          SL_DEBUG_LOG_V2(ERROR, "Failed to keep module in power save \r\n");
           return;
         }
-        LOG_PRINT("\r\n Module is in power save \r\n");
+        SL_DEBUG_LOG_V2(INFO, "Module is in power save \r\n");
 #endif
       } break;
       default: {

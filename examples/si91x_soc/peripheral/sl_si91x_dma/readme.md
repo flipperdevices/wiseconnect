@@ -1,8 +1,8 @@
-# SL DMA
+# SiWx91x Platform DMA
 
 ## Table of Contents
 
-- [SL DMA](#sl-dma)
+- [SiWx91x Platform DMA](#platform-siwx91x-dma)
   - [Table of Contents](#table-of-contents)
   - [Purpose/Scope](#purposescope)
   - [Overview](#overview)
@@ -14,6 +14,9 @@
   - [Getting Started](#getting-started)
   - [Application Build Environment](#application-build-environment)
   - [Test the Application](#test-the-application)
+  - [Troubleshooting](#troubleshooting)
+  - [Resources](#resources)
+  - [Report Bugs/Support](#report-bugssupport)
 
 ## Purpose/Scope
 
@@ -24,7 +27,7 @@ This example used both a simple DMA transfer API and a generic API for performin
 ## Overview
 
 - DMA is used for performing transfers without processor intervention.
-- Si91x DMA supports three types of DMA transfers: memory-to-memory, peripheral-to-memory, and memory-to-peripheral.
+- SiWx91x DMA supports three types of DMA transfers: memory-to-memory, peripheral-to-memory, and memory-to-peripheral.
 - UDMA0 supports 32 channels--out of which last 24 are dedicated channels for particular peripherals. The first 8 channels can support 32 different peripherals.
 - The number of transfers in a single DMA cycle can be programmed from 1 to 1024.
 - The transfer address increment can be greater than the data width.
@@ -32,7 +35,7 @@ This example used both a simple DMA transfer API and a generic API for performin
 
 ## About Example Code
 
-- [`dma_example.c`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.1-content-for-docs/examples/si91x_soc/peripheral/sl_si91x_dma/dma_example.c) file demonstrates how to use DMA peripheral to perform memory-to-memory transfers.
+- [`dma_example.c`](dma_example.c) file demonstrates how to use DMA peripheral to perform memory-to-memory transfers.
 - In this example, the first DMA initialization is done using [sl_si91x_dma_init](https://docs.silabs.com/wiseconnect/latest/wiseconnect-api-reference-guide-si91x-peripherals/dma#sl-si91x-dma-init).
 - Then [sl_si91x_dma_allocate_channel](https://docs.silabs.com/wiseconnect/latest/wiseconnect-api-reference-guide-si91x-peripherals/dma#sl-si91x-dma-allocate-channel) is used to allocate DMA_CHANNEL for transfer.
 - After configuring the channel, callbacks are registered using [sl_si91x_dma_register_callbacks](https://docs.silabs.com/wiseconnect/latest/wiseconnect-api-reference-guide-si91x-peripherals/dma#sl-si91x-dma-register-callbacks).
@@ -46,7 +49,7 @@ This example used both a simple DMA transfer API and a generic API for performin
 ### Hardware Requirements
 
 - Windows PC
-- Silicon Labs Si917 Evaluation Kit [[BRD4002](https://www.silabs.com/development-tools/wireless/wireless-pro-kit-mainboard?tab=overview) + [BRD4338A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-rb4338a-wifi-6-bluetooth-le-soc-radio-board?tab=overview) / [BRD4342A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx91x-rb4342a-wifi-6-bluetooth-le-soc-radio-board?tab=overview) / [BRD4343A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4343a-wi-fi-6-bluetooth-le-8mb-flash-radio-board-for-module?tab=overview)]
+- Silicon Labs SiWx91x Evaluation Kit [[BRD4002](https://www.silabs.com/development-tools/wireless/wireless-pro-kit-mainboard?tab=overview) + [BRD4338A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-rb4338a-wifi-6-bluetooth-le-soc-radio-board?tab=overview) / [BRD4342A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx91x-rb4342a-wifi-6-bluetooth-le-soc-radio-board?tab=overview) / [BRD4343A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4343a-wi-fi-6-bluetooth-le-8mb-flash-radio-board-for-module?tab=overview) / [BRD4343C](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4343c-wi-fi-6-bluetooth-le-8mb-flash-radio-board-for-module?tab=overview)]
 - SiWx917 AC1 Module Explorer Kit [BRD2708A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-ek2708a-explorer-kit)
 
 ### Software Requirements
@@ -78,13 +81,31 @@ For details on the project folder structure, see the [WiSeConnect Examples](http
   > ![Figure: ucScreenDMA](resources/uc_screen/ucScreenDMA.png)
 
 - Configure SL_DMA0_CHANNEL_COUNT(1 - 32) in UC - Number of available channels for UDMA0
-- Configure the following macros in the [`dma_example.c`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.1-content-for-docs/examples/si91x_soc/peripheral/sl_si91x_dma/dma_example.c) file and update/modify following macros, if required.
+- Configure the following macros in the [`dma_example.c`](dma_example.c) file and update/modify following macros, if required.
 
-    ```C
+  - `DMA_SIMPLE_TRANSFER`: Selects the DMA transfer API. When enabled (1), the example uses `sl_si91x_dma_simple_transfer`; when disabled (0), it uses `sl_si91x_dma_transfer` for more advanced configuration. By default, it is set to 1.
+
+    ```c
     #define DMA_SIMPLE_TRANSFER 1    ///< Enable/Disable simple transfer
-    #define DMA_CHANNEL         32   ///< DMA0 channel number 
-    #define DMA_TRANSFER_SIZE   2048 ///< DMA transfer size 
-    ```  
+    ```
+
+  - `DMA_INSTANCE`: Selects the DMA controller instance to use for the transfer (0 for UDMA0, 1 for ULP_DMA). By default, it is set to 0.
+
+    ```c
+    #define DMA_INSTANCE        0    ///< DMA0 instance
+    ```
+
+  - `DMA_CHANNEL`: Specifies the DMA channel number to be allocated for the memory-to-memory transfer. By default, it is set to 32.
+
+    ```c
+    #define DMA_CHANNEL         32   ///< DMA0 channel number
+    ```
+
+  - `DMA_TRANSFER_SIZE`: Defines the number of data elements to be transferred in a single DMA operation. By default, it is set to 2048.
+
+    ```c
+    #define DMA_TRANSFER_SIZE   2048 ///< DMA transfer size
+    ```
 
 ## Test the Application
 
@@ -100,3 +121,19 @@ Refer to the instructions [here](https://docs.silabs.com/wiseconnect/latest/wise
 > **Note:**
 > - The debug feature will not work after M4 flash is turned off
 > - Interrupt handlers are implemented in the driver layer, and user callbacks are provided for custom code. If you want to write your own interrupt handler instead of using the default one, make the driver interrupt handler a weak handler. Then, copy the necessary code from the driver handler to your custom interrupt handler.
+
+## Troubleshooting
+
+- If the project does not build, ensure Simplicity Studio and the WiSeConnect extension are installed and the board is connected.
+- If the device is not detected, reinstall the connectivity firmware and check USB drivers.
+
+## Resources
+
+- [WiSeConnect Getting Started](https://docs.silabs.com/wiseconnect/latest/wiseconnect-getting-started/)
+- [WiSeConnect Examples](https://docs.silabs.com/wiseconnect/latest/wiseconnect-examples/)
+- [SiWx91x SoC Documentation](https://docs.silabs.com/wiseconnect/latest/)
+
+## Report Bugs/Support
+
+For issues and support, use the Silicon Labs Community or your normal support channel.
+

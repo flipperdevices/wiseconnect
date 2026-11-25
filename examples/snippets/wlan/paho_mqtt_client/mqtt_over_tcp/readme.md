@@ -1,10 +1,14 @@
-
 # Wi-Fi - Paho MQTT Client Over TCP
+
+## High-Level Overview
+
+SiWx91x Paho MQTT over TCP example: Connect to Wi-Fi and an MQTT broker using the Paho MQTT library over TCP in SoC and NCP modes.
 
 ## Table of Contents
 
 - [Wi-Fi - Paho MQTT Client Over TCP](#wi-fi---paho-mqtt-client-over-tcp)
   - [Table of Contents](#table-of-contents)
+  - [High-Level Overview](#high-level-overview)
   - [Purpose/Scope](#purposescope)
   - [Prerequisites/Setup Requirements](#prerequisitessetup-requirements)
     - [Hardware Requirements](#hardware-requirements)
@@ -14,8 +18,12 @@
   - [Application Build Environment](#application-build-environment)
   - [Test the Application](#test-the-application)
     - [Procedure for executing the application when enabled with SSL](#procedure-for-executing-the-application-when-enabled-with-ssl)
+    - [Procedure for MQTT over TLS on port 443 with ALPN (Mosquitto)](#procedure-for-mqtt-over-tls-on-port-443-with-alpn-mosquitto)
   - [Additional Information](#additional-information)
     - [Steps to set up MQTT server](#steps-to-set-up-mqtt-server)
+  - [Troubleshooting](#troubleshooting)
+  - [Resources](#resources)
+  - [Report Bugs and Get Support](#report-bugs-and-get-support)
 
 ## Purpose/Scope
 
@@ -31,19 +39,46 @@ SiWx91x device is configured as a Wi-Fi station and connects to an access point.
 - Windows PC1 (for running MQTT broker)
 - Windows PC2 (for running MQTT client utility - MQTT Explorer)
 - SoC Mode:
-  - Silicon Labs [BRD4338A, BRD4343A](https://www.silabs.com/)
+  - Standalone
+    - BRD4002B Wireless Pro Kit Mainboard [SI-MB4002B](https://www.silabs.com/development-tools/wireless/wireless-pro-kit-mainboard?tab=overview)
+    - Radio Boards 
+	  - BRD4338A [SiWx917-RB4338A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-rb4338a-wifi-6-bluetooth-le-soc-radio-board?tab=overview)
+	  - BRD4342A [SiWx917-RB4342A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx91x-rb4342a-wifi-6-bluetooth-le-soc-radio-board?tab=overview)
+	  - BRD4339B [SiWx917-RB4339B](https://docs.silabs.com/wiseconnect/latest/wiseconnect-getting-started/getting-started-with-at)
+	  - BRD4340A [SiWx917-RB4340A](https://docs.silabs.com/wiseconnect/latest/wiseconnect-getting-started/getting-started-with-at)
+	  - BRD4343A [SiWx917-RB4343A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4343a-wi-fi-6-bluetooth-le-8mb-flash-radio-board-for-module?tab=overview)
+	  - BRD4343C [SiWx917-RB4343C](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4343c-wi-fi-6-bluetooth-le-8mb-flash-radio-board-for-module?tab=overview)
+  - Kits
+	- SiWG917 Dev Kit [BRD2605A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-dk2605a-wifi-6-bluetooth-le-soc-dev-kit?tab=overview)
+	- SiWG917 Dev Kit [BRD2605B]
+    - SiWx917 AC1 Module Explorer Kit [BRD2708A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-ek2708a-explorer-kit?tab=overview)
   - For Soc Mode, Simplicity Studio Energy Profiler can be used for the current consumption measurement - [Simplicity Studio Energy Profiler](#using-simplicity-studio-energy-profiler-for-current-measurement).
-- NCP Mode:
-  - Silicon Labs [BRD4180B](https://www.silabs.com/) 
-  - Host MCU Eval Kit. This example has been tested with:
-    - Silicon Labs [WSTK + EFR32MG21](https://www.silabs.com/development-tools/wireless/efr32xg21-bluetooth-starter-kit)
-   - Interface and Host MCU Supported
-      - SPI - EFR32 
-      - UART - EFR32
+- **NCP Mode** (select either the EFR32 or STM32 host MCU platform; a single platform is sufficient to run the application):
+  - **Option 1: EFR32 host**
+    - Silicon Labs [BRD4180B](https://www.silabs.com/development-tools/wireless/slwrb4180b-efr32xg21-wireless-gecko-radio-board?tab=overview)
+    - Host MCU Eval Kit. This example has been tested with:
+      - Silicon Labs [WSTK + EFR32MG21](https://www.silabs.com/development-tools/wireless/efr32xg21-bluetooth-starter-kit)
+    - NCP Expansion Kit with NCP Radio Boards
+      - [BRD4346A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-rb4346a-wifi-6-bluetooth-le-soc-4mb-flash-radio-board?tab=overview) + [BRD8045A](https://www.silabs.com/development-tools/wireless/wi-fi/expansion-adapter-board-for-co-processor-radio-boards?tab=overview)
+      - [BRD4357A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4357a-wi-fi-6-bluetooth-le-4mb-flash-radio-board-for-rcp-and-ncp-modules?tab=overview) + [BRD8045A](https://www.silabs.com/development-tools/wireless/wi-fi/expansion-adapter-board-for-co-processor-radio-boards?tab=overview)
+      - [BRD4357C](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4357c-wi-fi-6-bluetooth-le-4mb-flash-radio-board-for-rcp-and-ncp-modules?tab=overview) + [BRD8045A](https://www.silabs.com/development-tools/wireless/wi-fi/expansion-adapter-board-for-co-processor-radio-boards?tab=overview)
+
+  - **Option 2: STM32F411RE host**
+    - [STM32F411RE](https://www.st.com/en/microcontrollers-microprocessors/stm32f411re.html) MCU
+    - NCP Expansion Kit with NCP Radio Boards
+      - [BRD4346A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-rb4346a-wifi-6-bluetooth-le-soc-4mb-flash-radio-board?tab=overview) + [BRD8045C](https://www.silabs.com/development-tools/wireless/wi-fi/shield-adapter-board-for-co-processor-radio-boards?tab=overview)
+      - [BRD4357A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4357a-wi-fi-6-bluetooth-le-4mb-flash-radio-board-for-rcp-and-ncp-modules?tab=overview) + [BRD8045C](https://www.silabs.com/development-tools/wireless/wi-fi/shield-adapter-board-for-co-processor-radio-boards?tab=overview)
+      - [BRD4357C](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4357c-wi-fi-6-bluetooth-le-4mb-flash-radio-board-for-rcp-and-ncp-modules?tab=overview) + [BRD8045C](https://www.silabs.com/development-tools/wireless/wi-fi/shield-adapter-board-for-co-processor-radio-boards?tab=overview)
+
+  - Interface and host MCU supported
+    - SPI : EFR32 and STM32
+    - UART : EFR32
 
 ### Software Requirements
 
 - Simplicity Studio
+
+- [Keil IDE](https://www.keil.com/) (to be used with STM32F411RE MCU)
 
 ### Setup Diagram
 
@@ -73,7 +108,7 @@ In the Project explorer pane, expand the **config** folder and open the ``sl_net
 
 - STA instance related parameters
 
-    - DEFAULT_WIFI_CLIENT_PROFILE_SSID refers to the name with which the Wi-Fi network shall be advertised. The Si91X module is connected to it.
+    - DEFAULT_WIFI_CLIENT_PROFILE_SSID refers to the name with which the Wi-Fi network shall be advertised. The SiWx91x module is connected to it.
     
     ```c
 #define DEFAULT_WIFI_CLIENT_PROFILE_SSID "YOUR_AP_SSID"      
@@ -235,7 +270,7 @@ Follow the steps below for successful execution of the application:
 > Multiple MQTT client instances can be created.
 > If mosquitto isn't allowing external connections to the broker, add the following lines in **mosquitto.conf** file:
 
-  ```c
+  ```conf
   listener 1883
   allow_anonymous true
   ```
@@ -243,10 +278,10 @@ Follow the steps below for successful execution of the application:
 
 >For SSL support add this configuration in mosquitto.conf
 
-  ```c
+  ```conf
    listener 8883
    allow_anonymous true
-#Paths to SSL / TLS certificates
+   # Paths to SSL / TLS certificates
    cafile   resources/certificates/ca-cert.pem
    certfile resources/certificates/server-cert.pem
    keyfile  resources/certificates/server-key.pem
@@ -256,6 +291,42 @@ Follow the steps below for successful execution of the application:
 > For using a different config file for mosquitto broker, use command:
   `mosquitto -v -p 1883 -c config/mosquitto.conf`
   where **config** is the sub-folder and **mosquitto.conf** is the different config file than default.
+
+### Procedure for MQTT over TLS on port 443 with ALPN (Mosquitto)
+
+Use this when the MQTT broker listens on port 443 and requires ALPN negotiation with protocol name `mqtt` (common for Mosquitto behind TLS-terminating proxies or direct MQTT-over-TLS on 443).
+
+1. Configure Mosquitto to listen on port 443 with ALPN support. Example `mosquitto.conf` snippet:
+
+   ```conf
+   listener 443
+   protocol mqtt
+   allow_anonymous true
+   cafile   resources/certificates/ca-cert.pem
+   certfile resources/certificates/server-cert.pem
+   keyfile  resources/certificates/server-key.pem
+   ```
+
+   > Mosquitto 2.x supports `protocol mqtt` on TLS listeners to advertise the `mqtt` ALPN identifier. Verify your Mosquitto version supports this option.
+
+2. In the Simplicity Studio project (`.slcp`), add these defines under the `paho_mqtt_embedded` component:
+
+   ```yaml
+   define:
+     - name: MQTT_TLS_ALPN_ENABLED
+       value: '1'
+     - name: MQTT_TLS_ALPN_PROTOCOL
+       value: '"mqtt"'
+   ```
+
+3. In `app.c` of this example:
+
+   - Set `enable_ssl = true`
+   - Set `MQTT_BROKER_PORT` to `443`
+
+4. Build, flash, and run. The Paho Si91x port configures ALPN automatically during TCP/TLS connection setup when `MQTT_TLS_ALPN_ENABLED` is `1`.
+
+> **Note:** ALPN support in this SDK applies to **MQTT over TCP/TLS** only. The WebSocket transport example does not configure TLS ALPN. Secure WebSocket (WSS) on port 443 would typically negotiate `http/1.1` at the TLS layer rather than `mqtt`; that use case is not covered by this integration.
 
 ## Additional Information
 
@@ -302,3 +373,23 @@ Follow the steps below for successful execution of the application:
 >    - `-p 1883`: This is the same as the `-p` option for `mosquitto_sub`, specifying the network port of the MQTT broker.
 >    - `-t THERMOSTAT-DATA`: Specifies the topic that the client should publish the message to.
 >    - `-m "hello"`: Specifies the message to publish. In this case, the message is the string "hello".
+
+## Troubleshooting
+
+If you encounter issues while running this example, check the following:
+
+- Verify Wi-Fi credentials in `sl_net_default_values.h` and MQTT broker host/port in your application configuration.
+- Ensure that the MQTT broker is running and reachable before you start the application.
+- If you use TLS, replace the default certificates. Default cloud certificates are for reference only. 
+
+## Resources
+
+- [WiSeConnect Getting Started Guide](https://docs.silabs.com/wiseconnect/latest/wiseconnect-getting-started/)
+- [WiSeConnect Examples](https://docs.silabs.com/wiseconnect/latest/wiseconnect-examples/#example-folder-structure)
+- [WiSeConnect Recommended Settings Guide](https://docs.silabs.com/wiseconnect/latest/wiseconnect-developers-guide-prog-recommended-settings/)
+
+## Report Bugs and Get Support
+
+Report issues and get help from the Silicon Labs community:
+
+- [Silicon Labs Community](https://www.silabs.com/community)

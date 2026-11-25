@@ -83,7 +83,7 @@ static const sl_wifi_device_configuration_t config = {
                       | SL_SI91X_EXT_FEAT_BT_CUSTOM_FEAT_ENABLE),
                    .bt_feature_bit_map = (SL_SI91X_BT_RF_TYPE | SL_SI91X_ENABLE_BLE_PROTOCOL),
                    .ext_tcp_ip_feature_bit_map =
-                     (SL_SI91X_CONFIG_FEAT_EXTENTION_VALID | SL_SI91X_EXT_TCP_IP_TOTAL_SELECTS(1)
+                     (SL_SI91X_CONFIG_FEAT_EXTENSION_VALID | SL_SI91X_EXT_TCP_IP_TOTAL_SELECTS(1)
 #ifdef RSI_PROCESS_MAX_RX_DATA
                       | SL_SI91X_EXT_TCP_MAX_RECV_LENGTH
 #endif
@@ -94,7 +94,7 @@ static const sl_wifi_device_configuration_t config = {
                        | SL_SI91X_BLE_MAX_NBR_CENTRALS(RSI_BLE_MAX_NBR_CENTRALS)
                        | SL_SI91X_BLE_MAX_NBR_ATT_SERV(RSI_BLE_MAX_NBR_ATT_SERV)
                        | SL_SI91X_BLE_MAX_NBR_ATT_REC(RSI_BLE_MAX_NBR_ATT_REC))
-                      | SL_SI91X_FEAT_BLE_CUSTOM_FEAT_EXTENTION_VALID | SL_SI91X_BLE_PWR_INX(RSI_BLE_PWR_INX)
+                      | SL_SI91X_FEAT_BLE_CUSTOM_FEAT_EXTENSION_VALID | SL_SI91X_BLE_PWR_INX(RSI_BLE_PWR_INX)
                       | SL_SI91X_BLE_PWR_SAVE_OPTIONS(RSI_BLE_PWR_SAVE_OPTIONS)
                       | SL_SI91X_916_BLE_COMPATIBLE_FEAT_ENABLE
 #if RSI_BLE_GATT_ASYNC_ENABLE
@@ -120,7 +120,10 @@ static const sl_wifi_device_configuration_t config = {
                       | SL_SI91X_BLE_GATT_INIT
 #endif
                       ),
-                   .config_feature_bit_map = (SL_SI91X_FEAT_SLEEP_GPIO_SEL_BITMAP | SL_WIFI_ENABLE_ENHANCED_MAX_PSP) }
+                   .config_feature_bit_map = (SL_SI91X_FEAT_SLEEP_GPIO_SEL_BITMAP | SL_WIFI_ENABLE_ENHANCED_MAX_PSP) },
+  .ta_pool         = { .tx_ratio_in_buffer_pool = 0, .rx_ratio_in_buffer_pool = 0, .global_ratio_in_buffer_pool = 0 },
+  .efuse_data_type = SL_SI91X_EFUSE_MFG_SW_VERSION,
+  .nwp_fw_image_number = SL_SI91X_NWP_FW_IMAGE_NUMBER_0
 };
 
 const osThreadAttr_t thread_attributes = {
@@ -132,7 +135,6 @@ const osThreadAttr_t thread_attributes = {
   .stack_size = 3072,
   .priority   = osPriorityNormal,
   .tz_module  = 0,
-  .reserved   = 0,
 };
 
 const osThreadAttr_t ble_thread_attributes = {
@@ -144,7 +146,6 @@ const osThreadAttr_t ble_thread_attributes = {
   .stack_size = 2048,
   .priority   = osPriorityNormal,
   .tz_module  = 0,
-  .reserved   = 0,
 };
 
 void rsi_wlan_ble_app_init(void *argument)
@@ -155,20 +156,20 @@ void rsi_wlan_ble_app_init(void *argument)
   //! Wi-Fi initialization
   status = sl_wifi_init(&config, NULL, sl_wifi_default_event_handler);
   if (status != SL_STATUS_OK) {
-    LOG_PRINT("\r\nWi-Fi Initialization Failed, Error Code : 0x%lX\r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "Wi-Fi Initialization Failed, Error Code : 0x%lX\r\n", status);
     return;
   }
-  LOG_PRINT("\r\n Wi-Fi Initialization Success\r\n");
+  SL_DEBUG_LOG_V2(INFO, " Wi-Fi Initialization Success\r\n");
 
   wlan_thread_sem = osSemaphoreNew(1, 0, NULL);
   if (wlan_thread_sem == NULL) {
-    LOG_PRINT("Failed to create wlan_thread_sem\r\n");
+    SL_DEBUG_LOG_V2(ERROR, "Failed to create wlan_thread_sem\r\n");
     return;
   }
 
   ble_thread_sem = osSemaphoreNew(1, 0, NULL);
   if (ble_thread_sem == NULL) {
-    LOG_PRINT("Failed to create ble_thread_sem\r\n");
+    SL_DEBUG_LOG_V2(ERROR, "Failed to create ble_thread_sem\r\n");
     return;
   }
 
@@ -176,22 +177,22 @@ void rsi_wlan_ble_app_init(void *argument)
   uint8_t xtal_enable = 1;
   status              = sl_si91x_m4_ta_secure_handshake(SL_SI91X_ENABLE_XTAL, 1, &xtal_enable, 0, NULL);
   if (status != SL_STATUS_OK) {
-    LOG_PRINT("\r\nFailed to bring m4_ta_secure_handshake: 0x%lx\r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "Failed to bring m4_ta_secure_handshake: 0x%lx\r\n", status);
     return;
   }
-  LOG_PRINT("\r\nm4_ta_secure_handshake Success\r\n");
+  SL_DEBUG_LOG_V2(INFO, "m4_ta_secure_handshake Success\r\n");
 #endif
 
   if (osThreadNew((osThreadFunc_t)rsi_ble_configurator_task, NULL, &ble_thread_attributes) == NULL) {
-    LOG_PRINT("Failed to create BLE thread\r\n");
+    SL_DEBUG_LOG_V2(ERROR, "Failed to create BLE thread\r\n");
   }
 
   status = rsi_wlan_mqtt_certs_init();
   if (status != RSI_SUCCESS) {
-    LOG_PRINT("\r\nSet Certificate Issue, Error Code : 0x%lX\r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "Set Certificate Issue, Error Code : 0x%lX\r\n", status);
     return;
   } else {
-    LOG_PRINT("\r\nSet Certificate Success\r\n");
+    SL_DEBUG_LOG_V2(INFO, "Set Certificate Success\r\n");
   }
 
   // BLE initialization

@@ -1,6 +1,6 @@
 /***************************************************************************/ /**
  * @file
- * @brief IO Stream UART internal APIs.
+ * @brief IO Stream UART internal APIs for SiWx91x.
  *******************************************************************************
  * # License
  * <b>Copyright 2019 Silicon Laboratories Inc. www.silabs.com</b>

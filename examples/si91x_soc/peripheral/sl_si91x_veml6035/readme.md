@@ -1,8 +1,8 @@
-# SL VEML6035
+# SiWx91x Platform VEML6035
 
 ## Table of Contents
 
-- [SL VEML6035](#sl-veml6035)
+- [SiWx91x Platform VEML6035](#platform-siwx91x-veml6035)
   - [Purpose/Scope](#purposescope)
   - [About Example Code](#about-example-code)
   - [Prerequisites/Setup Requirements](#prerequisitessetup-requirements)
@@ -13,6 +13,9 @@
   - [Application Build Environment](#application-build-environment)
     - [Pin Configuration](#pin-configuration)
   - [Test the Application](#test-the-application)
+  - [Troubleshooting](#troubleshooting)
+  - [Resources](#resources)
+  - [Report Bugs/Support](#report-bugssupport)
 
 ## Purpose/Scope
 
@@ -27,7 +30,8 @@ This example demonstrates the measurement of Lux for every 2 seconds. It also sh
 ### Hardware Requirements
 
 - Windows PC
-- Silicon Labs SiWx917 Dev Kit [BRD2605A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-dk2605a-wifi-6-bluetooth-le-soc-dev-kit?tab=overview)
+- Silicon Labs SiWx917 Development Kit [BRD2605A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-dk2605a-wifi-6-bluetooth-le-soc-dev-kit?tab=overview)
+- Silicon Labs SiWx917 Development Kit [BRD2605B](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-dk2605b-wifi-6-bluetooth-le-soc-dev-kit?tab=overview)
 
 ### Software Requirements
 
@@ -51,12 +55,19 @@ Refer to the instructions [here](https://docs.silabs.com/wiseconnect/latest/wise
 
 ## Application Build Environment
 
-- Configure the following macros in [`veml6035_example.c`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.1-content-for-docs/examples/si91x_soc/peripheral/sl_si91x_veml6035/veml6035_example.c) file. .Update or  modify the following macros, if required.
+- Configure the following macros in [`veml6035_example.c`](veml6035_example.c) file. .Update or  modify the following macros, if required.
 
-  - `DELAY_PERIODIC_MS1` : Select the delay for data display. By default, the delay is kept as 2 seconds.
+ 
+  - `DELAY_PERIODIC_MS1`: Periodic sleeptimer timeout in milliseconds used to pace sensor readings. By default, it is set to 2000 ms (2 seconds).
 
-    ```C
-    #define DELAY_PERIODIC_MS1 2000    // sleeptimer1 periodic timeout in ms
+    ```c
+      #define DELAY_PERIODIC_MS1 2000                  // sleeptimer1 periodic timeout in ms
+    ```
+
+  - `SYNC_TIME`: Synchronization/settling time for the VEML6035 sensor, in milliseconds. By default, it is set to 10.
+
+    ```c
+      #define SYNC_TIME          10                    // Sync time for sensor
     ```
 
   - `I2C instance`: Select I2C instance for communication through UC from the VEML6035 slcp component. By default I2C2 is selected.
@@ -65,7 +76,7 @@ Refer to the instructions [here](https://docs.silabs.com/wiseconnect/latest/wise
 
 ### Pin Configuration
 
-- The sensor is internally connected on SiWG917 Dev kit board on ULP_I2C.
+- The sensor is internally connected on SiWx91x Dev kit board on ULP_I2C.
 - However, to use this sensor driver on Custom boards, the following pins are supported based on the instance selected in UC.
 
 **I2C0:**
@@ -103,3 +114,19 @@ See the instructions [Creating a Project](https://docs.silabs.com/wiseconnect/la
 > **Note:**
 >
 > - Interrupt handlers are implemented in the driver layer, and user callbacks are provided for custom code. If you want to write your own interrupt handler instead of using the default one, make the driver interrupt handler a weak handler. Then, copy the necessary code from the driver handler to your custom interrupt handler.
+
+## Troubleshooting
+
+- If the project does not build, ensure Simplicity Studio and the WiSeConnect extension are installed and the board is connected.
+- If the device is not detected, reinstall the connectivity firmware and check USB drivers.
+
+## Resources
+
+- [WiSeConnect Getting Started](https://docs.silabs.com/wiseconnect/latest/wiseconnect-getting-started/)
+- [WiSeConnect Examples](https://docs.silabs.com/wiseconnect/latest/wiseconnect-examples/)
+- [SiWx91x SoC Documentation](https://docs.silabs.com/wiseconnect/latest/)
+
+## Report Bugs/Support
+
+For issues and support, use the Silicon Labs Community or your normal support channel.
+

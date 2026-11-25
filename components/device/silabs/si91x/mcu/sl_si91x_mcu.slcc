@@ -1,8 +1,8 @@
 id: sl_si91x_mcu
 package: platform_siwx91x
-label: Si91x MCU Subsystem
+label: MCU Subsystem
 description: >
-  The Si91x MCU component initialises the Si91x MCU subsystem at startup.
+  This component initialises the SiWx91x MCU subsystem at startup.
 category: Device|Si91x|MCU
 quality: production
 metadata:
@@ -32,6 +32,8 @@ requires:
     condition: ["device_si91x"]
   - name: romdriver_romtable_headers 
     condition: ["device_si91x"]
+  - name: segger_rtt_config_siwx91x
+    condition: ["segger_rtt"]
   - name: si91x_log_none  
 define:
   - name: SLI_SI91X_ENABLE_OS

@@ -15,6 +15,7 @@
  *
  ******************************************************************************/
 #include "psa_ecdsa_app.h"
+#include <inttypes.h>
 #include "psa/crypto.h"
 #include "sl_si91x_psa_wrap.h"
 #include <stdio.h>
@@ -22,13 +23,27 @@
 #define WRAP_INPUT_KEYS     0 // Enable this if the input private key needs to be wrapped before use
 #define IMPORT_WRAPPED_KEYS 0 // Enable this if the input key is wrapped
 
-static const unsigned char input_data[] = { 0x24, 0x8d, 0x6a, 0x61, 0xd2, 0x06, 0x38, 0xb8, 0xe5, 0xc0, 0x26,
-                                            0x93, 0x0c, 0x3e, 0x60, 0x39, 0xa3, 0x3c, 0xe4, 0x59, 0x64, 0xff,
-                                            0x21, 0x67, 0xf6, 0xec, 0xed, 0xd4, 0x19, 0xdb, 0x06, 0xc1 };
+/* Test vector bytes in one place (avoids skew between side-band and default builds). */
+#define PSA_ECDSA_APP_INPUT_INITIALIZER                                                                             \
+  0x24, 0x8d, 0x6a, 0x61, 0xd2, 0x06, 0x38, 0xb8, 0xe5, 0xc0, 0x26, 0x93, 0x0c, 0x3e, 0x60, 0x39, 0xa3, 0x3c, 0xe4, \
+    0x59, 0x64, 0xff, 0x21, 0x67, 0xf6, 0xec, 0xed, 0xd4, 0x19, 0xdb, 0x06, 0xc1
 
-static const unsigned char private_key[] = { 0x95, 0xCD, 0x3A, 0x36, 0x25, 0xD6, 0xF6, 0x06, 0xBD, 0xC8, 0x64,
-                                             0x77, 0x8D, 0x4A, 0xA6, 0x50, 0xC2, 0xD7, 0x9A, 0x05, 0x94, 0xDD,
-                                             0x10, 0xCF, 0x4C, 0x47, 0x4B, 0x83, 0xD2, 0x87, 0x0D, 0x1A };
+#define PSA_ECDSA_APP_PRIVATE_KEY_INITIALIZER                                                                       \
+  0x95, 0xCD, 0x3A, 0x36, 0x25, 0xD6, 0xF6, 0x06, 0xBD, 0xC8, 0x64, 0x77, 0x8D, 0x4A, 0xA6, 0x50, 0xC2, 0xD7, 0x9A, \
+    0x05, 0x94, 0xDD, 0x10, 0xCF, 0x4C, 0x47, 0x4B, 0x83, 0xD2, 0x87, 0x0D, 0x1A
+
+#if defined(SL_SI91X_SIDE_BAND_CRYPTO)
+/*
+ * Side-band passes buffers to the TA by pointer: they must reside in RAM. A const array can be
+ * placed in flash-only .rodata; a plain static array is initialized into writable RAM (.data).
+ * (Runtime memcpy from flash is not used here because it has been unreliable for this path.)
+ */
+static uint8_t input_data[]  = { PSA_ECDSA_APP_INPUT_INITIALIZER };
+static uint8_t private_key[] = { PSA_ECDSA_APP_PRIVATE_KEY_INITIALIZER };
+#else
+static const uint8_t input_data[]  = { PSA_ECDSA_APP_INPUT_INITIALIZER };
+static const uint8_t private_key[] = { PSA_ECDSA_APP_PRIVATE_KEY_INITIALIZER };
+#endif
 
 void test_psa_ecdsa()
 {
@@ -44,7 +59,7 @@ void test_psa_ecdsa()
   /* psa crypto library initialization */
   ret = psa_crypto_init();
   if (ret != PSA_SUCCESS) {
-    printf("PSA crypto library initialization failed with error: %ld\r\n", ret);
+    printf("PSA crypto library initialization failed with error: %" PRId32 "\r\n", ret);
   } else {
     printf("PSA crypto library initialization Success\r\n");
   }
@@ -61,7 +76,7 @@ void test_psa_ecdsa()
   // Import a private key
   ret = psa_import_key(&key_attr, private_key, sizeof(private_key), &key_id);
   if (ret != PSA_SUCCESS) {
-    printf("Import Key failed with error: status %ld\r\n", ret);
+    printf("Import Key failed with error: status %" PRId32 "\r\n", ret);
   } else {
     printf("Import Key success\r\n");
   }
@@ -69,7 +84,7 @@ void test_psa_ecdsa()
   // Export a public key from a volatile private key
   ret = psa_export_public_key(key_id, public_key, sizeof(public_key), &pubkey_len);
   if (ret != PSA_SUCCESS) {
-    printf("Exporting a Public Key from Private key Failed with error: %ld\r\n", ret);
+    printf("Exporting a Public Key from Private key Failed with error: %" PRId32 "\r\n", ret);
   } else {
     printf("Export Public Key from Private Key Success\r\n");
   }
@@ -77,7 +92,7 @@ void test_psa_ecdsa()
   // Destroy the private key
   ret = psa_destroy_key(key_id);
   if (ret != PSA_SUCCESS) {
-    printf("Destroy Key failed with error : %ld\r\n", ret);
+    printf("Destroy Key failed with error : %" PRId32 "\r\n", ret);
   } else {
     printf("Destroy Key Success\r\n");
   }
@@ -103,7 +118,7 @@ void test_psa_ecdsa()
   // Import a private key
   ret = psa_import_key(&key_attr, private_key, sizeof(private_key), &key_id);
   if (ret != PSA_SUCCESS) {
-    printf("Import Key failed with error: status %ld\r\n", ret);
+    printf("Import Key failed with error: status %" PRId32 "\r\n", ret);
   } else {
     printf("Import Key success\r\n");
   }
@@ -118,7 +133,7 @@ void test_psa_ecdsa()
                          &signature_len);
 
   if (ret != PSA_SUCCESS) {
-    printf("Sign Message with Private key Failed with error: %ld\r\n", ret);
+    printf("Sign Message with Private key Failed with error: %" PRId32 "\r\n", ret);
   } else {
     printf("Sign Message with Private Key Success\r\n");
   }
@@ -126,7 +141,7 @@ void test_psa_ecdsa()
   // Destroy the wrapped/plain private key
   ret = psa_destroy_key(key_id);
   if (ret != PSA_SUCCESS) {
-    printf("Destroy Key failed with error : %ld\r\n", ret);
+    printf("Destroy Key failed with error : %" PRId32 "\r\n", ret);
   } else {
     printf("Destroy Key Success\r\n");
   }
@@ -142,7 +157,7 @@ void test_psa_ecdsa()
   // Import public key
   ret = psa_import_key(&key_attr, public_key, sizeof(public_key), &key_id);
   if (ret != PSA_SUCCESS) {
-    printf("Import Public Key failed with error : %ld\r\n", ret);
+    printf("Import Public Key failed with error : %" PRId32 "\r\n", ret);
   } else {
     printf("Import Public Key Success\r\n");
   }
@@ -155,7 +170,7 @@ void test_psa_ecdsa()
                            signature_buf,
                            signature_len);
   if (ret != PSA_SUCCESS) {
-    printf("Signature Verification with Public Key failed with error: %ld\r\n", ret);
+    printf("Signature Verification with Public Key failed with error: %" PRId32 "\r\n", ret);
   } else {
     printf("Signature Verification with Public Key Success\r\n");
   }
@@ -163,7 +178,7 @@ void test_psa_ecdsa()
   // Destroy public key
   ret = psa_destroy_key(key_id);
   if (ret != PSA_SUCCESS) {
-    printf("Destroy Key failed with error : %ld\r\n", ret);
+    printf("Destroy Key failed with error : %" PRId32 "\r\n", ret);
   } else {
     printf("Destroy Key Success\r\n");
   }

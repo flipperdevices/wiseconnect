@@ -465,6 +465,15 @@ int32_t iotSocketSetOpt(int32_t socket, int32_t opt_id, const void *opt_val, uin
     case IOT_SOCKET_SO_KEEPALIVE: {
       return IOT_SOCKET_ENOTSUP; // TBD
     }
+
+    // Silicon Labs vendor extension: translate TLS-enable to the
+    // corresponding BSD setsockopt() call so applications can stay
+    // on iotSocket APIs for TLS-enabled streams.
+    case IOT_SOCKET_SO_SSL_ENABLE: {
+      status = setsockopt(socket, SOL_TCP, TCP_ULP, opt_val, opt_len);
+      break;
+    }
+
     default: {
       return IOT_SOCKET_ENOTSUP; // Unsupported option
     }
@@ -502,6 +511,13 @@ int32_t iotSocketGetOpt(int32_t socket, int32_t opt_id, void *opt_val, uint32_t 
       *(uint32_t *)opt_val = (*(uint32_t *)opt_val == SOCK_STREAM) ? IOT_SOCKET_SOCK_STREAM : IOT_SOCKET_SOCK_DGRAM;
       break;
     }
+
+    // Silicon Labs vendor extension read-back path.
+    case IOT_SOCKET_SO_SSL_ENABLE: {
+      status = getsockopt(socket, SOL_TCP, TCP_ULP, opt_val, opt_len);
+      break;
+    }
+
     default: {
       return IOT_SOCKET_ENOTSUP; // Unsupported option
     }
@@ -509,10 +525,6 @@ int32_t iotSocketGetOpt(int32_t socket, int32_t opt_id, void *opt_val, uint32_t 
 
   if (status < 0) {
     return sli_si91x_errno_to_rc(); // Failure
-  }
-
-  if (*opt_len > 4) {
-    *opt_len = 4; // Ensure the option length is not greater than 4
   }
 
   return status;

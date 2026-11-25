@@ -37,6 +37,7 @@ extern "C" {
 #endif
 
 #include "si91x_device.h"
+#include "sl_log_helper.h"
 #include "sl_status.h"
 #include "base_types.h"
 

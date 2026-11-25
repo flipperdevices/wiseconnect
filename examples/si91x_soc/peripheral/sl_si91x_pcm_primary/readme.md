@@ -1,8 +1,8 @@
-# SL Pulse Code Modulation (PCM) Primary
+# SiWx91x Platform PCM Primary
 
 ## Table of Contents
 
-- [SL PCM PRIMARY](#sl-pcm-primary)
+- [SiWx91x Platform PCM Primary](#platform-siwx91x-pcm-primary)
   - [Table of Contents](#table-of-contents)
   - [Purpose/Scope](#purposescope)
   - [Overview](#overview)
@@ -18,6 +18,9 @@
     - [Pin Configuration](#pin-configuration)
     - [Pin Description](#pin-description)
   - [Test the Application](#test-the-application)
+  - [Troubleshooting](#troubleshooting)
+  - [Resources](#resources)
+  - [Report Bugs/Support](#report-bugssupport)
 
 ## Purpose/Scope
 
@@ -45,7 +48,7 @@ This application demonstrates the Pulse Code Modulation (PCM) primary device dat
 - The application will be in a wait state until data transmission is complete.
 - The test will pass after successful data comparison.
 
-**Note!** 
+**Note!**
 
 1. Any PCM transfers with 16-bit and 32-bit resolutions should only have an even transfer size (8,10,12,14...)
 2. Any PCM transfers with 24-bit resolutions should only have transfer size as multiples of 4 (8,12,16,20...)
@@ -57,7 +60,7 @@ This application demonstrates the Pulse Code Modulation (PCM) primary device dat
 ### Hardware Requirements
 
 - Windows PC
-- Silicon Labs Si917 Evaluation Kit [[BRD4002](https://www.silabs.com/development-tools/wireless/wireless-pro-kit-mainboard?tab=overview) + [BRD4338A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-rb4338a-wifi-6-bluetooth-le-soc-radio-board?tab=overview) / [BRD4342A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx91x-rb4342a-wifi-6-bluetooth-le-soc-radio-board?tab=overview) / [BRD4343A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4343a-wi-fi-6-bluetooth-le-8mb-flash-radio-board-for-module?tab=overview)]
+- Silicon Labs SiWx91x Evaluation Kit [[BRD4002](https://www.silabs.com/development-tools/wireless/wireless-pro-kit-mainboard?tab=overview) + [BRD4338A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-rb4338a-wifi-6-bluetooth-le-soc-radio-board?tab=overview) / [BRD4342A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx91x-rb4342a-wifi-6-bluetooth-le-soc-radio-board?tab=overview) / [BRD4343A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4343a-wi-fi-6-bluetooth-le-8mb-flash-radio-board-for-module?tab=overview) / [BRD4343C](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4343c-wi-fi-6-bluetooth-le-8mb-flash-radio-board-for-module?tab=overview)]
 - SiWx917 AC1 Module Explorer Kit [BRD2708A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-ek2708a-explorer-kit)
 
 ### Software Requirements
@@ -89,22 +92,24 @@ For details on the project folder structure, see the [WiSeConnect Examples](http
 
   ![Figure: pcm_primary_uc_screen](resources/uc_screen/pcm_primary_uc_screen.png)
 
-### General Configuration 
+### General Configuration
 
 - SL_PCM0_RESOLUTION: PCM0 resolution can be configured through this macro,valid resolution values are 16, 24 and 32 bit.
 - SL_PCM0_SAMPLING_RATE: PCM0 sampling rate can be configured through this macro,valid sampling rate values are
     8kHz, 11.025kHz, 16kHz, 22.05kHz and 24kHz.
 - Configuration files are generated in **config folder**, if not changed then the code will run on default UC values.
 
-Configure the following macros in [`pcm_primary_example.c`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.1-content-for-docs/examples/si91x_soc/peripheral/sl_si91x_pcm_primary/pcm_primary_example.c) file and update/modify the following macros if required.
+Configure the following macros in [`pcm_primary_example.c`](pcm_primary_example.c) file and update/modify the following macros if required.
 
-```C
- #define PCM_PRIMARY_BUFFER_SIZE 1024    ///< Transmit/Receive buffer size
-```
+- `PCM_PRIMARY_BUFFER_SIZE`: Size (in samples) of the buffers used to transmit and receive PCM data between the primary and secondary. By default, it is set to 1024.
 
-- If the resolution is changed to 24-bit or 32-bit, update the typedef for `pcm_data_size_t` to `uint32_t` instead of `uint16_t` to accommodate the larger data size - 
+  ```c
+   #define PCM_PRIMARY_BUFFER_SIZE 1024    ///< Transmit/Receive buffer size
+  ```
 
- ```C
+- If the resolution is changed to 24-bit or 32-bit, update the typedef for `pcm_data_size_t` to `uint32_t` instead of `uint16_t` to accommodate the larger data size -
+
+ ```c
  typedef uint32_t pcm_data_size_t;
  ```
 
@@ -112,9 +117,9 @@ Configure the following macros in [`pcm_primary_example.c`](https://github.com/S
 
 To use the ULP_PCM instance instead of the default PCM0 instance:
 
-- Change the `PCM_INSTANCE` macro value to `ULP_PCM` in [`pcm_primary_example.c`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.1-content-for-docs/examples/si91x_soc/peripheral/sl_si91x_pcm_primary/pcm_primary_example.c):
+- `PCM_INSTANCE`: Selects the PCM peripheral instance used by the example. Set to `ULP_PCM` to use the ULP_PCM instance instead of the default PCM0 instance.
 
-  ```C
+  ```c
   #define PCM_INSTANCE ULP_PCM
   ```
 
@@ -131,25 +136,28 @@ To use the ULP_PCM instance instead of the default PCM0 instance:
 
   ![Figure: Pin connections](resources/readme/PCM_Primary_Secondary_Pins.png)
 
-  ### Pin Description
+### Pin Description
 
-   >**Note:** The default pin configurations are set in the SiWx917:[RTE_Device_917.h](path:/$project/config/RTE_Device_917.h) file. Verify that these pin settings match your hardware setup. You can modify the pin configurations in this file if your board uses different GPIO pins for the PCM interface.
+>**Note:** The default pin configurations are set in the SiWx917:[RTE_Device_917.h](path:/$project/config/RTE_Device_917.h) file. Verify that these pin settings match your hardware setup. You can modify the pin configurations in this file if your board uses different GPIO pins for the PCM interface.
 
 ## Test the Application
 
 Refer to the instructions [here](https://docs.silabs.com/wiseconnect/latest/wiseconnect-getting-started/) to:
 
-1. Take two Silicon Labs boards: Si917 Evaluation Kit WPK (BRD4002) and one of BRD4325A / BRD4325B / BRD4338A.
+1. Take two Silicon Labs boards: SiWx91x Evaluation Kit WPK (BRD4002) and one of BRD4325A / BRD4325B / BRD4338A.
 2. On the first board, compile and run the PCM secondary device application.
 3. On the other board, compile and run the PCM primary application.
 4. When the primary application starts, it shows the message:
-   "Reset Secondary and Press Button 0 on Primary to sync."
+   "Reset Secondary " and " Press Button 0 on Primary to sync."
 5. Reset the secondary board. After reset, the secondary console prints:
    "Waiting for primary button 0 press to sync with primary."
 6. Press Button 0 on the primary board to complete the synchronization.
-7. After sync, the primary receives data from the secondary device, compares it, and then sends data back to the secondary device.
-8. When the primary sends data back, the secondary device receives it and performs loopback comparison to validate the data.
-9. After successful execution, the serial console will show the expected output logs.
+7. After sync, the primary receives data from the secondary device, compares it.
+8. After Data comparision at primary side, primary device shows the meassage:
+   "Press Button 0 on Primary to sync".
+9.  Again press button 0 on Primary device then primary sends data back to the secondary device.
+10. The secondary device receives it and performs loopback comparison to validate the data.
+11. After successful execution, the serial console will show the expected output logs.
 
     >![Figure: output](resources/readme/output.png)
 
@@ -157,3 +165,18 @@ Refer to the instructions [here](https://docs.silabs.com/wiseconnect/latest/wise
 >
 > - Interrupt handlers are implemented in the driver layer, and user callbacks are provided for custom code. If you want to write your own interrupt handler instead of using the default one, make the driver interrupt handler a weak handler. Then, copy the necessary code from the driver handler to your custom interrupt handler.
 > - pcm0 or ulp_pcm uses i2s0 and ulp_i2s peripherals internally. It is recommended not to install the i2s0 and ulp_i2s instances simultaneously with pcm0 or ulp_pcm, as this may cause resource conflicts.
+## Troubleshooting
+
+- If the project does not build, ensure Simplicity Studio and the WiSeConnect extension are installed and the board is connected.
+- If the device is not detected, reinstall the connectivity firmware and check USB drivers.
+
+## Resources
+
+- [WiSeConnect Getting Started](https://docs.silabs.com/wiseconnect/latest/wiseconnect-getting-started/)
+- [WiSeConnect Examples](https://docs.silabs.com/wiseconnect/latest/wiseconnect-examples/)
+- [SiWx91x SoC Documentation](https://docs.silabs.com/wiseconnect/latest/)
+
+## Report Bugs/Support
+
+For issues and support, use the Silicon Labs Community or your normal support channel.
+

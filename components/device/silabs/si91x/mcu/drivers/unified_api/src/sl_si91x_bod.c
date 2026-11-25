@@ -30,7 +30,6 @@
 #include "clock_update.h"
 #include "rsi_rom_clks.h"
 #include "rsi_rom_ulpss_clk.h"
-#include "sl_status.h"
 #include "sl_si91x_bod_config.h"
 /*******************************************************************************
  ***************************  DEFINES / MACROS   *******************************
@@ -72,6 +71,7 @@ sl_status_t sl_si91x_bod_init(void)
   if (BOD->BOD_COMP_SEL_REG_b.CMP_5_EN == ENABLE) {
     return SL_STATUS_OK; // Return success status
   } else {
+    SL_PRINT_STRING_ERROR("sl_si91x_bod_init:BOD init enable failed,line no : %d\r\n", (int)__LINE__);
     return SL_STATUS_BOD_NOT_ENABLED; // Return failure status
   }
 }
@@ -91,6 +91,7 @@ sl_status_t sl_si91x_bod_deinit(void)
   if (BOD->BOD_COMP_SEL_REG_b.CMP_5_EN == DISABLE) {
     return SL_STATUS_OK; // Return success status
   } else {
+    SL_PRINT_STRING_ERROR("sl_si91x_bod_deinit:BOD deinit failed,line no : %d\r\n", (int)__LINE__);
     return SL_STATUS_FAIL; // Return failure status
   }
 }
@@ -105,6 +106,8 @@ sl_status_t sl_si91x_bod_set_threshold(float vbatt_threshold)
 
   // Validate threshold range
   if (vbatt_threshold < SL_BOD_MIN_THRESHOLD || vbatt_threshold > SL_BOD_MAX_THRESHOLD) {
+    SL_PRINT_STRING_ERROR("sl_si91x_bod_set_threshold:BOD threshold value is out of range,line no : %d\r\n",
+                          (int)__LINE__);
     return SL_STATUS_INVALID_PARAMETER;
   }
   // Enable the BOD comparator
@@ -138,6 +141,8 @@ sl_status_t sl_si91x_bod_set_threshold(float vbatt_threshold)
     BOD->BOD_COMP_SEL_REG &= (uint32_t)(~0x7E);
     BOD->BOD_COMP_SEL_REG |= (threshold_i << 1);
   } else {
+    SL_PRINT_STRING_ERROR("sl_si91x_bod_set_threshold:BOD threshold configuration failed,line no : %d\r\n",
+                          (int)__LINE__);
     return SL_STATUS_BOD_THRESHOLD_CONFIG_FAIL;
   }
   return SL_STATUS_OK;
@@ -150,12 +155,15 @@ sl_status_t sl_si91x_bod_config_slot_value(uint16_t slot_value)
 {
   // Check if BOD is not enabled
   if (BOD->BOD_COMP_SEL_REG_b.CMP_5_EN == DISABLE) {
+    SL_PRINT_STRING_ERROR("sl_si91x_bod_config_slot_value:BOD slot not initialized,line no : %d\r\n", (int)__LINE__);
     return SL_STATUS_NOT_INITIALIZED; // Return not initialized status
   }
   // Enable the BOD comparator
   BOD->BOD_COMP_SEL_REG_b.CMP_5_EN = ENABLE;
   // Validate slot value range
   if (slot_value < SL_BOD_SLOT_MIN_VALUE) {
+    SL_PRINT_STRING_ERROR("sl_si91x_bod_config_slot_value:BOD slot value is out of range,line no : %d\r\n",
+                          (int)__LINE__);
     return SL_STATUS_INVALID_PARAMETER; // Return invalid parameter status
   }
   // Configure the BOD Slot value
@@ -166,6 +174,7 @@ sl_status_t sl_si91x_bod_config_slot_value(uint16_t slot_value)
   if (BOD->BOD_COMP_MODE_REG_b.CMP_SLOT_VALUE == slot_value) {
     return SL_STATUS_OK; // Return success status
   } else {
+    SL_PRINT_STRING_ERROR("sl_si91x_bod_config_slot_value:BOD slot write failed,line no : %d\r\n", (int)__LINE__);
     return SL_STATUS_FAIL; // Return failure status
   }
 }
@@ -254,12 +263,17 @@ sl_status_t sl_si91x_bod_button_wakeup_enable_v2(boolean_t bod_button_enable)
     SL_NPSS_GPIO_2_ANALOG_MODE |= SL_NPSS_GPIO_2_ANALOG_MODE_VALUE;
     if (BOD->BOD_COMP_SEL_REG_b.BUTTON_WAKEUP_EN == Enable)
       return SL_STATUS_OK;
-    else
+    else {
+      SL_PRINT_STRING_ERROR("sl_si91x_bod_button_wakeup_enable_v2:BOD button wakeup enable failed,line no : %d\r\n",
+                            (int)__LINE__);
       return SL_STATUS_FAIL;
-  } else
+    }
+  } else {
+    SL_PRINT_STRING_ERROR("sl_si91x_bod_button_wakeup_enable_v2:BOD button wakeup disable failed,line no : %d\r\n",
+                          (int)__LINE__);
     return SL_STATUS_FAIL;
+  }
 }
-
 /*******************************************************************************
  * Function to disable button wakeup
  ******************************************************************************/
@@ -277,8 +291,11 @@ sl_status_t sl_si91x_bod_button_wakeup_disable(void)
   }
   if (BOD->BOD_COMP_SEL_REG_b.BUTTON_WAKEUP_EN == DISABLE)
     return SL_STATUS_OK;
-  else
+  else {
+    SL_PRINT_STRING_ERROR("sl_si91x_bod_button_wakeup_disable:BOD button wakeup disable failed,line no : %d\r\n",
+                          (int)__LINE__);
     return SL_STATUS_FAIL;
+  }
 }
 /*******************************************************************************
  * Function to enable button interrupt
@@ -292,6 +309,8 @@ sl_status_t sl_si91x_bod_button_interrupt_enable(void)
   if (status_read) {
     return SL_STATUS_OK;
   }
+  SL_PRINT_STRING_ERROR("sl_si91x_bod_button_interrupt_enable:BOD button interrupt enable failed,line no : %d\r\n",
+                        (int)__LINE__);
   return SL_STATUS_FAIL;
 }
 
@@ -307,6 +326,8 @@ sl_status_t sl_si91x_bod_button_interrupt_disable(void)
   if (!status_read) {
     return SL_STATUS_OK;
   }
+  SL_PRINT_STRING_ERROR("sl_si91x_bod_button_interrupt_disable:BOD button interrupt disable failed,line no : %d\r\n",
+                        (int)__LINE__);
   return SL_STATUS_FAIL;
 }
 
@@ -332,12 +353,20 @@ sl_status_t sl_si91x_bod_set_configuration(sl_bod_uc_param_t usr_config_params)
   // Configure the BOD slot value
   status = sl_si91x_bod_config_slot_value(usr_config_params.slot_value);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR(
+      "sl_si91x_bod_set_configuration:BOD slot value configuration failed, status=0x%04lX,line no : %d\r\n",
+      status,
+      (int)__LINE__);
     return status; // Return if configuring slot value fails
   }
 
   // Set the BOD mode to automatic
   status = sl_si91x_bod_set_mode(SL_BOD_MODE_AUTOMATIC);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR(
+      "sl_si91x_bod_set_configuration:BOD mode configuration failed, status=0x%04lX,line no : %d\r\n",
+      status,
+      (int)__LINE__);
     return status; // Return if setting mode fails
   }
 
@@ -358,6 +387,7 @@ sl_status_t sl_si91x_bod_get_threshold(float *vbatt_threshold)
 {
   // Check if the vbatt_threshold pointer is NULL
   if (vbatt_threshold == NULL) {
+    SL_PRINT_STRING_ERROR("sl_si91x_bod_get_threshold:BOD threshold value is NULL,line no : %d\r\n", (int)__LINE__);
     return SL_STATUS_INVALID_PARAMETER; // Return invalid parameter status
   }
 
@@ -389,11 +419,14 @@ sl_status_t sl_si91x_bod_register_callback(bod_callback_t callback)
 {
   // Validate instance, if the parameters is NULL, it returns an error code.
   if (callback == NULL) {
+    SL_PRINT_STRING_ERROR("sl_si91x_bod_register_callback:BOD callback is NULL,line no : %d\r\n", (int)__LINE__);
     return SL_STATUS_NULL_POINTER;
   }
   // To validate the function pointer if the parameters is not NULL then, it
   // returns an error code
   if (user_callback != NULL) {
+    SL_PRINT_STRING_ERROR("sl_si91x_bod_register_callback:BOD callback is already registered,line no : %d\r\n",
+                          (int)__LINE__);
     return SL_STATUS_BUSY;
   }
   // User callback address is passed to the static variable which is called
@@ -409,11 +442,16 @@ sl_status_t sl_si91x_bod_button_register_callback(bod_button_callback_t callback
 {
   // Validate instance, if the parameters is NULL, it returns an error code.
   if (callback == NULL) {
+    SL_PRINT_STRING_ERROR("sl_si91x_bod_button_register_callback:BOD button callback is NULL,line no : %d\r\n",
+                          (int)__LINE__);
     return SL_STATUS_NULL_POINTER;
   }
   // To validate the function pointer if the parameters is not NULL then, it
   // returns an error code
   if (user_button_callback != NULL) {
+    SL_PRINT_STRING_ERROR(
+      "sl_si91x_bod_button_register_callback:BOD button callback is already registered,line no : %d\r\n",
+      (int)__LINE__);
     return SL_STATUS_BUSY;
   }
   // User callback address is passed to the static variable which is called
@@ -437,6 +475,7 @@ sl_status_t sl_si91x_bod_get_battery_status(float *battery_status)
 {
   // Check if the battery_status pointer is NULL
   if (battery_status == NULL) {
+    SL_PRINT_STRING_ERROR("sl_si91x_bod_get_battery_status:BOD battery status is NULL,line no : %d\r\n", (int)__LINE__);
     return SL_STATUS_INVALID_PARAMETER; // Return invalid parameter status
   }
 
@@ -568,6 +607,9 @@ sl_status_t sl_si91x_bod_button_set_configuration(sl_bod_button_uc_config_param_
   if (uc_config_param.button_wakeup_enable) {
     // Get the current battery voltage
     if (sl_si91x_bod_get_battery_status(&vbatt) != SL_STATUS_OK) {
+      SL_PRINT_STRING_ERROR(
+        "sl_si91x_bod_button_set_configuration:BOD button configuration battery voltage read failed,line no : %d\r\n",
+        (int)__LINE__);
       return SL_STATUS_FAIL; // Exit if unable to retrieve battery voltage
     }
 
@@ -675,10 +717,11 @@ uint8_t sl_si91x_bod_button_value_read(void)
 /*******************************************************************************
  * Function to set the BOD mode
  ******************************************************************************/
-sl_status_t sl_si91x_bod_set_mode(sl_bod_mode_t mode)
+sl_status_t sl_si91x_bod_set_mode(uint8_t mode)
 {
   // Check if the mode is valid
   if (mode >= SL_BOD_MAX_MODE_VALUE) {
+    SL_PRINT_STRING_ERROR("sl_si91x_bod_set_mode:BOD mode is invalid,line no : %d\r\n", (int)__LINE__);
     return SL_STATUS_INVALID_PARAMETER; // Return invalid parameter status
   }
   // Enable the BOD comparator
@@ -720,6 +763,8 @@ void sl_si91x_bod_black_out_reset(en_t enable)
 sl_status_t sl_si91x_bod_battery_percentage(float voltage, float *vbat_per)
 {
   if (vbat_per == NULL) {
+    SL_PRINT_STRING_ERROR("sl_si91x_bod_battery_percentage:BOD percentage value is NULL,line no : %d\r\n",
+                          (int)__LINE__);
     return SL_STATUS_INVALID_PARAMETER; // Check for NULL pointer
   }
 
@@ -731,6 +776,8 @@ sl_status_t sl_si91x_bod_battery_percentage(float voltage, float *vbat_per)
     *vbat_per = 100.0f; // Clamp to 100% if voltage is greater than max voltage
   } else {
     *vbat_per = 0.0f; // Clamp to 0% if voltage is less than min voltage
+    SL_PRINT_STRING_ERROR("sl_si91x_bod_battery_percentage:BOD percentage value is out of range,line no : %d\r\n",
+                          (int)__LINE__);
     return SL_STATUS_INVALID_PARAMETER;
   }
 

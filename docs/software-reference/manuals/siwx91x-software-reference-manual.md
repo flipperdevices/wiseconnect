@@ -1,6 +1,7 @@
 # SiWx917 Software Reference
 
 ## Introduction
+
 This reference manual provides detailed information about the software architecture, features, and functionalities of the SiWx917™, the first chip in the SiWx91x™ chipset family. This manual is designed to assist developers in leveraging the full potential of the SiWx917 for their applications.
 
 The SiWx917 system-on-chip (SoC) has two processing cores:
@@ -11,7 +12,7 @@ The SiWx917 operates with two flash memory options: common flash or dual flash. 
 
 The NWP includes support for in-built network and wireless protocol stacks, which applications running on the MCU can access via pre-defined APIs provided by the WiSeConnect™ SDK. Both the processors are connected over an AHB interface. The MCU and NWP rely on firmware-based state machines to manage and coordinate their individual and joint functionalities. These state machines control the operational flow within each processor, ensuring that each one transitions through specific states required for seamless processing and reliable performance
 
-MCU applications can be developed, compiled, and run on the SiWx917 using the WiSeConnect SDK extension (or **WiSeconnect** extension) on Simplicity Studio. The NWP firmware is available as a pre-built binary with the WiSeConnect SDK package. See the [Getting Started](http://docs.silabs.com/wiseconnect/latest/wiseconnect-getting-started/) documentation for more details.
+MCU applications can be developed, compiled, and run on the SiWx917 using the WiSeConnect SDK extension (or **WiSeConnect** extension) on Simplicity Studio. The NWP firmware is available as a pre-built binary with the WiSeConnect SDK package. See the [Getting Started](http://docs.silabs.com/wiseconnect/latest/wiseconnect-getting-started/) documentation for more details.
 
 >**Note:** RTOS support is available at Application and Service level. Applications developers must use the correct RTOS primitives when accessing MCU peripherals from multiple SW threads. When using RTOS, developers need to configure interrupt priorities for all MCU interrupts being used in the application.
 
@@ -21,22 +22,24 @@ The SiWx91x is the industry's first wireless microcontroller unit (MCU) family w
 
 Key features of the SiWx917 include:
 
- * Dual processing cores: Network wireless processor (NWP) and ARM Cortex M4 application processor (MCU)
- * Support for multiple flash memory configurations: separate flash for MCU and NWP or shared flash memory
- * Shared SRAM for both processors
- * In-built network and wireless stacks accessible via pre-defined APIs in the WiSeConnect™ SDK
- * Advanced security features
- * High-performance mixed-signal peripherals
- * Integrated power management
+- Dual processing cores: Network wireless processor (NWP) and ARM Cortex M4 application processor (MCU)
+- Support for multiple flash memory configurations: separate flash for MCU and NWP or shared flash memory
+- Shared SRAM for both processors
+- In-built network and wireless stacks accessible via pre-defined APIs in the WiSeConnect™ SDK
+- Advanced security features
+- High-performance mixed-signal peripherals
+- Integrated power management
+
 These features make the SiWx917 a versatile and powerful solution for a wide range of applications, providing developers with the tools they need for efficient and effective development.
 
 ## System Processor
 
 The SiWx917 family include ARM® Cortex®-M4 processor for user application. The Cortex-M4 processor is a high performance 32-bit processor designed for the micro-controller market. It offers significant benefits to developers, including:
--  Outstanding processing performance combined with fast interrupt handling
--  Enhanced system debug with extensive break-point and trace capabilities
--  Efficient processor core, system and memories
--  Ultra-low power consumption with integrated sleep modes
+
+- Outstanding processing performance combined with fast interrupt handling
+- Enhanced system debug with extensive break-point and trace capabilities
+- Efficient processor core, system and memories
+- Ultra-low power consumption with integrated sleep modes
 
 ## Software Architecture
 
@@ -59,6 +62,7 @@ For more details on MCU Peripherals, see the [SiWx917 Reference Manual](https://
 ![SiWx917 MCU Architecture](./resources/SiWx917_mcu_architecture.png)
 
 - When using low-power features in high-power mode with DMA enabled, it is recommended to use the ULP Memory block for buffer storage. For more details on buffer allocation, refer to the example applications: ULP_I2S, ULP_UDMA, ULP_SSI, and ULP_UART.
+
 ### Application Flow
 
 The following diagram demonstrates the flow of code in an SiWx917 MCU application code created using the WiSeConnect SDK.
@@ -68,6 +72,7 @@ Code blocks in green represent SiWx91x MCU APIs and code blocks in orange repres
 ![Application Flow](./resources/application_flow.png)
 
 ## Memory Architecture
+
 The SiWx917 SoC contains the following memory components:
   
   **On-chip SRAM**
@@ -88,23 +93,25 @@ The SiWx917 SoC contains the following memory components:
   **e-Fuse**
   The SiWx917 features 32 bytes of M4 eFuse and it is available for cusmoer applications. These e-fuses enable secure and permanent storage of important configuration settings, such as unique device identifiers and security keys. Once programmed, e-fuses remain unchanged, ensuring that critical settings are preserved.
 
-For detailed information on the memory components, please refer [SiWx917 SoC Memory Map Application Note](https://www.silabs.com/documents/public/application-notes/an1416-siwx917-soc-memory-map.pdf)
+For detailed information on the memory components, see [SiWx917 SoC Memory Map Application Note](https://www.silabs.com/documents/public/application-notes/an1416-siwx917-soc-memory-map.pdf)
 
 #### PSRAM
 
 The PSRAM on the SiWx917 provides additional RAM space to the MCU application beyond the SRAM. It is available in either stacked or external configurations, depending on the package. The stacked version offers enhanced security for application execution and data storage. The MCU application can use the PSRAM for additional RAM space beyond the SRAM.
 
 The SiWx917 provides the PSRAM in a ready-to-use state upon boot up. During boot up, the bootloader:
+
 - Initializes the PSRAM die according to the chip and PSRAM configurations in the master boot record (MBR).
 - Makes the PSRAM available as in-system memory. 
 
 The application may use the PSRAM for different memory segments like .data, .bss, .stack, .heap, .text, or user defined segments. Different PSRAM components are available in the Simplicity Studio application project depending on the memory segments required. See the components starting from Segments in PSRAM in the [Peripherals](https://docs.silabs.com/wiseconnect/latest/wiseconnect-developers-guide-migr-sdk-changes/application-components#peripherals) section of the **Application Components** documentation page.
 
-PSRAM can be used for runtime data storage as well as for executing MCU applications. It utilizes D-cache and I-cache to enhance memory access performance for both data and instructions.
+PSRAM can be used for runtime data storage and executing MCU applications. It uses the instruction cache (I-cache) to improve instruction memory access performance. The PSRAM D-cache path is disabled to prevent incorrect data during specific back-to-back accesses. For more information, see [DCACHE_E301 Errata](https://www.silabs.com/documents/public/errata/siwg917-soc-ic-errata.pdf).
 
 There is a provision to modify the PSRAM configuration settings in addition to boot up and default settings with the help of driver APIs which are part of the WiSeConnect SDK. These additional configurations include interface mode, read/write type, clock, pinset, and others. The WiSeConnect SDK offers various [examples](https://docs.silabs.com/wiseconnect/latest/wiseconnect-examples/) to demonstrate the use of PSRAM memory and driver APIs.
 
-The PSRAM interface comes with security features which allow the user to protect the data stored in the PSRAM.  It is possible to configure up to four secure segments within the PSRAM by specifying each segment's start address and length in the MBR. Each secure segment represents a designated memory area where data protection is applied, allowing users to choose specific areas of memory that require enhanced security. This segmentation flexibility lets users secure only the data that needs protection. 
+The PSRAM interface comes with security features which allow the user to protect the data stored in the PSRAM.  It is possible to configure up to four secure segments within the PSRAM by specifying each segment's start address and length in the MBR. Each secure segment represents a designated memory area where data protection is applied, allowing users to choose specific areas of memory that require enhanced security. This segmentation flexibility lets users secure only the data that needs protection.
+
 An inline AES engine within the Quad SPI controller encrypts and decrypts data on the fly for these secure segments, supporting CTR mode with a key size of either 128 or 256 bits. The security configurations for these secure segments are locked in place at system boot-up; they can only be written once and cannot be modified afterward, providing write protection for the security settings.
 
 The WiSeConnect SDK provides a power save mechanism for the PSRAM which effectively utilizes the hardware power handles and sleep features of the PSRAM die across sleep and wakeup to minimize power consumption.
@@ -137,16 +144,17 @@ For more information on the memory architecture and hardware interfaces of PSRAM
 - **Cache Coherency:** This is especially crucial when a buffer placed in PSRAM is accessed by both the NWP and M4 cores for bidirectional transactions. While the M4 core accesses PSRAM through cache, the Master (NWP core and DMA) interacts with PSRAM directly. Therefore, if PSRAM is used as a shared buffer, it's essential to move such buffers to SRAM.
 - Only the Text and Data segments are recommended for installation in Wireless Applications from PSRAM.
 - **BSS, Heap and Stack Region:** In PSRAM-enabled demos, moving of text and data segments to PSRAM is supported. However, the BSS, Heap, and Stack regions should remain in SRAM. For SDK applications, the BSS, Heap, and Stack regions are not configured to PSRAM.
-- **Code Classifier Usage:** The Code Classifier can be used to optimize memory allocation by selectively moving specific elements between SRAM and PSRAM. This is particularly useful in scenarios where performance improvements or memory usage optimizations are required. By classifying code, initialized data, or uninitialized data, developers can ensure efficient memory utilization and enhance application performance. For usage details, refer to the Code Classifier Demo Application.
-  > **Note:** Code classifier support does not extend to **static** variables.  
+- **PSRAM Code Classifier Usage:** The PSRAM Code Classifier can be used to optimize memory allocation by selectively moving specific elements between SRAM and PSRAM. This is particularly useful in scenarios where performance improvements or memory usage optimizations are required. By classifying code, initialized data, or uninitialized data, developers can ensure efficient memory utilization and enhance application performance. For usage details, refer to the PSRAM Code Classifier Demo Application.
+  > **Note:** PSRAM code classifier support does not extend to **static** variables.  
 
 #### Flash and PSRAM Combinations
 
 This section describes the package combinations of flash and PSRAM provided by the SiWx917. Users can select the appropriate combination based on their application requirements.
 
 The available PSRAM options depend on the flash configuration of the SiWx917 package:
-* In the common flash configuration, both the NWP and MCU will use the same flash memory which is either stacked or external.
-* In the dual flash configuration, the NWP uses stacked flash and MCU uses external flash.
+
+- In the common flash configuration, both the NWP and MCU will use the same flash memory which is either stacked or external.
+- In the dual flash configuration, the NWP uses stacked flash and MCU uses external flash.
 
 The following table shows the possible combinations and the available options to add on PSRAM:
 
@@ -162,6 +170,16 @@ The following table shows the possible combinations and the available options to
 ## Clock Architecture
 
 The SiWx917 clock subsystem is designed to facilitate dynamic adjustments of the clock source and frequency for various functionalities, enabling fine-tuning of power usage and performance for specific applications. This subsystem supports the configuration of on-chip clocks, including ULP clock oscillators, high-frequency PLLs, and clocks for the processor and peripherals (including MCU HP, MCU ULP, and UULP Vbat).
+
+> **Note**
+> **`CLK_CONFIG_REG2` (M4CLK `0x46000000` + `0x01C`) field names:** The [SiWx917 family RM](https://www.silabs.com/documents/public/reference-manuals/siw917x-family-rm.pdf) and WiseConnect `si91x_device.h` use different labels for the same bits:
+>
+> | Family RM (example names) | SDK (`CLK_CONFIG_REG2_b`) |
+> | ------------------------- | --------------------------- |
+> | `USART0_*`                | `USART1_*`                  |
+> | `UART1_*`                 | `USART2_*`                  |
+>
+> **`USART3_*`** appears only in the SDK for this register. If your RM omits it, ignore the field.
 
 **High-Frequency Clocks:**
   * 40MHZ_XTAL_CLK
@@ -191,7 +209,7 @@ In this mode, enabling the SL_SI91X_REQUIRES_INTF_PLL define will configure the 
 
 ### External Oscillator(32 kHz) Usage with UULP_GPIOs
 
-This section outlines how to utilize a 32 kHz external oscillator with UULP_GPIOs. To enable this functionality, users must install the "si91x_32kHz_external_oscillator" component, which provides the necessary configurations for the UULP_GPIOs. Additionally, this component includes a UC for selecting the appropriate UULP_GPIO. The component switches the LF-FSM clock to the internal 32 kHz RC oscillator.
+This section outlines how to utilize a 32 kHz external oscillator with UULP_GPIOs. To enable this functionality, users must install the `32kHz External Oscillator` component, which provides the necessary configurations for the UULP_GPIOs. Additionally, this component includes a UC for selecting the appropriate UULP_GPIO. The component switches the LF-FSM clock to the internal 32 kHz RC oscillator.
  
 > **Note**: 
 > - For module boards, this component will be installed by default, and for ICs, the default configuration is an external 32.768kHz XTAL available on pins XTAL_32KHz_P and XTAL_32KHz_N.
@@ -210,21 +228,21 @@ Refer to the User callback recommendation code snippet in the [Appendices](#user
 
 - By default, the 32 kHz XTAL clock source is enabled for Sleep-Timer, LF-FSM, and SysRTC on IC boards. For module boards, the Sleep-Timer and SysRTC use an External Oscillator clock, while LF-FSM operates with a 32 kHz RC clock.
 - To change the clock source:
-  - For Sleep-Timer, switch from XTAL to RC by installing the Sleep-Timer clock configuration.
+  - For Sleep-Timer, switch from XTAL to RC by installing the **Sleep Timer Clock Selection** component.
   - For SysRTC, use the UC configuration for SysRTC.
-  - For LF-FSM, install the LF-FSM clock configuration component.
+  - For LF-FSM, install the **LF-FSM Clock Selection** component.
 - For module boards, LF-FSM does not support clock source selection, because the external oscillator does not feed into the LF-FSM domain.
 
 ### 32 KHz Internal RC Calibration Component
 
-The 32 kHz RC calibration component is designed to enhance clock accuracy by reducing drift through periodic calibration. While the internal RC oscillator is functional, it does not provide the precision required for peripherals dependent on the Low-Frequency FSM (LF-FSM). Installing this component improves clock accuracy, ensuring an error margin of no more than 500 PPM.
+The **32KHZ RC Calibration** component is designed to enhance clock accuracy by reducing drift through periodic calibration. While the internal RC oscillator is functional, it does not provide the precision required for peripherals dependent on the Low-Frequency FSM (LF-FSM). Installing this component improves clock accuracy, ensuring an error margin of no more than 500 PPM.
 
 The calibration process is performed periodically to maintain sustained accuracy over time. The calendar alarm peripheral serves a dual purpose by managing both periodic calibration triggers and standard alarm events. An intelligent algorithm determines the next trigger, categorizing interrupts as either calibration events or alarm events using flags. This implementation is seamlessly integrated into the primary functionality of the calendar alarm without causing interference.
 
 Pre-requisites for installing the 32 kHz RC calibration component are as follows:
 
-- For IC Boards: Users must configure the LF-FSM clock as internal 32 kHz RC clock. To achieve this, install the SL_SI91X_LF_FSM_CLOCK_SELECTION software component and update the LF-FSM to operate using the 32 kHz RC clock prior to installing the RC calibration component.
-- For Module Boards: The internal 32 KHz RC Clock is fed to the LF-FSM by default. The user can directly install the 32 KHz RC calibration component to enable the calibration.
+- For IC Boards: Users must configure the LF-FSM clock as internal 32 kHz RC clock. To achieve this, install the **LF-FSM Clock Selection** component and update the LF-FSM to operate using the 32 kHz RC clock prior to installing the RC calibration component.
+- For Module Boards: The internal 32 KHz RC Clock is fed to the LF-FSM by default. The user can directly install the **32KHZ RC Calibration** component to enable the calibration.
 
 ##### Notes: (Applicable only when the 32kHz RC calibration is enabled)
 - When 32 kHz RC calibration is enabled, the M4 is active for 7.11 milliseconds every 30 minutes, consuming a current of 8.75 milliamperes.
@@ -370,11 +388,11 @@ The wakeup mode defines the bootloader sequence the SiWx917 will undergo once it
 >**Note:**
 >* rsi_deepsleep_soc.c file should compiled to SRAM.
 >
->* Refer to the [Wi-Fi - TCP Tx on Periodic Wakeup (SoC)](https://github.com/SiliconLabs/wiseconnect/tree/v4.0.1-content-for-docs/examples/snippets/wlan/tcp_tx_on_periodic_wakeup) example for a detailed >example of M4 sleep wakeup.
+>* Refer to the [Wi-Fi - TCP Tx on Periodic Wakeup (SoC)](https://github.com/SiliconLabs/wiseconnect/tree/v4.1.2-content-for-docs/examples/snippets/wlan/tcp_tx_on_periodic_wakeup) example for a detailed >example of M4 sleep wakeup.
 >
 >* Enable SL_SI91X_ENABLE_LOWPWR_RET_LDO macro to optimize the deepsleep >power number. By default, it is disabled.
 >
->* This flow will be deprecated. It is strongly recommended to use power manager with freeRTOS tickless.
+>* FreeRTOS Tickless Idle Mode is mandatory for power save mechanism. 
 
 ### Front-End Switch Selection GPIOs
 
@@ -398,14 +416,14 @@ The following table describes the front-end switch selection for the SiWx917.
 - Select the appropriate power state based on the application's power consumption and performance requirements.
 - Use sleep states to conserve energy when the system is idle.
 - For any wakeup source, ensure the corresponding peripheral component is installed in powersave applications
-- SYSRTC and wake on wireless wakeup resources are enabled by default when tickeless idle mode is enabled. Avoid installing sleeptimer component in power save applications (where FreeRTOS tickless is enabled by default)
+- SYSRTC and wake on wireless wakeup resources are enabled by default when tickeless idle mode is enabled. Avoid installing **Sleep Timer** component in power save applications (where FreeRTOS tickless is enabled by default).
 
 ### Notes
 - After reset, the processor starts in PS4 state which is the highest activity state where the full functionality is available. The other Active states (PS2/PS3) will have limited functionality or processing power.
 
 ## Configuring M4 PS1 State in FreeRTOS Tickless Idle Mode
 - The SiWx917 SoC supports the M4 PS1 state in FreeRTOS Tickless Idle mode. 
-- To enable this functionality, the user must integrate the Power Manager component along with the appropriate ULP peripheral component into the application. 
+- To enable this functionality, the user must integrate the **Power Manager** component along with the appropriate ULP peripheral component into the application. 
 - The PS1 state does not support the UULP wakeup source.
 - The following ULP peripherals are supported in the PS1 state:
 
@@ -429,6 +447,279 @@ The following table describes the front-end switch selection for the SiWx917.
 ### Sequence to Configure M4 Standby State in FreeRTOS Tickless Idle Mode
 
 ![ Standby State Sequence](./resources/Standby_Sequence.png)
+
+## SL Debug Logger
+The Silicon Labs Debug Logger (`sl_log`) is a platform-level service that gives an
+application a single, unified logging API with selectable backends (UART /
+IO Stream, RTT, SEGGER SystemView, no-op) and compile-time and runtime level
+filtering. It is the recommended replacement for ad-hoc `printf` /
+`DEBUGOUT` paths used today.
+
+SL Log provides:
+
+- Printf-style string logging with explicit levels: `SL_PRINT_STRING_DEBUG`,
+  `SL_PRINT_STRING_INFO`, `SL_PRINT_STRING_WARN`, `SL_PRINT_STRING_ERROR`.
+- Event-style numeric logging: `SL_PRINT_EVENT_INFO`, `SL_PRINT_EVENT_DEBUG`,
+  `SL_PRINT_EVENT_WARN`, `SL_PRINT_EVENT_ERROR` for trace IDs, dictionaries, and
+  machine-parsed logs.
+- Compile-time level filtering (`SL_LOG_CONFIG_LEVEL_COMPILE_TIME`) that
+  removes lower-priority calls from the binary.
+- Runtime level control through `sl_log_set_loglevel()` /
+  `sl_log_get_loglevel()`.
+- Configurable maximum argument count per log call (`SL_LOG_CONFIG_ARG`, set in UC as **CONFIG_MAX_ARGS**, dropdown **0**–**10**, default **3**)
+  and configurable ring-buffer depth (`SL_LOG_NUMBER_OF_EVENTS`, set in UC as **No of Logs**, range 1–255, default **128**).
+- Multiple backends selected at the component level:
+  - **Log Backend I/O Stream – Compact Binary Output** or **Log Backend I/O Stream – Formatted Output** (`log_backend_iostream` transport shim) over **IO Stream RTT** or UART (VCOM).
+  - **Log Segger Systemview** (`log_backend_systemview`) for trace/timeline
+    correlation.
+  - `log_none` that keeps logger calls compilable when no real backend
+    is installed.
+
+  > Only one backend may be installed at a time. Adding a second backend
+  > component triggers a Simplicity Studio conflict dialog that offers
+  > Replace or Keep.
+- Multi-core timestamp synchronization (`sl_log_sync_timestamp`) for
+  correlating Host MCU and Captive Core (e.g. NWP / Wi-Fi / BLE) logs on
+  SiWx91x.
+- Power-aware integration (`sl_log_pre_sleep_process`,
+  `sl_log_post_sleep_process`) so logs survive normal low-power transitions.
+
+### SL_DEBUG_LOG_V2
+
+`SL_DEBUG_LOG_V2` is a convenience wrapper around the `SL_PRINT_STRING_*` macros. It is defined in `sl_constants.h`, and used by the SDK components and examples in level-tagged diagnostics.
+
+```c
+SL_DEBUG_LOG_V2(INFO,  "message\r\n");
+SL_DEBUG_LOG_V2(ERROR, "failed: 0x%lX", (unsigned long)status);
+```
+
+The `level` argument is one of `DEBUG`, `INFO`, `WARN`, or `ERROR`.
+
+**Platform support**
+
+| Platform | Behavior |
+|----------|----------|
+| Silicon Labs SoC (SiWx91x) | Expands to `SL_PRINT_STRING_<level>` → SL Log backend |
+| Silicon Labs NCP (EFR32 host boards only) | Same as SoC — expands to `SL_PRINT_STRING_<level>` → SL Log backend |
+| All other host boards | Expands to `printf`-style output via `sl_debug_log()` |
+
+For SoC and EFR NCP builds, include `sl_constants.h` only. For other hosts, output is displayed on the host console. If configured, log level filtering uses `SLI_HOST_CURRENT_DBGLOG_LEVEL`.
+
+### Architecture
+
+![SL Log common service architecture: shared logger layers, board-specific platform adapters, and captive-core log ingress to the host MCU.](resources/sl_log_common_architecture.png)
+
+SL Log is delivered as a common service. Application code uses the same
+logging API regardless of the host MCU family; board-specific behavior
+(timestamp source, power hooks, captive-core ingress, backend transport) is
+isolated in a platform adapter. Logs from the host core and any captive core
+funnel into the same ring buffer, level filter, and selected backend.
+
+| Component `id:`                   | Provides (`provides:`)                          | Visible in UC | Role                                                                                       |
+|-----------------------------------|-------------------------------------------------|---------------|--------------------------------------------------------------------------------------------|
+| `log`                             | `log`                                            | hidden        | SL Log core (ring buffer, level filtering, public APIs).                                    |
+| `log_none`                        | `log_none`                                       | hidden        | Headers + weak no-op stubs; keeps callers buildable when no real backend is installed.      |
+| `log_platform_specific`           | `log_platform_core`                              | hidden        | Timer / sleep / wake hooks for the host platform; provides the `log_platform_core` capability. |
+| `log_backend_iostream`            | `log_backend_iostream`                           | visible       | I/O Stream transport shim (UART (VCOM) / **IO Stream RTT**). Requires one output-format implementation. |
+| `log_backend_iostream_compact`    | `log_backend`, `log_backend_iostream_impl`       | visible       | **Log Backend I/O Stream – Compact Binary Output**: raw `sl_log_event_t` records for offline host-side decoding. |
+| `log_backend_iostream_formatted`  | `log_backend`, `log_backend_iostream_impl`       | visible       | **Log Backend I/O Stream – Formatted Output**: human-readable text lines (printf-style format expansion on target). |
+| `log_backend_systemview`          | `log_backend`, `log_backend_systemview`          | visible       | **Log Segger Systemview** trace backend.                                                    |
+
+> IO Stream backend pair. Selecting the IO Stream path means installing
+> the transport shim (`log_backend_iostream`) plus exactly one
+> output-format implementation (**Log Backend I/O Stream – Compact Binary Output** *or*
+> **Log Backend I/O Stream – Formatted Output**). The shim defaults to the compact
+> implementation (`recommends`), but the choice is exposed in the UC.
+>
+> All seven components currently ship with `quality: evaluation`; enable the
+> **Evaluation** entry in the Software Components **Quality** filter in Simplicity Studio.
+> In each logger backend UC, the **General** section exposes **LOG_LEVEL** (**NONE**, **DEBUG**, **INFO**, **WARN**, or **ERROR**), **CONFIG_MAX_ARGS** (dropdown **0**–**10**, default **3**), **No of Logs** (numeric spinner, default **128**), and **Enable Debug Assertions** (toggle). **Log Segger Systemview** and **Log Backend I/O Stream – Formatted Output** use the same **General** fields. **Log Backend I/O Stream – Compact Binary Output** adds **DEBUG LOGGER Proprietary UC Configuration** with **PROPRIETARY_CONFIG_MODE** (**Buffer Mode**, **Console Mode**, or **Host Mode**; default **Console Mode** for UART decode).
+
+Public headers, configuration files, readme documents, API header documentation and example code live under
+`platform/service/sl_log/` (see `inc/sl_log.h`, `inc/sl_log_helper.h`, and
+`config/sl_log_common_config.h`).
+
+### Migration Guidelines
+
+Most existing customer code emits diagnostics through `printf`, the
+WiSeConnect `DEBUGOUT(...)` macro, or a third-party library’s own logger.
+A “big-bang” switch to SL Log is rarely practical on a real product. SL Log is
+designed to support a staged migration so that legacy and new logging
+coexist during the transition and become a single unified stream once
+migration is complete.
+
+The recommended path has three stages.
+
+#### Stage 1 – Coexistence (no source changes to legacy code)
+
+Goal: Keep the customer’s existing log path unchanged, and capture
+SL Log output on a separate backend. Drivers and services that already
+emit through `SL_PRINT_STRING_*` start producing usable output without
+disturbing legacy `printf` / `DEBUGOUT` traffic.
+
+Setup:
+
+1. Leave existing `printf` / `DEBUGOUT` over UART untouched. Existing
+   board UART, baud rate, and host capture continue to work as before.
+2. Install one SL Log backend stack on a transport that does not
+   collide with the legacy path. The SL Log core (`log`) and the platform
+   integration (`log_platform_specific`) are pulled in transitively.
+   - **`log_backend_systemview`** (**Log Segger Systemview**) — if **IO Stream RTT** / J-Link is available, this is
+     the cleanest separation: no UART contention.
+   - **`log_backend_iostream` + `log_backend_iostream_compact`** (**Log Backend I/O Stream – Compact Binary Output**) over
+     **IO Stream RTT** — also fully separate from legacy UART; smallest on-wire
+     footprint, decoded host-side by `Log_script.py`.
+   - **`log_backend_iostream` + `log_backend_iostream_formatted`** (**Log Backend I/O Stream – Formatted Output**) over
+     **IO Stream RTT** — same as above when no host decoder is desired.
+   - **`log_backend_iostream` (compact or formatted)** over
+     UART (VCOM) is acceptable only if a second UART is available;
+     sharing one UART between `printf` and SL Log is not recommended at
+     this stage.
+3. Build and flash. Two streams are now visible:
+   - Legacy `printf` / `DEBUGOUT` lines on UART, as before.
+   - SL Log output (from drivers/services that already use SL Log) on the
+     chosen secondary backend.
+
+What is achieved:
+
+- No changes to any application file that uses `printf` or `DEBUGOUT`.
+- SL Log–native subsystems begin producing structured, level-filtered output.
+- The customer can evaluate viewers (RTT, SystemView), level filtering, and
+  backend behavior in production-like conditions before touching legacy code.
+
+#### Stage 2 – Bridge legacy macros to SL Log (no call-site changes)
+
+Goal: Stop emitting two parallel streams. Redirect existing
+`printf` / `DEBUGOUT` calls into SL Log so that the SL Log backend becomes
+the single sink. Call sites stay unchanged.
+
+Two equivalent mechanisms are provided:
+
+#### Macro redirect (recommended for simple cases)
+
+In a central header included before the legacy log header (or by gating the
+existing one), redefine the legacy macro to an SL Log macro:
+
+```c
+#if defined(SL_CATALOG_LOGGER_COMPONENT_PRESENT)
+  #include "sl_log.h"
+  #include "sl_log_helper.h"
+  #define DEBUGOUT(...)  SL_PRINT_STRING_INFO(__VA_ARGS__)
+  #define DEBUGINIT()    do { } while (0)   /* sl_log_init() handled by sl_main / sl_system_init */
+#endif
+```
+
+Notes and constraints:
+
+- `SL_PRINT_STRING_*` macros accept up to **CONFIG_MAX_ARGS** arguments
+  (default **3**). A small number of legacy call sites with more than **3**
+  arguments must be split or simplified.
+- All redirected calls land at one chosen level (typically **INFO** in **LOG_LEVEL**), this is not the intent of SL Logger. Promote
+  to **WARN** / **ERROR** selectively in code that matters.
+- Use `sl_log_set_loglevel()` at runtime to throttle verbosity in the
+  field without a rebuild.
+
+For supported logger backends (**Log Backend I/O Stream – Compact Binary Output** or **Log Backend I/O Stream – Formatted Output** over **IO Stream RTT** or UART, and **Log Segger Systemview**), use the SL SI91x Logger Backend Example (`examples/si91x_soc/service/sl_si91x_logger_backend_example/readme.md`).
+
+What is achieved:
+
+- One log stream. All legacy and SL Log output goes through SL Log’s
+  ring buffer, level filtering, and the chosen backend.
+- Existing source tree is largely untouched.
+- The customer’s log viewer, log levels, and tooling are now the long-term
+  ones.
+
+#### Stage 3 – Direct SL Log API at call sites (long-term form)
+
+Goal: Use SL Log natively. New code is written directly with
+`SL_PRINT_STRING_*` and `SL_PRINT_EVENT_*`; legacy macro redirects and the
+adapter layer can be retired over time.
+
+Typical actions:
+
+- Replace `DEBUGOUT("Error: 0x%lX", status);` with
+  `SL_PRINT_STRING_ERROR("Error: 0x%lX", (uint32_t)status);`.
+- Pick the right **LOG_LEVEL** per call site (**DEBUG**, **INFO**, **WARN**, **ERROR**).
+- For high-volume numeric trace, prefer `SL_PRINT_EVENT_*` with a
+  module-scoped event-ID range.
+- Drop the redirection header / adapter component once no caller uses it.
+
+What is achieved:
+
+- Full benefit of SL Log: explicit levels, compile-time stripping, runtime
+  filtering, multi-backend choice, captive-core correlation, and assert
+  logging.
+- Unified logging across Application and silicon labs components.
+
+#### Migration checklist
+
+| Step | Action                                                                                                                                  |
+|------|-----------------------------------------------------------------------------------------------------------------------------------------|
+| 1    | Confirm existing `printf` / `DEBUGOUT` works as a baseline before adding SL Log.                                                         |
+| 2    | Install one backend stack (`log_backend_iostream` + `_compact`/`_formatted`, or `log_backend_systemview`) on a transport separate from the legacy UART (Stage 1). |
+| 3    | Verify SL Log–native subsystems produce output on the new backend.                                                                       |
+| 4    | Choose a redirect mechanism (macro redirect or adapter) and unify streams (Stage 2).                                                     |
+| 5    | Audit call sites that exceed **CONFIG_MAX_ARGS**; split or simplify them (default **3**).                                                   |
+| 6    | Re-tune **LOG_LEVEL**, **CONFIG_MAX_ARGS** (**0**–**10**), **No of Logs** (default **128**), **Enable Debug Assertions**, and **PROPRIETARY_CONFIG_MODE** (**Buffer Mode** / **Console Mode** / **Host Mode**) for production. |
+| 7    | Replace remaining legacy macros with `SL_PRINT_STRING_*` / `SL_PRINT_EVENT_*` (Stage 3).                                                 |
+| 8    | Pick the production backend pair: `_compact` (smallest, needs `Log_script.py`) vs `_formatted` (plain text), or `log_backend_systemview`.|
+| 9    | If logger is intentionally disabled in a build, install **Log None** (`log_none` / `si91x_log_none`) or set **LOG_LEVEL** to **NONE**.                        |
+
+### M4 and TA logs visibility with backend
+
+![M4 and TA logs visibility with backend](./resources/M4_TA_logs_visibility_with_backend.png)
+
+#### Captive core (NWP) logging enablement
+
+NWP (Captive Core) logging is disabled by default. The NWP log paths listed in the table above require captive-core logs to be forwarded from the wireless stack to the host-side logger. To enable the NWP logging, set `SL_SI91X_ENABLE_NWP_LOGGING` in the `config_feature_bit_map` field of `sl_wifi_device_configuration_t`, before initializing the wireless stack. For example:
+
+```c
+.config_feature_bit_map = SL_SI91X_ENABLE_NWP_LOGGING,
+```
+
+### Format specifiers and argument-type requirements by backend
+
+| Backend | Allowed specifiers | Required cast | Mixing rules |
+|---------|-------------------|----------------|--------------|
+| Log Backend I/O Stream – Formatted Output | `%d`, `%x`, `%p`, `%s` | `(uint32_t)` for non-pointer / non-string args; `(uintptr_t)` for `%p` and `%s` arguments. | May mix freely. |
+| Log Backend I/O Stream – Compact Binary Output | `%lu` | `(uint32_t)` for every argument; strings cannot be rendered (decode on the host with `Log_script.py`). | Numeric only. |
+| Log Segger Systemview | `%d`, `%u`, `%x` | None enforced by the macro. | None |
+
+### Decoding Log Backend I/O Stream – Compact Binary Output messages
+
+With **Log Backend I/O Stream – Compact Binary Output**, the target sends encoded `sl_log_event_t` records (not plain text). On the host PC, run `Log_script.py` from the logger example tree (for example `examples/si91x_soc/service/sl_si91x_logger_backend_example/Log_script.py` or `examples/si91x_soc/service/sl_si91x_logger/Log_script.py`). Point `--out` at the built firmware image (`.out` / `.axf`) so the script reads format strings from the `.log_fmt` ELF section. Pass `--descriptor SYSVIEW_Si917nwp.txt` so captive-core (TA / NWP) events decode with readable names (use the descriptor file supplied with your SDK or project).
+
+UART (VCOM) — decode from the board virtual COM port. Add `--port` (for example `COM5`) and `--baud` if the script does not auto-detect the port; use 921600 when TA logging is enabled on UART. Match `--max-args` to the **CONFIG_MAX_ARGS** value from UC (default **3**). For compact UART logging, set **PROPRIETARY_CONFIG_MODE** to **Console Mode**:
+
+```text
+python Log_script.py --out firmware.out --descriptor SYSVIEW_CaptiveCore.txt --max-args 3
+```
+
+**IO Stream RTT** — decode from the J-Link RTT stream while the target runs (use the same **CONFIG_MAX_ARGS** value as in UC):
+
+```text
+python Log_script.py --source rtt --device SiWG917M111M --out firmware.out --descriptor SYSVIEW_CaptiveCore.txt --max-args 3
+```
+
+List format strings stored in the firmware `.log_fmt` section (no device connection):
+
+```text
+python Log_script.py --out firmware.out --list-formats
+```
+
+For backend setup, UC settings (**General** and **DEBUG LOGGER Proprietary UC Configuration**), and **PROPRIETARY_CONFIG_MODE** **Console Mode** for compact UART, see `examples/si91x_soc/service/sl_si91x_logger_backend_example/readme.md`. Additional `Log_script.py` flags (`--flash`, `--reset`, `--max-args` — align with **CONFIG_MAX_ARGS**, `--variable-packet`) are documented in the script’s `--help` text in the same example folder.
+
+### Limitations
+
+1. Buffer overflow is reported, not blocked. When the ring buffer fills, new events are dropped and an `event_id = 0xFFFFFFFF` overflow marker (with the dropped count) is delivered the next time `sl_log_flush()` runs. Increase **No of Logs** above the default **128**, or call `sl_log_flush()` more often, if you see overflows.
+
+2. Lowest allowable power state is PS3 for **IO Stream RTT** and **Log Segger Systemview** backends when a debugger is connected. When using **Log Backend I/O Stream – Compact Binary Output** or **Log Backend I/O Stream – Formatted Output** over **IO Stream RTT**, or **Log Segger Systemview**, the logger prevents the device from entering sleep or active power states below PS3 while an active debugger connection is detected, so debug and log capture sessions can remain connected.
+
+3. **IO Stream RTT** and **Log Segger Systemview** are not supported on encrypted SiWx91x SoC boards. On an encrypted board, the RTT viewer may show a garbage buffer name and missing or unreadable log text because debugger reads of flash-resident strings return ciphertext. Use UART (VCOM) logging on encrypted boards. RTT works as expected on plain (non-encrypted) boards.
+
+4. For UART + BLE with TA logging at **LOG_LEVEL** **INFO** or **DEBUG**, use **Log Backend I/O Stream – Compact Binary Output** and `IOStream Si91x UART at 921600 baud`; lower baud rates cannot carry M4 + TA traffic and `most logs will be dropped`. If needed, reduce **LOG_LEVEL**, flush more often, or use **IO Stream RTT** with a log backend, or **Log Segger Systemview**.
+
+5. NWP (Captive Core) logging is not recommended for applications using the BLE Advertising Extension (AE) feature. Do not enable `SL_SI91X_ENABLE_NWP_LOGGING` in the `config_feature_bit_map` field of `sl_wifi_device_configuration_t` when BLE AE is enabled.
 
 ## Chip/Module Programming
 
@@ -562,8 +853,8 @@ For more detailed information about NVM3, refer to [Third Generation NonVolatile
 
 2. **Select Software Components:**
    - In the `.slcp` file, go to the "SOFTWARE COMPONENTS" tab.
-   - Enter "nvm3 for si91x" in the search bar.
-   - Select "NVM3 for Si91x" from the search results and click "Install".
+   - Enter "NVM3" in the search bar.
+   - Select **NVM3** from the search results and click "Install".
 
    ![NVM3 component install](./resources/NVM3_select_and_install.png)
 
@@ -609,8 +900,9 @@ Wireless initialization needs to be done before using NVM3 APIs in common flash 
 **Note:**
 
 1. Wireless initialization is only required for Si91x common flash. For Si91x dual flash, nvm3_initDefault() can be directly called without wireless init.
-2. NVM3 APIs should not be called from an ISR.
-3. For more information about NVM3 usage, refer to [NVM3 - NVM Data Manager](https://docs.silabs.com/gecko-platform/3.1/driver/api/group-nvm3).
+2. If nvm3_initDefault() is called before wireless initialization on common flash, it may return `SL_STATUS_NVM3_NO_VALID_PAGES` (0x5E) even when the NVM3 region size and linker layout are correct. On SiWx91x SoC, this status can reflect missing NWP-M4 communication rather than corrupted or invalid flash; verify initialization order before treating it as an NVM3 layout problem.
+3. NVM3 APIs should not be called from an ISR.
+4. For more information about NVM3 usage, refer to [NVM3 - NVM Data Manager](https://docs.silabs.com/gecko-platform/3.1/driver/api/group-nvm3).
 
 ### IOSTREAM
 
@@ -634,7 +926,7 @@ The IO Stream module is a software platform component that facilitates input and
 
 2. **Select Software Components:**
    - In the `.slcp` file, go to the "SOFTWARE COMPONENTS" tab.
-   - Enter "IOSTREAM" in the search bar.
+   - Enter **IO Stream** in the search bar.
    - Select required IOSTREAM component from the search results and click "Install".
 
    ![IOSTREAM component install](./resources/IOSTREAM_select_and_install.png)
@@ -650,7 +942,7 @@ The IO Stream module is a software platform component that facilitates input and
 2. For using other IOSTREAM add any of the following ```iostream_swo_si91x``` , ```iostream_vuart_si91x``` , ```iostream_debug_si91x``` .
 
 **Using IOSTREAM for prints:**
-1. To use IOSTREAM for printf or DEBUGOUT install component "SI91X IOSTREAM LOG".
+1. To use IOSTREAM for printf or DEBUGOUT install component **IO Stream Log**.
 
   ![IOSTREAM LOG stream select](./resources/IOSTREAM_select_log_stream.png)
 
@@ -659,21 +951,25 @@ The IO Stream module is a software platform component that facilitates input and
   ![IOSTREAM LOG config](./resources/IOSTREAM_LOG_config.png)  
 
 > **Note:** 
-> 1. Ensure that the corresponding IOSTREAM component for your selected interface is installed.
-> 2. IOSTREAM LOG does not support UART. To use `printf` or `DEBUGOUT` with UART, please refer to the IOSTREAM USART example.
+> 1. Ensure that the corresponding IO Stream component for your selected interface is installed.
+> 2. **IO Stream Log** does not support UART. To use `printf` or `DEBUGOUT` with UART, please refer to the IO Stream USART example.
+> 3. On encrypted SiWx91x SoC boards, **IO Stream RTT** is not supported for readable console or logger output. Use a UART/VCOM stream instead. RTT works as expected on plain (non-encrypted) boards.
 
 **IOSTREAM usage in Si91x:**
 
 1. Use  ```sl_iostream_write(sl_iostream_t *stream,const void *buffer,size_t buffer_length)``` api to write to a IOSTREAM.
 2. Use  ```sl_iostream_read(sl_iostream_t *stream,void *buffer,size_t buffer_length,size_t *bytes_read)``` api to read from a IOSTREAM.
-3. If multiple IOSTREAM components are installed IOSTREAM LOG can be used for selecting which IOSTREAM to use.
+3. If multiple IOSTREAM components are installed, **IO Stream Log** can be used for selecting which IOSTREAM to use.
 
 > **Note:**
 > 1. For more information on how use above IOSTREAM apis refere to IOSTREAM USART BAREMETAL example.
-> 2. IOSTREAM VUART , IOSTREAM debug has limited support.
+> 2. **IO Stream VUART** and **IO Stream Debug** have limited support.
 
 
 ### SLEEP-Timer
+
+The Sleep Timer service component is listed in Software Components as **Sleep Timer**. Clock source selection for the Sleep Timer uses **Sleep Timer Clock Selection**, as described under **32 kHz Clock Configurations** above.
+
 #### Understanding the Use of OS-Timer instead of Sleep-Timer in Tick-less Mode 
 - When FreeRTOS operates in TICKLESS-MODE (low-power mode), the core enters a sleep state, and the OS runs using the sleep timer service instead of the usual SYSTICK timer. This is because the SYSTICK timer stops functioning when the core is a sleep, while the SYSRTC driver continues to run. The SYSRTC is configured as the wake-up source for the core, meaning it will trigger the core to wake up after the specified time has elapsed.
 
@@ -708,8 +1004,8 @@ To configure and use the Watchdog Timer Manager, follow these steps:
 
 2. **Select Software Components**:
    - In the `.slcp` file, go to the "SOFTWARE COMPONENTS" tab.
-   - Enter "WDT Manager" in the search bar.
-   - Select "WDT Manager" from the search results and click "Install".
+   - Enter **WDT Manager** in the search bar.
+   - Select **WDT Manager** from the search results and click "Install".
 
    ![WDT Manager Configuration](./resources/WDT_select_and_install.png)
 
@@ -761,7 +1057,7 @@ The Embedded Trace Macrocell (ETM) enables high-bandwidth instruction tracing th
 
 ### VCOM
 
-The virtual COM (VCOM) port is available on the wireless pro kit mainboard (BRD4002A) and supports several functionalities:
+The virtual COM (VCOM) port is available on the wireless pro kit mainboard (BRD4002B) and supports several functionalities:
 
 **Flash, Erase, and Debug over SWD:**
   * If the ULP UART peripheral is configured, VCOM cannot be used for debug prints because the ULP UART is mapped to the VCOM.
@@ -787,9 +1083,9 @@ The virtual COM (VCOM) port is available on the wireless pro kit mainboard (BRD4
   * In this mode, GPIO_8 (RX) and GPIO_9 (TX) will be mapped to the NWP UART.
 
 **VCOM Disable Procedure:**
-  * VCOM can be disabled by following these steps (note that VCOM will reset to enabled upon power cycle of BRD4002A):
+  * VCOM can be disabled by following these steps (note that VCOM will reset to enabled upon power cycle of BRD4002B):
     * Step 1: Open "Tools" in Simplicity Studio. Search for "Device Console" and click OK.
-    * Step 2: Switch to the "Admin" tab and press Enter. Issue the command `serial vcom ctrl sense deassert`. The VCOM LED on the BRD4002A will turn OFF.
+    * Step 2: Switch to the "Admin" tab and press Enter. Issue the command `serial vcom ctrl sense deassert`. The VCOM LED on the BRD4002B will turn OFF.
 
 > **Note:** Debug logs from the NWP can be fetched via the NWP UART, which is available on the EXP header's EXP14 (UART_RX) and EXP12 (UART_TX) pins.
 
@@ -836,7 +1132,7 @@ The Lite configuration is used for 4 MB SoC OPN where 1.3 MB is allocated for th
 The `SLI_SI91X_MCU_4MB_LITE_IMAGE` macro will be enabled if the **lite_image_for_4mb** component is installed.
 
 For low-power M4 sleep states such as PS2, PS3, and PS4, certain files must be run from RAM memory. Refer to [Power manager integration guide](
-https://github.com/SiliconLabs/wiseconnect/blob/v4.0.1-content-for-docs/examples/si91x_soc/service/sl_si91x_power_manager_tickless_idle/resources/power_manager_integration_guide/power_manager_integration.pdf) for more details.
+https://github.com/SiliconLabs/wiseconnect/blob/v4.1.2-content-for-docs/examples/si91x_soc/service/sl_si91x_power_manager_tickless_idle/resources/power_manager_integration_guide/power_manager_integration.pdf) for more details.
 
 #### SL_SI91X_ENABLE_GCC_LTO
 
@@ -981,5 +1277,5 @@ For further assistance and support, please contact:
 | Getting Started with WiSeConnect | [Getting Started](http://docs.silabs.com/wiseconnect/latest/wiseconnect-getting-started/) |
 | NVM3 - NVM Data Manager | [NVM3 Documentation](https://docs.silabs.com/gecko-platform/3.1/driver/api/group-nvm3) |
 | Third Generation NonVolatile Memory (NVM3) Data Storage | [NVM3 Application Note](https://www.silabs.com/documents/public/application-notes/an1135-using-third-generation-nonvolatile-memory.pdf) |
-| Power Manager Integration Guide | [Power Manager Integration Guide](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.1-content-for-docs/examples/si91x_soc/service/sl_si91x_power_manager_tickless_idle/resources/power_manager_integration_guide/power_manager_integration.pdf) |
+| Power Manager Integration Guide | [Power Manager Integration Guide](https://github.com/SiliconLabs/wiseconnect/blob/v4.1.2-content-for-docs/examples/si91x_soc/service/sl_si91x_power_manager_tickless_idle/resources/power_manager_integration_guide/power_manager_integration.pdf) |
 | SiWx917 Reference Manual | Contact [Silicon Labs Sales](https://www.silabs.com/about-us/contact-sales) for access. |

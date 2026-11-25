@@ -1,9 +1,14 @@
 # WLAN - BLE Unified AE Coex App
 
+## High-Level Overview
+
+SiWx91x WLAN BLE unified extended advertising coex example: measure WLAN TCP throughput while running BLE extended advertising/scanning with one central and one peripheral connection and BLE data transfer in SoC and NCP modes.
+
 ## Table of Contents
 
 - [WLAN - BLE Unified AE Coex App](#wlan---ble-unified-ae-coex-app)
   - [Table of Contents](#table-of-contents)
+  - [High-Level Overview](#high-level-overview)
   - [Purpose/Scope](#purposescope)
   - [Prerequisites/Setup Requirements](#prerequisitessetup-requirements)
     - [Hardware Requirements](#hardware-requirements)
@@ -20,7 +25,11 @@
     - [Pairing Procedure](#pairing-procedure)
     - [Peripheral Connection](#peripheral-connection)
     - [BLE Data Transfer](#ble-data-transfer)
-  - [Limitations for this App](#limitations-for-this-app)
+  - [Limitations](#limitations)
+  - [Troubleshooting](#troubleshooting)
+  - [Resources](#resources)
+  - [Report Bugs and Get Support](#report-bugs-and-get-support)
+
 
 ## Purpose/Scope
 
@@ -33,18 +42,41 @@ This application demonstrates how to configure SiWx91x in Extended Advertising/S
 - Windows PC
 - TCP Server
 - SoC Mode:
-  - Silicon Labs [BRD4325A, BRD4325B, BRD4325C, BRD4325G, BRD4338A, BRD4339B, BRD4343A](https://www.silabs.com/)
+  - Standalone
+    - BRD4002B Wireless Pro Kit Mainboard [SI-MB4002B](https://www.silabs.com/development-tools/wireless/wireless-pro-kit-mainboard?tab=overview)
+    - Radio Boards
+      - BRD4338A [SiWx917-RB4338A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-rb4338a-wifi-6-bluetooth-le-soc-radio-board?tab=overview)
+      - BRD4342A [SiWx917-RB4342A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx91x-rb4342a-wifi-6-bluetooth-le-soc-radio-board?tab=overview)
+      - BRD4339B [SiWx917-RB4339B](https://docs.silabs.com/wiseconnect/latest/wiseconnect-getting-started/getting-started-with-at)
+      - BRD4340A [SiWx917-RB4340A](https://docs.silabs.com/wiseconnect/latest/wiseconnect-getting-started/getting-started-with-at)
+      - BRD4343A [SiWx917-RB4343A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4343a-wi-fi-6-bluetooth-le-8mb-flash-radio-board-for-module?tab=overview)
+      - BRD4343C [SiWx917-RB4343C](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4343c-wi-fi-6-bluetooth-le-8mb-flash-radio-board-for-module?tab=overview)
   - Kits
-    - SiWx91x AC1 Module Explorer Kit (BRD2708A)
-- NCP Mode:
-  - Silicon Labs [BRD4180B](https://www.silabs.com/);
-  - Host MCU Eval Kit. This example has been tested with:
-    - Silicon Labs [WSTK + EFR32MG21](https://www.silabs.com/development-tools/wireless/efr32xg21-bluetooth-starter-kit)
-    - NCP Expansion Kit with NCP Radio boards
-      - (BRD4346A + BRD8045A) [SiWx917-EB4346A]
-      - (BRD4357A + BRD8045A) [SiWx917-EB4357A]
-  - Interface and Host MCU Supported 
-    - SPI - EFR32 
+    - SiWG917 Dev Kit [BRD2605A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-dk2605a-wifi-6-bluetooth-le-soc-dev-kit?tab=overview)
+    - SiWG917 Dev Kit [BRD2605B]
+    - SiWx91x AC1 Module Explorer Kit [BRD2708A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-ek2708a-explorer-kit?tab=overview)
+- **NCP Mode** (select either the EFR32 or STM32 host MCU platform; a single platform is sufficient to run the application):
+  - **Option 1: EFR32 host**
+    - Standalone
+      - BRD4002B Wireless Pro Kit Mainboard [SI-MB4002B](https://www.silabs.com/development-tools/wireless/wireless-pro-kit-mainboard?tab=overview)
+      - EFR32xG24 Wireless 2.4 GHz +10 dBm Radio Board [xG24-RB4186C](https://www.silabs.com/development-tools/wireless/xg24-rb4186c-efr32xg24-wireless-gecko-radio-board?tab=overview)
+      - NCP Expansion Kit with NCP Radio Boards
+        - [BRD4346A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-rb4346a-wifi-6-bluetooth-le-soc-4mb-flash-radio-board?tab=overview) + [BRD8045A](https://www.silabs.com/development-tools/wireless/wi-fi/expansion-adapter-board-for-co-processor-radio-boards?tab=overview)
+        - [BRD4357A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4357a-wi-fi-6-bluetooth-le-4mb-flash-radio-board-for-rcp-and-ncp-modules?tab=overview) + [BRD8045A](https://www.silabs.com/development-tools/wireless/wi-fi/expansion-adapter-board-for-co-processor-radio-boards?tab=overview)
+        - [BRD4357C](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4357c-wi-fi-6-bluetooth-le-4mb-flash-radio-board-for-rcp-and-ncp-modules?tab=overview) + [BRD8045A](https://www.silabs.com/development-tools/wireless/wi-fi/expansion-adapter-board-for-co-processor-radio-boards?tab=overview)
+    - Kits
+  	- EFR32xG24 Pro Kit +10 dBm [xG24-PK6009A](https://www.silabs.com/development-tools/wireless/efr32xg24-pro-kit-10-dbm?tab=overview)
+
+  - **Option 2: STM32F411RE host**
+    - [STM32F411RE](https://www.st.com/en/microcontrollers-microprocessors/stm32f411re.html) MCU
+    - NCP Expansion Kit with NCP Radio Boards
+      - [BRD4346A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-rb4346a-wifi-6-bluetooth-le-soc-4mb-flash-radio-board?tab=overview) + [BRD8045C](https://www.silabs.com/development-tools/wireless/wi-fi/shield-adapter-board-for-co-processor-radio-boards?tab=overview)
+      - [BRD4357A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4357a-wi-fi-6-bluetooth-le-4mb-flash-radio-board-for-rcp-and-ncp-modules?tab=overview) + [BRD8045C](https://www.silabs.com/development-tools/wireless/wi-fi/shield-adapter-board-for-co-processor-radio-boards?tab=overview)
+      - [BRD4357C](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4357c-wi-fi-6-bluetooth-le-4mb-flash-radio-board-for-rcp-and-ncp-modules?tab=overview) + [BRD8045C](https://www.silabs.com/development-tools/wireless/wi-fi/shield-adapter-board-for-co-processor-radio-boards?tab=overview)
+
+  - Interface and host MCU supported
+    - SPI : EFR32 and STM32
+    - UART : EFR32
 - Smartphone configured as BLE peripheral/central which supports extended advertising.
 - Access point
 - Windows PC (to run the TCP server).
@@ -52,6 +84,7 @@ This application demonstrates how to configure SiWx91x in Extended Advertising/S
 ### Software Requirements
 
 - Simplicity Studio IDE
+- [Keil IDE](https://www.keil.com/) (to be used with STM32F411RE MCU)
 - Download and install the Silicon Labs [Simplicity Connect App(formerly EFR Connect App) or other BLE Central/Peripheral app.](https://www.silabs.com/developers/simplicity-connect-mobile-app ) in the android smart phones for testing BLE applications. Users can also use their choice of BLE apps available in Android/iOS smart phones.
 - [iPerf Application](https://sourceforge.net/projects/iperf2/files/iperf-2.0.8-win.zip/download). iPerf is a tool for active measurements of the maximum achievable bandwidth on IP networks. It supports tuning of various parameters related to timing, buffers, and protocols (TCP and UDP with IPv4 and IPv6).
 - [Python Environment](https://www.python.org/downloads/)
@@ -481,7 +514,7 @@ Follow the steps as mentioned for the successful execution of the application:
 
    **Note:** According to the application flow, both WLAN and BLE tasks are running in separate threads. Depending on the user's choice, either the WLAN connection will establish first or the BLE connection will establish first.
 
-2. By default, the Si91x device is configured for two extended advertising sets and extended scanning. Its advertising can be validated with any remote device that supports the AE feature. The following image shows the Si91x device's extended advertising sets as seen in the SiConnect app.
+2. By default, the SiWx91x device is configured for two extended advertising sets and extended scanning. Its advertising can be validated with any remote device that supports the AE feature. The following image shows the SiWx91x device's extended advertising sets as seen in the SiConnect app.
 
      ![](resources/readme/remote_scanner.png)
 
@@ -516,7 +549,7 @@ Follow the steps as mentioned for the successful execution of the application:
 
 ### Peripheral Connection
 
-   1. If extended scanning is enabled, the Si91x device will scan for the advertising devices using the configured scan parameters.
+   1. If extended scanning is enabled, the SiWx91x device will scan for the advertising devices using the configured scan parameters.
 
    2. To make a remote peripheral connection, advertise the remote device with the specific name defined in the RSI_REMOTE_DEVICE_NAME1 macro.
 
@@ -530,7 +563,7 @@ Follow the steps as mentioned for the successful execution of the application:
 
 ### BLE Data Transfer
 
-   1. Click on the **Notify** property to enable notifications for continuous data transfer from the Si91x device.
+   1. Click on the **Notify** property to enable notifications for continuous data transfer from the SiWx91x device.
     When notifications are enabled, the **Notify** option will be highlighted as shown in the following image.
 
        ![](resources/readme/notification_enable.png)
@@ -556,11 +589,10 @@ Follow the steps as mentioned for the successful execution of the application:
       ![Prints in docklight window](resources/readme/output_log3.png)
      ![Prints in docklight window](resources/readme/output_log4.png)
 
-## Limitations for this App
+## Limitations
 
-- PSRAM is not supported for this feature.
-- This feature is supported only with TA_480K_M4SS_192K and TA_416K_M4SS_256K RAM configurations.
-- This feature is supported only with power save enabled.
+- Wi-Fi + AE BLE feature is supported only with TA_480K_M4SS_192K and TA_416K_M4SS_256K RAM configurations.
+- Wi-Fi + AE BLE is supported only with power save enabled.
 - TWT(Target Wake Times) based wakeup is not supported.
 - A maximum of 2 BLE connections are supported when the AE+CoEx feature is enabled.
 - The scan interval and window are recommended to be in a 3:1 ratio.
@@ -569,3 +601,27 @@ Follow the steps as mentioned for the successful execution of the application:
 - DUT does not save bonding information.
 - Bonding information needs to be removed from remote device before issuing reconnection.
 - WLAN/BLE throughputs will be less in coexistence cases due to BLE flow control missing in SDK.
+- The SL logging framework is not supported for AE feature.
+
+## Troubleshooting
+
+If you encounter issues while running this example, check the following:
+
+- Verify Wi-Fi credentials and BLE extended advertising parameters in your application configuration.
+- Review [Extended Advertising Configurations](#extended-advertising-configurations) and [Extended Scanning Configurations](#extended-scanning-configurations) before you start testing.
+- Install iPerf on your remote PC for WLAN throughput measurements.
+- Review [Limitations](#limitations) for supported feature combinations.
+
+
+## Resources
+
+- [WiSeConnect Getting Started Guide](https://docs.silabs.com/wiseconnect/latest/wiseconnect-getting-started/)
+- [WiSeConnect Examples](https://docs.silabs.com/wiseconnect/latest/wiseconnect-examples/#example-folder-structure)
+- [WiSeConnect Recommended Settings Guide](https://docs.silabs.com/wiseconnect/latest/wiseconnect-developers-guide-prog-recommended-settings/)
+- [iPerf Tool](https://sourceforge.net/projects/iperf2/files/)
+
+## Report Bugs and Get Support
+
+Report issues and get help from the Silicon Labs community:
+
+- [Silicon Labs Community](https://www.silabs.com/community)

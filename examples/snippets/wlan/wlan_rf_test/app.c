@@ -73,10 +73,13 @@ static const sl_wifi_device_configuration_t transmit_test_configuration = {
 #endif
                                                   ),
                    .bt_feature_bit_map         = SL_SI91X_BT_RF_TYPE,
-                   .ext_tcp_ip_feature_bit_map = SL_SI91X_CONFIG_FEAT_EXTENTION_VALID,
+                   .ext_tcp_ip_feature_bit_map = SL_SI91X_CONFIG_FEAT_EXTENSION_VALID,
                    .ble_feature_bit_map        = 0,
                    .ble_ext_feature_bit_map    = 0,
-                   .config_feature_bit_map     = SL_SI91X_FEAT_SLEEP_GPIO_SEL_BITMAP }
+                   .config_feature_bit_map     = SL_SI91X_FEAT_SLEEP_GPIO_SEL_BITMAP },
+  .ta_pool         = { .tx_ratio_in_buffer_pool = 0, .rx_ratio_in_buffer_pool = 0, .global_ratio_in_buffer_pool = 0 },
+  .efuse_data_type = SL_SI91X_EFUSE_MFG_SW_VERSION,
+  .nwp_fw_image_number = SL_SI91X_NWP_FW_IMAGE_NUMBER_0
 };
 
 /******************************************************
@@ -92,7 +95,6 @@ const osThreadAttr_t thread_attributes = {
   .stack_size = 3072,
   .priority   = osPriorityLow,
   .tz_module  = 0,
-  .reserved   = 0,
 };
 
 #if RECEIVE_STATS
@@ -173,10 +175,10 @@ static void application_start(void *argument)
 
   status = sl_net_init(SL_NET_WIFI_CLIENT_INTERFACE, &transmit_test_configuration, NULL, NULL);
   if (status != SL_STATUS_OK) {
-    printf("Failed to start Wi-Fi client interface: 0x%lx\r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "Failed to start Wi-Fi client interface: 0x%lx\r\n", status);
     return;
   }
-  printf("\r\nWi-Fi Init Done \r\n");
+  SL_DEBUG_LOG_V2(INFO, "Wi-Fi Init Done \r\n");
 
 #if RECEIVE_STATS
   // Register WLAN receive stats call back handler
@@ -185,30 +187,30 @@ static void application_start(void *argument)
 
   status = sl_wifi_set_antenna(SL_WIFI_CLIENT_2_4GHZ_INTERFACE, SL_WIFI_ANTENNA_INTERNAL);
   if (status != SL_STATUS_OK) {
-    printf("Failed to start set Antenna: 0x%lx\r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "Failed to start set Antenna: 0x%lx\r\n", status);
     return;
   }
-  printf("\r\nAntenna Command Frame Success \r\n");
+  SL_DEBUG_LOG_V2(INFO, "Antenna Command Frame Success \r\n");
 
   if ((mode == SL_WIFI_TEST_CONTINOUS_WAVE_MODE) || (mode == SL_WIFI_TEST_CONTINOUS_WAVE_MODE_OFF_CENTER_LOW)
       || (mode == SL_WIFI_TEST_CONTINOUS_WAVE_MODE_OFF_CENTER_HIGH)) {
     tx_test_info.mode = SL_WIFI_TEST_CONTINOUS_MODE;
     status            = sl_si91x_transmit_test_start(&tx_test_info);
     if (status != SL_STATUS_OK) {
-      printf("\r\nTransmit test start Failed, Error Code : 0x%lX\r\n", status);
+      SL_DEBUG_LOG_V2(ERROR, "Transmit test start Failed, Error Code : 0x%lX\r\n", status);
       return;
     }
-    printf("\r\nTransmit test start Success\r\n");
+    SL_DEBUG_LOG_V2(INFO, "Transmit test start Success\r\n");
 
     // Add delay here to see the TX packets on AIR
     osDelay(1000);
 
     status = sl_si91x_transmit_test_stop();
     if (status != SL_STATUS_OK) {
-      printf("\r\nTransmit test stop Failed, Error Code : 0x%lX\r\n", status);
+      SL_DEBUG_LOG_V2(ERROR, "Transmit test stop Failed, Error Code : 0x%lX\r\n", status);
       return;
     }
-    printf("\r\nTransmit test stop Success\r\n");
+    SL_DEBUG_LOG_V2(INFO, "Transmit test stop Success\r\n");
 
     osDelay(1000);
   }
@@ -216,20 +218,20 @@ static void application_start(void *argument)
   tx_test_info.mode = mode;
   status            = sl_si91x_transmit_test_start(&tx_test_info);
   if (status != SL_STATUS_OK) {
-    printf("\r\nTransmit test start Failed, Error Code : 0x%lX\r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "Transmit test start Failed, Error Code : 0x%lX\r\n", status);
     return;
   }
-  printf("\r\nTransmit test start Success\r\n");
+  SL_DEBUG_LOG_V2(INFO, "Transmit test start Success\r\n");
 
   // Add delay here to see the TX packets on AIR
   osDelay(1000);
 
   status = sl_si91x_transmit_test_stop();
   if (status != SL_STATUS_OK) {
-    printf("\r\nTransmit test stop Failed, Error Code : 0x%lX\r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "Transmit test stop Failed, Error Code : 0x%lX\r\n", status);
     return;
   }
-  printf("\r\nTransmit test stop Success\r\n");
+  SL_DEBUG_LOG_V2(INFO, "Transmit test stop Success\r\n");
 
 #if RECEIVE_STATS
   ////////////////////////////////////////
@@ -242,20 +244,20 @@ static void application_start(void *argument)
   status                    = sl_wifi_start_statistic_report(SL_WIFI_CLIENT_INTERFACE, channel);
   if (SL_STATUS_IN_PROGRESS == status) {
     callback_status = SL_STATUS_IN_PROGRESS;
-    printf("\r\nReceive Statistics...\r\n");
+    SL_DEBUG_LOG_V2(INFO, "Receive Statistics...\r\n");
     while (stats_count <= MAX_RECEIVE_STATS_COUNT) {
       osThreadYield();
       if (stats_count == MAX_RECEIVE_STATS_COUNT && callback_status != SL_STATUS_IN_PROGRESS) {
-        printf("\r\n%s: Stop Statistics Report\n", __func__);
+        SL_DEBUG_LOG_V2(INFO, "%s: Stop Statistics Report\r\n", (uintptr_t) __func__);
         sl_wifi_stop_statistic_report(SL_WIFI_CLIENT_INTERFACE);
-        printf("\r\nStart Statistic Report Success\r\n");
+        SL_DEBUG_LOG_V2(INFO, "Start Statistic Report Success\r\n");
         return;
       }
     }
     status = callback_status;
   }
   if (status != SL_STATUS_OK) {
-    printf("\r\nStart Statistic Report Failed, Error Code : 0x%lX\r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "Start Statistic Report Failed, Error Code : 0x%lX\r\n", status);
     return;
   }
 #endif
@@ -278,8 +280,12 @@ sl_status_t wifi_stats_receive_handler(sl_wifi_event_t event,
   if (event == SL_WIFI_STATS_ASYNC_EVENT) {
     sl_wifi_async_stats_response_t *result = (sl_wifi_async_stats_response_t *)reponse;
 
-    printf("\r\n%s: WIFI STATS Recieved packet# %d\n", __func__, stats_count);
-    printf("stats : crc_pass %d, crc_fail %d, cal_rssi :%d\n", result->crc_pass, result->crc_fail, result->cal_rssi);
+    SL_DEBUG_LOG_V2(DEBUG, "%s: WIFI STATS Received packet# %d\r\n", (uintptr_t) __func__, stats_count);
+    SL_DEBUG_LOG_V2(DEBUG,
+                    "stats : crc_pass %d, crc_fail %d, cal_rssi :%d",
+                    result->crc_pass,
+                    result->crc_fail,
+                    result->cal_rssi);
     float p = result->crc_pass;
     float f = result->crc_fail;
     float t = p + f;
@@ -294,10 +300,11 @@ sl_status_t wifi_stats_receive_handler(sl_wifi_event_t event,
     total_crc_fail += result->crc_fail;
 
     if (stats_count == MAX_RECEIVE_STATS_COUNT - 1) {
-      printf("\r\n CRC Average pass%% = %.6f,         CRC Average fail%% = %.6f \r\n",
-             pass_avg / MAX_RECEIVE_STATS_COUNT,
-             fail_avg / MAX_RECEIVE_STATS_COUNT);
-      printf("Total : total_crc_pass %d, total_crc_fail %d \n", total_crc_pass, total_crc_fail);
+      SL_DEBUG_LOG_V2(INFO,
+                      " CRC Average pass%% = %.6f,         CRC Average fail%% = %.6f ",
+                      pass_avg / MAX_RECEIVE_STATS_COUNT,
+                      fail_avg / MAX_RECEIVE_STATS_COUNT);
+      SL_DEBUG_LOG_V2(INFO, "Total : total_crc_pass %d, total_crc_fail %d ", total_crc_pass, total_crc_fail);
       pass_avg = 0;
       fail_avg = 0;
     }

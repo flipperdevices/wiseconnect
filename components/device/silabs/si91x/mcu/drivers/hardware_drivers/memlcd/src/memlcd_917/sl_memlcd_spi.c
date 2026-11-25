@@ -61,12 +61,12 @@ void mySPI_callback_spi(uint32_t event)
             but send/receive/transfer operation has not been started
             and indicates that data is lost. Occurs also in master mode
             when driver cannot transfer data fast enough. */
-      DEBUGOUT("\r\n ARM_SPI_EVENT_DATA_LOST \r\n");
+      SL_PRINT_STRING_ERROR("\r\n ARM_SPI_EVENT_DATA_LOST \r\n");
       break;
     case ARM_SPI_EVENT_MODE_FAULT:
       /*  Occurs in master mode when Slave Select is deactivated and
             indicates Master Mode Fault. */
-      DEBUGOUT("\r\n ARM_SPI_EVENT_MODE_FAULT \r\n");
+      SL_PRINT_STRING_ERROR("\r\n ARM_SPI_EVENT_MODE_FAULT \r\n");
       break;
   }
 }
@@ -78,21 +78,23 @@ sl_status_t sli_memlcd_spi_init(uint32_t spi_baud)
   // Uninitialize the SPI driver
   status_spi = SPIdrv->Uninitialize();
   if (status_spi != ARM_DRIVER_OK) {
-    DEBUGOUT("\r\n SPI Uninitialization Failed, Error Code : %ld\r\n", status_spi);
+    SL_PRINT_STRING_ERROR("\r\n SPI Uninitialization Failed, Error Code : %ld\r\n", (long)status_spi);
+    SL_PRINT_STRING_ERROR("memlcd_spi: Uninitialize failed, code=%ld", (long)status_spi);
     return SL_STATUS_FAIL;
   }
 
   // Initialize the SPI driver
   status_spi = SPIdrv->Initialize(mySPI_callback_spi);
   if (status_spi != ARM_DRIVER_OK) {
-    DEBUGOUT("\r\n SPI Initialization Failed, Error Code : %ld\r\n", status_spi);
+    SL_PRINT_STRING_ERROR("\r\n SPI Initialization Failed, Error Code : %ld\r\n", (long)status_spi);
+    SL_PRINT_STRING_ERROR("memlcd_spi: Initialize failed, code=%ld", (long)status_spi);
     return SL_STATUS_FAIL;
   }
 
   // Power up the SPI peripheral
   status_spi = SPIdrv->PowerControl(ARM_POWER_FULL);
   if (status_spi != ARM_DRIVER_OK) {
-    DEBUGOUT("\r\n Failed to Set Power to SPI, Error Code : %ld\r\n", status_spi);
+    SL_PRINT_STRING_ERROR("\r\n Failed to Set Power to SPI, Error Code : %ld\r\n", (long)status_spi);
     return SL_STATUS_FAIL;
   }
 
@@ -104,7 +106,9 @@ sl_status_t sli_memlcd_spi_init(uint32_t spi_baud)
     ARM_SPI_MODE_MASTER | ARM_SPI_CPOL0_CPHA0 | ARM_SPI_SS_MASTER_HW_OUTPUT | ARM_SPI_DATA_BITS(SPI_BIT_WIDTH),
     spi_baud);
   if (status_spi != ARM_DRIVER_OK) {
-    DEBUGOUT("\r\n Failed to Set Configuration Parameters to SPI, Error Code : %ld\r\n", status_spi);
+    SL_PRINT_STRING_ERROR("\r\n Failed to Set Configuration Parameters to SPI, "
+                          "Error Code : %ld\r\n",
+                          (long)status_spi);
     return SL_STATUS_FAIL;
   }
 
@@ -115,7 +119,7 @@ sl_status_t sli_memlcd_spi_shutdown()
   ARM_DRIVER_SPI *SPIdrv = &Driver_SSI_ULP_MASTER;
   status_spi             = SPIdrv->PowerControl(ARM_POWER_OFF);
   if (status_spi != ARM_DRIVER_OK) {
-    DEBUGOUT("\r\n Failed to Set Power to SPI, Error Code : %ld\r\n", status_spi);
+    SL_PRINT_STRING_ERROR("\r\n Failed to Set Power to SPI, Error Code : %ld\r\n", (long)status_spi);
     return SL_STATUS_FAIL;
   }
 
@@ -128,7 +132,7 @@ sl_status_t sli_memlcd_spi_tx(const void *data, unsigned len)
   char *temp         = (char *)malloc(len);
 
   if (temp == NULL) {
-    DEBUGOUT("\r\n Failed to allocate memory for temp buffer\r\n");
+    SL_PRINT_STRING_ERROR("\r\n Failed to allocate memory for temp buffer\r\n");
     return SL_STATUS_FAIL;
   }
 
@@ -136,7 +140,11 @@ sl_status_t sli_memlcd_spi_tx(const void *data, unsigned len)
 
   status_spi = SPIdrv->Control(ARM_SPI_CONTROL_SS, ARM_SPI_SS_ACTIVE);
   if (status_spi != ARM_DRIVER_OK) {
-    DEBUGOUT("\r\n Failed to Active Slave Select Line for SPI Transfer, Error Code : %ld\r\n", status_spi);
+    SL_PRINT_STRING_ERROR("\r\n Failed to Active Slave Select Line for SPI "
+                          "Transfer, Error Code : %ld\r\n",
+                          (long)status_spi);
+    free(temp);
+    temp = NULL;
     return SL_STATUS_FAIL;
   }
 
@@ -146,9 +154,16 @@ sl_status_t sli_memlcd_spi_tx(const void *data, unsigned len)
 
   // Trigger the SPI data transfer
   status_spi = SPIdrv->Send(temp, len);
+  if (status_spi != ARM_DRIVER_OK) {
+    SL_PRINT_STRING_ERROR("\r\n Failed to Send SPI data, Error Code : %ld\r\n", (long)status_spi);
+    free(temp);
+    temp = NULL;
+    return SL_STATUS_FAIL;
+  }
 
   // Free allocated memory
   free(temp);
+  temp = NULL;
 
   return SL_STATUS_OK;
 }

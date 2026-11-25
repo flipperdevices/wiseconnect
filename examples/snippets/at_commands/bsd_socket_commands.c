@@ -278,15 +278,11 @@ sl_status_t bsd_socket_accept_handler(console_args_t *arguments)
   VERIFY_BSD_STATUS(status);
 
   PRINT_AT_CMD_SUCCESS;
-  printf("Socket ID: %lu\n", status);
+  SL_DEBUG_LOG_V2(INFO, "Socket ID: %lu\r\n", status);
   if ((ip_version == SL_IPV4_VERSION) && (socket_length == sizeof(struct sockaddr_in))) {
     const uint8_t *ip_address = (const uint8_t *)&remote_socket_address.sin_addr.s_addr;
-    printf("%u.%u.%u.%u:%u",
-           ip_address[0],
-           ip_address[1],
-           ip_address[2],
-           ip_address[3],
-           remote_socket_address.sin_port);
+    SL_DEBUG_LOG_V2(INFO, "%u.%u.", ip_address[0], ip_address[1]);
+    SL_DEBUG_LOG_V2(INFO, "%u.%u:%u", ip_address[2], ip_address[3], remote_socket_address.sin_port);
   }
 
   return SL_STATUS_OK;
@@ -361,7 +357,7 @@ sl_status_t bsd_socket_receive_from_handler(console_args_t *arguments)
   }
 
   PRINT_AT_CMD_SUCCESS;
-  printf("%d ", size);
+  SL_DEBUG_LOG_V2(INFO, "%d ", size);
   at_print_char_buffer((char *)buffer, size);
 
   SL_CLEANUP_MALLOC(buffer);
@@ -608,11 +604,8 @@ sl_status_t bsd_socket_get_host_by_name_handler(console_args_t *arguments)
   PRINT_AT_CMD_SUCCESS;
   print_sl_ip_address((sl_ip_address_t *)host_ent->h_addr);
 
-  printf("\r\nhost_name: %s, h_errno:%d, type:%d, length:%d",
-         host_name,
-         h_errno,
-         host_ent->h_addrtype,
-         host_ent->h_length);
+  SL_DEBUG_LOG_V2(DEBUG, "host_name: %s, h_errno:%d", (uintptr_t)host_name, h_errno);
+  SL_DEBUG_LOG_V2(DEBUG, "type:%d, length:%d", host_ent->h_addrtype, host_ent->h_length);
 
   return SL_STATUS_OK;
 #else
@@ -638,8 +631,9 @@ sl_status_t bsd_socket_get_sock_name(console_args_t *arguments)
   if (socket_length == sizeof(struct sockaddr_in)) {
     const uint8_t *ip_address = (uint8_t *)&socket_address.sin_addr.s_addr;
 
-    printf("%u.%u.%u.%u", ip_address[0], ip_address[1], ip_address[2], ip_address[3]);
-    printf(":%d\r\n", socket_address.sin_port);
+    SL_DEBUG_LOG_V2(INFO, "%u.%u.", ip_address[0], ip_address[1]);
+    SL_DEBUG_LOG_V2(INFO, "%u.%u", ip_address[2], ip_address[3]);
+    SL_DEBUG_LOG_V2(INFO, ":%d", socket_address.sin_port);
   }
 
   return SL_STATUS_OK;
@@ -668,12 +662,12 @@ sl_status_t bsd_socket_select_handler(console_args_t *arguments)
 
   PRINT_AT_CMD_SUCCESS;
   if (retval == 0) {
-    printf("Timeout");
+    SL_DEBUG_LOG_V2(INFO, "Timeout");
   } else {
-    printf("Data is available on sockets: ");
+    SL_DEBUG_LOG_V2(INFO, "Data is available on sockets: ");
     for (int i = 0; i < nfds; i++) {
       if (FD_ISSET(i, &readfds)) {
-        printf("%d, ", i);
+        SL_DEBUG_LOG_V2(INFO, "%d, ", i);
       }
       FD_CLR(i, &readfds);
     }

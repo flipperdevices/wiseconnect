@@ -17,6 +17,9 @@ include:
   - path: "cmsis_driver"
     file_list:
     - path: "UDMA.h"
+define:
+  - name: SL_CODE_COMPONENT_CMSIS_UDMA
+    value: cmsis_udma
 provides:
   - name: cmsis_udma
 requires:
@@ -24,6 +27,9 @@ requires:
   - name: rsilib_udma
   - name: romdriver_romtable_headers
   - name: udma_linker_config
+  - name: code_classification
 template_contribution:
+  - name: code_classification_components
+    value: cmsis_udma
   - name: udma_in_ram
     value: 1

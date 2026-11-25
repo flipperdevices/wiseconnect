@@ -444,7 +444,8 @@ IoT_Error_t iot_tls_connect(Network *pNetwork, TLSConnectParams *params)
   mbedtls_ssl_conf_read_timeout(&conf, pNetwork->tlsConnectParams.timeout_ms);
 
   if (pNetwork->tlsConnectParams.DestinationPort == SLI_MQTT_TLS_PORT) {
-	  const char *alpnProtocols[] = { ALPN_AMZN_MQTT_CA, NULL };
+	  // mbedTLS keeps the pointer to this list, so it must outlive the SSL configuration.
+	  static const char *alpnProtocols[] = { ALPN_AMZN_MQTT_CA, NULL };
 	  status = mbedtls_ssl_conf_alpn_protocols(&conf, alpnProtocols);
 	  if (status != 0) {
 		  return NETWORK_SSL_INIT_ERROR;

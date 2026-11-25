@@ -1,6 +1,6 @@
 /***************************************************************************/ /**
  * @file
- * @brief IO Stream SWO ITM SI91X.
+ * @brief IO Stream SWO ITM for SiWx91x.
  *******************************************************************************
  * # License
  * <b>Copyright 2019 Silicon Laboratories Inc. www.silabs.com</b>
@@ -44,7 +44,7 @@ extern "C" {
 
 /***************************************************************************/
 /**
- * @brief To initialize ITM Channle 8.
+ * @brief To initialize ITM channel 8.
  * 
  * @details This API will initialize swo stimulus 8 by writing to Trace Enable Register
  * 

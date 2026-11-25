@@ -48,7 +48,7 @@ int32_t debug_logs_init_hook(void)
   status =
     rsi_bt_debug_logs_register_callbacks(RSI_BT_ON_CONTROLLER_LOGS, (void *)rsi_bt_on_controller_logs_driver_callback);
   if (status != RSI_SUCCESS) {
-    printf("rsi_bt_debug_logs_register_callbacks failed \n");
+    SL_DEBUG_LOG_V2(ERROR, "rsi_bt_debug_logs_register_callbacks failed \r\n");
   }
   return 0;
 }

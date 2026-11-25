@@ -114,7 +114,8 @@ typedef enum {
 #define ENCRYPT_CONNECTION     0
 #define KEEP_ALIVE_INTERVAL    2000
 #define MQTT_CONNECT_TIMEOUT   5000
-#define DNS_TIMEOUT            20000
+#define DNS_TIMEOUT            10
+#define RETRY_COUNT            1
 #define MAX_DNS_RETRY_COUNT    5
 
 #define DHCP_HOST_NAME NULL
@@ -135,7 +136,7 @@ sl_mqtt_client_credentials_t *client_credentails         = NULL;
 sl_mqtt_client_configuration_t mqtt_client_configuration = { .is_clean_session = IS_CLEAN_SESSION,
                                                              .client_port      = CLIENT_PORT };
 
-sl_mqtt_broker_t mqtt_broker_configuration = {
+sl_mqtt_broker_v2_t mqtt_broker_configuration = {
   .port                    = MQTT_BROKER_PORT,
   .is_connection_encrypted = ENCRYPT_CONNECTION,
   .connect_timeout         = MQTT_CONNECT_TIMEOUT,
@@ -167,7 +168,7 @@ sl_mqtt_client_last_will_message_t last_will_message = {
 
 void mqtt_client_message_handler(void *client, sl_mqtt_client_message_t *message, void *context);
 void mqtt_client_event_handler(void *client, sl_mqtt_client_event_t event, void *event_data, void *context);
-void mqtt_client_error_event_handler(void *client, sl_mqtt_client_error_status_t *error);
+void mqtt_client_error_event_handler(void *client, sl_mqtt_client_error_info_t *error);
 void mqtt_client_cleanup();
 void print_char_buffer(char *buffer, uint32_t buffer_length);
 sl_status_t mqtt_example();
@@ -290,9 +291,7 @@ static sl_net_wifi_client_profile_t wifi_client_profile = {
     .ip = {
         .mode = SL_IP_MANAGEMENT_DHCP,
         .type = SL_IPV4,
-        .host_name = DHCP_HOST_NAME,
-        .ip = {{{0}}},
-
+        .host_name = DHCP_HOST_NAME
     }
 };
 
@@ -385,27 +384,31 @@ void rsi_wlan_app_callbacks_init(void)
 
 static sl_status_t show_scan_results()
 {
-  printf("%lu Scan results:\n", scan_result->scan_count);
+  SL_DEBUG_LOG_V2(INFO, "%lu Scan results:\r\n", scan_result->scan_count);
 
   if (scan_result->scan_count) {
-    printf("\n   %s %24s %s", "SSID", "SECURITY", "NETWORK");
-    printf("%12s %12s %s\n", "BSSID", "CHANNEL", "RSSI");
+    SL_DEBUG_LOG_V2(INFO, "   %s %24s %s", (uintptr_t) "SSID", (uintptr_t) "SECURITY", (uintptr_t) "NETWORK");
+    SL_DEBUG_LOG_V2(INFO, "%12s %12s %s\r\n", (uintptr_t) "BSSID", (uintptr_t) "CHANNEL", (uintptr_t) "RSSI");
 
     for (int a = 0; a < (int)scan_result->scan_count; ++a) {
       uint8_t *bssid = (uint8_t *)&scan_result->scan_info[a].bssid;
-      printf("%-24s %4u,  %4u, ",
-             scan_result->scan_info[a].ssid,
-             scan_result->scan_info[a].security_mode,
-             scan_result->scan_info[a].network_type);
-      printf("  %02x:%02x:%02x:%02x:%02x:%02x, %4u,  -%u\n",
-             bssid[0],
-             bssid[1],
-             bssid[2],
-             bssid[3],
-             bssid[4],
-             bssid[5],
-             scan_result->scan_info[a].rf_channel,
-             scan_result->scan_info[a].rssi_val);
+      SL_DEBUG_LOG_V2(INFO,
+                      "%-24s %4u,  %4u, ",
+                      (uintptr_t)scan_result->scan_info[a].ssid,
+                      scan_result->scan_info[a].security_mode,
+                      scan_result->scan_info[a].network_type);
+      char oob_scan_bssid_log[48];
+      snprintf(oob_scan_bssid_log,
+               sizeof(oob_scan_bssid_log),
+               "  %02x:%02x:%02x:%02x:%02x:%02x,",
+               bssid[0],
+               bssid[1],
+               bssid[2],
+               bssid[3],
+               bssid[4],
+               bssid[5]);
+      SL_DEBUG_LOG_V2(INFO, "%s", (uintptr_t)oob_scan_bssid_log);
+      SL_DEBUG_LOG_V2(INFO, " %4u,  -%u\r\n", scan_result->scan_info[a].rf_channel, scan_result->scan_info[a].rssi_val);
     }
   }
 
@@ -449,10 +452,10 @@ sl_status_t network_event_handler(sl_net_event_t event, sl_status_t status, void
       sl_net_ping_response_t *response = (sl_net_ping_response_t *)data;
       UNUSED_VARIABLE(response);
       if (status != SL_STATUS_OK) {
-        printf("\r\nPing request unsuccessful\r\n");
+        SL_DEBUG_LOG_V2(WARN, "Ping request unsuccessful\r\n");
         return status;
       }
-      printf("\r\nPing response from www.silabs.com \r\n");
+      SL_DEBUG_LOG_V2(INFO, "Ping response from www.silabs.com \r\n");
       break;
     }
     default:
@@ -480,12 +483,16 @@ void ping_silabs()
 
   do {
     //! Getting IP address of the remote server using DNS request
-    status = sl_net_dns_resolve_hostname((const char *)hostname, DNS_TIMEOUT, SL_NET_DNS_TYPE_IPV4, &dns_query_rsp);
+    status = sl_net_dns_resolve_hostname_v2((const char *)hostname,
+                                            DNS_TIMEOUT,
+                                            RETRY_COUNT,
+                                            SL_NET_DNS_TYPE_IPV4,
+                                            &dns_query_rsp);
     dns_retry_count--;
   } while ((dns_retry_count != 0) && (status != SL_STATUS_OK));
 
   if (status != SL_STATUS_OK) {
-    printf("\r\nUnexpected error while resolving dns, Error 0x%lX\r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "Unexpected error while resolving dns, Error 0x%lX\r\n", status);
     return;
   }
 
@@ -497,14 +504,14 @@ void ping_silabs()
           (server_address & 0x00ff0000) >> 16,
           (server_address & 0xff000000) >> 24);
 
-  printf("\r\nResolved DNS - www.silabs.com IP address = %s\n", server_ip);
-  printf("\r\nPinging www.silabs.com");
+  SL_DEBUG_LOG_V2(INFO, "Resolved DNS - www.silabs.com IP address = %s\r\n", (uintptr_t)server_ip);
+  SL_DEBUG_LOG_V2(INFO, "Pinging www.silabs.com");
 
   while (i < NO_OF_PINGS) {
     // Send ping
     status = sl_si91x_send_ping(dns_query_rsp, PING_PACKET_SIZE);
     if (status != SL_STATUS_IN_PROGRESS) {
-      printf("\r\nPing request failed with status 0x%lX\r\n", status);
+      SL_DEBUG_LOG_V2(ERROR, "Ping request failed with status 0x%lX\r\n", status);
       return;
     }
 
@@ -524,13 +531,17 @@ void mqtt_client_message_handler(void *client, sl_mqtt_client_message_t *message
 {
   UNUSED_PARAMETER(context);
   UNUSED_PARAMETER(client);
-  printf("Message Received on Topic: ");
+  SL_DEBUG_LOG_V2(INFO, "Message Received on Topic: ");
   print_char_buffer((char *)message->topic, message->topic_length);
-  printf("\r\n");
+  SL_DEBUG_LOG_V2(INFO, "\r\n");
   print_char_buffer((char *)message->content, message->content_length);
-  printf("\r\n");
-  strncpy(msg, (char *)message->content, message->content_length);
-  msg[message->content_length] = '\0';
+  SL_DEBUG_LOG_V2(INFO, "\r\n");
+  uint32_t copy_len = message->content_length;
+  if (copy_len >= sizeof(msg)) {
+    copy_len = sizeof(msg) - 1;
+  }
+  memcpy(msg, message->content, copy_len);
+  msg[copy_len] = '\0';
   GLIB_clear(&glibContext);
   GLIB_drawBitmap(&glibContext,
                   SILABS_LOGO_POSITION_X,
@@ -558,31 +569,68 @@ void mqtt_client_message_handler(void *client, sl_mqtt_client_message_t *message
   GLIB_drawStringOnLine(&glibContext, TOPIC_TO_BE_SUBSCRIBED, currentLine++, GLIB_ALIGN_LEFT, 5, 5, true);
   GLIB_drawStringOnLine(&glibContext, "", currentLine++, GLIB_ALIGN_LEFT, 5, 5, true);
   GLIB_drawStringOnLine(&glibContext, "Message:", currentLine++, GLIB_ALIGN_LEFT, 5, 5, true);
-  GLIB_drawStringOnLine(&glibContext, (char *)message->content, currentLine, GLIB_ALIGN_LEFT, 5, 5, true);
+  GLIB_drawStringOnLine(&glibContext, msg, currentLine, GLIB_ALIGN_LEFT, 5, 5, true);
   DMD_updateDisplay();
 }
 
 void print_char_buffer(char *buffer, uint32_t buffer_length)
 {
-  printf("\r\n");
+  SL_DEBUG_LOG_V2(INFO, "\r\n");
 
   for (uint32_t index = 0; index < buffer_length; index++) {
-    printf("%c", buffer[index]);
+    SL_DEBUG_LOG_V2(INFO, "%c", buffer[index]);
   }
 }
 
-void mqtt_client_error_event_handler(void *client, sl_mqtt_client_error_status_t *error)
+void mqtt_client_error_event_handler(void *client, sl_mqtt_client_error_info_t *error)
 {
   UNUSED_PARAMETER(client);
-  printf("Terminating program, Error: %d\r\n", *error);
-  mqtt_client_cleanup();
+
+  if (error == NULL) {
+    SL_DEBUG_LOG_V2(ERROR, "MQTT Error: event data is NULL\r\n");
+    return;
+  }
+
+  switch (error->error_status) {
+    case SL_MQTT_CLIENT_RECEIVE_FAILED:
+      SL_DEBUG_LOG_V2(ERROR, "MQTT Error: Message receive failed with status: 0x%lx\r\n", error->status_code);
+      break;
+
+    case SL_MQTT_CLIENT_RECEIVE_PAYLOAD_TOO_LARGE:
+      SL_DEBUG_LOG_V2(ERROR,
+                      "MQTT Error: Received payload exceeds max size (%u bytes). "
+                      "Increase SL_MQTT_CLIENT_MAX_RX_PAYLOAD_SIZE. Failed with status: 0x%lx",
+                      SL_MQTT_CLIENT_MAX_RX_PAYLOAD_SIZE,
+                      error->status_code);
+      break;
+
+    case SL_MQTT_CLIENT_RECEIVE_MEMORY_ALLOCATION_FAILED:
+      SL_DEBUG_LOG_V2(ERROR,
+                      "MQTT Error: Failed to allocate memory for message reassembly with status: 0x%lx",
+                      error->status_code);
+      break;
+
+    case SL_MQTT_CLIENT_RECEIVE_DATA_CORRUPTED:
+      SL_DEBUG_LOG_V2(ERROR,
+                      "MQTT Error: Data corruption detected during message reassembly with status: 0x%lx",
+                      error->status_code);
+      break;
+
+    default:
+      SL_DEBUG_LOG_V2(ERROR,
+                      "Terminating program due to error: %d, status: 0x%lx\r\n",
+                      error->error_status,
+                      error->status_code);
+      mqtt_client_cleanup();
+      break;
+  }
 }
 
 void mqtt_client_event_handler(void *client, sl_mqtt_client_event_t event, void *event_data, void *context)
 {
   switch (event) {
     case SL_MQTT_CLIENT_CONNECTED_EVENT: {
-      printf("\r\nMQTT connection established\r\n");
+      SL_DEBUG_LOG_V2(INFO, "MQTT connection established\r\n");
 
       sl_status_t status;
 
@@ -594,7 +642,7 @@ void mqtt_client_event_handler(void *client, sl_mqtt_client_event_t event, void 
                                         mqtt_client_message_handler,
                                         TOPIC_TO_BE_SUBSCRIBED);
       if (status != SL_STATUS_IN_PROGRESS) {
-        printf("\r\nFailed to subscribe : 0x%lx\r\n", status);
+        SL_DEBUG_LOG_V2(ERROR, "Failed to subscribe : 0x%lx\r\n", status);
 
         mqtt_client_cleanup();
         return;
@@ -605,10 +653,10 @@ void mqtt_client_event_handler(void *client, sl_mqtt_client_event_t event, void 
 
     case SL_MQTT_CLIENT_MESSAGE_PUBLISHED_EVENT: {
       sl_mqtt_client_message_t *published_message = (sl_mqtt_client_message_t *)context;
-      printf("Published message successfully on topic: ");
+      SL_DEBUG_LOG_V2(INFO, "Published message successfully on topic: ");
       print_char_buffer((char *)published_message->topic, published_message->topic_length);
       print_char_buffer((char *)published_message->content, published_message->content_length);
-      printf("\r\n");
+      SL_DEBUG_LOG_V2(INFO, "\r\n");
       GLIB_clear(&glibContext);
       GLIB_drawBitmap(&glibContext,
                       SILABS_LOGO_POSITION_X,
@@ -651,7 +699,7 @@ void mqtt_client_event_handler(void *client, sl_mqtt_client_event_t event, void 
     case SL_MQTT_CLIENT_SUBSCRIBED_EVENT: {
       char *subscribed_topic = (char *)context;
 
-      printf("Subscribed to Topic: %s\r\n", subscribed_topic);
+      SL_DEBUG_LOG_V2(INFO, "Subscribed to Topic: %s\r\n", (uintptr_t)subscribed_topic);
       mqtt_connected = 1;
       break;
     }
@@ -659,21 +707,21 @@ void mqtt_client_event_handler(void *client, sl_mqtt_client_event_t event, void 
     case SL_MQTT_CLIENT_UNSUBSCRIBED_EVENT: {
       char *unsubscribed_topic = (char *)context;
 
-      printf("\r\nUnsubscribed from topic: %s\r\n", unsubscribed_topic);
+      SL_DEBUG_LOG_V2(INFO, "Unsubscribed from topic: %s\r\n", (uintptr_t)unsubscribed_topic);
 
       sl_mqtt_client_disconnect(client, 0);
       break;
     }
 
     case SL_MQTT_CLIENT_DISCONNECTED_EVENT: {
-      printf("\r\nDisconnected from MQTT broker\r\n");
+      SL_DEBUG_LOG_V2(INFO, "Disconnected from MQTT broker\r\n");
       mqtt_disconnect_flag = 1;
       mqtt_client_cleanup();
       break;
     }
 
     case SL_MQTT_CLIENT_ERROR_EVENT: {
-      mqtt_client_error_event_handler(client, (sl_mqtt_client_error_status_t *)event_data);
+      mqtt_client_error_event_handler(client, (sl_mqtt_client_error_info_t *)event_data);
       break;
     }
     default:
@@ -686,7 +734,7 @@ void test_mosquitto_org_pub()
   sl_status_t status = 0;
   status             = sl_mqtt_client_publish(&client, &message_to_be_published, 0, &message_to_be_published);
   if (status != SL_STATUS_IN_PROGRESS) {
-    printf("\r\nFailed to publish message: 0x%lx\r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "Failed to publish message: 0x%lx\r\n", status);
     mqtt_client_cleanup();
     return;
   }
@@ -698,12 +746,12 @@ sl_status_t mqtt_example()
 
   status = sl_mqtt_client_init(&client, mqtt_client_event_handler);
   if (status != SL_STATUS_OK) {
-    printf("\r\nFailed to initialize MQTT client: 0x%lx\r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "Failed to initialize MQTT client: 0x%lx\r\n", status);
 
     mqtt_client_cleanup();
     return status;
   }
-  printf("\r\nMQTT client initialization successful\r\n");
+  SL_DEBUG_LOG_V2(INFO, "MQTT client initialization successful\r\n");
 
   sl_ip_address_t remote_ip_address = { 0 };
 
@@ -718,13 +766,16 @@ sl_status_t mqtt_example()
 
   do {
 
-    status =
-      sl_net_dns_resolve_hostname((const char *)mqtt_hostname, DNS_TIMEOUT, SL_NET_DNS_TYPE_IPV4, &dns_query_rsp);
+    status = sl_net_dns_resolve_hostname_v2((const char *)mqtt_hostname,
+                                            DNS_TIMEOUT,
+                                            RETRY_COUNT,
+                                            SL_NET_DNS_TYPE_IPV4,
+                                            &dns_query_rsp);
     dns_retry_count--;
   } while ((dns_retry_count != 0) && (status != SL_STATUS_OK));
 
   if (status != SL_STATUS_OK) {
-    printf("\r\nUnexpected error while resolving DNS, Error 0x%lX\r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "Unexpected error while resolving DNS, Error 0x%lX\r\n", status);
   }
 
   server_address = dns_query_rsp.ip.v4.value;
@@ -735,7 +786,7 @@ sl_status_t mqtt_example()
           (server_address & 0x00ff0000) >> 16,
           (server_address & 0xff000000) >> 24);
 
-  printf("\r\nResolved test.mosquitto.org's IP address = %s\n", server_ip);
+  SL_DEBUG_LOG_V2(INFO, "Resolved test.mosquitto.org's IP address = %s\r\n", (uintptr_t)server_ip);
 
   mqtt_broker_configuration.ip.type        = SL_IPV4;
   mqtt_broker_configuration.ip.ip.v4.value = dns_query_rsp.ip.v4.value;
@@ -757,9 +808,9 @@ sl_status_t mqtt_example()
   mqtt_client_configuration.client_id_length = strlen((char *)mqtt_client_configuration.client_id);
 
   status =
-    sl_mqtt_client_connect(&client, &mqtt_broker_configuration, &last_will_message, &mqtt_client_configuration, 0);
+    sl_mqtt_client_connect_v2(&client, &mqtt_broker_configuration, &last_will_message, &mqtt_client_configuration, 0);
   if (status != SL_STATUS_IN_PROGRESS) {
-    printf("Failed to connect to MQTT broker: 0x%lx\r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "Failed to connect to MQTT broker: 0x%lx\r\n", status);
 
     mqtt_client_cleanup();
     return status;
@@ -778,7 +829,7 @@ void wifi_app_task(void)
   // Allocate memory for scan buffer
   scan_result = (sl_wifi_scan_result_t *)malloc(scanbuf_size);
   if (scan_result == NULL) {
-    LOG_PRINT("Failed to allocate memory for scan result\n");
+    SL_DEBUG_LOG_V2(ERROR, "Failed to allocate memory for scan result\r\n");
     return;
   }
   memset(scan_result, 0, scanbuf_size);
@@ -830,7 +881,7 @@ void wifi_app_task(void)
           status = scan_complete ? callback_status : SL_STATUS_TIMEOUT;
         }
         if (status != SL_STATUS_OK) {
-          LOG_PRINT("\r\nWLAN Scan Wait Failed, Error Code : 0x%lX\r\n", status);
+          SL_DEBUG_LOG_V2(ERROR, "WLAN Scan Wait Failed, Error Code : 0x%lX\r\n", status);
           GLIB_drawStringOnLine(&glibContext, "WLAN Scan Failed", currentLine++, GLIB_ALIGN_LEFT, 5, 5, true);
           DMD_updateDisplay();
           osDelay(1000);
@@ -856,7 +907,7 @@ void wifi_app_task(void)
           status =
             sl_net_set_credential(wifi_client_profile.config.credential_id, SL_NET_WIFI_PSK, pwd, strlen((char *)pwd));
           if (status != SL_STATUS_OK) {
-            printf("\r\nFailed to set client credentials: 0x%lx\r\n", status);
+            SL_DEBUG_LOG_V2(ERROR, "Failed to set client credentials: 0x%lx\r\n", status);
             continue;
           }
         } else {
@@ -877,26 +928,26 @@ void wifi_app_task(void)
               SL_WIFI_CLIENT_2_4GHZ_INTERFACE,
               SL_WIFI_JOIN_FEAT_MFP_CAPABLE_REQUIRED | SL_WIFI_JOIN_FEAT_LISTEN_INTERVAL_VALID);
             if (status != SL_STATUS_OK) {
-              printf("\r\n join configuration settings for WPA3 failed\r\n");
+              SL_DEBUG_LOG_V2(ERROR, " join configuration settings for WPA3 failed\r\n");
             }
           } else if (wifi_client_profile.config.security == SL_WIFI_WPA3_TRANSITION) {
             status = sl_wifi_set_join_configuration(
               SL_WIFI_CLIENT_2_4GHZ_INTERFACE,
               SL_WIFI_JOIN_FEAT_MFP_CAPABLE_ONLY | SL_WIFI_JOIN_FEAT_LISTEN_INTERVAL_VALID);
             if (status != SL_STATUS_OK) {
-              printf("\r\n Join configuration settings for WPA3 failed\r\n");
+              SL_DEBUG_LOG_V2(ERROR, " Join configuration settings for WPA3 failed\r\n");
             }
           } else {
             status =
               sl_wifi_set_join_configuration(SL_WIFI_CLIENT_2_4GHZ_INTERFACE, SL_WIFI_JOIN_FEAT_LISTEN_INTERVAL_VALID);
             if (status != SL_STATUS_OK) {
-              printf("\r\n Join configuration settings for WPA3 failed\r\n");
+              SL_DEBUG_LOG_V2(ERROR, " Join configuration settings for WPA3 failed\r\n");
             }
           }
 
-          printf("\r\nSelected SSID:");
+          SL_DEBUG_LOG_V2(INFO, "Selected SSID:");
           for (int i = 0; i < wifi_client_profile.config.ssid.length; i++) {
-            printf("%c", wifi_client_profile.config.ssid.value[i]);
+            SL_DEBUG_LOG_V2(INFO, "%c", wifi_client_profile.config.ssid.value[i]);
           }
 
           do {
@@ -908,7 +959,7 @@ void wifi_app_task(void)
         if (status != RSI_SUCCESS) {
           timeout = 1;
           wifi_app_send_to_ble(WIFI_APP_TIMEOUT_NOTIFY, (uint8_t *)&timeout, 1);
-          LOG_PRINT("\r\nWLAN Connect Failed, Error Code : 0x%lX\r\n", status);
+          SL_DEBUG_LOG_V2(ERROR, "WLAN Connect Failed, Error Code : 0x%lX\r\n", status);
 
           GLIB_drawStringOnLine(&glibContext, "WLAN Connect Failed", currentLine++, GLIB_ALIGN_LEFT, 5, 5, true);
           DMD_updateDisplay();
@@ -919,7 +970,7 @@ void wifi_app_task(void)
           connected    = 0;
         } else {
 
-          LOG_PRINT("\r\nWLAN connection successful\r\n");
+          SL_DEBUG_LOG_V2(INFO, "WLAN connection successful\r\n");
 
           // Update WLAN application state
           wifi_app_set_event(WIFI_APP_CONNECTED_STATE);
@@ -933,7 +984,7 @@ void wifi_app_task(void)
         if (retry) {
           status = sl_net_up(SL_NET_WIFI_CLIENT_INTERFACE, SL_NET_DEFAULT_WIFI_CLIENT_PROFILE_ID);
           if (status != RSI_SUCCESS) {
-            LOG_PRINT("\r\nWLAN connection failed, Error Code : 0x%lX\r\n", status);
+            SL_DEBUG_LOG_V2(ERROR, "WLAN connection failed, Error Code : 0x%lX\r\n", status);
             break;
           } else {
             wifi_app_set_event(WIFI_APP_CONNECTED_STATE);
@@ -961,7 +1012,7 @@ void wifi_app_task(void)
               wifi_app_set_event(WIFI_APP_IDLE_STATE);
             }
           }
-          LOG_PRINT("\r\nIP configuration failed, Error Code : 0x%lX\r\n", status);
+          SL_DEBUG_LOG_V2(ERROR, "IP configuration failed, Error Code : 0x%lX\r\n", status);
           break;
         } else {
           a             = 0;
@@ -977,7 +1028,7 @@ void wifi_app_task(void)
                   fetch_ip->bytes[1],
                   fetch_ip->bytes[2],
                   fetch_ip->bytes[3]);
-          printf("\r\nIP Address:%s \r\n", ip_add);
+          SL_DEBUG_LOG_V2(INFO, "IP Address:%s \r\n", (uintptr_t)ip_add);
           GLIB_clear(&glibContext);
           GLIB_drawBitmap(&glibContext,
                           SILABS_LOGO_POSITION_X,
@@ -1023,7 +1074,7 @@ void wifi_app_task(void)
                 mac_addr.octet[3],
                 mac_addr.octet[4],
                 mac_addr.octet[5]);
-        printf("\r\nMAC Address:%s \r\n", mac_id);
+        SL_DEBUG_LOG_V2(INFO, "MAC Address:%s \r\n", (uintptr_t)mac_id);
 
         GLIB_drawStringOnLine(&glibContext, "", currentLine++, GLIB_ALIGN_LEFT, 5, 5, true);
 
@@ -1076,7 +1127,7 @@ void wifi_app_task(void)
         //! initiating power save in BLE mode
         status = rsi_bt_power_save_profile(PSP_MODE, PSP_TYPE);
         if (status != RSI_SUCCESS) {
-          LOG_PRINT("\r\nFailed to initiate power save in BLE mode\r\n");
+          SL_DEBUG_LOG_V2(ERROR, "Failed to initiate power save in BLE mode\r\n");
         }
         uint32_t rc                                          = SL_STATUS_FAIL;
         sl_wifi_performance_profile_v2_t performance_profile = { .profile         = ASSOCIATED_POWER_SAVE_LOW_LATENCY,
@@ -1084,9 +1135,9 @@ void wifi_app_task(void)
 
         rc = sl_wifi_set_performance_profile_v2(&performance_profile);
         if (rc != SL_STATUS_OK) {
-          printf("\r\nPower save configuration Failed, Error Code : 0x%lX\r\n", rc);
+          SL_DEBUG_LOG_V2(ERROR, "Power save configuration Failed, Error Code : 0x%lX\r\n", rc);
         }
-        printf("\r\nAssociated power save enabled\r\n");
+        SL_DEBUG_LOG_V2(INFO, "Associated power save enabled\r\n");
         GLIB_drawStringOnLine(&glibContext, "", currentLine++, GLIB_ALIGN_LEFT, 5, 5, true);
         GLIB_drawStringOnLine(&glibContext, "NWP Lowpower enabled", currentLine++, GLIB_ALIGN_LEFT, 5, 5, true);
         DMD_updateDisplay();
@@ -1127,7 +1178,7 @@ void wifi_app_task(void)
 #if RSI_WISE_MCU_ENABLE
           rsi_flash_erase((uint32_t)FLASH_ADDR_TO_STORE_AP_DETAILS);
 #endif
-          LOG_PRINT("\r\nWLAN disconnected\r\n");
+          SL_DEBUG_LOG_V2(INFO, "WLAN disconnected\r\n");
           disassociated   = 1;
           connected       = 0;
           yield           = 0;
@@ -1136,7 +1187,7 @@ void wifi_app_task(void)
           wifi_app_send_to_ble(WIFI_APP_DISCONNECTION_NOTIFY, (uint8_t *)&disassociated, 1);
           wifi_app_set_event(WIFI_APP_UNCONNECTED_STATE);
         } else {
-          LOG_PRINT("\r\nWi-Fi disconnect failed, Error Code : 0x%lX\r\n", status);
+          SL_DEBUG_LOG_V2(ERROR, "Wi-Fi disconnect failed, Error Code : 0x%lX\r\n", status);
         }
       } break;
       default:

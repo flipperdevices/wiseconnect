@@ -83,7 +83,7 @@ sl_status_t wifi_bsd_socket_create_handler(console_args_t *arguments)
   int32_t socket_fd = socket(domain, type, protocol);
   VERIFY_BSD_STATUS(socket_fd);
 
-  printf("%ld", socket_fd);
+  SL_DEBUG_LOG_V2(INFO, "%ld", socket_fd);
   return SL_STATUS_OK;
 }
 
@@ -130,15 +130,11 @@ sl_status_t wifi_bsd_socket_accept_handler(console_args_t *arguments)
   int32_t status = accept(socket_fd, ((struct sockaddr *)&remote_socket_address), &socket_length);
   VERIFY_BSD_STATUS(status);
 
-  printf("\r\n Socket ID: %ld\n", status);
+  SL_DEBUG_LOG_V2(INFO, " Socket ID: %ld\r\n", status);
   if (socket_length == sizeof(struct sockaddr_in)) {
     const uint8_t *ip_address = (const uint8_t *)&remote_socket_address.sin_addr.s_addr;
-    printf("%u.%u.%u.%u:%u",
-           ip_address[0],
-           ip_address[1],
-           ip_address[2],
-           ip_address[3],
-           remote_socket_address.sin_port);
+    SL_DEBUG_LOG_V2(INFO, "%u.%u.", ip_address[0], ip_address[1]);
+    SL_DEBUG_LOG_V2(INFO, "%u.%u:%u", ip_address[2], ip_address[3], remote_socket_address.sin_port);
   }
 
   return SL_STATUS_OK;
@@ -155,9 +151,10 @@ sl_status_t wifi_bsd_socket_receive_from_handler(console_args_t *arguments)
   VERIFY_BSD_STATUS(status);
 
   memcpy(&ip.value, &address.sin_addr.s_addr, SL_IPV4_ADDRESS_LENGTH);
-  printf("%u.%u.%u.%u:%u\r\n", ip.bytes[0], ip.bytes[1], ip.bytes[2], ip.bytes[3], address.sin_port);
+  SL_DEBUG_LOG_V2(INFO, "%u.%u.", ip.bytes[0], ip.bytes[1]);
+  SL_DEBUG_LOG_V2(INFO, "%u.%u:%u", ip.bytes[2], ip.bytes[3], address.sin_port);
 
-  printf("Received:%s", buffer);
+  SL_DEBUG_LOG_V2(INFO, "Received:%s", (uintptr_t)buffer);
   return SL_STATUS_OK;
 }
 
@@ -168,7 +165,7 @@ sl_status_t wifi_bsd_socket_receive_handler(console_args_t *arguments)
   int32_t status = recv(sock_fd, buffer, sizeof(buffer), 0);
   VERIFY_BSD_STATUS(status);
 
-  printf("Received:%s", buffer);
+  SL_DEBUG_LOG_V2(INFO, "Received:%s", (uintptr_t)buffer);
   return SL_STATUS_OK;
 }
 
@@ -182,7 +179,7 @@ sl_status_t wifi_bsd_socket_send_handler(console_args_t *arguments)
 
   VERIFY_BSD_STATUS(status);
 
-  printf("%ld bytes sent", status);
+  SL_DEBUG_LOG_V2(INFO, "%ld bytes sent", status);
 
   return SL_STATUS_OK;
 }
@@ -210,7 +207,7 @@ sl_status_t wifi_bsd_socket_send_to_handler(console_args_t *arguments)
   int32_t status = sendto(sock_fd, buffer, strlen(buffer), 0, (const struct sockaddr *)&address, sizeof(address));
   VERIFY_BSD_STATUS(status);
 
-  printf("%ld bytes sent", status);
+  SL_DEBUG_LOG_V2(INFO, "%ld bytes sent", status);
 
   return SL_STATUS_OK;
 }
@@ -261,7 +258,8 @@ sl_status_t wifi_bsd_get_host_by_name_handler(console_args_t *arguments)
 
   print_sl_ip_address((sl_ip_address_t *)host_ent->h_addr);
 
-  printf("host_name: %s, h_errno:%d, type:%d, length:%d", host_name, h_errno, host_ent->h_addrtype, host_ent->h_length);
+  SL_DEBUG_LOG_V2(DEBUG, "host_name: %s, h_errno:%d", (uintptr_t)host_name, h_errno);
+  SL_DEBUG_LOG_V2(DEBUG, "type:%d, length:%d", host_ent->h_addrtype, host_ent->h_length);
 
   return SL_STATUS_OK;
 #else
@@ -285,8 +283,9 @@ sl_status_t wifi_bsd_get_sock_name(console_args_t *arguments)
   if (socket_length == sizeof(struct sockaddr_in)) {
     uint8_t *ip_address = (uint8_t *)&socket_address.sin_addr.s_addr;
 
-    printf("\n\rIP address %u:%u:%u:%u", ip_address[0], ip_address[1], ip_address[2], ip_address[3]);
-    printf("\n\rPort %d", socket_address.sin_port);
+    SL_DEBUG_LOG_V2(INFO, "IP address %u:%u:", ip_address[0], ip_address[1]);
+    SL_DEBUG_LOG_V2(INFO, "%u:%u", ip_address[2], ip_address[3]);
+    SL_DEBUG_LOG_V2(INFO, "Port %d", socket_address.sin_port);
   }
 
   return SL_STATUS_OK;
@@ -306,12 +305,12 @@ sl_status_t wifi_bsd_select_handler(console_args_t *arguments)
   VERIFY_BSD_STATUS(retval);
 
   if (retval == 0) {
-    printf("Timeout");
+    SL_DEBUG_LOG_V2(INFO, "Timeout");
   } else {
-    printf("Data is available on sockets: ");
+    SL_DEBUG_LOG_V2(INFO, "Data is available on sockets: ");
     for (int i = 0; i < nfds; i++) {
       if (FD_ISSET(i, &readfds)) {
-        printf("%d, ", i);
+        SL_DEBUG_LOG_V2(INFO, "%d, ", i);
       }
       FD_CLR(i, &readfds);
     }
@@ -329,7 +328,7 @@ sl_status_t wifi_bsd_socket_get_opt_handler(console_args_t *arguments)
   int32_t socket_status = getsockopt(socket, SOL_SOCKET, option_name, &option_value, &length);
   VERIFY_BSD_STATUS(socket_status);
 
-  printf("%lu", option_value);
+  SL_DEBUG_LOG_V2(INFO, "%lu", option_value);
 
   return SL_STATUS_OK;
 }
@@ -349,8 +348,9 @@ sl_status_t wifi_bsd_get_peer_name(console_args_t *arguments)
   if (socket_length == sizeof(struct sockaddr_in)) {
     uint8_t *ip_address = (uint8_t *)&remote_socket_address.sin_addr.s_addr;
 
-    printf("\n\rIP address %d:%d:%d:%d", ip_address[0], ip_address[1], ip_address[2], ip_address[3]);
-    printf("\n\rPort %d", remote_socket_address.sin_port);
+    SL_DEBUG_LOG_V2(INFO, "IP address %d:%d:", ip_address[0], ip_address[1]);
+    SL_DEBUG_LOG_V2(INFO, "%d:%d", ip_address[2], ip_address[3]);
+    SL_DEBUG_LOG_V2(INFO, "Port %d", remote_socket_address.sin_port);
   }
 
   return SL_STATUS_OK;
@@ -370,5 +370,5 @@ sl_status_t wifi_bsd_socket_set_opt_handler(console_args_t *arguments)
 
 static inline void print_errno(void)
 {
-  printf("errno: %d", errno);
+  SL_DEBUG_LOG_V2(ERROR, "errno: %d", errno);
 }

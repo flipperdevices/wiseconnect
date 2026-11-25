@@ -28,6 +28,9 @@
 ******************************************************************************/
 
 // Include Files
+#if defined(__ZEPHYR__) || defined(SL_CATALOG_KERNEL_PRESENT)
+#include "sl_cmsis_utility.h"
+#endif
 
 #include "rsi_ccp_user_config.h"
 
@@ -35,6 +38,7 @@
 #include "rsi_qspi.h"
 #include "rsi_efuse.h"
 #include "rsi_rom_timer.h"
+#include "sl_code_classification.h"
 
 // static function prototype
 static void qspi_aes_encrypt_decrypt_standalone(qspi_reg_t *qspi_reg,
@@ -56,6 +60,7 @@ static void qspi_aes_encrypt_decrypt_standalone(qspi_reg_t *qspi_reg,
  * @brief        This API used to initialise the Efuse program of input output mode  
  * @return       none
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_RSILIB_QSPI, SL_CODE_CLASS_TIME_CRITICAL)
 void initialise_m4_efuse_in_io_mode()
 {
   M4SS_CLK_ENABLE_SET_3_REG = EFUSE_CLK_BIT | EFUSE_PCLK_BIT;
@@ -76,6 +81,7 @@ void initialise_m4_efuse_in_io_mode()
  * @param[in]    len : length 
  * @return       none
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_RSILIB_QSPI, SL_CODE_CLASS_TIME_CRITICAL)
 void rsi_cmemcpy(uint8_t *dst, uint8_t *src, uint32_t len)
 {
   while (len--) {
@@ -93,6 +99,7 @@ void rsi_cmemcpy(uint8_t *dst, uint8_t *src, uint32_t len)
  * @param[in]    cs_no         :  chip select number  
  * @return       none
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_RSILIB_QSPI, SL_CODE_CLASS_TIME_CRITICAL)
 void qspi_write_to_flash(qspi_reg_t *qspi_reg, uint32_t len_in_bits, uint32_t cmd_addr_data, uint32_t cs_no)
 {
   // length of the word to be programmed
@@ -115,6 +122,7 @@ void qspi_write_to_flash(qspi_reg_t *qspi_reg, uint32_t len_in_bits, uint32_t cm
  * @param[in]    cs_no     :  chip select number  
  * @return       none
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_RSILIB_QSPI, SL_CODE_CLASS_TIME_CRITICAL)
 void qspi_switch_qspi2(qspi_reg_t *qspi_reg, uint32_t mode, uint32_t cs_no)
 {
   uint32_t qspi_manual_config_reg;
@@ -145,6 +153,7 @@ void qspi_switch_qspi2(qspi_reg_t *qspi_reg, uint32_t mode, uint32_t cs_no)
  * @param[in]    wr_reg_delay_ms :   read and write register delay in milisecond 
  * @return       return flash_status for success
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_RSILIB_QSPI, SL_CODE_CLASS_TIME_CRITICAL)
 uint32_t qspi_wait_flash_status_Idle(qspi_reg_t *qspi_reg, spi_config_t *spi_config, uint32_t wr_reg_delay_ms)
 {
   (void)wr_reg_delay_ms;
@@ -260,6 +269,7 @@ uint32_t qspi_wait_flash_status_Idle(qspi_reg_t *qspi_reg, spi_config_t *spi_con
  * @param[in]    cs_no          : chip select 
  * @return       none
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_RSILIB_QSPI, SL_CODE_CLASS_TIME_CRITICAL)
 void qspi_enable_status_reg_write(qspi_reg_t *qspi_reg, uint32_t flash_type, spi_config_t *spi_config, uint32_t cs_no)
 {
   (void)flash_type;
@@ -286,6 +296,7 @@ void qspi_enable_status_reg_write(qspi_reg_t *qspi_reg, uint32_t flash_type, spi
  * @param[in]    wr_reg_delay_ms :   register delay in milisecond 
  * @return       none
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_RSILIB_QSPI, SL_CODE_CLASS_TIME_CRITICAL)
 void qspi_status_reg_write(qspi_reg_t *qspi_reg,
                            uint32_t write_value,
                            spi_config_t *spi_config,
@@ -326,7 +337,7 @@ void qspi_status_reg_write(qspi_reg_t *qspi_reg,
     // enable status reg write
     qspi_enable_status_reg_write(qspi_reg, spi_config->spi_config_1.flash_type, spi_config, cs_no);
 #if 0       
-		if ((flash_type == WBOND_QUAD_FLASH)) {
+		if (flash_type == WBOND_QUAD_FLASH) {
 			qspi_func->write_to_flash(qspi_reg, CMD_LEN, WREN, cs_no);   
 			DEASSERT_CSN;
 		}
@@ -382,6 +393,7 @@ void qspi_status_reg_write(qspi_reg_t *qspi_reg,
  * @param[in]    spi_config      :   pointer to the different configuration 
  * @return       return rd_config if success
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_RSILIB_QSPI, SL_CODE_CLASS_TIME_CRITICAL)
 uint32_t qspi_flash_reg_read(qspi_reg_t *qspi_reg, uint8_t reg_read_cmd, uint32_t cs_no, spi_config_t *spi_config)
 {
   (void)spi_config;
@@ -439,6 +451,7 @@ uint32_t qspi_flash_reg_read(qspi_reg_t *qspi_reg, uint8_t reg_read_cmd, uint32_
  * @return       none
  */
 
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_RSILIB_QSPI, SL_CODE_CLASS_TIME_CRITICAL)
 void qspi_flash_reg_write(qspi_reg_t *qspi_reg,
                           uint32_t reg_write_cmd,
                           uint32_t reg_write_value,
@@ -466,6 +479,7 @@ void qspi_flash_reg_write(qspi_reg_t *qspi_reg,
  * @param[in]    operating_mode      :   operating mode
  * @return       none
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_RSILIB_QSPI, SL_CODE_CLASS_TIME_CRITICAL)
 void RSI_QSPI_UpdateOperatingMode_and_ResetType(qspi_reg_t *qspi_reg, uint32_t operating_mode)
 {
   uint32_t bbff_storage2;
@@ -491,6 +505,7 @@ void RSI_QSPI_UpdateOperatingMode_and_ResetType(qspi_reg_t *qspi_reg, uint32_t o
  * @param[in]    cs_no      :   chip select number
  * @return       note
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_RSILIB_QSPI, SL_CODE_CLASS_TIME_CRITICAL)
 void RSI_QSPI_ResetFlash(qspi_reg_t *qspi_reg, uint32_t cs_no)
 {
   uint32_t operating_mode, reset_type, flash_oper_mode;
@@ -674,6 +689,7 @@ void RSI_QSPI_ResetFlash(qspi_reg_t *qspi_reg, uint32_t cs_no)
  * @param[in]    flash_type      :   flash type
  * @return       none
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_RSILIB_QSPI, SL_CODE_CLASS_TIME_CRITICAL)
 void qspi_set_flash_mode(qspi_reg_t *qspi_reg,
                          uint32_t data_mode,
                          uint32_t cs_no,
@@ -696,7 +712,7 @@ void qspi_set_flash_mode(qspi_reg_t *qspi_reg,
     enable_bus_mode = EQIO;
     reset_bus_mode  = RSTQIO;
   }
-  if ((data_mode == QUAD_MODE)) {
+  if (data_mode == QUAD_MODE) {
     qspi_write_to_flash(qspi_reg, QSPI_8BIT_LEN, enable_bus_mode, cs_no);
 
     DEASSERT_CSN;
@@ -760,6 +776,7 @@ void qspi_set_flash_mode(qspi_reg_t *qspi_reg,
  * @param[in]    wr_reg_delay_ms :   register delay in milisecond 
  * @return       none
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_RSILIB_QSPI, SL_CODE_CLASS_TIME_CRITICAL)
 void qspi_status_control_reg_write(spi_config_t *spi_config,
                                    qspi_reg_t *qspi_reg,
                                    uint16_t write_command,
@@ -804,6 +821,7 @@ void qspi_status_control_reg_write(spi_config_t *spi_config,
  * @param[in]    num_prot_bytes  :   number of protection bytes
  * @return       none
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_RSILIB_QSPI, SL_CODE_CLASS_TIME_CRITICAL)
 void qspi_write_block_protect(qspi_reg_t *qspi_reg,
                               uint32_t protect,
                               uint32_t cs_no,
@@ -838,6 +856,7 @@ void qspi_write_block_protect(qspi_reg_t *qspi_reg,
  * @param[in]    addr            :   address of configuration flash 
  * @return       none
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_RSILIB_QSPI, SL_CODE_CLASS_TIME_CRITICAL)
 void qspi_config_qflash4_read(qspi_reg_t *qspi_reg, spi_config_t *spi_config, uint32_t addr)
 {
   uint32_t dummy_cnt, tmp_dummy;
@@ -985,6 +1004,7 @@ void qspi_config_qflash4_read(qspi_reg_t *qspi_reg, spi_config_t *spi_config, ui
  * @param[in]    mode         :  mode
  * @return       none
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_RSILIB_QSPI, SL_CODE_CLASS_TIME_CRITICAL)
 void RSI_QSPI_GPDMA_Init(uint32_t hsize, uint32_t ch_no, uint32_t mode)
 {
   GPDMA_C->CHANNEL_CONFIG[ch_no].FIFO_CONFIG_REGS_b.FIFO_SIZE      = 8;
@@ -1027,6 +1047,7 @@ void RSI_QSPI_GPDMA_Init(uint32_t hsize, uint32_t ch_no, uint32_t mode)
  * @param[in]    ch_no      :   channel number
  * @return       none
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_RSILIB_QSPI, SL_CODE_CLASS_TIME_CRITICAL)
 void RSI_QSPI_GPDMA_ReadFromFifo(uint32_t src, uint32_t dst, uint32_t len, uint32_t ch_no)
 {
   // Set src and dest in given channel
@@ -1052,6 +1073,7 @@ void RSI_QSPI_GPDMA_ReadFromFifo(uint32_t src, uint32_t dst, uint32_t len, uint3
  * @param[in]    ch_no          :   channel number
  * @return       none
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_RSILIB_QSPI, SL_CODE_CLASS_TIME_CRITICAL)
 void RSI_QSPI_ReadFromFifo(uint32_t udma_read, void *udmaHandle, void *gpdmaHandle, uint32_t ch_no)
 {
   if (udma_read) {
@@ -1096,6 +1118,7 @@ void RSI_QSPI_ReadFromFifo(uint32_t udma_read, void *udmaHandle, void *gpdmaHand
  * @param[in]    gpdmaHandle     :   pointer to general purpose DMA controller
  * @return       none
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_RSILIB_QSPI, SL_CODE_CLASS_TIME_CRITICAL)
 void qspi_manual_read(qspi_reg_t *qspi_reg,
                       spi_config_t *spi_config,
                       uint32_t addr,
@@ -1269,6 +1292,7 @@ void qspi_manual_read(qspi_reg_t *qspi_reg,
  * @param[in]    cs_no             : chip select number
  * @return       none
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_RSILIB_QSPI, SL_CODE_CLASS_TIME_CRITICAL)
 void RSI_QSPI_WrapInit( qspi_reg_t *qspi_reg, uint32_t wrap_len_in_bytes, uint32_t cs_no)
 {
 	// send SET_BURST cmd to flash to initialize wrap
@@ -1286,6 +1310,7 @@ void RSI_QSPI_WrapInit( qspi_reg_t *qspi_reg, uint32_t wrap_len_in_bytes, uint32
  * @param[in]    qspi_reg        :   qsi register pointer to the qspi enable auto mode 
  * @return       none
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_RSILIB_QSPI, SL_CODE_CLASS_TIME_CRITICAL)
 void RSI_QSPI_AutoModeEn(qspi_reg_t *qspi_reg)
 {
   if (!(qspi_reg->QSPI_STATUS_REG & HW_CTRLD_QSPI_MODE_CTRL_SCLK)) {
@@ -1304,6 +1329,7 @@ void RSI_QSPI_AutoModeEn(qspi_reg_t *qspi_reg)
  * @param[in]    spi_config      :   pointer to the SPI configuration 
  * @return       none
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_RSILIB_QSPI, SL_CODE_CLASS_TIME_CRITICAL)
 void qspi_auto_init(qspi_reg_t *qspi_reg, spi_config_t *spi_config)
 {
   uint32_t offset;
@@ -1464,6 +1490,7 @@ void qspi_auto_init(qspi_reg_t *qspi_reg, spi_config_t *spi_config)
  * @param[in]    dma_flags     :   dma flags 
  * @return       none
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_RSILIB_QSPI, SL_CODE_CLASS_TIME_CRITICAL)
 void qspi_auto_read(uint32_t cs_no,
                     uint32_t addr,
                     uint8_t *data,
@@ -1559,6 +1586,7 @@ void qspi_auto_read(uint32_t cs_no,
  * @param[in]    wr_reg_delay_ms :   register delay in milisecond 
  * @return       none
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_RSILIB_QSPI, SL_CODE_CLASS_TIME_CRITICAL)
 void qspi_flash_init(qspi_reg_t *qspi_reg, spi_config_t *spi_config, uint32_t wr_reg_delay_ms)
 {
   uint32_t reg_cfg  = 0;
@@ -1982,6 +2010,7 @@ void qspi_flash_init(qspi_reg_t *qspi_reg, spi_config_t *spi_config, uint32_t wr
  * @param[in]    qspi_reg        :   qsi register pointer to the qspi read data 
  * @return       none
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_RSILIB_QSPI, SL_CODE_CLASS_TIME_CRITICAL)
 void RSI_QSPI_ConfigQspiDll(spi_config_t *spi_config, qspi_reg_t *qspi_reg)
 {
   uint32_t delay = 10;
@@ -2015,6 +2044,7 @@ void RSI_QSPI_ConfigQspiDll(spi_config_t *spi_config, qspi_reg_t *qspi_reg)
  * @param[in]    fifo_thrsld     :   threshold FIFO
  * @return       none
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_RSILIB_QSPI, SL_CODE_CLASS_TIME_CRITICAL)
 void qspi_spi_init(qspi_reg_t *qspi_reg,
                    spi_config_t *spi_config,
                    uint32_t flash_init_req,
@@ -2165,6 +2195,7 @@ void qspi_spi_init(qspi_reg_t *qspi_reg,
  * @param[in]    wr_reg_delay_ms :   register delay in milisecond
  * @return       none
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_RSILIB_QSPI, SL_CODE_CLASS_TIME_CRITICAL)
 void qspi_spi_erase(qspi_reg_t *qspi_reg,
                     spi_config_t *spi_config,
                     uint32_t erase_cmd,
@@ -2312,6 +2343,7 @@ void qspi_spi_erase(qspi_reg_t *qspi_reg,
  * @param[in]    gpdmaHandle     :   pointer to general purpose DMA controller
  * @return       status
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_RSILIB_QSPI, SL_CODE_CLASS_TIME_CRITICAL)
 uint32_t qspi_spi_write(qspi_reg_t *qspi_reg,
                         spi_config_t *spi_config,
                         uint32_t write_cmd,
@@ -2619,6 +2651,7 @@ uint32_t qspi_spi_write(qspi_reg_t *qspi_reg,
  * @param[in]    gpdmaHandle     :   pointer to general purpose DMA controller 
  * @return       none
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_RSILIB_QSPI, SL_CODE_CLASS_TIME_CRITICAL)
 void qspi_spi_read(qspi_reg_t *qspi_reg,
                    spi_config_t *spi_config,
                    uint32_t addr,
@@ -2644,6 +2677,7 @@ void qspi_spi_read(qspi_reg_t *qspi_reg,
  *  @brief   This API is used to configure the qspi timer.
  *  @return  none
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_RSILIB_QSPI, SL_CODE_CLASS_TIME_CRITICAL)
 void RSI_QSPI_TIMER_Config(void)
 {
   // Timer clock config 32Mhz clock
@@ -2666,8 +2700,12 @@ void RSI_QSPI_TIMER_Config(void)
  * @param[in]  delay   : delay
  * @return     none
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_RSILIB_QSPI, SL_CODE_CLASS_TIME_CRITICAL)
 void qspi_usleep(uint32_t delay)
 {
+#if defined(__ZEPHYR__) || defined(SL_CATALOG_KERNEL_PRESENT)
+  osDelay(SLI_SYSTEM_US_TO_TICKS(delay));
+#else
   // Micro seconds delay
   RSI_TIMERS_SetMatch(TIMERS, TIMER_0, delay);
   // Start timer
@@ -2675,10 +2713,12 @@ void qspi_usleep(uint32_t delay)
   // Wait for time out
   while (!RSI_TIMERS_InterruptStatus(TIMERS, TIMER_0))
     ;
+#endif
 }
 
 #if defined(SLI_SI917)
 #if defined(SLI_SI917B0)
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_RSILIB_QSPI, SL_CODE_CLASS_TIME_CRITICAL)
 void qspi_qspiload_key(qspi_reg_t *qspi_reg,
                        uint8_t mode,
                        uint32_t *key1,
@@ -2743,6 +2783,7 @@ void qspi_qspiload_key(qspi_reg_t *qspi_reg,
  * @param[in]   kh_enable      :   enable key
  * @return      none
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_RSILIB_QSPI, SL_CODE_CLASS_TIME_CRITICAL)
 void qspi_qspiload_key(qspi_reg_t *qspi_reg, uint8_t mode, uint32_t *key, uint32_t kh_enable)
 {
   uint32_t key_valid;
@@ -2785,6 +2826,7 @@ void qspi_qspiload_key(qspi_reg_t *qspi_reg, uint8_t mode, uint32_t *key, uint32
  * @param[in]   kh_enable      :   enable key
  * @return      none
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_RSILIB_QSPI, SL_CODE_CLASS_TIME_CRITICAL)
 void qspi_qspiload_key(qspi_reg_t *qspi_reg, uint32_t *key, uint32_t kh_enable)
 {
   qspi_reg->QSPI_AES_KEY_0_3 = *key++;
@@ -2803,6 +2845,7 @@ void qspi_qspiload_key(qspi_reg_t *qspi_reg, uint32_t *key, uint32_t kh_enable)
  * @param[in]   nonce          :   pointer to bus controller
  * @return      none 
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_RSILIB_QSPI, SL_CODE_CLASS_TIME_CRITICAL)
 void qspi_qspiload_nonce(qspi_reg_t *qspi_reg, uint32_t *nonce)
 {
   (void)qspi_reg;
@@ -2826,6 +2869,7 @@ void qspi_qspiload_nonce(qspi_reg_t *qspi_reg, uint32_t *nonce)
  * @param[in]   end_addr       :   end the address 
  * @return      none
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_RSILIB_QSPI, SL_CODE_CLASS_TIME_CRITICAL)
 void qspi_seg_sec_en(qspi_reg_t *qspi_reg, uint32_t seg_no, uint32_t start_addr, uint32_t end_addr)
 {
   qspi_reg->OCTA_SPI_BUS_CONTROLLER2 |= (BIT(seg_no) << EN_SEG_SEC); // enabling security for segment
@@ -2846,6 +2890,7 @@ void qspi_seg_sec_en(qspi_reg_t *qspi_reg, uint32_t seg_no, uint32_t start_addr,
  * @param[in]   end_addr       :   end the address 
  * @return      none
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_RSILIB_QSPI, SL_CODE_CLASS_TIME_CRITICAL)
 void qspi_seg_sec_en(qspi_reg_t *qspi_reg, uint32_t seg_no, uint32_t start_addr, uint32_t end_addr)
 {
   qspi_reg->OCTA_SPI_BUS_CONTROLLER2 |= (BIT(seg_no) << EN_SEG_SEC); // enabling security for segment
@@ -2864,6 +2909,7 @@ void qspi_seg_sec_en(qspi_reg_t *qspi_reg, uint32_t seg_no, uint32_t start_addr,
  * @param[in]   length         :   length of semi auto mode 
  * @return      none
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_RSILIB_QSPI, SL_CODE_CLASS_TIME_CRITICAL)
 void qspi_semi_auto_mode_config(qspi_reg_t *qspi_reg, uint32_t addr, uint32_t hsize, uint32_t bsize, uint32_t length)
 {
   while (qspi_reg->QSPI_STATUS_REG & BUSY)
@@ -2884,6 +2930,7 @@ void qspi_semi_auto_mode_config(qspi_reg_t *qspi_reg, uint32_t addr, uint32_t hs
  * @param[in]   cs_no          :   chip select number
  * @return      none
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_RSILIB_QSPI, SL_CODE_CLASS_TIME_CRITICAL)
 void RSI_QSPI_ProtectAdesto(spi_config_t *spi_config, qspi_reg_t *qspi_reg, uint32_t protection, uint32_t cs_no)
 {
   uint32_t addr = 0;
@@ -2933,6 +2980,7 @@ void RSI_QSPI_ProtectAdesto(spi_config_t *spi_config, qspi_reg_t *qspi_reg, uint
  * @param[in]    wr_reg_delay_ms :   register delay in milisecond
  * @return       none
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_RSILIB_QSPI, SL_CODE_CLASS_TIME_CRITICAL)
 void qspi_flash_protection(spi_config_t *spi_config, qspi_reg_t *qspi_reg, uint32_t prot, uint32_t wr_reg_delay_ms)
 {
   uint32_t flash_status = 0, flash_status2 = 0, i = 0;
@@ -2994,6 +3042,7 @@ skip_status_reg_write:
  * @brief        This API used to qspi data configuration
  * @return       none
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_RSILIB_QSPI, SL_CODE_CLASS_TIME_CRITICAL)
 void RSI_QSPI_DdrPadConfig()
 {
   M4_DDR_PAD_CONFIG(qspi_ddr_data_0) = 0x00;
@@ -3016,6 +3065,7 @@ void RSI_QSPI_DdrPadConfig()
  * @brief        This API used to qspi octo mode control
  * @return       none
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_RSILIB_QSPI, SL_CODE_CLASS_TIME_CRITICAL)
 void RSI_QSPI_DdrPad()
 {
   M4SS_QSPI_OCTA_MODE_CTRL = BIT(0);
@@ -3059,6 +3109,7 @@ const ROM_QSPI_API_T qspi_api =
 typedef int dummy; // To remove empty translation unit warning.
 #endif // QSPI_ROMDRIVER_PRESENT
 
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_RSILIB_QSPI, SL_CODE_CLASS_TIME_CRITICAL)
 static void qspi_aes_encrypt_decrypt_standalone(qspi_reg_t *qspi_reg,
                                                 uint8_t aes_mode,
                                                 bool encrypt,
@@ -3186,6 +3237,7 @@ static void qspi_aes_encrypt_decrypt_standalone(qspi_reg_t *qspi_reg,
  * @section description
  * This api is used to encrypt or decrypt the input data with QSPI standalone AES
  */
+SL_CODE_CLASSIFY(SL_CODE_COMPONENT_RSILIB_QSPI, SL_CODE_CLASS_TIME_CRITICAL)
 uint32_t RSI_QSPI_Aes_Encrypt_Decrypt_Standalone(qspi_reg_t *qspi_reg,
                                                  qspi_standalone_config_t *configs,
                                                  uint32_t *in_data,

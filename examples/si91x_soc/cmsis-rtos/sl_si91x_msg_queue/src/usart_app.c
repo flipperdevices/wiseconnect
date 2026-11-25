@@ -15,6 +15,7 @@
  *
  ******************************************************************************/
 
+#include <inttypes.h>
 #include "app.h"
 #include "sl_si91x_usart.h"
 #include "rsi_debug.h"
@@ -34,17 +35,17 @@
 static uint8_t usart_data_in[BUFFER_SIZE];
 static uint8_t usart_data_out[BUFFER_SIZE];
 
-volatile boolean_t send_complete = false, transfer_complete = false, receive_complete = false;
+static volatile boolean_t send_complete = false, transfer_complete = false, receive_complete = false;
 static boolean_t begin_transmission = true;
 
 /*******************************************************************************
  **********************  Local Function prototypes   ***************************
  ******************************************************************************/
-void callback_event(uint32_t event);
+static void callback_event(uint32_t event);
 /*******************************************************************************
  **************************   GLOBAL VARIABLES   *******************************
  ******************************************************************************/
-sl_usart_handle_t usart_handle;
+static sl_usart_handle_t usart_handle;
 usart_mode_enum_t current_mode = SL_SEND_DATA;
 
 osMessageQueueId_t mid_usart_msg_queue;      // message queue id
@@ -74,29 +75,36 @@ void usart_example_init(void)
     // Initialize the USART
     status = sl_si91x_usart_init(USART_0, &usart_handle);
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("sl_si91x_usart_initialize: Error Code : %lu \n", status);
+      SL_PRINT_STRING_ERROR("sl_si91x_usart_initialize: Error Code : %" PRIu32 " \n", (uint32_t)status);
       break;
     }
-    DEBUGOUT("USART initialization is successful \n");
+
+    /* Note: All status messages in this example — both success and failure — are
+ * intentionally emitted via SL_PRINT_STRING_ERROR so that they remain visible
+ * on the console at the default log level. This is a demonstration choice, not
+ * a recommendation: in production code, ERROR severity should be reserved for
+ * actual failures, with successful operations logged via SL_PRINT_STRING_INFO
+ * (or SL_PRINT_STRING_DEBUG for verbose trace). */
+    SL_PRINT_STRING_ERROR("USART initialization is successful \n");
     // Configure the USART configurations
     status = sl_si91x_usart_set_configuration(usart_handle, &usart_config);
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("sl_si91x_usart_set_configuration: Error Code : %lu \n", status);
+      SL_PRINT_STRING_ERROR("sl_si91x_usart_set_configuration: Error Code : %" PRIu32 " \n", (uint32_t)status);
       break;
     }
-    DEBUGOUT("USART configuration is successful \n");
+    SL_PRINT_STRING_ERROR("USART configuration is successful \n");
     // Register user callback function
     status = sl_si91x_usart_register_event_callback(callback_event);
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("sl_si91x_usart_register_event_callback: Error Code : %lu \n", status);
+      SL_PRINT_STRING_ERROR("sl_si91x_usart_register_event_callback: Error Code : %" PRIu32 " \n", (uint32_t)status);
       break;
     }
-    DEBUGOUT("USART user event callback registered successfully \n");
+    SL_PRINT_STRING_ERROR("USART user event callback registered successfully \n");
     sl_si91x_usart_get_configurations(USART_0, &get_config);
 #if SL_USART_SYNCH_MODE
-    DEBUGOUT("Baud Rate = %ld \n", (get_config.baudrate << 3));
+    SL_PRINT_STRING_ERROR("Baud Rate = %" PRIu32 " \n", (get_config.baudrate << 3));
 #else
-    DEBUGOUT("Baud Rate = %ld \n", get_config.baudrate);
+    SL_PRINT_STRING_ERROR("Baud Rate = %" PRIu32 " \n", get_config.baudrate);
 #endif
 
     // create and initialize message queue object for USART Rx msgs
@@ -126,18 +134,19 @@ void usart_example_process_action(void)
         // wait for the usart_data_out buffer to be filled from i2c reception
         os_status = osMessageQueueGet(mid_i2c_msg_queue, usart_data_out, NULL, osWaitForever); // wait for message
         if (os_status != osOK) {
-          DEBUGOUT("I2C Message Queue read failed\n");
+          SL_PRINT_STRING_ERROR("I2C Message Queue read failed\n");
           break;
         }
 
-        DEBUGOUT("USART_Task: Data read from I2C_Message_Queue successfully and performing loopback\n");
+        SL_PRINT_STRING_ERROR("USART_Task: Data read from I2C_Message_Queue "
+                              "successfully and performing loopback\n");
 
         // Validation for executing the API only once
         if (begin_transmission == true) {
           status = sl_si91x_usart_send_data(usart_handle, usart_data_out, sizeof(usart_data_out));
           if (status != SL_STATUS_OK) {
             // If it fails to execute the API, it will not execute rest of the things
-            DEBUGOUT("sl_si91x_usart_send_data: Error Code : %lu \n", status);
+            SL_PRINT_STRING_ERROR("sl_si91x_usart_send_data: Error Code : %" PRIu32 " \n", (uint32_t)status);
             current_mode = SL_TRANSMISSION_COMPLETED;
             break;
           }
@@ -146,7 +155,7 @@ void usart_example_process_action(void)
 
         send_complete = false;
 
-        DEBUGOUT("USART send completed successfully \n");
+        SL_PRINT_STRING_ERROR("USART send completed successfully \n");
 
         if (USE_RECEIVE) {
           // If receive macro is enabled, current mode is set to receive
@@ -167,35 +176,36 @@ void usart_example_process_action(void)
           status = sl_si91x_usart_receive_data(usart_handle, usart_data_in, sizeof(usart_data_in));
           if (status != SL_STATUS_OK) {
             // If it fails to execute the API, it will not execute rest of the things
-            DEBUGOUT("sl_si91x_usart_receive_data: Error Code : %lu \n", status);
+            SL_PRINT_STRING_ERROR("sl_si91x_usart_receive_data: Error Code : %" PRIu32 " \n", (uint32_t)status);
             current_mode = SL_TRANSMISSION_COMPLETED;
             break;
           }
-          DEBUGOUT("USART receive begin successfully \n");
+          SL_PRINT_STRING_ERROR("USART receive begin successfully \n");
           begin_transmission = false;
         }
         //Waiting till the receive is completed
         if (receive_complete) {
-          // Update the receive compelete flag with 0.
+          // Update the receive complete flag with 0.
           receive_complete = false;
 
           if (USE_SEND) {
             // If send macro is enabled, current mode is set to send
             current_mode       = SL_SEND_DATA;
             begin_transmission = true;
-            DEBUGOUT("USART receive completed \n");
+            SL_PRINT_STRING_ERROR("USART receive completed \n");
             break;
           }
 
-          DEBUGOUT("USART receive completed \n");
+          SL_PRINT_STRING_ERROR("USART receive completed \n");
 
           // put the received msg into MessageQueue which will be taken by I2C
           os_status = osMessageQueuePut(mid_usart_msg_queue, usart_data_in, 0U, 0U);
           if (os_status != osOK) {
-            DEBUGOUT("USART Message Queue write failed\n");
+            SL_PRINT_STRING_ERROR("USART Message Queue write failed\n");
             break;
           }
-          DEBUGOUT("USART_Task: USART Loopback data read successfully and written into USART_Message_Queue\n");
+          SL_PRINT_STRING_ERROR("USART_Task: USART Loopback data read successfully and written "
+                                "into USART_Message_Queue\n");
 
           // If send macro is not enabled, current mode is set to completed.
           current_mode = SL_TRANSMISSION_COMPLETED;
@@ -214,11 +224,11 @@ void usart_example_process_action(void)
           status = sl_si91x_usart_transfer_data(usart_handle, usart_data_out, usart_data_in, sizeof(usart_data_out));
           if (status != SL_STATUS_OK) {
             // If it fails to execute the API, it will not execute rest of the things
-            DEBUGOUT("sl_si91x_usart_transfer_data: Error Code : %lu \n", status);
+            SL_PRINT_STRING_ERROR("sl_si91x_usart_transfer_data: Error Code : %" PRIu32 " \n", (uint32_t)status);
             current_mode = SL_TRANSMISSION_COMPLETED;
             break;
           }
-          DEBUGOUT("USART transfer begin successfully \n");
+          SL_PRINT_STRING_ERROR("USART transfer begin successfully \n");
           begin_transmission = false;
         }
 
@@ -229,7 +239,7 @@ void usart_example_process_action(void)
 
           // At last current mode is set to completed.
           current_mode = SL_TRANSMISSION_COMPLETED;
-          DEBUGOUT("USART transfer completed \n");
+          SL_PRINT_STRING_ERROR("USART transfer completed \n");
         }
 #endif
         break;

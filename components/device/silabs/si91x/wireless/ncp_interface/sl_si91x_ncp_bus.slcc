@@ -1,9 +1,9 @@
 id: sl_si91x_ncp_bus
 package: wifi
 description: >
-  This component implements NCP communication interface to Si91x from the host MCU.
+  This component implements NCP communication interface to SiWx91x from the host MCU.
 
-label: Si91x NCP bus interface
+label: SiWx91x NCP bus interface
 category: Device|Si91x|Wireless|Network Stack
 quality: production
 metadata:

@@ -180,6 +180,12 @@ static sl_status_t nvm3_halFlashReadWords(nvm3_HalPtr_t nvmAdr, void *dst, size_
 
   /* Calling this function for flash read */
   halSta = rsi_flash_read(pSrc, pDst, wordCnt, 0);
+  if (halSta != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("nvm3_halFlashReadWords: rsi_flash_read failed "
+                          "st=0x%04lX,line no : %d\r\n",
+                          (unsigned long)halSta,
+                          (int)__LINE__);
+  }
   return halSta;
 }
 
@@ -198,6 +204,9 @@ static sl_status_t nvm3_halFlashWriteWords(nvm3_HalPtr_t nvmAdr, void const *src
   //check for pDst and pSrc address is valid or NULL
   if ((pDst == NULL) || (pSrc == NULL)) {
     halSta = SL_STATUS_NVM3_INVALID_ADDR;
+    SL_PRINT_STRING_ERROR("nvm3_halFlashWriteWords: invalid address st=0x%04lX,line no : %d\r\n",
+                          (unsigned long)halSta,
+                          (int)__LINE__);
   } else {
     /* Calling this function for flash write */
     halSta = rsi_flash_write(pDst, (unsigned char *)pSrc, byteCnt);
@@ -209,7 +218,22 @@ static sl_status_t nvm3_halFlashWriteWords(nvm3_HalPtr_t nvmAdr, void const *src
   if (halSta == SL_STATUS_OK) {
     if (memcmp((uint32_t *)data, pSrc, byteCnt) != 0) {
       halSta = SL_STATUS_FLASH_PROGRAM_FAILED;
+      SL_PRINT_STRING_ERROR("nvm3_halFlashWriteWords: verify failed st=0x%04lX,line no : %d\r\n",
+                            (unsigned long)halSta,
+                            (int)__LINE__);
     }
+  } else {
+    SL_PRINT_STRING_ERROR("nvm3_halFlashWriteWords: rsi_flash_write failed "
+                          "st=0x%04lX,line no : %d\r\n",
+                          (unsigned long)halSta,
+                          (int)__LINE__);
+  }
+#else
+  if (((pDst != NULL) && (pSrc != NULL)) && (halSta != SL_STATUS_OK)) {
+    SL_PRINT_STRING_ERROR("nvm3_halFlashWriteWords: rsi_flash_write failed "
+                          "st=0x%04lX,line no : %d\r\n",
+                          (unsigned long)halSta,
+                          (int)__LINE__);
   }
 #endif
   return halSta;
@@ -225,6 +249,9 @@ static sl_status_t nvm3_halFlashPageErase(nvm3_HalPtr_t nvmAdr)
   //check for NVM3 address is valid or NULL
   if (nvmAdr == NULL) {
     halSta = SL_STATUS_NVM3_INVALID_ADDR;
+    SL_PRINT_STRING_ERROR("nvm3_halFlashPageErase: invalid address st=0x%04lX,line no : %d\r\n",
+                          (unsigned long)halSta,
+                          (int)__LINE__);
   } else {
     /* Calling this function for flash erase */
     halSta = rsi_flash_erase_sector((uint32_t *)nvmAdr);
@@ -235,7 +262,22 @@ static sl_status_t nvm3_halFlashPageErase(nvm3_HalPtr_t nvmAdr)
   if (halSta == SL_STATUS_OK) {
     if (!isErased((nvmAdr), PAGE_SIZE)) {
       halSta = SL_STATUS_FLASH_ERASE_FAILED;
+      SL_PRINT_STRING_ERROR("nvm3_halFlashPageErase: verify failed st=0x%04lX,line no : %d\r\n",
+                            (unsigned long)halSta,
+                            (int)__LINE__);
     }
+  } else {
+    SL_PRINT_STRING_ERROR("nvm3_halFlashPageErase: rsi_flash_erase_sector "
+                          "failed st=0x%04lX,line no : %d\r\n",
+                          (unsigned long)halSta,
+                          (int)__LINE__);
+  }
+#else
+  if ((nvmAdr != NULL) && (halSta != SL_STATUS_OK)) {
+    SL_PRINT_STRING_ERROR("nvm3_halFlashPageErase: rsi_flash_erase_sector "
+                          "failed st=0x%04lX,line no : %d\r\n",
+                          (unsigned long)halSta,
+                          (int)__LINE__);
   }
 #endif
   return halSta;

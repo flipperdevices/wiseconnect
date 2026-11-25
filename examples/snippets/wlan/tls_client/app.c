@@ -54,15 +54,17 @@
 
 //! Load certificate to device flash :
 //! Certificate should be loaded once and need not need to load for every boot up
-#define LOAD_CERTIFICATE     1
-#define SERVER_IP            "192.168.0.247"
-#define SERVER_PORT1         5002
-#define SERVER_PORT2         5003
-#define DATA                 "Hello from SSL TCP Client\n"
-#define NUMBER_OF_PACKETS    1000
-#define TLS_EXTENSION_ENABLE 0
-#define TLS_ALPN_EXTENSION   "http/1.1"
-#define TLS_SNI_EXTENSION    "example.com"
+#define LOAD_CERTIFICATE        1
+#define SERVER_IP               "192.168.0.247"
+#define SERVER_PORT1            5002
+#define SERVER_PORT2            5003
+#define DATA                    "Hello from SSL TCP Client\n"
+#define NUMBER_OF_PACKETS       1000
+#define TLS_EXTENSION_ENABLE    0
+#define TLS_ALPN_EXTENSION      "http/1.1"
+#define TLS_SNI_EXTENSION       "example.com"
+#define PER_SOCKET_CLOSE_ENABLE 1
+#define PER_SOCKET_CLOSE_VALUE  BIT(0)
 
 /******************************************************
  *               Variable Definitions
@@ -76,7 +78,6 @@ const osThreadAttr_t thread_attributes = {
   .stack_size = 3072,
   .priority   = osPriorityLow,
   .tz_module  = 0,
-  .reserved   = 0,
 };
 
 static const sl_wifi_device_configuration_t station_init_configuration = {
@@ -101,11 +102,16 @@ static const sl_wifi_device_configuration_t station_init_configuration = {
 #endif
                       ),
                    .bt_feature_bit_map         = 0,
-                   .ext_tcp_ip_feature_bit_map = SL_SI91X_CONFIG_FEAT_EXTENTION_VALID,
+                   .ext_tcp_ip_feature_bit_map = SL_SI91X_CONFIG_FEAT_EXTENSION_VALID,
                    .ble_feature_bit_map        = 0,
                    .ble_ext_feature_bit_map    = 0,
-                   .config_feature_bit_map     = SL_SI91X_FEAT_SLEEP_GPIO_SEL_BITMAP }
+                   .config_feature_bit_map     = SL_SI91X_FEAT_SLEEP_GPIO_SEL_BITMAP },
+  .ta_pool         = { .tx_ratio_in_buffer_pool = 0, .rx_ratio_in_buffer_pool = 0, .global_ratio_in_buffer_pool = 0 },
+  .efuse_data_type = SL_SI91X_EFUSE_MFG_SW_VERSION,
+  .nwp_fw_image_number = SL_SI91X_NWP_FW_IMAGE_NUMBER_0
 };
+
+static uint8_t per_socket_close_value = PER_SOCKET_CLOSE_VALUE;
 
 /******************************************************
  *               Function Declarations
@@ -129,31 +135,31 @@ static void application_start(void *argument)
 
   status = sl_net_init(SL_NET_WIFI_CLIENT_INTERFACE, &station_init_configuration, NULL, NULL);
   if (status != SL_STATUS_OK) {
-    printf("Failed to start Wi-Fi client interface: 0x%lx\r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "Failed to start Wi-Fi client interface: 0x%lx\r\n", status);
     return;
   }
-  printf("\r\nWi-Fi client interface init success\r\n");
+  SL_DEBUG_LOG_V2(INFO, "Wi-Fi client interface init success\r\n");
 
 #if LOAD_CERTIFICATE
   status =
     sl_net_set_credential(SL_NET_TLS_SERVER_CREDENTIAL_ID(0), SL_NET_SIGNING_CERTIFICATE, cacert, sizeof(cacert) - 1);
   if (status != SL_STATUS_OK) {
-    printf("\r\nUnexpected error while loading certificate: 0x%lx\r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "Unexpected error while loading certificate: 0x%lx\r\n", status);
     return;
   }
-  printf("\r\nLoading certificate Success\r\n");
+  SL_DEBUG_LOG_V2(INFO, "Loading certificate Success\r\n");
 #endif
 
   status = sl_net_up(SL_NET_WIFI_CLIENT_INTERFACE, SL_NET_DEFAULT_WIFI_CLIENT_PROFILE_ID);
   if (status != SL_STATUS_OK) {
-    printf("\r\nFailed to bring Wi-Fi client interface up: 0x%lx\r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "Failed to bring Wi-Fi client interface up: 0x%lx\r\n", status);
     return;
   }
-  printf("\r\nWi-Fi client interface up Success\r\n");
+  SL_DEBUG_LOG_V2(INFO, "Wi-Fi client interface up Success\r\n");
 
   status = send_data_from_tls_socket();
   if (status != SL_STATUS_OK) {
-    printf("\r\nError while sending data: 0x%lx \r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "Error while sending data: 0x%lx \r\n", status);
     return;
   }
 }
@@ -179,79 +185,106 @@ sl_status_t send_data_from_tls_socket()
 
   client_socket1 = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
   if (client_socket1 < 0) {
-    printf("\r\nSocket1 creation failed with bsd error: %d\r\n", errno);
+    SL_DEBUG_LOG_V2(ERROR, "Socket1 creation failed with bsd error: %d\r\n", errno);
     return SL_STATUS_FAIL;
   }
-  printf("\r\nSocket1 ID: %d\r\n", client_socket1);
+  SL_DEBUG_LOG_V2(INFO, "Socket1 ID: %d\r\n", client_socket1);
 
   return_value = setsockopt(client_socket1, SOL_TCP, TCP_ULP, TLS_1_0, sizeof(TLS_1_0));
   if (return_value < 0) {
-    printf("\r\nSet socket1 option failed with bsd error: %d\r\n", errno);
+    SL_DEBUG_LOG_V2(ERROR, "Set socket1 option failed with bsd error: %d\r\n", errno);
     close(client_socket1);
     return SL_STATUS_FAIL;
   }
+
+#if PER_SOCKET_CLOSE_ENABLE
+  return_value = setsockopt(client_socket1,
+                            SOL_SOCKET,
+                            SL_SO_PER_SOCKET_CLOSE,
+                            &per_socket_close_value,
+                            sizeof(per_socket_close_value));
+  if (return_value < 0) {
+    SL_DEBUG_LOG_V2(ERROR, "Set socket1 option per socket close failed with bsd error: %d", errno);
+    close(client_socket1);
+    return SL_STATUS_FAIL;
+  }
+#endif
 
 #if TLS_EXTENSION_ENABLE
   status = set_tls_extensions(client_socket1);
   if (status != SL_STATUS_OK) {
-    printf("\r\nFailed to set TLS extension: 0x%lx\r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "Failed to set TLS extension: 0x%lx", status);
     close(client_socket1);
     return SL_STATUS_FAIL;
   }
-  printf("\r\nTLS extension set successfully\r\n");
+  SL_DEBUG_LOG_V2(INFO, "TLS extension set successfully");
 #endif
 
   return_value = connect(client_socket1, (struct sockaddr *)&server_address, socket_length);
   if (return_value < 0) {
-    printf("\r\nSocket1 connect failed with %s with bsd error: %d\r\n", tls_socket1, errno);
+    SL_DEBUG_LOG_V2(ERROR, "Socket1 connect failed with %s with bsd error: %d", (uintptr_t)tls_socket1, errno);
     close(client_socket1);
     return SL_STATUS_FAIL;
   }
-  printf("\r\nSocket1 connect success with %s\r\n", tls_socket1);
+  SL_DEBUG_LOG_V2(INFO, "Socket1 connect success with %s", (uintptr_t)tls_socket1);
 
   client_socket2 = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
   if (client_socket2 < 0) {
-    printf("\r\nSocket2 creation failed with bsd error: %d\r\n", errno);
+    SL_DEBUG_LOG_V2(ERROR, "Socket2 creation failed with bsd error: %d", errno);
     close(client_socket1);
     return SL_STATUS_FAIL;
   }
-  printf("\r\nSocket2 ID: %d\r\n", client_socket2);
+  SL_DEBUG_LOG_V2(INFO, "Socket2 ID: %d", client_socket2);
 
   return_value = setsockopt(client_socket2, SOL_TCP, TCP_ULP, TLS_1_2, sizeof(TLS_1_2));
   if (return_value < 0) {
-    printf("\r\nSet socket2 option failed with bsd error: %d\r\n", errno);
+    SL_DEBUG_LOG_V2(ERROR, "Set socket2 option failed with bsd error: %d", errno);
     close(client_socket1);
     close(client_socket2);
     return SL_STATUS_FAIL;
   }
+
+#if PER_SOCKET_CLOSE_ENABLE
+  return_value = setsockopt(client_socket2,
+                            SOL_SOCKET,
+                            SL_SO_PER_SOCKET_CLOSE,
+                            &per_socket_close_value,
+                            sizeof(per_socket_close_value));
+  if (return_value < 0) {
+    SL_DEBUG_LOG_V2(ERROR, "Set socket2 option per socket close failed with bsd error: %d", errno);
+    close(client_socket1);
+    close(client_socket2);
+    return SL_STATUS_FAIL;
+  }
+#endif
 
 #if TLS_EXTENSION_ENABLE
   status = set_tls_extensions(client_socket2);
   if (status != SL_STATUS_OK) {
-    printf("\r\nFailed to set TLS extension: 0x%lx\r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "Failed to set TLS extension: 0x%lx", status);
     close(client_socket1);
     close(client_socket2);
     return SL_STATUS_FAIL;
   }
-  printf("\r\nTLS extension set successfully\r\n");
+  SL_DEBUG_LOG_V2(INFO, "TLS extension set successfully");
 #endif
 
   server_address.sin_port = SERVER_PORT2;
   return_value            = connect(client_socket2, (struct sockaddr *)&server_address, socket_length);
   if (return_value < 0) {
-    printf("\r\nSocket2 connect failed with %s with bsd error: %d\r\n", tls_socket2, errno);
+    SL_DEBUG_LOG_V2(ERROR, "Socket2 connect failed with %s with bsd error: %d", (uintptr_t)tls_socket2, errno);
     close(client_socket1);
     close(client_socket2);
     return SL_STATUS_FAIL;
   }
-  printf("\r\nSocket2 connect success with %s \r\n", tls_socket2);
+  SL_DEBUG_LOG_V2(INFO, "Socket2 connect success with %s ", (uintptr_t)tls_socket2);
 
   while (packet_count < NUMBER_OF_PACKETS) {
     return_value = send(client_socket1, DATA, strlen(DATA), 0);
     if (return_value < 0) {
       if (errno == ENOBUFS)
         continue;
-      printf("\r\nSocket1 send failed with bsd error: %d\r\n", errno);
+      SL_DEBUG_LOG_V2(ERROR, "Socket1 send failed with bsd error: %d", errno);
       close(client_socket1);
       close(client_socket2);
       return SL_STATUS_FAIL;
@@ -262,7 +295,7 @@ sl_status_t send_data_from_tls_socket()
       if (return_value < 0) {
         if (errno == ENOBUFS)
           continue;
-        printf("\r\nSocket2 send failed with bsd error: %d\r\n", errno);
+        SL_DEBUG_LOG_V2(ERROR, "Socket2 send failed with bsd error: %d\r\n", errno);
         close(client_socket1);
         close(client_socket2);
         return SL_STATUS_FAIL;
@@ -272,12 +305,12 @@ sl_status_t send_data_from_tls_socket()
     packet_count++;
   }
 
-  printf("\r\nData sent successfully\r\n");
+  SL_DEBUG_LOG_V2(INFO, "Data sent successfully\r\n");
 
   close(client_socket1);
   close(client_socket2);
 
-  printf("\r\nSockets closed successfully\r\n");
+  SL_DEBUG_LOG_V2(INFO, "Sockets closed successfully\r\n");
 
   return status;
 }
@@ -295,7 +328,7 @@ sl_status_t set_tls_extensions(int client_socket)
     (sl_si91x_socket_type_length_value_t *)malloc(sizeof(sl_si91x_socket_type_length_value_t) + sni_length);
 
   if (sni_value == NULL) {
-    printf("\r\nMemory allocation failed for SNI value\r\n");
+    SL_DEBUG_LOG_V2(ERROR, "Memory allocation failed for SNI value\r\n");
     return SL_STATUS_ALLOCATION_FAILED;
   }
 
@@ -315,7 +348,7 @@ sl_status_t set_tls_extensions(int client_socket)
                                    sizeof(sl_si91x_socket_type_length_value_t) + sni_length);
 
   if (socket_return_value < 0) {
-    printf("\r\nSet Socket option SNI extension failed with bsd error: %d\r\n", errno);
+    SL_DEBUG_LOG_V2(ERROR, "Set Socket option SNI extension failed with bsd error: %d\r\n", errno);
     free(sni_value);
     return SL_STATUS_FAIL;
   }
@@ -330,7 +363,7 @@ sl_status_t set_tls_extensions(int client_socket)
     (sl_si91x_socket_type_length_value_t *)malloc(sizeof(sl_si91x_socket_type_length_value_t) + alpn_length);
 
   if (alpn_value == NULL) {
-    printf("\r\nMemory allocation failed for ALPN value\r\n");
+    SL_DEBUG_LOG_V2(ERROR, "Memory allocation failed for ALPN value\r\n");
     return SL_STATUS_ALLOCATION_FAILED;
   }
 
@@ -350,7 +383,7 @@ sl_status_t set_tls_extensions(int client_socket)
                                    sizeof(sl_si91x_socket_type_length_value_t) + alpn_length);
 
   if (socket_return_value < 0) {
-    SL_DEBUG_LOG("\r\nSet Socket option ALPN extension failed with bsd error: %d\r\n", errno);
+    SL_DEBUG_LOG_V2(ERROR, "Set Socket option ALPN extension failed with bsd error: %d\r\n", errno);
     free(alpn_value);
     return SL_STATUS_FAIL;
   }

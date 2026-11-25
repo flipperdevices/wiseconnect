@@ -462,6 +462,10 @@ void RSI_Configure_Ipmu_Mode(void)
   (void)temperature;
   /*configures chip supply mode to HP-LDO */
   configure_ipmu_mode(HP_LDO_MODE);
+#elif defined(__ZEPHYR__)
+  (void)temperature;
+  // FIXME: If temperature is too high, switch to LDO supply mode.
+  configure_ipmu_mode(SCDC_MODE);
 #else
   (void)temperature;
   /* Read the temperature; if it is within the range of 0 to 60 degrees, switch the chip supply to SCDC mode. Otherwise, maintain the default LDO supply mode.*/
@@ -605,8 +609,9 @@ void RSI_IPMU_ClockMuxSel(uint8_t bg_pmu_clk)
 
 uint32_t RSI_IPMU_32MHzClkClib(void)
 {
-  volatile int i;
-  volatile int trim_value = 0;
+  volatile int
+    i; /* Volatile required: empty while(i--) loops are intentional delay for hardware settle; must not be optimized away. */
+  int trim_value = 0;
   /*Enables RC 32MHz clock and*/
   ULP_SPI_MEM_MAP(0x104) = (0x3FFFFF & 0x41368000);
   /*Enable XTAL 40MHz clock through NPSS*/
@@ -1483,10 +1488,10 @@ void RSI_IPMU_32KHzRCClkClib(void)
 
 uint32_t RSI_Clks_Trim32MHzRC(uint32_t freq)
 {
-  volatile uint32_t no_oftst_clk_f = 0;
-  volatile uint32_t no_oftst_clk   = 0;
-  volatile uint32_t reg_read       = 0;
-  volatile uint32_t trim_value     = 0;
+  uint32_t no_oftst_clk_f = 0;
+  uint32_t no_oftst_clk   = 0;
+  uint32_t reg_read       = 0;
+  uint32_t trim_value     = 0;
 
   system_clocks.rc_mhz_clock = freq;
 
@@ -1501,8 +1506,8 @@ uint32_t RSI_Clks_Trim32MHzRC(uint32_t freq)
   freq *= 10;
 
   /* Measures MHz RC clock Clock Frequency  */
-  no_oftst_clk = RSI_Clks_Calibration(ulp_ref_clk, none);
-  no_oftst_clk = no_oftst_clk_f / 100000;
+  no_oftst_clk_f = RSI_Clks_Calibration(ulp_ref_clk, none);
+  no_oftst_clk   = no_oftst_clk_f / 100000;
   /* Trims MHz RC clock to required frequency */
   if (no_oftst_clk != freq) {
     reg_read = ULP_SPI_MEM_MAP(ULPCLKS_MRC_CLK_REG_OFFSET);
@@ -1510,7 +1515,7 @@ uint32_t RSI_Clks_Trim32MHzRC(uint32_t freq)
     reg_read &= (uint32_t)(~(0x7F << TRIM_LSB_MHZ));
     ULP_SPI_MEM_MAP(ULPCLKS_MRC_CLK_REG_OFFSET) = reg_read;
     /* check's from 20 bit to 14 bit  */
-    for (volatile uint32_t i = TRIM_MSB_MHZ; i >= TRIM_LSB_MHZ; i--) {
+    for (uint32_t i = TRIM_MSB_MHZ; i >= TRIM_LSB_MHZ; i--) {
       /* Measures MHz RC clock Clock Frequency  */
       no_oftst_clk_f = RSI_Clks_Calibration(ulp_ref_clk, none);
       /*To get in three digit of Measured frequency value in MHz e.g:20MHz as 200 */
@@ -1549,8 +1554,8 @@ uint32_t RSI_Clks_Trim32MHzRC(uint32_t freq)
 
 void RSI_IPMU_20M_ROClktrim(uint8_t clkfreq)
 {
-  volatile uint32_t ro50m_trim = 0;
-  system_clocks.doubler_clock  = (clkfreq * 1000000 * 2);
+  uint32_t ro50m_trim         = 0;
+  system_clocks.doubler_clock = (clkfreq * 1000000 * 2);
 
   system_clocks.ro_20mhz_clock = (clkfreq * 1000000);
 
@@ -1616,7 +1621,7 @@ void RSI_IPMU_20M_ROClktrim(uint8_t clkfreq)
 
 uint32_t RSI_Clks_Calibration(INPUT_CLOCK_T inputclk, SLEEP_CLOCK_T sleep_clk_type)
 {
-  volatile uint32_t no_oftst_clk = 0;
+  uint32_t no_oftst_clk = 0;
 
   if (inputclk > 10) {
     return INVALID_PARAMETERS;

@@ -174,8 +174,8 @@ void ps_clr_wkp_up_status(uint32_t wakeUpIntrClear)
 
 void ps_bg_ldo_config(uint8_t ldo_0p6_ctrl, uint8_t ldo_0p6_lp_mode)
 {
-  volatile uint32_t read_ldo_data = 0;
-  read_ldo_data                   = ULP_SPI_MEM_MAP(0x129);
+  uint32_t read_ldo_data = 0;
+  read_ldo_data          = ULP_SPI_MEM_MAP(0x129);
 
   if (ldo_0p6_lp_mode) {
     read_ldo_data |= (1 << 16);

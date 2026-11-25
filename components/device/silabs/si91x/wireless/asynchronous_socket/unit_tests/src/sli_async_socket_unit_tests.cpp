@@ -29,12 +29,39 @@
  ******************************************************************************/
 #include <gtest/gtest.h>
 #include <cstdint> // For u_int32_t
+#include <cstring>
+#include <cstdlib>
+#include <string>
 extern "C" {
 #include "sli_async_socket_fake_functions.h"
 #include "sl_si91x_socket_constants.h"
 #include "sl_si91x_socket.h"
+#include "sl_si91x_socket_utility.h"
 #include "sl_constants.h"
+#include <errno.h>
 #include <stdint.h>
+}
+
+static int sli_configure_tls_extension_enomem_fake(sli_si91x_tls_extensions_t *socket_tls_extensions,
+                                                   const sl_si91x_socket_type_length_value_t *tls_extension,
+                                                   socklen_t option_length)
+{
+  (void)socket_tls_extensions;
+  (void)tls_extension;
+  (void)option_length;
+  errno = ENOMEM;
+  return -1;
+}
+
+static int sli_configure_tls_extension_einval_fake(sli_si91x_tls_extensions_t *socket_tls_extensions,
+                                                   const sl_si91x_socket_type_length_value_t *tls_extension,
+                                                   socklen_t option_length)
+{
+  (void)socket_tls_extensions;
+  (void)tls_extension;
+  (void)option_length;
+  errno = EINVAL;
+  return -1;
 }
 
 #define IPADDR_LOOPBACK ((uint32_t)0x7f000001UL)
@@ -208,7 +235,7 @@ TEST(sli_async_socket_unit_tests, enable_DTLS_V_1_2_invalid_flag)
 TEST(sli_async_socket_unit_tests, SendToAsync_Success)
 {
   RESET_FAKE(sli_get_si91x_socket);
-  RESET_FAKE(sli_si91x_driver_send_socket_data);
+  RESET_FAKE(sli_si91x_send_socket_data);
 
   // Mock behavior for sli_get_si91x_socket
   sli_si91x_socket_t mock_socket;
@@ -216,13 +243,13 @@ TEST(sli_async_socket_unit_tests, SendToAsync_Success)
   mock_socket.id                        = 0;           // Default socket ID
   mock_socket.type                      = SOCK_STREAM; // Set type to SOCK_STREAM for TCP
   mock_socket.state                     = CONNECTED;
-  mock_socket.local_address.sin6_family = AF_INET; // Set family to AF_INET
+  mock_socket.local_address.sin6_family = AF_INET;                          // Set family to AF_INET
   mock_socket.mss                       = SLI_DEFAULT_STREAM_MSS_SIZE_IPV4; // Set default MSS for IPv4
   mock_socket.is_waiting_on_ack         = false;
   sli_get_si91x_socket_fake.return_val  = &mock_socket;
 
-  // Mock behavior for sli_si91x_driver_send_socket_data
-  sli_si91x_driver_send_socket_data_fake.return_val = SL_STATUS_OK;
+  // Mock behavior for sli_si91x_send_socket_data
+  sli_si91x_send_socket_data_fake.return_val = SL_STATUS_IN_PROGRESS;
 
   int socket = 1;
   SendToAsyncTestParams params;
@@ -237,15 +264,13 @@ TEST(sli_async_socket_unit_tests, SendToAsync_Success)
 
   EXPECT_EQ(result, params.buffer_length);
   EXPECT_FALSE(mock_socket.is_waiting_on_ack);
-  EXPECT_EQ(sli_si91x_driver_send_socket_data_fake.call_count, 1);
 }
 
 // Test Case: Valid UDP Socket
 TEST(sli_async_socket_unit_tests, valid_udp_Socket_request)
 {
   RESET_FAKE(sli_get_si91x_socket);
-  RESET_FAKE(sli_create_and_send_socket_request);
-  RESET_FAKE(sli_si91x_driver_send_socket_data);
+  RESET_FAKE(sli_si91x_send_socket_data);
 
   // Mock behavior for sli_get_si91x_socket
   sli_si91x_socket_t mock_socket;
@@ -255,11 +280,8 @@ TEST(sli_async_socket_unit_tests, valid_udp_Socket_request)
   mock_socket.state                    = BOUND;
   sli_get_si91x_socket_fake.return_val = &mock_socket;
 
-  // Mock behavior for sli_create_and_send_socket_request
-  sli_create_and_send_socket_request_fake.return_val = SL_STATUS_OK;
-
-  // Mock behavior for sli_si91x_driver_send_socket_data
-  sli_si91x_driver_send_socket_data_fake.return_val = SL_STATUS_OK;
+  // Mock behavior for sli_si91x_send_socket_data
+  sli_si91x_send_socket_data_fake.return_val = SL_STATUS_IN_PROGRESS;
 
   int socket = 1;
   SendToAsyncTestParams params;
@@ -275,7 +297,7 @@ TEST(sli_async_socket_unit_tests, valid_udp_Socket_request)
 
   // Validate the result
   EXPECT_EQ(result, params.buffer_length);
-  EXPECT_EQ(sli_create_and_send_socket_request_fake.call_count, 1);
+  EXPECT_EQ(sli_si91x_send_socket_data_fake.call_count, 1);
 }
 
 // Test case: Invalid socket
@@ -337,7 +359,6 @@ TEST(sli_async_socket_unit_tests, send_to_async_buffer_overflow)
 TEST(sli_async_socket_unit_tests, message_size_exceeds_limit)
 {
   RESET_FAKE(sli_get_si91x_socket);
-  RESET_FAKE(sli_si91x_driver_send_socket_data);
 
   // Mock behavior for sli_get_si91x_socket
   sli_si91x_socket_t mock_socket;
@@ -395,4 +416,101 @@ TEST(sli_async_socket_unit_tests, invalid_buffer_length)
 
   EXPECT_EQ(result, -1);
   EXPECT_EQ(errno, EMSGSIZE);
+}
+
+namespace {
+
+sl_si91x_socket_type_length_value_t *make_tls_alpn_tlv(socklen_t *option_length)
+{
+  const char *protocol      = "mqtt";
+  const size_t value_length = strlen(protocol);
+  const size_t total_size   = sizeof(sl_si91x_socket_type_length_value_t) + value_length;
+  auto *tlv                 = (sl_si91x_socket_type_length_value_t *)malloc(total_size);
+
+  tlv->type   = SL_SI91X_TLS_EXTENSION_ALPN_TYPE;
+  tlv->length = (uint16_t)value_length;
+  memcpy(tlv->value, protocol, value_length);
+  *option_length = (socklen_t)total_size;
+  return tlv;
+}
+
+} // namespace
+
+TEST(sli_async_socket_unit_tests, SetSockopt_TlsAlpn_Success)
+{
+  RESET_FAKE(sli_get_si91x_socket);
+  RESET_FAKE(sli_si91x_configure_tls_extension);
+
+  sli_si91x_socket_t mock_socket_instance           = { 0 };
+  sli_get_si91x_socket_fake.return_val              = &mock_socket_instance;
+  sli_si91x_configure_tls_extension_fake.return_val = SLI_SI91X_NO_ERROR;
+
+  socklen_t option_length                  = 0;
+  sl_si91x_socket_type_length_value_t *tlv = make_tls_alpn_tlv(&option_length);
+
+  const int result = sl_si91x_setsockopt(1, 0, SL_SI91X_SO_TLS_ALPN, tlv, option_length);
+
+  EXPECT_EQ(result, SLI_SI91X_NO_ERROR);
+  EXPECT_EQ(sli_si91x_configure_tls_extension_fake.call_count, 1u);
+  free(tlv);
+}
+
+TEST(sli_async_socket_unit_tests, SetSockopt_TlsAlpn_MemoryError)
+{
+  RESET_FAKE(sli_get_si91x_socket);
+  RESET_FAKE(sli_si91x_configure_tls_extension);
+
+  sli_si91x_socket_t mock_socket_instance            = { 0 };
+  sli_get_si91x_socket_fake.return_val               = &mock_socket_instance;
+  sli_si91x_configure_tls_extension_fake.custom_fake = sli_configure_tls_extension_enomem_fake;
+
+  socklen_t option_length                  = 0;
+  sl_si91x_socket_type_length_value_t *tlv = make_tls_alpn_tlv(&option_length);
+
+  const int result = sl_si91x_setsockopt(1, 0, SL_SI91X_SO_TLS_ALPN, tlv, option_length);
+
+  EXPECT_EQ(result, -1);
+  EXPECT_EQ(errno, ENOMEM);
+  EXPECT_EQ(sli_si91x_configure_tls_extension_fake.call_count, 1u);
+  free(tlv);
+}
+
+TEST(sli_async_socket_unit_tests, SetSockopt_TlsAlpn_InvalidParameter)
+{
+  RESET_FAKE(sli_get_si91x_socket);
+  RESET_FAKE(sli_si91x_configure_tls_extension);
+
+  sli_si91x_socket_t mock_socket_instance            = { 0 };
+  sli_get_si91x_socket_fake.return_val               = &mock_socket_instance;
+  sli_si91x_configure_tls_extension_fake.custom_fake = sli_configure_tls_extension_einval_fake;
+
+  socklen_t option_length                  = 0;
+  sl_si91x_socket_type_length_value_t *tlv = make_tls_alpn_tlv(&option_length);
+
+  const int result = sl_si91x_setsockopt(1, 0, SL_SI91X_SO_TLS_ALPN, tlv, option_length);
+
+  EXPECT_EQ(result, -1);
+  EXPECT_EQ(errno, EINVAL);
+  EXPECT_EQ(sli_si91x_configure_tls_extension_fake.call_count, 1u);
+  free(tlv);
+}
+
+TEST(sli_async_socket_unit_tests, SetSockopt_TlsAlpn_NullPointer)
+{
+  RESET_FAKE(sli_get_si91x_socket);
+  RESET_FAKE(sli_si91x_configure_tls_extension);
+
+  sli_si91x_socket_t mock_socket_instance            = { 0 };
+  sli_get_si91x_socket_fake.return_val               = &mock_socket_instance;
+  sli_si91x_configure_tls_extension_fake.custom_fake = sli_configure_tls_extension_einval_fake;
+
+  socklen_t option_length                  = 0;
+  sl_si91x_socket_type_length_value_t *tlv = make_tls_alpn_tlv(&option_length);
+
+  const int result = sl_si91x_setsockopt(1, 0, SL_SI91X_SO_TLS_ALPN, tlv, option_length);
+
+  EXPECT_EQ(result, -1);
+  EXPECT_EQ(errno, EINVAL);
+  EXPECT_EQ(sli_si91x_configure_tls_extension_fake.call_count, 1u);
+  free(tlv);
 }

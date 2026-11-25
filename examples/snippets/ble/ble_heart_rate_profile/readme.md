@@ -1,19 +1,29 @@
 # BLE - Heart Rate
 
+## High-Level Overview
+
+SiWx91x BLE heart rate profile example: configure a GATT server or client for the heart rate service with indications on SoC, PSRAM, and NCP modes using Simplicity Studio.
+
 ## Table of Contents
 
 - [BLE - Heart Rate](#ble---heart-rate)
+  - [High-Level Overview](#high-level-overview)
   - [Table of Contents](#table-of-contents)
   - [Purpose/Scope](#purposescope)
   - [Prerequisites/Setup Requirements](#prerequisitessetup-requirements)
     - [Hardware Requirements](#hardware-requirements)
     - [Software Requirements](#software-requirements)
+    - [NCP mode: host application and project files](#ncp-mode-host-application-and-project-files)
     - [Setup Diagram](#setup-diagram)
-  - [Getting Started](#getting-started)
-  - [Application Build Environment](#application-build-environment)
-  - [Test the Application](#test-the-application)
-    - [Verify BLE Heart Rate Profile Application as a Server](#verify-ble-heart-rate-profile-application-as-a-server)
-    - [Verify BLE Heart Rate Profile Application as a Client](#verify-ble-heart-rate-profile-application-as-a-client)
+  - [Steps to Run Demo](#steps-to-run-demo)
+    - [Getting Started](#getting-started)
+    - [Configuration and Setup](#configuration-and-setup)
+    - [Steps for Execution](#steps-for-execution)
+      - [Verify BLE Heart Rate Profile Application as a Server](#verify-ble-heart-rate-profile-application-as-a-server)
+      - [Verify BLE Heart Rate Profile Application as a Client](#verify-ble-heart-rate-profile-application-as-a-client)
+  - [Troubleshooting](#troubleshooting)
+  - [Resources](#resources)
+  - [Report Bugs and Get Support](#report-bugs-and-get-support)
 
 ## Purpose/Scope
 
@@ -30,20 +40,20 @@ When the connected remote device writes data to writable characteristic UUID, th
 - Windows PC with Host interface(UART/ SPI/ SDIO).
   - SiWx91x Wi-Fi Evaluation Kit. The SiWx91x supports multiple operating modes. See [Operating Modes]() for details.
   - SoC Mode:
-    - Silicon Labs [BRD4325A, BRD4325B, BRD4325C, BRD4338A, BRD4339B, BRD4343A](https://www.silabs.com/)
+    - Silicon Labs [[BRD4002B](https://www.silabs.com/development-tools/wireless/wireless-pro-kit-mainboard?tab=overview) + [BRD4338A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-rb4338a-wifi-6-bluetooth-le-soc-radio-board?tab=overview) / [BRD4343A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4343a-wi-fi-6-bluetooth-le-8mb-flash-radio-board-for-module?tab=overview) / [BRD4343C](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4343c-wi-fi-6-bluetooth-le-8mb-flash-radio-board-for-module?tab=overview)]
     - Kits
-      - SiWx917 AC1 Module Explorer Kit (BRD2708A)
+      - SiWG917 Dev Kit [BRD2605B]
+      - SiWx917 AC1 Module Explorer Kit [BRD2708A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-ek2708a-explorer-kit)
   - PSRAM Mode:  
-    - Silicon Labs [BRD4340A, BRD4342A, BRD4325G](https://www.silabs.com/)
+    - Silicon Labs [[BRD4002B](https://www.silabs.com/development-tools/wireless/wireless-pro-kit-mainboard?tab=overview) + [BRD4342A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx91x-rb4342a-wifi-6-bluetooth-le-soc-radio-board?tab=overview)]
   - NCP Mode:
-    - Silicon Labs [BRD4180B](https://www.silabs.com/);
+    - Silicon Labs [BRD4186C](https://www.silabs.com/development-tools/wireless/xg24-rb4186c-efr32xg24-wireless-gecko-radio-board?tab=overview)
     - Host MCU Eval Kit. This example has been tested with:
       - Silicon Labs [WSTK + EFR32MG21](https://www.silabs.com/development-tools/wireless/efr32xg21-bluetooth-starter-kit)
     - NCP Expansion Kit with NCP Radio boards
-      - (BRD4346A + BRD8045A) [SiWx917-EB4346A]
-      - (BRD4357A + BRD8045A) [SiWx917-EB4357A]
-  - Interface and Host MCU Supported
-    - SPI - EFR32 
+      - [[BRD8045A](https://www.silabs.com/development-tools/wireless/wi-fi/expansion-adapter-board-for-co-processor-radio-boards?tab=overview) + [BRD4346A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-rb4346a-wifi-6-bluetooth-le-soc-4mb-flash-radio-board?tab=overview) / [BRD4357A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4357a-wi-fi-6-bluetooth-le-4mb-flash-radio-board-for-rcp-and-ncp-modules?tab=overview) / [BRD4357C](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4357c-wi-fi-6-bluetooth-le-4mb-flash-radio-board-for-rcp-and-ncp-modules?tab=overview)]
+  - Interface and host MCU supported
+    - SPI : EFR32
   - BLE Smartphone
   
 ### Software Requirements
@@ -54,11 +64,23 @@ When the connected remote device writes data to writable characteristic UUID, th
 
 > **Note:** The provided mobile screenshots are from the 2.5.2 version of the Simplicity Connect App(formerly EFR Connect App), it is recommended to use the latest version.
 
+### NCP mode: host application and project files
+
+| Mode      | Host / target                                                                           | Project file (this example folder)        |
+|-----------|-----------------------------------------------------------------------------------------|-------------------------------------------|
+| SoC       | Application runs on SiWx91x.                                                            | `ble_heart_rate_profile_soc.slcp`         |
+| PSRAM     | Application runs on SiWx91x with PSRAM-capable radio board.                             | `ble_heart_rate_profile_psram.slcp`       |
+| NCP (SPI) | Application runs on **EFR32** host; SiWx917 is the network co-processor over **SPI**.   | `ble_heart_rate_profile_ncp.slcp`         |
+
+Open the `.slcp` for your kit from `examples/snippets/ble/ble_heart_rate_profile/` in Simplicity Studio. For NCP, follow [Getting started with NCP mode](https://docs.silabs.com/wiseconnect/latest/wiseconnect-getting-started/getting-started-with-ncp-mode).
+
 ### Setup Diagram
 
 ![](resources/readme/ble_heart_rate_profile_soc_ncp.png)
 
-## Getting Started
+## Steps to Run Demo
+
+### Getting Started
 
 Refer to the instructions [here](https://docs.silabs.com/wiseconnect/latest/wiseconnect-getting-started/) to:
 
@@ -70,7 +92,7 @@ Refer to the instructions [here](https://docs.silabs.com/wiseconnect/latest/wise
 
 For details on the project folder structure, see the [WiSeConnect Examples](https://docs.silabs.com/wiseconnect/latest/wiseconnect-examples/#example-folder-structure) page.
 
-## Application Build Environment
+### Configuration and Setup
 
 The application can be configured to suit your requirements and development environment. Read through the following sections and make any changes needed.
 
@@ -203,7 +225,7 @@ The application can be configured to suit your requirements and development envi
 
 > **Note**: For recommended settings, please refer the [recommendations guide](https://docs.silabs.com/wiseconnect/latest/wiseconnect-developers-guide-prog-recommended-settings/).
 
-## Test the Application
+### Steps for Execution
 
 Refer to the instructions [here](https://docs.silabs.com/wiseconnect/latest/wiseconnect-getting-started/) to:
 
@@ -212,7 +234,7 @@ Refer to the instructions [here](https://docs.silabs.com/wiseconnect/latest/wise
 
 Follow the steps below for successful execution of the application:
 
-### Verify BLE Heart Rate Profile Application as a Server
+#### Verify BLE Heart Rate Profile Application as a Server
 
 1. After the program gets executed, if Silicon Labs device is configured as ``SERVER`` specified in the macro ``GATT_ROLE``, Silicon Labs device will be in Advertising state.
 
@@ -242,7 +264,8 @@ Follow the steps below for successful execution of the application:
 10. Observe the connection status of heart rate on the Docklight.
 
     ![](resources/readme/heartrate_server_role.PNG)
-### Verify BLE Heart Rate Profile Application as a Client
+
+#### Verify BLE Heart Rate Profile Application as a Client
 
 1. Configure the **GATT_ROLE** macro as **CLIENT**
 
@@ -291,3 +314,26 @@ Follow the steps below for successful execution of the application:
 10. Observe the updated heart rate measurement value on the Docklight. Refer the below images for console prints:
 
    ![](resources/readme/output1.png)
+
+## Troubleshooting
+
+If you encounter issues while running the BLE Heart Rate Profile example, check the following:
+
+- Ensure the correct radio board is connected and the connectivity firmware is up to date.
+- Verify `GATT_ROLE` is set correctly (SERVER or CLIENT) in `app.c`.
+- When in CLIENT mode, confirm `RSI_BLE_DEV_ADDR_TYPE`, `RSI_BLE_DEV_ADDR`, and `RSI_REMOTE_DEVICE_NAME` match the remote GATT server.
+- When in SERVER mode, verify the service/characteristic UUIDs (`RSI_BLE_HEART_RATE_SERVICE_UUID`, `RSI_BLE_HEART_RATE_MEASUREMENT_UUID`, `RSI_BLE_SENSOR_LOCATION_UUID`, `RSI_BLE_HEART_RATE_CONTROL_POINT_UUID`) are correctly configured.
+- If notifications are not received on the client, ensure the remote GATT client has enabled the notify property on `RSI_BLE_HEART_RATE_MEASUREMENT_UUID`.
+- For NCP mode, confirm the SPI wiring between the host MCU (EFR32) and the SiWx91x NCP is correct.
+
+## Resources
+
+- [WiSeConnect Getting Started Guide](https://docs.silabs.com/wiseconnect/latest/wiseconnect-getting-started/)
+- [WiSeConnect API Reference Guide](https://docs.silabs.com/wiseconnect/latest/wiseconnect-api-reference-guide-si91x-driver/)
+- [Simplicity Connect Mobile App](https://www.silabs.com/developers/simplicity-connect-mobile-app)
+
+## Report Bugs and Get Support
+
+Report issues and get help from the Silicon Labs community:
+
+- [Silicon Labs Community](https://www.silabs.com/community)

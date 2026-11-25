@@ -1,6 +1,6 @@
 /*******************************************************************************
  * @file
- * @brief Retreive GSDK version
+ * @brief Retrieve GSDK version
  *******************************************************************************
  * # License
  * <b>Copyright 2019 Silicon Laboratories Inc. www.silabs.com</b>

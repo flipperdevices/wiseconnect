@@ -1,8 +1,8 @@
-# HSPI Secondary
+# SiWx91x Platform HSPI SECONDARY
 
 ## Table of Contents
 
-- [HSPI Secondary](#hspi-secondary)
+- [SiWx91x Platform HSPI SECONDARY](#platform-siwx91x-hspi-secondary)
   - [Table of Contents](#table-of-contents)
   - [About Example Code](#about-example-code)
   - [Prerequisites/Setup Requirements](#prerequisitessetup-requirements)
@@ -13,6 +13,9 @@
   - [Application Build Environment](#application-build-environment)
     - [Pin Configuration](#pin-configuration)
   - [Test the Application](#test-the-application)
+  - [Troubleshooting](#troubleshooting)
+  - [Resources](#resources)
+  - [Report Bugs/Support](#report-bugssupport)
   - [HSPI Secondary Data Flow](#hspi-secondary-data-flow)
 
 ## About Example Code
@@ -24,7 +27,7 @@ This example showcases the use of the HSPI secondary interface with GPDMA, provi
 ### Hardware Requirements
 
 - Windows PC
-- Silicon Labs Si917 Evaluation Kit [[BRD4002](https://www.silabs.com/development-tools/wireless/wireless-pro-kit-mainboard?tab=overview) + [BRD4338A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-rb4338a-wifi-6-bluetooth-le-soc-radio-board?tab=overview) / [BRD4342A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx91x-rb4342a-wifi-6-bluetooth-le-soc-radio-board?tab=overview) / [BRD4343A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4343a-wi-fi-6-bluetooth-le-8mb-flash-radio-board-for-module?tab=overview)]
+- Silicon Labs SiWx91x Evaluation Kit [[BRD4002](https://www.silabs.com/development-tools/wireless/wireless-pro-kit-mainboard?tab=overview) + [BRD4338A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-rb4338a-wifi-6-bluetooth-le-soc-radio-board?tab=overview) / [BRD4342A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx91x-rb4342a-wifi-6-bluetooth-le-soc-radio-board?tab=overview) / [BRD4343A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4343a-wi-fi-6-bluetooth-le-8mb-flash-radio-board-for-module?tab=overview) / [BRD4343C](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4343c-wi-fi-6-bluetooth-le-8mb-flash-radio-board-for-module?tab=overview)]
 - An external SPI Primary device.
 
 ### Software Requirements
@@ -55,6 +58,14 @@ For details on the project folder structure, see the [WiSeConnect Examples](http
 
   ![Figure: hspi_secondary_uc](resources/uc_screen/hspi_secondary_uc.png)
 
+- Configure the following macros in [`hspi_secondary_example.c`](hspi_secondary_example.c) file and update/modify following macros, if required.
+
+  - `TEST_MEMORY_READ_WRITES`: When enabled, runs additional memory read/write tests from the SPI primary against the HSPI secondary memory. By default, it is set to 0.
+
+    ```c
+    #define TEST_MEMORY_READ_WRITES        0         // Enable memory read/write tests
+    ```
+
 ### Pin Configuration
 
 | GPIO pin  |  Connection |  Description|
@@ -78,13 +89,13 @@ Refer to the instructions [here](https://docs.silabs.com/wiseconnect/latest/wise
 
     Ensure the SPI Secondary application is running before the SPI Primary application. This order is essential for proper data communication with  HSPI Secondary.
 
-3. After successful program execution, the prints in serial console looks as shown below.   
-   
+3. After successful program execution, the prints in serial console looks as shown below.
+
   - ####  If GPDMA is enabled
   >![Figure: output_hspi_secondary](resources/readme/output_hspi_secondary.png)
 
   - ####  If GPDMA is disabled
-  >![Figure: output_hspi_secondary_blocking](resources/readme/output_hspi_secondary_blocking.png) 
+  >![Figure: output_hspi_secondary_blocking](resources/readme/output_hspi_secondary_blocking.png)
 
 ## HSPI Secondary Data Flow
 
@@ -96,3 +107,19 @@ The SPI Primary writes data to the HSPI Secondary
 > **Note:**
 >
 > - The driver handles interrupts internally, offering user-defined callbacks for custom actions. To replace the default driver interrupt handling with your own, create a weak version of the driver's interrupt handler and then incorporate the required code into your custom handler.
+
+## Troubleshooting
+
+- If the project does not build, ensure Simplicity Studio and the WiSeConnect extension are installed and the board is connected.
+- If the device is not detected, reinstall the connectivity firmware and check USB drivers.
+
+## Resources
+
+- [WiSeConnect Getting Started](https://docs.silabs.com/wiseconnect/latest/wiseconnect-getting-started/)
+- [WiSeConnect Examples](https://docs.silabs.com/wiseconnect/latest/wiseconnect-examples/)
+- [SiWx91x SoC Documentation](https://docs.silabs.com/wiseconnect/latest/)
+
+## Report Bugs/Support
+
+For issues and support, use the Silicon Labs Community or your normal support channel.
+

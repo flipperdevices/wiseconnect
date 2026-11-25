@@ -1,8 +1,8 @@
-# PSA AES-CTR Multipart for SI91X
+# SiWx91x Platform PSA AES Cipher Multipart
 
 ## Table of Contents
 
-- [PSA AES-CTR Multipart for SI91X](#psa-aes-ctr-multipart-for-si91x)
+- [SiWx91x Platform PSA AES Cipher Multipart](#platform-siwx91x-psa-aes-cipher-multipart)
   - [Table of Contents](#table-of-contents)
   - [Purpose/Scope](#purposescope)
   - [Prerequisites/Setup Requirements](#prerequisitessetup-requirements)
@@ -14,6 +14,9 @@
     - [Application Configuration Parameters](#application-configuration-parameters)
   - [Test the Application](#test-the-application)
     - [Expected output](#expected-output)
+  - [Troubleshooting](#troubleshooting)
+  - [Resources](#resources)
+  - [Report Bugs/Support](#report-bugssupport)
 
 ## Purpose/Scope
 
@@ -26,7 +29,7 @@ Before running the application, the user will need the following things to setup
 ### Hardware Requirements
 
   - Windows PC
-  - Silicon Labs Si917 Evaluation Kit [WPK(BRD4002)+ BRD4338A]
+  - Silicon Labs SiWx91x Evaluation Kit [WPK(BRD4002)+ BRD4338A]
 
 ### Software Requirements
 
@@ -50,33 +53,33 @@ For details on the project folder structure, see the [WiSeConnect Examples](http
 
 ## Application Build Environment
 
-- To program the device ,refer **"Burn M4 Binary"** section in **getting-started-with-siwx917-soc** guide at **release_package/docs/index.html** to work with Si91x and Simplicity Studio.
+- To program the device, refer **"Burn M4 Binary"** section in **getting-started-with-siwx917-soc** guide at **release_package/docs/index.html** to work with SiWx91x and Simplicity Studio.
 
 ### Application Configuration Parameters
 
-- This AES multipart sample application demonstrates how to split the encryption and decryption process into multiple chunks and handle each chunk separately. 
+- This AES multipart sample application demonstrates how to split the encryption and decryption process into multiple chunks and handle each chunk separately.
 
 - The function `test_psa_aes()` is used to perform AES encryption and decryption on large messages by splitting them into smaller chunks. The function will first send the first chunk data and then remaining chunks will be considered as middle chunks.
 
 - The function by default defines the size of first chunk as 16 bytes and subsequent four middle chunks size as 32 bytes.
 
-- The length of the first chunk of incoming message can be configured by using the below macro
+- `FIRST_CHUNK_SIZE`: Specifies the length (in bytes) of the first chunk of the incoming message processed by the AES multipart operation. By default, it is set to 16.
 
-```c
-#define FISRT_CHUNK_SIZE   16
-```
+  ```c
+  #define FIRST_CHUNK_SIZE   16
+  ```
 
-- The length of the Middle chunk of incoming message can be configured by using the below macro
+- `MIDDLE_CHUNK_SIZE`: Specifies the length (in bytes) of each subsequent middle chunk of the incoming message processed by the AES multipart operation. By default, it is set to 32.
 
-```c
-#define MIDDLE_CHUNK_SIZE   32
-```
+  ```c
+  #define MIDDLE_CHUNK_SIZE   32
+  ```
 
-- The length of the input message/plain text can be configured by using the below macro. By default it is 144 bytes.
+- `AES_TEST_PT_MAX_LEN`: Specifies the total length (in bytes) of the input message/plain text to be encrypted and decrypted. By default, it is set to 144.
 
-```c
-#define AES_TEST_PT_MAX_LEN 144
-```
+  ```c
+  #define AES_TEST_PT_MAX_LEN 144
+  ```
 
 - In AES multipart operation, data must be transmitted in 16-byte aligned chunks.
 
@@ -104,3 +107,18 @@ Follow the steps as mentioned for the successful execution of the application:
 * [AN1311: Integrating Crypto Functionality Using PSA Crypto Compared to Mbed TLS Guide](https://www.silabs.com/documents/public/application-notes/an1311-mbedtls-psa-crypto-porting-guide.pdf)
 
 * [AN1135: Using Third Generation Non-Volatile Memory (NVM3) Data Storage](https://www.silabs.com/documents/public/application-notes/an1135-using-third-generation-nonvolatile-memory.pdf)
+## Troubleshooting
+
+- If the project does not build, ensure Simplicity Studio and the WiSeConnect extension are installed and the board is connected.
+- If the device is not detected, reinstall the connectivity firmware and check USB drivers.
+
+## Resources
+
+- [WiSeConnect Getting Started](https://docs.silabs.com/wiseconnect/latest/wiseconnect-getting-started/)
+- [WiSeConnect Examples](https://docs.silabs.com/wiseconnect/latest/wiseconnect-examples/)
+- [SiWx91x SoC Documentation](https://docs.silabs.com/wiseconnect/latest/)
+
+## Report Bugs/Support
+
+For issues and support, use the Silicon Labs Community or your normal support channel.
+

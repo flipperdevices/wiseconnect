@@ -87,15 +87,24 @@ sl_status_t sl_si91x_icm40627_ssi_interface_init(sl_ssi_handle_t *ssi_driver_han
   do {
     sl_status = sl_si91x_ssi_init(ssi_master_config.device_mode, ssi_driver_handle);
     if (sl_status != SL_STATUS_OK) {
-      return sl_status;
+      SL_PRINT_STRING_ERROR("sl_si91x_icm40627_ssi_interface_init: SSI init "
+                            "failed, status=0x%04lX,line no : %d",
+                            (unsigned long)sl_status,
+                            __LINE__);
+      break;
     }
     sl_status = sl_si91x_ssi_set_configuration(*ssi_driver_handle, &ssi_master_config, ssi_slave_number);
     if (sl_status != SL_STATUS_OK) {
-      return sl_status;
+      SL_PRINT_STRING_ERROR("sl_si91x_icm40627_ssi_interface_init: SSI set_configuration failed, "
+                            "status=0x%04lX,line no : %d",
+                            (unsigned long)sl_status,
+                            __LINE__);
+      break;
     }
     sl_si91x_ssi_set_slave_number((uint8_t)ssi_slave_number);
-    return SL_STATUS_OK;
+
   } while (false);
+  return SL_STATUS_OK;
 }
 
 /***************************************************************************/ /**
@@ -113,6 +122,10 @@ sl_status_t sl_si91x_icm40627_init(sl_ssi_handle_t ssi_driver_handle)
   /* Disable I2C interface, use SPI */
   status = icm40627_read_register(ssi_driver_handle, SL_ICM40627_REG_INTF_CONFIG0, ssi_data_in, ssi_data_length);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si91x_icm40627_init: init read INTF_CONFIG0 "
+                          "failed, status=0x%04lX,line no : %d",
+                          (unsigned long)status,
+                          __LINE__);
     // If it fails to execute the API, it will not execute rest of the things
     return status;
   }
@@ -120,12 +133,19 @@ sl_status_t sl_si91x_icm40627_init(sl_ssi_handle_t ssi_driver_handle)
   temp |= SL_ICM40627_INTF_CONFIG0_BIT_UI_SIFS_CFG_DISABLE_I2C;
   status = icm40627_write_register(ssi_driver_handle, (uint8_t)SL_ICM40627_REG_INTF_CONFIG0, &temp, 1);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si91x_icm40627_init: init write INTF_CONFIG0 "
+                          "failed, status=0x%04lX",
+                          (unsigned long)status);
     return status;
   }
 
   /* Set clock select to automatic clock source selection */
   status = icm40627_read_register(ssi_driver_handle, SL_ICM40627_REG_INTF_CONFIG1, ssi_data_in, ssi_data_length);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si91x_icm40627_init: init read INTF_CONFIG1 "
+                          "failed, status=0x%04lX,line no : %d",
+                          (unsigned long)status,
+                          __LINE__);
     return status;
   }
   /* Extract the received register data from the second byte of the SPI response. */
@@ -133,6 +153,10 @@ sl_status_t sl_si91x_icm40627_init(sl_ssi_handle_t ssi_driver_handle)
   temp |= SL_ICM40627_INT_CONFIG1_BIT_CLKSEL_SEL_PLL;
   status = icm40627_write_register(ssi_driver_handle, (uint8_t)SL_ICM40627_REG_INTF_CONFIG1, &temp, 1);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si91x_icm40627_init: init write INTF_CONFIG1 "
+                          "failed, status=0x%04lX,line no : %d",
+                          (unsigned long)status,
+                          __LINE__);
     return status;
   }
 
@@ -174,12 +198,13 @@ sl_status_t sl_si91x_icm40627_software_reset(sl_ssi_handle_t ssi_driver_handle)
   /* Set SOFT_RESET_CONFIG bit to initiate Software reset */
   status = icm40627_write_register(ssi_driver_handle, soft_reset_reg_addr, &soft_reset_data, ssi_data_length);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si91x_icm40627_software_reset: write register failed, "
+                          "status=0x%04lX,line no : %d",
+                          (unsigned long)status,
+                          __LINE__);
     return status;
   }
-
-  /* Wait 100ms to complete the reset sequence */
   sl_sleeptimer_delay_millisecond(100);
-
   return SL_STATUS_OK;
 }
 
@@ -200,6 +225,10 @@ static sl_status_t icm40627_read_register(sl_ssi_handle_t ssi_driver_handle,
   bank   = (reg_addr >> SL_ICM40627_REG_BANK_SHIFT);
   status = icm40627_select_register_bank(ssi_driver_handle, bank);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("icm40627_read_register: select register bank "
+                          "failed, status=0x%04lX,line no : %d",
+                          (unsigned long)status,
+                          __LINE__);
     return status;
   }
 
@@ -233,6 +262,10 @@ static sl_status_t icm40627_write_register(sl_ssi_handle_t ssi_driver_handle,
   bank   = (reg_addr >> SL_ICM40627_REG_BANK_SHIFT);
   status = icm40627_select_register_bank(ssi_driver_handle, bank);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("icm40627_write_register: select register bank "
+                          "failed, status=0x%04lX,line no : %d",
+                          (unsigned long)status,
+                          __LINE__);
     return status;
   }
 
@@ -244,6 +277,10 @@ static sl_status_t icm40627_write_register(sl_ssi_handle_t ssi_driver_handle,
   status = sl_si91x_ssi_send_data(ssi_driver_handle, ssi_data_out, ssi_data_length);
   if (status != SL_STATUS_OK) {
     // If it fails to execute the API, it will not execute rest of the things
+    SL_PRINT_STRING_ERROR("icm40627_write_register: send data failed, "
+                          "status=0x%04lX,line no : %d",
+                          (unsigned long)status,
+                          __LINE__);
     return status;
   }
 
@@ -277,6 +314,10 @@ sl_status_t icm40627_select_register_bank(sl_ssi_handle_t ssi_driver_handle, uin
   status = sl_si91x_ssi_send_data(ssi_driver_handle, ssi_data_out, ssi_data_length);
   if (status != SL_STATUS_OK) {
     // If it fails to execute the API, it will not execute rest of the things
+    SL_PRINT_STRING_ERROR("icm40627_get_device_id: read register failed, "
+                          "status=0x%04lX,line no : %d",
+                          (unsigned long)status,
+                          __LINE__);
     return status;
   }
 
@@ -299,6 +340,10 @@ sl_status_t sl_si91x_icm40627_get_device_id(sl_ssi_handle_t ssi_driver_handle, u
   status = icm40627_read_register(ssi_driver_handle, reg_address, ssi_data_in, ssi_data_length);
   if (status != SL_STATUS_OK) {
     // If it fails to execute the API, it will not execute rest of the things
+    SL_PRINT_STRING_ERROR("sl_si91x_icm40627_get_temperature_data: read temperature data failed, "
+                          "status=0x%04lX,line no : %d",
+                          (unsigned long)status,
+                          __LINE__);
     return status;
   }
 
@@ -427,6 +472,10 @@ sl_status_t sl_si91x_icm40627_get_accel_resolution(sl_ssi_handle_t ssi_driver_ha
   /* Read the actual acceleration full scale setting */
   status = icm40627_read_register(ssi_driver_handle, SL_ICM40627_REG_ACCEL_CONFIG0, ssi_data, ssi_data_length);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si91x_icm40627_get_accel_resolution: read "
+                          "register failed, status=0x%04lX,line no : %d",
+                          (unsigned long)status,
+                          __LINE__);
     return status;
   }
   ssi_data[ssi_data_length - 1] &= SL_ICM40627_MASK_ACCEL_FS_SEL;
@@ -469,6 +518,10 @@ sl_status_t sl_si91x_icm40627_get_gyro_resolution(sl_ssi_handle_t ssi_driver_han
   /* Read the actual gyroscope full scale setting */
   status = icm40627_read_register(ssi_driver_handle, SL_ICM40627_REG_GYRO_CONFIG0, ssi_data, ssi_data_length);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si91x_icm40627_get_gyro_resolution: read "
+                          "register failed, status=0x%04lX,line no : %d",
+                          (unsigned long)status,
+                          __LINE__);
     return status;
   }
   ssi_data[ssi_data_length - 1] &= 0xF0;
@@ -513,6 +566,10 @@ sl_status_t sl_si91x_icm40627_enable_sensor(sl_ssi_handle_t ssi_driver_handle, b
 
   status = icm40627_read_register(ssi_driver_handle, SL_ICM40627_REG_PWR_MGMT0, ssi_data, ssi_data_length);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si91x_icm40627_enable_sensor: read register "
+                          "failed, status=0x%04lX,line no : %d",
+                          (unsigned long)status,
+                          __LINE__);
     return status;
   }
 
@@ -533,6 +590,10 @@ sl_status_t sl_si91x_icm40627_enable_sensor(sl_ssi_handle_t ssi_driver_handle, b
     status =
       icm40627_write_register(ssi_driver_handle, SL_ICM40627_REG_GYRO_ON_OFF_CONFIG, &gyroOn, ssi_data_length - 1);
     if (status != SL_STATUS_OK) {
+      SL_PRINT_STRING_ERROR("sl_si91x_icm40627_enable_sensor: write register "
+                            "failed, status=0x%04lX,line no : %d",
+                            (unsigned long)status,
+                            __LINE__);
       return status;
     }
   } else {
@@ -541,6 +602,10 @@ sl_status_t sl_si91x_icm40627_enable_sensor(sl_ssi_handle_t ssi_driver_handle, b
     status =
       icm40627_write_register(ssi_driver_handle, SL_ICM40627_REG_GYRO_ON_OFF_CONFIG, &gyroOff, ssi_data_length - 1);
     if (status != SL_STATUS_OK) {
+      SL_PRINT_STRING_ERROR("sl_si91x_icm40627_enable_sensor: write register "
+                            "failed, status=0x%04lX,line no : %d",
+                            (unsigned long)status,
+                            __LINE__);
       return status;
     }
   }
@@ -555,6 +620,10 @@ sl_status_t sl_si91x_icm40627_enable_sensor(sl_ssi_handle_t ssi_driver_handle, b
   /* Write back the modified values */
   status = icm40627_write_register(ssi_driver_handle, SL_ICM40627_REG_PWR_MGMT0, &pwrManagement, ssi_data_length - 1);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si91x_icm40627_enable_sensor: write register "
+                          "failed, status=0x%04lX,line no : %d",
+                          (unsigned long)status,
+                          __LINE__);
     return status;
   }
 
@@ -576,6 +645,10 @@ sl_status_t sl_si91x_icm40627_enable_sleep_mode(sl_ssi_handle_t ssi_driver_handl
 
   status = icm40627_read_register(ssi_driver_handle, SL_ICM40627_REG_INT_STATUS3, ssi_data, ssi_data_length);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si91x_icm40627_enable_sleep_mode: read register "
+                          "failed, status=0x%04lX,line no : %d",
+                          (unsigned long)status,
+                          __LINE__);
     return status;
   }
   reg = ssi_data[ssi_data_length - 1];
@@ -592,6 +665,10 @@ sl_status_t sl_si91x_icm40627_enable_sleep_mode(sl_ssi_handle_t ssi_driver_handl
 
   status = icm40627_write_register(ssi_driver_handle, SL_ICM40627_REG_INT_STATUS3, &reg, ssi_data_length - 1);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si91x_icm40627_enable_sleep_mode: write register "
+                          "failed, status=0x%04lX,line no : %d",
+                          (unsigned long)status,
+                          __LINE__);
     return status;
   }
 
@@ -697,6 +774,10 @@ sl_status_t sl_si91x_icm40627_gyro_set_sample_rate(sl_ssi_handle_t ssi_driver_ha
   /* Read the ICM40627_REG_GYRO_CONFIG0 register */
   status = icm40627_read_register(ssi_driver_handle, SL_ICM40627_REG_GYRO_CONFIG0, ssi_data, ssi_data_length);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si91x_icm40627_gyro_set_sample_rate: read "
+                          "register failed, status=0x%04lX,line no : %d",
+                          (unsigned long)status,
+                          __LINE__);
     return status;
   }
   reg = ssi_data[ssi_data_length - 1];
@@ -706,6 +787,10 @@ sl_status_t sl_si91x_icm40627_gyro_set_sample_rate(sl_ssi_handle_t ssi_driver_ha
   reg |= (gyro_ODR & SL_ICM40627_MASK_GYRO_ODR_VALUE);
   status = icm40627_write_register(ssi_driver_handle, SL_ICM40627_REG_GYRO_CONFIG0, &reg, ssi_data_length - 1);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si91x_icm40627_gyro_set_sample_rate: write "
+                          "register failed, status=0x%04lX,line no : %d",
+                          (unsigned long)status,
+                          __LINE__);
     return status;
   }
 
@@ -746,6 +831,10 @@ sl_status_t sl_si91x_icm40627_accel_set_sample_rate(sl_ssi_handle_t ssi_driver_h
   /* Read the ICM40627_REG_ACCEL_CONFIG0 register */
   status = icm40627_read_register(ssi_driver_handle, SL_ICM40627_REG_ACCEL_CONFIG0, ssi_data, ssi_data_length);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si91x_icm40627_accel_set_sample_rate: read "
+                          "register failed, status=0x%04lX,line no : %d",
+                          (unsigned long)status,
+                          __LINE__);
     return status;
   }
   reg = ssi_data[ssi_data_length - 1];
@@ -755,6 +844,10 @@ sl_status_t sl_si91x_icm40627_accel_set_sample_rate(sl_ssi_handle_t ssi_driver_h
   reg |= (accel_ODR & SL_ICM40627_MASK_ACCEL_ODR_VALUE);
   status = icm40627_write_register(ssi_driver_handle, SL_ICM40627_REG_ACCEL_CONFIG0, &reg, ssi_data_length - 1);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si91x_icm40627_accel_set_sample_rate: write "
+                          "register failed, status=0x%04lX,line no : %d",
+                          (unsigned long)status,
+                          __LINE__);
     return status;
   }
 
@@ -774,6 +867,10 @@ sl_status_t sl_si91x_icm40627_set_gyro_bandwidth(sl_ssi_handle_t ssi_driver_hand
   /* Read the GYRO_ACCEL_CONFIG0 register */
   status = icm40627_read_register(ssi_driver_handle, SL_ICM40627_REG_GYRO_ACCEL_CONFIG0, ssi_data, ssi_data_length);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si91x_icm40627_set_gyro_bandwidth: read register "
+                          "failed, status=0x%04lX,line no : %d",
+                          (unsigned long)status,
+                          __LINE__);
     return status;
   }
 
@@ -784,6 +881,10 @@ sl_status_t sl_si91x_icm40627_set_gyro_bandwidth(sl_ssi_handle_t ssi_driver_hand
   /* Write the new bandwidth value to the GYRO_ACCEL_CONFIG0 register */
   status = icm40627_write_register(ssi_driver_handle, SL_ICM40627_REG_GYRO_ACCEL_CONFIG0, &temp, ssi_data_length - 1);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si91x_icm40627_set_gyro_bandwidth: write "
+                          "register failed, status=0x%04lX,line no : %d",
+                          (unsigned long)status,
+                          __LINE__);
     return status;
   }
 
@@ -803,6 +904,10 @@ sl_status_t sl_si91x_icm40627_set_accel_bandwidth(sl_ssi_handle_t ssi_driver_han
   /* Read the GYRO_ACCEL_CONFIG0 register */
   status = icm40627_read_register(ssi_driver_handle, SL_ICM40627_REG_GYRO_ACCEL_CONFIG0, ssi_data, ssi_data_length);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si91x_icm40627_set_accel_bandwidth: read "
+                          "register failed, status=0x%04lX,line no : %d",
+                          (unsigned long)status,
+                          __LINE__);
     return status;
   }
 
@@ -813,6 +918,10 @@ sl_status_t sl_si91x_icm40627_set_accel_bandwidth(sl_ssi_handle_t ssi_driver_han
   /* Write the new bandwidth value to the GYRO_ACCEL_CONFIG0 register */
   status = icm40627_write_register(ssi_driver_handle, SL_ICM40627_REG_GYRO_ACCEL_CONFIG0, &temp, ssi_data_length - 1);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si91x_icm40627_set_accel_bandwidth: write "
+                          "register failed, status=0x%04lX,line no : %d",
+                          (unsigned long)status,
+                          __LINE__);
     return status;
   }
 
@@ -833,6 +942,10 @@ sl_status_t sl_si91x_icm40627_set_accel_full_scale(sl_ssi_handle_t ssi_driver_ha
 
   status = icm40627_read_register(ssi_driver_handle, SL_ICM40627_REG_ACCEL_CONFIG0, ssi_data, ssi_data_length);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si91x_icm40627_set_accel_full_scale: read "
+                          "register failed, status=0x%04lX,line no : %d",
+                          (unsigned long)status,
+                          __LINE__);
     return status;
   }
 
@@ -842,6 +955,10 @@ sl_status_t sl_si91x_icm40627_set_accel_full_scale(sl_ssi_handle_t ssi_driver_ha
 
   status = icm40627_write_register(ssi_driver_handle, SL_ICM40627_REG_ACCEL_CONFIG0, &temp, ssi_data_length - 1);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si91x_icm40627_set_accel_full_scale: write "
+                          "register failed, status=0x%04lX,line no : %d",
+                          (unsigned long)status,
+                          __LINE__);
     return status;
   }
 
@@ -860,6 +977,10 @@ sl_status_t sl_si91x_icm40627_set_gyro_full_scale(sl_ssi_handle_t ssi_driver_han
 
   status = icm40627_read_register(ssi_driver_handle, SL_ICM40627_REG_GYRO_CONFIG0, ssi_data, ssi_data_length);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si91x_icm40627_set_gyro_full_scale: read "
+                          "register failed, status=0x%04lX,line no : %d",
+                          (unsigned long)status,
+                          __LINE__);
     return status;
   }
 
@@ -869,6 +990,10 @@ sl_status_t sl_si91x_icm40627_set_gyro_full_scale(sl_ssi_handle_t ssi_driver_han
 
   status = icm40627_write_register(ssi_driver_handle, SL_ICM40627_REG_GYRO_CONFIG0, &temp, ssi_data_length - 1);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si91x_icm40627_set_gyro_full_scale: write "
+                          "register failed, status=0x%04lX,line no : %d",
+                          (unsigned long)status,
+                          __LINE__);
     return status;
   }
 
@@ -887,6 +1012,10 @@ sl_status_t sl_si91x_icm40627_enable_interrupt(sl_ssi_handle_t ssi_driver_handle
 
   status = icm40627_read_register(ssi_driver_handle, SL_ICM40627_REG_INT_SOURCE1, ssi_data, ssi_data_length);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si91x_icm40627_enable_interrupt: read register "
+                          "failed, status=0x%04lX,line no : %d",
+                          (unsigned long)status,
+                          __LINE__);
     return status;
   }
 
@@ -898,6 +1027,10 @@ sl_status_t sl_si91x_icm40627_enable_interrupt(sl_ssi_handle_t ssi_driver_handle
   /* Write value to register */
   status = icm40627_write_register(ssi_driver_handle, SL_ICM40627_REG_INT_SOURCE1, &intEnable, ssi_data_length - 1);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si91x_icm40627_enable_interrupt: write register "
+                          "failed, status=0x%04lX,line no : %d",
+                          (unsigned long)status,
+                          __LINE__);
     return status;
   }
 
@@ -906,6 +1039,10 @@ sl_status_t sl_si91x_icm40627_enable_interrupt(sl_ssi_handle_t ssi_driver_handle
 
   status = icm40627_read_register(ssi_driver_handle, SL_ICM40627_REG_INT_SOURCE0, ssi_data, ssi_data_length);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si91x_icm40627_enable_interrupt: read register "
+                          "failed, status=0x%04lX,line no : %d",
+                          (unsigned long)status,
+                          __LINE__);
     return status;
   }
   if (dataReadyEnable) {
@@ -914,6 +1051,10 @@ sl_status_t sl_si91x_icm40627_enable_interrupt(sl_ssi_handle_t ssi_driver_handle
   /* Write value to register */
   status = icm40627_write_register(ssi_driver_handle, SL_ICM40627_REG_INT_SOURCE0, &intEnable, ssi_data_length - 1);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si91x_icm40627_enable_interrupt: write register "
+                          "failed, status=0x%04lX,line no : %d",
+                          (unsigned long)status,
+                          __LINE__);
     return status;
   }
 
@@ -934,18 +1075,30 @@ sl_status_t sl_si91x_icm40627_read_interrupt_status(sl_ssi_handle_t ssi_driver_h
 
   status = icm40627_read_register(ssi_driver_handle, SL_ICM40627_REG_INT_STATUS, ssi_data, ssi_data_length);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si91x_icm40627_read_interrupt_status: read "
+                          "register failed, status=0x%04lX,line no : %d",
+                          (unsigned long)status,
+                          __LINE__);
     return status;
   }
   reg_status = ssi_data[ssi_data_length - 1];
 
   status = icm40627_read_register(ssi_driver_handle, SL_ICM40627_REG_INT_STATUS2, ssi_data, ssi_data_length);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si91x_icm40627_read_interrupt_status: read "
+                          "register failed, status=0x%04lX,line no : %d",
+                          (unsigned long)status,
+                          __LINE__);
     return status;
   }
   reg_status2 = ssi_data[ssi_data_length - 1];
 
   status = icm40627_read_register(ssi_driver_handle, SL_ICM40627_REG_INT_STATUS3, ssi_data, ssi_data_length);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si91x_icm40627_read_interrupt_status: read "
+                          "register failed, status=0x%04lX,line no : %d",
+                          (unsigned long)status,
+                          __LINE__);
     return status;
   }
   reg_status3 = ssi_data[ssi_data_length - 1];
@@ -1031,6 +1184,10 @@ sl_status_t sl_si91x_icm40627_calibrate_accel_and_gyro(sl_ssi_handle_t ssi_drive
   /* Disable the FIFO */
   status = icm40627_write_register(ssi_driver_handle, SL_ICM40627_REG_FIFO_CONFIG, &disable_fifo, ssi_data_length - 1);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si91x_icm40627_calibrate_accel_and_gyro: write "
+                          "register failed, status=0x%04lX,line no : %d",
+                          (unsigned long)status,
+                          __LINE__);
     return status;
   }
 
@@ -1044,6 +1201,10 @@ sl_status_t sl_si91x_icm40627_calibrate_accel_and_gyro(sl_ssi_handle_t ssi_drive
   /* Reset the FIFO */
   status = icm40627_write_register(ssi_driver_handle, SL_ICM40627_REG_FIFO_CONFIG, &reset_fifo, ssi_data_length - 1);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si91x_icm40627_calibrate_accel_and_gyro: write "
+                          "register failed, status=0x%04lX,line no : %d",
+                          (unsigned long)status,
+                          __LINE__);
     return status;
   }
 
@@ -1051,6 +1212,10 @@ sl_status_t sl_si91x_icm40627_calibrate_accel_and_gyro(sl_ssi_handle_t ssi_drive
   status =
     icm40627_write_register(ssi_driver_handle, SL_ICM40627_REG_FIFO_CONFIG1, &sensor_write_fifo, ssi_data_length);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si91x_icm40627_calibrate_accel_and_gyro: write "
+                          "register failed, status=0x%04lX,line no : %d",
+                          (unsigned long)status,
+                          __LINE__);
     return status;
   }
 
@@ -1070,16 +1235,28 @@ sl_status_t sl_si91x_icm40627_calibrate_accel_and_gyro(sl_ssi_handle_t ssi_drive
                                    &sensor_disable_write_fifo,
                                    ssi_data_length - 1);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si91x_icm40627_calibrate_accel_and_gyro: read "
+                          "register failed, status=0x%04lX,line no : %d",
+                          (unsigned long)status,
+                          __LINE__);
     return status;
   }
 
   /* Read FIFO sample count */
   status = icm40627_read_register(ssi_driver_handle, SL_ICM40627_REG_FIFO_COUNTH, counth, ssi_data_length);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si91x_icm40627_calibrate_accel_and_gyro: read "
+                          "register failed, status=0x%04lX,line no : %d",
+                          (unsigned long)status,
+                          __LINE__);
     return status;
   }
   status = icm40627_read_register(ssi_driver_handle, SL_ICM40627_REG_FIFO_COUNTL, countl, ssi_data_length);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si91x_icm40627_calibrate_accel_and_gyro: read "
+                          "register failed, status=0x%04lX,line no : %d",
+                          (unsigned long)status,
+                          __LINE__);
     return status;
   }
 
@@ -1140,6 +1317,10 @@ sl_status_t sl_si91x_icm40627_calibrate_accel_and_gyro(sl_ssi_handle_t ssi_drive
 
   status = icm40627_read_register(ssi_driver_handle, SL_ICM40627_REG_OFFSET_USER1, offset_data, ssi_data_length);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si91x_icm40627_calibrate_accel_and_gyro: read "
+                          "register failed, status=0x%04lX,line no : %d",
+                          (unsigned long)status,
+                          __LINE__);
     return status;
   }
   /* Extract upper 4 bits of X-axis and upper 4 bits of Y-axis factory calibration value */
@@ -1150,6 +1331,10 @@ sl_status_t sl_si91x_icm40627_calibrate_accel_and_gyro(sl_ssi_handle_t ssi_drive
     (int16_t)((temp & SL_ICM40627_BYTE_MASK_HIGH_NIBBLE) << SL_ICM40627_BYTE_SHIFT_4);
   status = icm40627_read_register(ssi_driver_handle, SL_ICM40627_REG_OFFSET_USER2, offset_data, ssi_data_length);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si91x_icm40627_calibrate_accel_and_gyro: read "
+                          "register failed, status=0x%04lX,line no : %d",
+                          (unsigned long)status,
+                          __LINE__);
     return status;
   }
   /* Extract lower 8 bits of Y-axis factory calibration value */
@@ -1157,6 +1342,10 @@ sl_status_t sl_si91x_icm40627_calibrate_accel_and_gyro(sl_ssi_handle_t ssi_drive
 
   status = icm40627_read_register(ssi_driver_handle, SL_ICM40627_REG_OFFSET_USER3, offset_data, ssi_data_length);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si91x_icm40627_calibrate_accel_and_gyro: read "
+                          "register failed, status=0x%04lX,line no : %d",
+                          (unsigned long)status,
+                          __LINE__);
     return status;
   }
   /* Extract lower 8 bits of Z-axis factory calibration value */
@@ -1164,6 +1353,10 @@ sl_status_t sl_si91x_icm40627_calibrate_accel_and_gyro(sl_ssi_handle_t ssi_drive
 
   status = icm40627_read_register(ssi_driver_handle, SL_ICM40627_REG_OFFSET_USER4, offset_data, ssi_data_length);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si91x_icm40627_calibrate_accel_and_gyro: read "
+                          "register failed, status=0x%04lX,line no : %d",
+                          (unsigned long)status,
+                          __LINE__);
     return status;
   }
   /* Extract upper 4 bits of Z-axis and upper 4 bits of Y-axis factory calibration value */
@@ -1217,6 +1410,10 @@ sl_status_t sl_si91x_icm40627_calibrate_accel_and_gyro(sl_ssi_handle_t ssi_drive
 
   status = icm40627_read_register(ssi_driver_handle, SL_ICM40627_REG_OFFSET_USER6, offset_data, ssi_data_length);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si91x_icm40627_calibrate_accel_and_gyro: read "
+                          "register failed, status=0x%04lX,line no : %d",
+                          (unsigned long)status,
+                          __LINE__);
     return status;
   }
   /* Extract lower 8 bits of Y-axis factory calibration value */
@@ -1224,6 +1421,10 @@ sl_status_t sl_si91x_icm40627_calibrate_accel_and_gyro(sl_ssi_handle_t ssi_drive
 
   status = icm40627_read_register(ssi_driver_handle, SL_ICM40627_REG_OFFSET_USER7, offset_data, ssi_data_length);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si91x_icm40627_calibrate_accel_and_gyro: read "
+                          "register failed, status=0x%04lX,line no : %d",
+                          (unsigned long)status,
+                          __LINE__);
     return status;
   }
   /* Extract upper 4 bits of Y-axis and upper 4 bits of Z-axis factory calibration value */
@@ -1234,6 +1435,10 @@ sl_status_t sl_si91x_icm40627_calibrate_accel_and_gyro(sl_ssi_handle_t ssi_drive
     (int16_t)((temp & SL_ICM40627_BYTE_MASK_HIGH_NIBBLE) << SL_ICM40627_BYTE_SHIFT_4);
   status = icm40627_read_register(ssi_driver_handle, SL_ICM40627_REG_OFFSET_USER8, offset_data, ssi_data_length);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si91x_icm40627_calibrate_accel_and_gyro: read "
+                          "register failed, status=0x%04lX,line no : %d",
+                          (unsigned long)status,
+                          __LINE__);
     return status;
   }
   /* Extract lower 8 bits of Z-axis factory calibration value */
@@ -1289,38 +1494,74 @@ sl_status_t sl_si91x_icm40627_calibrate_accel_and_gyro(sl_ssi_handle_t ssi_drive
   /* Write the  gyro and accel bias values to the chip */
   status = icm40627_write_register(ssi_driver_handle, SL_ICM40627_REG_OFFSET_USER0, &data[0], 1);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si91x_icm40627_calibrate_accel_and_gyro: write "
+                          "register failed, status=0x%04lX,line no : %d",
+                          (unsigned long)status,
+                          __LINE__);
     return status;
   }
   status = icm40627_write_register(ssi_driver_handle, SL_ICM40627_REG_OFFSET_USER1, &data[1], 1);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si91x_icm40627_calibrate_accel_and_gyro: write "
+                          "register failed, status=0x%04lX,line no : %d",
+                          (unsigned long)status,
+                          __LINE__);
     return status;
   }
   status = icm40627_write_register(ssi_driver_handle, SL_ICM40627_REG_OFFSET_USER2, &data[2], 1);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si91x_icm40627_calibrate_accel_and_gyro: write "
+                          "register failed, status=0x%04lX,line no : %d",
+                          (unsigned long)status,
+                          __LINE__);
     return status;
   }
   status = icm40627_write_register(ssi_driver_handle, SL_ICM40627_REG_OFFSET_USER3, &data[3], 1);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si91x_icm40627_calibrate_accel_and_gyro: write "
+                          "register failed, status=0x%04lX,line no : %d",
+                          (unsigned long)status,
+                          __LINE__);
     return status;
   }
   status = icm40627_write_register(ssi_driver_handle, SL_ICM40627_REG_OFFSET_USER4, &data[4], 1);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si91x_icm40627_calibrate_accel_and_gyro: write "
+                          "register failed, status=0x%04lX,line no : %d",
+                          (unsigned long)status,
+                          __LINE__);
     return status;
   }
   status = icm40627_write_register(ssi_driver_handle, SL_ICM40627_REG_OFFSET_USER5, &data[5], 1);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si91x_icm40627_calibrate_accel_and_gyro: write "
+                          "register failed, status=0x%04lX,line no : %d",
+                          (unsigned long)status,
+                          __LINE__);
     return status;
   }
   status = icm40627_write_register(ssi_driver_handle, SL_ICM40627_REG_OFFSET_USER6, &data[6], 1);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si91x_icm40627_calibrate_accel_and_gyro: write "
+                          "register failed, status=0x%04lX,line no : %d",
+                          (unsigned long)status,
+                          __LINE__);
     return status;
   }
   status = icm40627_write_register(ssi_driver_handle, SL_ICM40627_REG_OFFSET_USER7, &data[7], 1);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si91x_icm40627_calibrate_accel_and_gyro: write "
+                          "register failed, status=0x%04lX,line no : %d",
+                          (unsigned long)status,
+                          __LINE__);
     return status;
   }
   status = icm40627_write_register(ssi_driver_handle, SL_ICM40627_REG_OFFSET_USER8, &data[8], 1);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si91x_icm40627_calibrate_accel_and_gyro: write "
+                          "register failed, status=0x%04lX,line no : %d",
+                          (unsigned long)status,
+                          __LINE__);
     return status;
   }
 
@@ -1328,6 +1569,10 @@ sl_status_t sl_si91x_icm40627_calibrate_accel_and_gyro(sl_ssi_handle_t ssi_drive
   disable_fifo = SL_ICM40627_FIFO_DISABLE_VALUE;
   status       = icm40627_write_register(ssi_driver_handle, SL_ICM40627_REG_FIFO_CONFIG, &disable_fifo, 1);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si91x_icm40627_calibrate_accel_and_gyro: write "
+                          "register failed, status=0x%04lX,line no : %d",
+                          (unsigned long)status,
+                          __LINE__);
     return status;
   }
 

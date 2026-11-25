@@ -58,7 +58,7 @@ typedef struct debug_log_s {
   uint32_t debug_systick;
 } debug_log_t;
 /*=======================================================================*/
-//   ! Fucntion declarations
+//   ! Function declarations
 /*=======================================================================*/
 
 void rsi_app_init_event_parameters(uint32_t *async_event_map,

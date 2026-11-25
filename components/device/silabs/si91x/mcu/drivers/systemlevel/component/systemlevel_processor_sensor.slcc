@@ -2,7 +2,7 @@ id: systemlevel_processor_sensor
 label: PROCESSOR SENSOR
 package: platform_siwx91x
 description: >
-  Processor Sensor API's
+  This component provides processor sensor APIs for the SiWx91x.
 category: Device|Si91x|MCU|Internal|System-Level Drivers
 quality: production
 metadata:

@@ -15,6 +15,7 @@
  *
  ******************************************************************************/
 
+#include <inttypes.h>
 #include "rsi_debug.h"
 #include "file_system_example.h"
 #include "lfs.h"
@@ -97,7 +98,7 @@ void file_system_example_init(void)
   lfs_unmount(&lfs);
 
   // print the boot count
-  printf("boot_count: %ld\n", boot_count);
+  printf("boot_count: %" PRIu32 "\n", boot_count);
 }
 
 /*******************************************************************************

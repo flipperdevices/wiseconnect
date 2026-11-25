@@ -76,9 +76,12 @@ sl_status_t sl_si91x_sysrtc_init(const sl_sysrtc_config_t *config_ptr)
   // will return an error code
   if (config_ptr == NULL) {
     status = SL_STATUS_NULL_POINTER;
+    SL_PRINT_STRING_ERROR("sl_si91x_sysrtc_init: handle NULL,line no : %d\r\n", (int)__LINE__);
+
   } else {
     // initializing sysrtc module
     rsi_sysrtc_init(config_ptr);
+
     status = SL_STATUS_OK;
   }
   // Enabling sysrtc module
@@ -99,15 +102,22 @@ sl_status_t sl_si91x_sysrtc_configure_clock(sl_sysrtc_clock_config_t *clk_ptr)
     // will return an error code
     if (clk_ptr == NULL) {
       status = SL_STATUS_NULL_POINTER;
+      SL_PRINT_STRING_ERROR("sl_si91x_sysrtc_configure_clock: handle NULL,line no : %d\r\n", (int)__LINE__);
       break;
     }
     if ((clk_ptr->clock_source != RSI_SYSRTC_CLK_1kHz_clk) && (clk_ptr->clock_source != RSI_SYSRTC_CLK_32KHz_RO)
         && (clk_ptr->clock_source != RSI_SYSRTC_CLK_32kHz_RC) && (clk_ptr->clock_source != RSI_SYSRTC_CLK_32kHz_Xtal)) {
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR("sl_si91x_sysrtc_configure_clock: error status=0x%04lX,line no : %d\r\n",
+                            (unsigned long)(SL_STATUS_INVALID_PARAMETER),
+                            (int)__LINE__);
       break;
     }
     if ((clk_ptr->division_factor) >= MAX_DIVISION_FACTOR) {
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR("sl_si91x_sysrtc_configure_clock: error status=0x%04lX,line no : %d\r\n",
+                            (unsigned long)(SL_STATUS_INVALID_PARAMETER),
+                            (int)__LINE__);
       break;
     }
     // configuring sysrtc clock source
@@ -131,10 +141,14 @@ sl_status_t sl_si91x_sysrtc_configure_group(sl_sysrtc_group_number_t group_numbe
     // will return an error code
     if (config_ptr == NULL) {
       status = SL_STATUS_NULL_POINTER;
+      SL_PRINT_STRING_ERROR("sl_si91x_sysrtc_configure_group: handle NULL,line no : %d\r\n", (int)__LINE__);
       break;
     }
     if (group_number >= SL_SYSRTC_GROUP_LAST) {
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR("sl_si91x_sysrtc_configure_group: error status=0x%04lX,line no : %d\r\n",
+                            (unsigned long)(SL_STATUS_INVALID_PARAMETER),
+                            (int)__LINE__);
       break;
     }
     // initializing group as per group number
@@ -161,16 +175,23 @@ sl_status_t sl_si91x_sysrtc_register_callback(sl_sysrtc_callback_t sl_sysrtc_cal
     // if they are NULL will return an error code
     if ((interrupt_enable_ptr == NULL) || (sl_sysrtc_callback == NULL)) {
       status = SL_STATUS_NULL_POINTER;
+      SL_PRINT_STRING_ERROR("sl_si91x_sysrtc_register_callback: handle NULL,line no : %d\r\n", (int)__LINE__);
       break;
     }
     // To validate the function pointer, if the parameters is not NULL then it
     // will return an busy error code
     if (callback_function_ptr != NULL) {
       status = SL_STATUS_BUSY;
+      SL_PRINT_STRING_ERROR("sl_si91x_sysrtc_register_callback: error status=0x%04lX,line no : %d\r\n",
+                            (unsigned long)(SL_STATUS_BUSY),
+                            (int)__LINE__);
       break;
     }
     if (group_number >= SL_SYSRTC_GROUP_LAST) {
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR("sl_si91x_sysrtc_register_callback: error status=0x%04lX,line no : %d\r\n",
+                            (unsigned long)(SL_STATUS_INVALID_PARAMETER),
+                            (int)__LINE__);
       break;
     }
     if (group_number == SL_SYSRTC_GROUP_0) {
@@ -240,10 +261,14 @@ sl_status_t sl_si91x_sysrtc_unregister_callback(sl_sysrtc_group_number_t group_n
     // if they are NULL will return an error code
     if (interrupt_enable_ptr == NULL) {
       status = SL_STATUS_NULL_POINTER;
+      SL_PRINT_STRING_ERROR("sl_si91x_sysrtc_unregister_callback: handle NULL,line no : %d\r\n", (int)__LINE__);
       break;
     }
     if (group_number >= SL_SYSRTC_GROUP_LAST) {
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR("sl_si91x_sysrtc_unregister_callback: error status=0x%04lX,line no : %d\r\n",
+                            (unsigned long)(SL_STATUS_INVALID_PARAMETER),
+                            (int)__LINE__);
       break;
     }
     // Calculating ored interrupt flag value
@@ -294,10 +319,16 @@ sl_status_t sl_si91x_sysrtc_set_compare_value(sl_sysrtc_group_number_t group_num
   do {
     if (group_number >= SL_SYSRTC_GROUP_LAST) {
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR("sl_si91x_sysrtc_set_compare_value: error status=0x%04lX,line no : %d\r\n",
+                            (unsigned long)(SL_STATUS_INVALID_PARAMETER),
+                            (int)__LINE__);
       break;
     }
     if (channel >= SL_SYSRTC_CHANNEL_LAST) {
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR("sl_si91x_sysrtc_set_compare_value: error status=0x%04lX,line no : %d\r\n",
+                            (unsigned long)(SL_STATUS_INVALID_PARAMETER),
+                            (int)__LINE__);
       break;
     }
     rsi_sysrtc_set_compare_value((uint8_t)group_number, (uint8_t)channel, compare_value);
@@ -319,14 +350,21 @@ sl_status_t sl_si91x_sysrtc_get_compare_value(sl_sysrtc_group_number_t group_num
     // will return an error code
     if (compare_value == NULL) {
       status = SL_STATUS_NULL_POINTER;
+      SL_PRINT_STRING_ERROR("sl_si91x_sysrtc_get_compare_value: handle NULL,line no : %d\r\n", (int)__LINE__);
       break;
     }
     if (group_number >= SL_SYSRTC_GROUP_LAST) {
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR("sl_si91x_sysrtc_get_compare_value: error status=0x%04lX,line no : %d\r\n",
+                            (unsigned long)(SL_STATUS_INVALID_PARAMETER),
+                            (int)__LINE__);
       break;
     }
     if (channel >= SL_SYSRTC_CHANNEL_LAST) {
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR("sl_si91x_sysrtc_get_compare_value: error status=0x%04lX,line no : %d\r\n",
+                            (unsigned long)(SL_STATUS_INVALID_PARAMETER),
+                            (int)__LINE__);
       break;
     }
     // reading group compare value
@@ -343,6 +381,9 @@ sl_status_t sl_si91x_sysrtc_sets_register_capture_input(sl_sysrtc_group_number_t
   sl_status_t status;
   if (group_number >= SL_SYSRTC_GROUP_LAST) {
     status = SL_STATUS_INVALID_PARAMETER;
+    SL_PRINT_STRING_ERROR("sl_si91x_sysrtc_sets_register_capture_input: error status=0x%04lX,line no : %d\r\n",
+                          (unsigned long)(SL_STATUS_INVALID_PARAMETER),
+                          (int)__LINE__);
   } else {
     rsi_sysrtc_set_capture_reg((const uint32_t)group_number);
     status = SL_STATUS_OK;
@@ -358,6 +399,9 @@ sl_status_t sl_si91x_sysrtc_set_gpio_as_capture_input(sl_sysrtc_group_number_t g
   sl_status_t status;
   if (group_number >= SL_SYSRTC_GROUP_LAST) {
     status = SL_STATUS_INVALID_PARAMETER;
+    SL_PRINT_STRING_ERROR("sl_si91x_sysrtc_set_gpio_as_capture_input: error status=0x%04lX,line no : %d\r\n",
+                          (unsigned long)(SL_STATUS_INVALID_PARAMETER),
+                          (int)__LINE__);
   } else {
     rsi_sysrtc_set_capture_gpio((const uint32_t)group_number);
     status = SL_STATUS_OK;
@@ -376,10 +420,16 @@ sl_status_t sl_si91x_sysrtc_set_compare_output_gpio(sl_sysrtc_group_number_t gro
   do {
     if (group_number >= SL_SYSRTC_GROUP_LAST) {
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR("sl_si91x_sysrtc_set_compare_output_gpio: error status=0x%04lX,line no : %d\r\n",
+                            (unsigned long)(SL_STATUS_INVALID_PARAMETER),
+                            (int)__LINE__);
       break;
     }
     if (channel >= SL_SYSRTC_CHANNEL_LAST) {
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR("sl_si91x_sysrtc_set_compare_output_gpio: error status=0x%04lX,line no : %d\r\n",
+                            (unsigned long)(SL_STATUS_INVALID_PARAMETER),
+                            (int)__LINE__);
       break;
     }
     // reading group compare value
@@ -397,6 +447,9 @@ sl_status_t sl_si91x_sysrtc_set_capture_input_prs_gpio(sl_sysrtc_group_number_t 
   sl_status_t status = SL_STATUS_OK;
   if (group_number >= SL_SYSRTC_GROUP_LAST) {
     status = SL_STATUS_INVALID_PARAMETER;
+    SL_PRINT_STRING_ERROR("sl_si91x_sysrtc_set_capture_input_prs_gpio: error status=0x%04lX,line no : %d\r\n",
+                          (unsigned long)(SL_STATUS_INVALID_PARAMETER),
+                          (int)__LINE__);
   } else
     status = sli_si91x_sysrtc_gpio_capture_config(group_number, sysrtc_prs_gpio);
 
@@ -415,10 +468,16 @@ sl_status_t sl_si91x_sysrtc_set_compare_output_prs_gpio(sl_sysrtc_group_number_t
   do {
     if (group_number >= SL_SYSRTC_GROUP_LAST) {
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR("sl_si91x_sysrtc_set_compare_output_prs_gpio: error status=0x%04lX,line no : %d\r\n",
+                            (unsigned long)(SL_STATUS_INVALID_PARAMETER),
+                            (int)__LINE__);
       break;
     }
     if (channel >= SL_SYSRTC_CHANNEL_LAST) {
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR("sl_si91x_sysrtc_set_compare_output_prs_gpio: error status=0x%04lX,line no : %d\r\n",
+                            (unsigned long)(SL_STATUS_INVALID_PARAMETER),
+                            (int)__LINE__);
       break;
     }
     // reading group compare value
@@ -437,12 +496,18 @@ static sl_status_t sli_si91x_sysrtc_compare_gpio_config(sl_sysrtc_group_number_t
   sl_si91x_uulp_npss_mode_t mux_mode;
   sl_status_t status = sl_gpio_driver_init(); // Initialize the GPIO driver
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sli_si91x_sysrtc_compare_gpio_config: error status=0x%04lX,line no : %d\r\n",
+                          (unsigned long)(SL_STATUS_FAIL),
+                          (int)__LINE__);
     return SL_STATUS_FAIL;
   }
 
   // Configure GPIO pins for SYSRTC Pin config.
   status = sl_gpio_set_configuration(sysrtc_prs_gpio);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sli_si91x_sysrtc_compare_gpio_config: error status=0x%04lX,line no : %d\r\n",
+                          (unsigned long)(SL_STATUS_FAIL),
+                          (int)__LINE__);
     return SL_STATUS_FAIL;
   }
   if (group_number == SL_SYSRTC_GROUP_0) {
@@ -459,14 +524,23 @@ static sl_status_t sli_si91x_sysrtc_compare_gpio_config(sl_sysrtc_group_number_t
   }
   status = sl_si91x_gpio_driver_set_uulp_npss_pin_mux(sysrtc_prs_gpio.port_pin.pin, mux_mode);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sli_si91x_sysrtc_compare_gpio_config: error status=0x%04lX,line no : %d\r\n",
+                          (unsigned long)(SL_STATUS_FAIL),
+                          (int)__LINE__);
     return SL_STATUS_FAIL;
   }
   status = sl_si91x_gpio_driver_select_uulp_npss_receiver(sysrtc_prs_gpio.port_pin.pin, GPIO_RECEIVER_DS);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sli_si91x_sysrtc_compare_gpio_config: error status=0x%04lX,line no : %d\r\n",
+                          (unsigned long)(SL_STATUS_FAIL),
+                          (int)__LINE__);
     return SL_STATUS_FAIL;
   }
   status = sl_si91x_gpio_driver_select_uulp_npss_polarity(sysrtc_prs_gpio.port_pin.pin, GPIO_POLARITY_0);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sli_si91x_sysrtc_compare_gpio_config: error status=0x%04lX,line no : %d\r\n",
+                          (unsigned long)(SL_STATUS_FAIL),
+                          (int)__LINE__);
     return SL_STATUS_FAIL;
   }
 
@@ -482,12 +556,18 @@ static sl_status_t sli_si91x_sysrtc_gpio_capture_config(sl_sysrtc_group_number_t
   sl_si91x_uulp_npss_mode_t mux_mode;
   sl_status_t status = sl_gpio_driver_init(); // Initialize the GPIO driver
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sli_si91x_sysrtc_gpio_capture_config: error status=0x%04lX,line no : %d\r\n",
+                          (unsigned long)(SL_STATUS_FAIL),
+                          (int)__LINE__);
     return SL_STATUS_FAIL;
   }
   // Configure GPIO pins for SYSRTC Pin config.
 
   status = sl_gpio_set_configuration(sysrtc_prs_gpio);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sli_si91x_sysrtc_gpio_capture_config: error status=0x%04lX,line no : %d\r\n",
+                          (unsigned long)(SL_STATUS_FAIL),
+                          (int)__LINE__);
     return SL_STATUS_FAIL;
   }
   if (group_number == SL_SYSRTC_GROUP_0) {
@@ -501,14 +581,23 @@ static sl_status_t sli_si91x_sysrtc_gpio_capture_config(sl_sysrtc_group_number_t
 
   status = sl_si91x_gpio_driver_set_uulp_npss_pin_mux(sysrtc_prs_gpio.port_pin.pin, mux_mode);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sli_si91x_sysrtc_gpio_capture_config: error status=0x%04lX,line no : %d\r\n",
+                          (unsigned long)(SL_STATUS_FAIL),
+                          (int)__LINE__);
     return SL_STATUS_FAIL;
   }
   status = sl_si91x_gpio_driver_select_uulp_npss_receiver(sysrtc_prs_gpio.port_pin.pin, GPIO_RECEIVER_EN);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sli_si91x_sysrtc_gpio_capture_config: error status=0x%04lX,line no : %d\r\n",
+                          (unsigned long)(SL_STATUS_FAIL),
+                          (int)__LINE__);
     return SL_STATUS_FAIL;
   }
   status = sl_si91x_gpio_driver_select_uulp_npss_polarity(sysrtc_prs_gpio.port_pin.pin, GPIO_POLARITY_0);
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sli_si91x_sysrtc_gpio_capture_config: error status=0x%04lX,line no : %d\r\n",
+                          (unsigned long)(SL_STATUS_FAIL),
+                          (int)__LINE__);
     return SL_STATUS_FAIL;
   }
   return SL_STATUS_OK;
@@ -525,6 +614,8 @@ sl_status_t sl_si91x_sysrtc_get_count(uint32_t *count_value)
   // if it is NULL will return an error code
   if (count_value == NULL) {
     status = SL_STATUS_NULL_POINTER;
+    SL_PRINT_STRING_ERROR("sl_si91x_sysrtc_get_count: handle NULL,line no : %d\r\n", (int)__LINE__);
+
   } else {
     // reading counter current count value
     *count_value = rsi_sysrtc_get_counter();
@@ -544,12 +635,16 @@ sl_status_t sl_si91x_sysrtc_get_capture_value(sl_sysrtc_group_number_t group_num
   do {
     if (group_number >= SL_SYSRTC_GROUP_LAST) {
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR("sl_si91x_sysrtc_get_capture_value: error status=0x%04lX,line no : %d\r\n",
+                            (unsigned long)(SL_STATUS_INVALID_PARAMETER),
+                            (int)__LINE__);
       break;
     }
     // Validating the 'pointer to capture_value' parameter,
     // if it is NULL will return an error code
     if (capture_value == NULL) {
       status = SL_STATUS_NULL_POINTER;
+      SL_PRINT_STRING_ERROR("sl_si91x_sysrtc_get_capture_value: handle NULL,line no : %d\r\n", (int)__LINE__);
       break;
     }
     // reading capture value
@@ -570,12 +665,16 @@ sl_status_t sl_si91x_sysrtc_get_compare_output(sl_sysrtc_group_number_t group_nu
   do {
     if (group_number >= SL_SYSRTC_GROUP_LAST) {
       status = SL_STATUS_INVALID_PARAMETER;
+      SL_PRINT_STRING_ERROR("sl_si91x_sysrtc_get_compare_output: error status=0x%04lX,line no : %d\r\n",
+                            (unsigned long)(SL_STATUS_INVALID_PARAMETER),
+                            (int)__LINE__);
       break;
     }
     // Validating the 'pointer to capture_value' parameter,
     // if it is NULL will return an error code
     if (compare_output == NULL) {
       status = SL_STATUS_NULL_POINTER;
+      SL_PRINT_STRING_ERROR("sl_si91x_sysrtc_get_compare_output: handle NULL,line no : %d\r\n", (int)__LINE__);
       break;
     }
     // reading capture value
@@ -598,6 +697,7 @@ sl_status_t sl_si91x_sysrtc_is_running(boolean_t *running_status)
     // will return an error code
     if (running_status == NULL) {
       status = SL_STATUS_NULL_POINTER;
+      SL_PRINT_STRING_ERROR("sl_si91x_sysrtc_is_running: handle NULL,line no : %d\r\n", (int)__LINE__);
       break;
     }
     sysrtc_status = rsi_sysrtc_get_status();
@@ -624,6 +724,7 @@ sl_status_t sl_si91x_sysrtc_is_locked(boolean_t *lock_status)
     // will return an error code
     if (lock_status == NULL) {
       status = SL_STATUS_NULL_POINTER;
+      SL_PRINT_STRING_ERROR("sl_si91x_sysrtc_is_locked: handle NULL,line no : %d\r\n", (int)__LINE__);
       break;
     }
     sysrtc_status = rsi_sysrtc_get_status();

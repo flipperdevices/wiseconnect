@@ -1,8 +1,9 @@
 id: iostream_rtt_si91x
+label: IO Stream RTT
 package: platform_siwx91x
-label: "IO Stream:SI91X RTT"
 description: >
-  Instantiate the driver for using IO Stream over RTT peripheral.
+  This component instantiates the driver for using IO Stream over the Segger RTT
+  (Real-Time Transfer) interface on SiWx91x.
 category: Device|Si91x|MCU|Service
 quality: production
 metadata:

@@ -1,8 +1,8 @@
 id: cmsis_si91x_common
-label: CMSIS DRIVER COMMON
+label: CMSIS Driver Common
 package: platform_siwx91x
 description: >
-  Common Driver API's
+  This component provides common CMSIS driver APIs for the SiWx91x platform.
 category: Device|Si91x|MCU|Internal|CMSIS Drivers
 quality: production
 metadata:

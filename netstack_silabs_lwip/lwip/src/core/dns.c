@@ -460,7 +460,7 @@ dns_getserver(u8_t numdns)
  * 
  * @note Made non-static when LWIP_TESTMODE is defined for unit testing.
  */
-#ifdef LWIP_TESTMODE
+#if LWIP_TESTMODE
 void dns_timeout_cb(void *arg)
 #else
 static void dns_timeout_cb(void *arg)
@@ -1909,7 +1909,7 @@ dns_gethostbyname_addrtype(const char *hostname, ip_addr_t *addr, dns_found_call
                      LWIP_DNS_ISMDNS_ARG(is_mdns));
 }
 
-#if SL_LWIP_DNS_ONDEMAND_TIMER && defined(LWIP_TESTMODE)
+#if SL_LWIP_DNS_ONDEMAND_TIMER && LWIP_TESTMODE
 /**
  * Test helper functions for unit tests
  * These functions are only available when LWIP_TESTMODE is defined

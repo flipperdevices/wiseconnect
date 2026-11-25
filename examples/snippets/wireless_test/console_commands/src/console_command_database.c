@@ -144,6 +144,7 @@ static const char *_sl_net_dns_resolve_hostname_arg_help[] = {
   0,
   0,
   0,
+  0,
 };
 
 static const console_descriptive_command_t _sl_net_dns_resolve_hostname_command = {
@@ -152,6 +153,7 @@ static const console_descriptive_command_t _sl_net_dns_resolve_hostname_command 
   .handler       = sl_dns_hostgetbyname_command_handler,
   .argument_list = { CONSOLE_ARG_STRING,
                      CONSOLE_OPTIONAL_ARG('t', CONSOLE_ARG_UINT),
+                     CONSOLE_OPTIONAL_ARG('r', CONSOLE_ARG_UINT),
                      CONSOLE_OPTIONAL_ARG('i', CONSOLE_ENUM_ARG(sl_net_dns_resolution_ip_type_t)),
                      CONSOLE_ARG_END }
 };
@@ -1242,14 +1244,15 @@ static const char *_wifi_start_wps_arg_help[] = {
   0,
 };
 
-static const console_descriptive_command_t _wifi_start_wps_command = { .description   = "Enable WPS on access point",
-                                                                       .argument_help = _wifi_start_wps_arg_help,
-                                                                       .handler       = wifi_start_wps,
-                                                                       .argument_list = {
-                                                                         CONSOLE_ENUM_ARG(wifi_interface),
-                                                                         CONSOLE_ENUM_ARG(wps_mode),
-                                                                         CONSOLE_OPTIONAL_ARG('p', CONSOLE_ARG_STRING),
-                                                                         CONSOLE_ARG_END } };
+static const console_descriptive_command_t _wifi_start_wps_command = {
+  .description   = "Start WPS on Wi-Fi client (STA) as push-button enrollee (v2 API)",
+  .argument_help = _wifi_start_wps_arg_help,
+  .handler       = wifi_start_wps,
+  .argument_list = { CONSOLE_ENUM_ARG(wifi_interface),
+                     CONSOLE_ENUM_ARG(wps_mode),
+                     CONSOLE_OPTIONAL_ARG('p', CONSOLE_ARG_STRING),
+                     CONSOLE_ARG_END }
+};
 
 extern sl_status_t wifi_stop_scan_command_handler(console_args_t *arguments);
 static const char *_wifi_stop_scan_arg_help[] = {

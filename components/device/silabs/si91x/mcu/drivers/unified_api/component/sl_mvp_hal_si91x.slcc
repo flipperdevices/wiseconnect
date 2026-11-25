@@ -3,7 +3,7 @@ label: MVP HAL
 package: platform_siwx91x
 description: >
   This component provides the HAL part of the MVP driver. It is customized for
-  si91x parts with MVP.
+  SiWx91x parts with MVP.
   The API of this component is marked as internal.
 category: Device|Si91x|MCU|Compute
 quality: production

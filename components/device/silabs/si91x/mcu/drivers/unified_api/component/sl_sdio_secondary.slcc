@@ -16,6 +16,7 @@ provides:
 requires:
   - name: sl_assert
   - name: sl_sdio_secondary_peripheral
+  - name: log_none
 source:
   - path: src/sl_si91x_sdio_secondary.c
 include:
@@ -31,8 +32,5 @@ template_contribution:
       event: driver_init
       include: "sl_si91x_sdio_secondary.h"
       handler: sl_si91x_sdio_secondary_init
-documentation:
-    docset: wiseconnect
-    document: wiseconnect-api-reference-guide-si91x-peripherals/sdio
 conflicts:
   - name: sl_hspi_secondary    

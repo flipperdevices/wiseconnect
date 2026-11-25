@@ -31,18 +31,25 @@ void low_power_configuration(void);
 void ps0_state_init(void)
 {
   sl_status_t status;
+  // Print the required state
+  SL_PRINT_STRING_ERROR("PS0 Sleep State \n");
   // change the TASS reference clock to MHz RC.
   RSI_ChangeTassRefClock();
   // Power downs the domains.
   low_power_configuration();
   // Shutdown Wireless NWP.
   ps_wireless_shutdown();
-  DEBUGOUT("PS0 Sleep State \n");
+  /* Note: All status messages in this example — both success and failure — are
+ * intentionally emitted via SL_PRINT_STRING_ERROR so that they remain visible
+ * on the console at the default log level. This is a demonstration choice, not
+ * a recommendation: in production code, ERROR severity should be reserved for
+ * actual failures, with successful operations logged via SL_PRINT_STRING_INFO
+ * (or SL_PRINT_STRING_DEBUG for verbose trace). */
   // PS0 state requirement is added, it transits to PS0 sleep state.
   status = sl_si91x_power_manager_add_ps_requirement(SL_SI91X_POWER_MANAGER_PS0);
   if (status != SL_STATUS_OK) {
     // If status is not OK, return with the error code.
-    DEBUGOUT("Error Code: 0x%lX, Power State Transition Failed \n", status);
+    SL_PRINT_STRING_ERROR("Error Code: 0x%lX, Power State Transition Failed \n", (unsigned long)status);
   }
 }
 

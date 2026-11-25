@@ -5,7 +5,7 @@ description: 'Wirelessly updates the M4 firmware from a remote TCP server
   '
 category: Example|si91x_soc
 quality: production
-label: sl_si91x_slot_a_fw
+label: SiWx91x Platform - Firmware Fallback Slot A
 component:
 - id: sl_main
 - id: freertos
@@ -20,7 +20,6 @@ component:
 - id: basic_network_config_manager
 - id: bsd_socket
 - id: sl_si91x_soc_soft_reset
-- id: sl_si91x_basic_buffers
 - id: sl_si91x_fw_fallback
 source:
 - path: app.c
@@ -42,7 +41,9 @@ template_contribution:
   priority: -100
 toolchain_settings:
 - option: gcc_compiler_option
-  value: -Wall -Werror
+  value: -Wall -Werror -Wno-error=deprecated-declarations
+- option: llvm_compiler_option
+  value: -Wall -Werror -Wno-error=deprecated-declarations
 other_file:
 - path: resources/readme/output_remote_server.png
 - path: resources/readme/output_soc.png
@@ -65,6 +66,15 @@ readme:
 post_build:
   profile: wiseconnect_soc
 filter:
+- name: Device Type
+  value:
+  - SoC
+- name: MCU
+  value:
+  - 32-bit MCU
+- name: Level
+  value:
+  - Beginner
 - name: Wireless Technology
   value:
   - Wi-Fi
@@ -74,8 +84,8 @@ filter:
 sdk_extension:
 - id: wiseconnect3_sdk
   vendor: silabs
-  version: 4.0.1
+  version: 4.1.2
 sdk:
   id: simplicity_sdk
   vendor: silabs
-  version: 2025.12.2
+  version: 2026.6.2

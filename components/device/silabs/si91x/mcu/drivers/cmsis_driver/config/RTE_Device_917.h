@@ -954,17 +954,13 @@
 #endif
 #endif
 	
-//   <e> DMA Rx
-//     <o3> Channel <28=>28
+//     <o> RTE_SSI_MASTER_UDMA_RX_CH Channel <28=>28
 //     <i>  Selects DMA Channel (only Channel 28 can be used)
-//   </e>
 #define RTE_SSI_MASTER_RX_DMA                0
 #define RTE_SSI_MASTER_UDMA_RX_CH	         28
 
-//   <e> DMA Tx
-//     <o3> Channel <29=>29
+//     <o> RTE_SSI_MASTER_UDMA_TX_CH Channel <29=>29
 //     <i>  Selects DMA Channel (only Channel 29 can be used)
-//   </e>
 #define RTE_SSI_MASTER_TX_DMA                0
 #define RTE_SSI_MASTER_UDMA_TX_CH      		 29
 // </e>
@@ -1132,18 +1128,14 @@
 #error "Invalid SSI_SLAVE_CS Pin Configuration!"
 #endif
 
-//   <e> DMA Rx
-//     <o3> Channel <22=>22
+//     <o> RTE_SSI_SLAVE_UDMA_RX_CH Channel <22=>22
 //     <i>  Selects DMA Channel (only Channel 22 can be used)
-//   </e>
 #define RTE_SSI_SLAVE_RX_DMA                1
 #define RTE_SSI_SLAVE_UDMA_RX_CH	         22
 #define RTE_SSI_SLAVE_DMA_RX_LEN_PER_DES	 1024
 
-//   <e> DMA Tx
-//     <o3> Channel <23=>23
+//     <o> RTE_SSI_SLAVE_UDMA_TX_CH Channel <23=>23
 //     <i>  Selects DMA Channel (only Channel 23 can be used)
-//   </e>
 #define RTE_SSI_SLAVE_TX_DMA                1
 #define RTE_SSI_SLAVE_UDMA_TX_CH      		 23
 #define RTE_SSI_SLAVE_DMA_TX_LEN_PER_DES	 1024
@@ -1154,7 +1146,6 @@
 // <i> Configuration settings for Driver_SSI_ULP_MASTER in component ::CMSIS Driver:SPI
 #define RTE_SSI_ULP_MASTER                  1
 
-// <e> Enable multiple CSN lines
 #define ULP_SSI_CS0     1
 #define ULP_SSI_CS1     0
 #define ULP_SSI_CS2     0
@@ -1254,18 +1245,14 @@
 #define  RTE_SSI_ULP_MASTER_CS2_MODE            1
 
 
-//   <e> DMA Rx
-//     <o3> Channel <2=>2
+//     <o> RTE_SSI_ULP_MASTER_UDMA_RX_CH Channel <2=>2
 //     <i>  Selects DMA Channel (only Channel 2 can be used)
-//   </e>
 #define RTE_SSI_ULP_MASTER_RX_DMA                1
 #define RTE_SSI_ULP_MASTER_UDMA_RX_CH	           2
 #define RTE_SSI_ULP_MASTER_DMA_RX_LEN_PER_DES	   96
 
-//   <e> DMA Tx
-//     <o3> Channel <3=>3
+//     <o> RTE_SSI_ULP_MASTER_UDMA_TX_CH Channel <3=>3
 //     <i>  Selects DMA Channel (only Channel 3 can be used)
-//   </e>
 #define RTE_SSI_ULP_MASTER_TX_DMA                1
 #define RTE_SSI_ULP_MASTER_UDMA_TX_CH      		   3
 #define RTE_SSI_ULP_MASTER_DMA_TX_LEN_PER_DES	   96
@@ -2072,10 +2059,8 @@
   #error "Invalid GSPI0 RTE_GSPI_MASTER_CLK_PIN Pin Configuration!"
 #endif
 
-//   <e> GSPI_MASTER_CS0
-//   <o>  <0=>P0_9 <1=>P0_28 <2=>P0_49 <3=>P0_53   
+//   <o> GSPI_MASTER_CS0 Pin <0=>P0_9 <1=>P0_28 <2=>P0_49 <3=>P0_53
 //   <i> CS0 of GSPI0
-//   </e>
 #ifndef CHIP_917_6x6
 #define RTE_GSPI_MASTER_CS0_PORT_ID                  0
 #endif
@@ -2115,10 +2100,8 @@
 #endif
 
 #ifndef CHIP_917_6x6
-//   <e> GSPI_MASTER_CS1
-//   <o>  <0=>P0_10 <1=>P0_29 <2=>P0_50 <3=>P0_54   
+//   <o> GSPI_MASTER_CS1 Pin <0=>P0_10 <1=>P0_29 <2=>P0_50 <3=>P0_54
 //   <i> CS1 of GSPI0
-//   </e>
 #define RTE_GSPI_MASTER_CS1_PORT_ID                  2
 #if(RTE_GSPI_MASTER_CS1_PORT_ID == 0)
 #define RTE_GSPI_MASTER_CS1                     1  
@@ -2148,10 +2131,8 @@
   #error "Invalid GSPI0 RTE_GSPI_MASTER_CS1_PIN Pin Configuration!"
 #endif
 
-//   <e> GSPI_MASTER_CS2
-//   <o>  <0=>P0_15 <1=>P0_30 <2=>P0_51 <3=>P0_55   
+//   <o> GSPI_MASTER_CS2 Pin <0=>P0_15 <1=>P0_30 <2=>P0_51 <3=>P0_55
 //   <i> CS2 of GSPI0
-//   </e>
 #define RTE_GSPI_MASTER_CS2_PORT_ID                  1
 #if(RTE_GSPI_MASTER_CS2_PORT_ID == 0)
 #define RTE_GSPI_MASTER_CS2                     1  

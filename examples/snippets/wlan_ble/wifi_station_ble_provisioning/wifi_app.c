@@ -43,6 +43,7 @@
 
 #include "cmsis_os2.h"
 #include <string.h>
+#include <stdio.h>
 
 #include "wifi_config.h"
 #include "rsi_common_apis.h"
@@ -84,7 +85,7 @@ static uint32_t wlan_app_event_map;
 extern void wifi_app_send_to_ble(uint16_t msg_type, uint8_t *data, uint16_t data_len);
 static sl_status_t show_scan_results();
 void wifi_app_set_event(uint32_t event_num);
-extern uint8_t coex_ssid[50], pwd[34], sec_type;
+extern uint8_t coex_ssid[WIFI_STATION_BLE_COEX_SSID_BUFFER_LEN], pwd[WIFI_STATION_BLE_PWD_BUFFER_LEN], sec_type;
 uint8_t retry = 1;
 
 uint8_t conn_status;
@@ -175,27 +176,31 @@ static sl_status_t show_scan_results()
 {
   SL_WIFI_ARGS_CHECK_NULL_POINTER(scan_result);
   uint8_t *bssid = NULL;
-  LOG_PRINT("%lu Scan results:\n", scan_result->scan_count);
+  SL_DEBUG_LOG_V2(INFO, "%lu Scan results:\r\n", scan_result->scan_count);
 
   if (scan_result->scan_count) {
-    LOG_PRINT("\n   %s %24s %s", "SSID", "SECURITY", "NETWORK");
-    LOG_PRINT("%12s %12s %s\n", "BSSID", "CHANNEL", "RSSI");
+    SL_DEBUG_LOG_V2(INFO, "   %s %24s %s", (uintptr_t) "SSID", (uintptr_t) "SECURITY", (uintptr_t) "NETWORK");
+    SL_DEBUG_LOG_V2(INFO, "%12s %12s %s\r\n", (uintptr_t) "BSSID", (uintptr_t) "CHANNEL", (uintptr_t) "RSSI");
 
     for (int a = 0; a < (int)scan_result->scan_count; ++a) {
       bssid = (uint8_t *)&scan_result->scan_info[a].bssid;
-      LOG_PRINT("%-24s %4u,  %4u, ",
-                scan_result->scan_info[a].ssid,
-                scan_result->scan_info[a].security_mode,
-                scan_result->scan_info[a].network_type);
-      LOG_PRINT("  %02x:%02x:%02x:%02x:%02x:%02x, %4u,  -%u\n",
-                bssid[0],
-                bssid[1],
-                bssid[2],
-                bssid[3],
-                bssid[4],
-                bssid[5],
-                scan_result->scan_info[a].rf_channel,
-                scan_result->scan_info[a].rssi_val);
+      SL_DEBUG_LOG_V2(INFO,
+                      "%-24s %4u,  %4u, ",
+                      (uintptr_t)scan_result->scan_info[a].ssid,
+                      scan_result->scan_info[a].security_mode,
+                      scan_result->scan_info[a].network_type);
+      char sta_prov_scan_bssid_log[48];
+      snprintf(sta_prov_scan_bssid_log,
+               sizeof(sta_prov_scan_bssid_log),
+               "  %02x:%02x:%02x:%02x:%02x:%02x, ",
+               bssid[0],
+               bssid[1],
+               bssid[2],
+               bssid[3],
+               bssid[4],
+               bssid[5]);
+      SL_DEBUG_LOG_V2(INFO, "%s", (uintptr_t)sta_prov_scan_bssid_log);
+      SL_DEBUG_LOG_V2(INFO, "%4u,  -%u\r\n", scan_result->scan_info[a].rf_channel, scan_result->scan_info[a].rssi_val);
     }
   }
 
@@ -239,7 +244,7 @@ void wifi_app_task()
   // Allocate memory for scan buffer
   scan_result = (sl_wifi_scan_result_t *)malloc(scanbuf_size);
   if (scan_result == NULL) {
-    LOG_PRINT("Failed to allocate memory for scan result\n");
+    SL_DEBUG_LOG_V2(ERROR, "Failed to allocate memory for scan result\r\n");
     return;
   }
   memset(scan_result, 0, scanbuf_size);
@@ -256,7 +261,7 @@ void wifi_app_task()
     switch (event_id) {
       case WIFI_APP_INITIAL_STATE: {
         wifi_app_clear_event(WIFI_APP_INITIAL_STATE);
-        LOG_PRINT("WIFI App Initial State\n");
+        SL_DEBUG_LOG_V2(INFO, "WIFI App Initial State\r\n");
 
         //! Initialize join fail call back
         sl_wifi_set_join_callback_v2(join_callback_handler, NULL);
@@ -272,7 +277,7 @@ void wifi_app_task()
 
       case WIFI_APP_UNCONNECTED_STATE: {
         wifi_app_clear_event(WIFI_APP_UNCONNECTED_STATE);
-        LOG_PRINT("WIFI App Unconnected State\n");
+        SL_DEBUG_LOG_V2(INFO, "WIFI App Unconnected State\r\n");
 
         // Any additional code if required
 
@@ -291,7 +296,7 @@ void wifi_app_task()
 
         status = sl_wifi_start_scan(SL_WIFI_CLIENT_2_4GHZ_INTERFACE, NULL, &wifi_scan_configuration);
         if (SL_STATUS_IN_PROGRESS == status) {
-          LOG_PRINT("Scanning...\r\n");
+          SL_DEBUG_LOG_V2(INFO, "Scanning...\r\n");
           const uint32_t start = osKernelGetTickCount();
 
           while (!scan_complete && (osKernelGetTickCount() - start) <= WIFI_SCAN_TIMEOUT) {
@@ -300,7 +305,7 @@ void wifi_app_task()
           status = scan_complete ? callback_status : SL_STATUS_TIMEOUT;
         }
         if (status != SL_STATUS_OK) {
-          LOG_PRINT("\r\nWLAN Scan Wait Failed, Error Code : 0x%lX\r\n", status);
+          SL_DEBUG_LOG_V2(ERROR, "WLAN Scan Wait Failed, Error Code : 0x%lX\r\n", status);
           wifi_app_set_event(WIFI_APP_SCAN_STATE);
           osDelay(1000);
         }
@@ -319,10 +324,10 @@ void wifi_app_task()
         if (sec_type != SL_WIFI_OPEN) {
           status = sl_net_set_credential(id, SL_NET_WIFI_PSK, pwd, strlen((char *)pwd));
           if (SL_STATUS_OK == status) {
-            LOG_PRINT("Credentials set, id : %lu\n", id);
+            SL_DEBUG_LOG_V2(INFO, "Credentials set, id : %lu\r\n", id);
           }
           if (status != SL_STATUS_OK) {
-            printf("\r\nFailed to set client credentials: 0x%lx\r\n", status);
+            SL_DEBUG_LOG_V2(ERROR, "Failed to set client credentials: 0x%lx\r\n", status);
             continue;
           }
         } else {
@@ -335,26 +340,26 @@ void wifi_app_task()
         access_point.encryption    = SL_WIFI_DEFAULT_ENCRYPTION;
         access_point.credential_id = id;
 
-        LOG_PRINT("SSID=%s\n", access_point.ssid.value);
+        SL_DEBUG_LOG_V2(INFO, "SSID=%s\r\n", (uintptr_t)access_point.ssid.value);
         status = sl_wifi_connect(SL_WIFI_CLIENT_2_4GHZ_INTERFACE, &access_point, TIMEOUT_MS);
 
         if (status != RSI_SUCCESS) {
           timeout = 1;
           wifi_app_send_to_ble(WIFI_APP_TIMEOUT_NOTIFY, (uint8_t *)&timeout, 1);
           wifi_app_clear_event(WIFI_APP_JOIN_STATE);
-          LOG_PRINT("\r\nWLAN Connect Failed, Error Code : 0x%lX\r\n", status);
+          SL_DEBUG_LOG_V2(ERROR, "WLAN Connect Failed, Error Code : 0x%lX\r\n", status);
 
           // update wlan application state
           disconnected = 1;
           connected    = 0;
         } else {
-          LOG_PRINT("\n WLAN connection is successful\n");
+          SL_DEBUG_LOG_V2(INFO, " WLAN connection is successful\r\n");
           // update wlan application state
           wifi_app_clear_event(WIFI_APP_JOIN_STATE);
           wifi_app_set_event(WIFI_APP_CONNECTED_STATE);
         }
         osSemaphoreRelease(wlan_thread_sem);
-        LOG_PRINT("WIFI App Join State\n");
+        SL_DEBUG_LOG_V2(INFO, "WIFI App Join State\r\n");
       } break;
 
       case WIFI_APP_FLASH_STATE: {
@@ -363,7 +368,7 @@ void wifi_app_task()
         if (retry) {
           status = sl_wifi_connect(SL_WIFI_CLIENT_2_4GHZ_INTERFACE, &access_point, TIMEOUT_MS);
           if (status != RSI_SUCCESS) {
-            LOG_PRINT("\r\nWLAN Connect Failed, Error Code : 0x%lX\r\n", status);
+            SL_DEBUG_LOG_V2(ERROR, "WLAN Connect Failed, Error Code : 0x%lX\r\n", status);
             break;
           } else {
             wifi_app_set_event(WIFI_APP_CONNECTED_STATE);
@@ -395,7 +400,7 @@ void wifi_app_task()
               wifi_app_set_event(WIFI_APP_ERROR_STATE);
             }
           }
-          LOG_PRINT("\r\nIP Config Failed, Error Code : 0x%lX\r\n", status);
+          SL_DEBUG_LOG_V2(ERROR, "IP Config Failed, Error Code : 0x%lX\r\n", status);
           break;
         } else {
           a             = 0;
@@ -417,7 +422,7 @@ void wifi_app_task()
         }
 
         osSemaphoreRelease(wlan_thread_sem);
-        LOG_PRINT("WIFI App Connected State\n");
+        SL_DEBUG_LOG_V2(INFO, "WIFI App Connected State\r\n");
 
       } break;
 
@@ -425,7 +430,7 @@ void wifi_app_task()
         wifi_app_clear_event(WIFI_APP_IPCONFIG_DONE_STATE);
 
         osSemaphoreRelease(wlan_thread_sem);
-        LOG_PRINT("WIFI App IPCONFIG Done State\n");
+        SL_DEBUG_LOG_V2(INFO, "WIFI App IPCONFIG Done State\r\n");
       } break;
 
       case WIFI_APP_ERROR_STATE: {
@@ -439,7 +444,7 @@ void wifi_app_task()
         wifi_app_set_event(WIFI_APP_FLASH_STATE);
 
         osSemaphoreRelease(wlan_thread_sem);
-        LOG_PRINT("WIFI App Disconnected State\n");
+        SL_DEBUG_LOG_V2(INFO, "WIFI App Disconnected State\r\n");
 
       } break;
 
@@ -451,17 +456,17 @@ void wifi_app_task()
 #if RSI_WISE_MCU_ENABLE
           rsi_flash_erase((uint32_t)FLASH_ADDR_TO_STORE_AP_DETAILS);
 #endif
-          LOG_PRINT("\r\nWLAN Disconnected\r\n");
+          SL_DEBUG_LOG_V2(INFO, "WLAN Disconnected\r\n");
           disassosiated = 1;
           connected     = 0;
           wifi_app_send_to_ble(WIFI_APP_DISCONNECTION_NOTIFY, (uint8_t *)&disassosiated, 1);
           wifi_app_set_event(WIFI_APP_UNCONNECTED_STATE);
         } else {
-          LOG_PRINT("\r\nWIFI Disconnect Failed, Error Code : 0x%lX\r\n", status);
+          SL_DEBUG_LOG_V2(ERROR, "WIFI Disconnect Failed, Error Code : 0x%lX\r\n", status);
         }
 
         osSemaphoreRelease(wlan_thread_sem);
-        LOG_PRINT("WIFI App Disconnect Notify State\n");
+        SL_DEBUG_LOG_V2(INFO, "WIFI App Disconnect Notify State\r\n");
       } break;
       case WIFI_APP_SOCKET_RECEIVE_STATE:
         break;

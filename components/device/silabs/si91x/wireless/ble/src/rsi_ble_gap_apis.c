@@ -129,7 +129,7 @@ int32_t rsi_ble_set_random_address_with_value(uint8_t *random_addr)
 #ifdef BD_ADDR_IN_ASCII
   rsi_ascii_dev_address_to_6bytes_rev(ble_rand.rand_addr, random_addr);
 #else
-  memcpy((int8_t *)&(ble_rand.rand_addr), (int8_t *)random_addr, 6);
+  memcpy((int8_t *)&(ble_rand.rand_addr), (int8_t *)random_addr, RSI_DEV_ADDR_LEN);
 #endif
 
   // Send set random address command
@@ -226,8 +226,8 @@ int32_t rsi_ble_encrypt(const uint8_t *key, const uint8_t *data, uint8_t *resp)
 
   SL_PRINTF(SL_RSI_BLE_ENCRYPT_TRIGGER, BLE, LOG_INFO);
   rsi_ble_encrypt_t ble_en;
-  memcpy(ble_en.key, key, 16);
-  memcpy(ble_en.data, data, 16);
+  memcpy(ble_en.key, key, RSI_BLE_ENC_KEY_LENGTH);
+  memcpy(ble_en.data, data, RSI_BLE_ENC_KEY_LENGTH);
 
   // Send Encrypt command
   return rsi_bt_driver_send_cmd(RSI_BLE_ENCRYPT, &ble_en, resp);
@@ -497,7 +497,7 @@ int32_t rsi_ble_connect_with_params(uint8_t remote_dev_addr_type,
 #ifdef BD_ADDR_IN_ASCII
   rsi_ascii_dev_address_to_6bytes_rev(ble_conn.dev_addr, remote_dev_addr);
 #else
-  memcpy(ble_conn.dev_addr, remote_dev_addr, 6);
+  memcpy(ble_conn.dev_addr, remote_dev_addr, RSI_DEV_ADDR_LEN);
 #endif
   ble_conn.le_scan_interval  = scan_interval;
   ble_conn.le_scan_window    = scan_window;
@@ -540,7 +540,7 @@ int32_t rsi_ble_connect(uint8_t remote_dev_addr_type, const int8_t *remote_dev_a
 #ifdef BD_ADDR_IN_ASCII
   rsi_ascii_dev_address_to_6bytes_rev(ble_conn.dev_addr, remote_dev_addr);
 #else
-  memcpy(ble_conn.dev_addr, remote_dev_addr, 6);
+  memcpy(ble_conn.dev_addr, remote_dev_addr, RSI_DEV_ADDR_LEN);
 #endif
   ble_conn.le_scan_interval  = LE_SCAN_INTERVAL;
   ble_conn.le_scan_window    = LE_SCAN_WINDOW;
@@ -599,7 +599,7 @@ int32_t rsi_ble_connect_cancel(const int8_t *remote_dev_address)
 #ifdef BD_ADDR_IN_ASCII
   rsi_ascii_dev_address_to_6bytes_rev(ble_disconnect.dev_addr, remote_dev_address);
 #else
-  memcpy(ble_disconnect.dev_addr, remote_dev_address, 6);
+  memcpy(ble_disconnect.dev_addr, remote_dev_address, RSI_DEV_ADDR_LEN);
 #endif
   ble_disconnect.type = BLE_CONNECT_CANCEL;
 
@@ -629,7 +629,7 @@ int32_t rsi_ble_disconnect(const int8_t *remote_dev_address)
 #ifdef BD_ADDR_IN_ASCII
   rsi_ascii_dev_address_to_6bytes_rev(ble_disconnect.dev_addr, remote_dev_address);
 #else
-  memcpy(ble_disconnect.dev_addr, remote_dev_address, 6);
+  memcpy(ble_disconnect.dev_addr, remote_dev_address, RSI_DEV_ADDR_LEN);
 #endif
   ble_disconnect.type = BLE_DISCONNECT;
   // Send disconnect command
@@ -698,7 +698,7 @@ int32_t rsi_ble_set_local_irk_value(const uint8_t *l_irk)
   SL_PRINTF(SL_RSI_BLE_SET_LOCAL_IRK_VALUE, BLE, LOG_INFO);
   rsi_ble_set_local_irk_t local_device_irk = { 0 };
 
-  memcpy(local_device_irk.irk, l_irk, 16);
+  memcpy(local_device_irk.irk, l_irk, RSI_BLE_ENC_KEY_LENGTH);
 
   return rsi_bt_driver_send_cmd(RSI_BLE_CMD_SET_LOCAL_IRK, &local_device_irk, NULL);
 }
@@ -713,6 +713,7 @@ int32_t rsi_ble_set_local_irk_value(const uint8_t *l_irk)
  * @param[in]  status 			- accept or reject the connection parameters update request \n
  *                    			0 - ACCEPT, \n
 					1 - REJECT \n
+ * @note       If the central device receives a Connection Parameter Update Request with parameters that match the existing connection parameters, the central shall reject the request since no parameter change is necessary.
  * @return     0 - Success \n
  *             Non-Zero Value - Failure
  *             0x4E0C - Command disallowed \n
@@ -731,7 +732,7 @@ int32_t rsi_ble_conn_param_resp(const uint8_t *remote_dev_address, uint8_t statu
 #ifdef BD_ADDR_IN_ASCII
   rsi_ascii_dev_address_to_6bytes_rev(conn_param_resp_cmd.dev_addr, remote_dev_address);
 #else
-  memcpy(conn_param_resp_cmd.dev_addr, remote_dev_address, 6);
+  memcpy(conn_param_resp_cmd.dev_addr, remote_dev_address, RSI_DEV_ADDR_LEN);
 #endif
   conn_param_resp_cmd.status = status;
 
@@ -756,7 +757,8 @@ int32_t rsi_ble_conn_param_resp(const uint8_t *remote_dev_address, uint8_t statu
  *                            0x00 - Display Only \n
  *                            0x01 - Display Yes/No \n
  *                            0x02 - Keyboard Only \n
- *                            0x03 - No Input No Output
+ *                            0x03 - No Input No Output \n
+ *                            0x04 - Keyboard Display \n
  * @param[in]  mitm_req - MITM enable/disable \n
  *                       0 - Disable \n
  *                       1 - Enable
@@ -780,7 +782,7 @@ int32_t rsi_ble_smp_pair_request(uint8_t *remote_dev_address, uint8_t io_capabil
 #ifdef BD_ADDR_IN_ASCII
   rsi_ascii_dev_address_to_6bytes_rev(smp_pair_req.dev_addr, remote_dev_address);
 #else
-  memcpy(smp_pair_req.dev_addr, (int8_t *)remote_dev_address, 6);
+  memcpy(smp_pair_req.dev_addr, (int8_t *)remote_dev_address, RSI_DEV_ADDR_LEN);
 #endif
   smp_pair_req.io_capability = io_capability;
   smp_pair_req.mitm_req      = mitm_req;
@@ -811,7 +813,7 @@ int32_t rsi_ble_smp_pair_failed(uint8_t *remote_dev_address, uint8_t reason)
 #ifdef BD_ADDR_IN_ASCII
   rsi_ascii_dev_address_to_6bytes_rev(smp_pair_failed.dev_addr, remote_dev_address);
 #else
-  memcpy(smp_pair_failed.dev_addr, (int8_t *)remote_dev_address, 6);
+  memcpy(smp_pair_failed.dev_addr, (int8_t *)remote_dev_address, RSI_DEV_ADDR_LEN);
 #endif
   smp_pair_failed.reason = reason;
 
@@ -854,11 +856,11 @@ int32_t rsi_ble_ltk_req_reply(uint8_t *remote_dev_address, uint8_t reply_type, c
 #ifdef BD_ADDR_IN_ASCII
   rsi_ascii_dev_address_to_6bytes_rev(le_ltk_req_reply.dev_addr, remote_dev_address);
 #else
-  memcpy(le_ltk_req_reply.dev_addr, (int8_t *)remote_dev_address, 6);
+  memcpy(le_ltk_req_reply.dev_addr, (int8_t *)remote_dev_address, RSI_DEV_ADDR_LEN);
 #endif
   le_ltk_req_reply.replytype = reply_type;
   if (ltk != NULL) {
-    memcpy(le_ltk_req_reply.localltk, ltk, 16);
+    memcpy(le_ltk_req_reply.localltk, ltk, RSI_BLE_ENC_KEY_LENGTH);
   }
 
   return rsi_bt_driver_send_cmd(RSI_BLE_LE_LTK_REQ_REPLY, &le_ltk_req_reply, NULL);
@@ -882,7 +884,8 @@ int32_t rsi_ble_ltk_req_reply(uint8_t *remote_dev_address, uint8_t reply_type, c
  *                            0x00 - Display Only \n
  *                            0x01 - Display Yes/No \n
  *                            0x02 - Keyboard Only \n
- *                            0x03 - No Input No Output
+ *                            0x03 - No Input No Output \n
+ *                            0x04 - Keyboard Display \n
  * @param[in]  mitm_req -  MITM Request info \n
  *                        0 - Disable \n
  *                        1 - Enable
@@ -906,7 +909,7 @@ int32_t rsi_ble_smp_pair_response(uint8_t *remote_dev_address, uint8_t io_capabi
 #ifdef BD_ADDR_IN_ASCII
   rsi_ascii_dev_address_to_6bytes_rev(smp_pair_resp.dev_addr, remote_dev_address);
 #else
-  memcpy(smp_pair_resp.dev_addr, (int8_t *)remote_dev_address, 6);
+  memcpy(smp_pair_resp.dev_addr, (int8_t *)remote_dev_address, RSI_DEV_ADDR_LEN);
 #endif
   smp_pair_resp.io_capability = io_capability;
   smp_pair_resp.mitm_req      = mitm_req;
@@ -944,7 +947,7 @@ int32_t rsi_ble_smp_passkey(uint8_t *remote_dev_address, uint32_t passkey)
 #ifdef BD_ADDR_IN_ASCII
   rsi_ascii_dev_address_to_6bytes_rev(smp_passkey.dev_addr, remote_dev_address);
 #else
-  memcpy(smp_passkey.dev_addr, (int8_t *)remote_dev_address, 6);
+  memcpy(smp_passkey.dev_addr, (int8_t *)remote_dev_address, RSI_DEV_ADDR_LEN);
 #endif
   smp_passkey.passkey = passkey;
   return rsi_bt_driver_send_cmd(RSI_BLE_SMP_PASSKEY, &smp_passkey, NULL);
@@ -979,7 +982,7 @@ int32_t rsi_ble_get_le_ping_timeout(uint8_t *remote_dev_address, uint16_t *time_
 #ifdef BD_ADDR_IN_ASCII
   rsi_ascii_dev_address_to_6bytes_rev(leping_cmd.dev_addr, remote_dev_address);
 #else
-  memcpy(leping_cmd.dev_addr, (int8_t *)remote_dev_address, 6);
+  memcpy(leping_cmd.dev_addr, (int8_t *)remote_dev_address, RSI_DEV_ADDR_LEN);
 #endif
   status = (uint16_t)(rsi_bt_driver_send_cmd(RSI_BLE_GET_LE_PING, &leping_cmd, &le_ping_rsp));
   if (status == 0) {
@@ -1016,7 +1019,7 @@ int32_t rsi_ble_set_le_ping_timeout(uint8_t *remote_dev_address, uint16_t time_o
 #ifdef BD_ADDR_IN_ASCII
   rsi_ascii_dev_address_to_6bytes_rev(leping_cmd.dev_addr, remote_dev_address);
 #else
-  memcpy(leping_cmd.dev_addr, (int8_t *)remote_dev_address, 6);
+  memcpy(leping_cmd.dev_addr, (int8_t *)remote_dev_address, RSI_DEV_ADDR_LEN);
 #endif
   leping_cmd.time_out = time_out;
 
@@ -1068,7 +1071,7 @@ int32_t rsi_ble_addto_acceptlist(const int8_t *dev_address, uint8_t dev_addr_typ
 #ifdef BD_ADDR_IN_ASCII
   rsi_ascii_dev_address_to_6bytes_rev(le_acceptlist.dev_addr, dev_address);
 #else
-  memcpy(le_acceptlist.dev_addr, dev_address, 6);
+  memcpy(le_acceptlist.dev_addr, dev_address, RSI_DEV_ADDR_LEN);
 #endif
   le_acceptlist.bdaddressType = dev_addr_type;
 
@@ -1097,7 +1100,7 @@ int32_t rsi_ble_deletefrom_acceptlist(const int8_t *dev_address, uint8_t dev_add
 #ifdef BD_ADDR_IN_ASCII
   rsi_ascii_dev_address_to_6bytes_rev(le_acceptlist.dev_addr, dev_address);
 #else
-  memcpy(le_acceptlist.dev_addr, dev_address, 6);
+  memcpy(le_acceptlist.dev_addr, dev_address, RSI_DEV_ADDR_LEN);
 #endif
   le_acceptlist.bdaddressType = dev_addr_type;
 
@@ -1150,10 +1153,10 @@ int32_t rsi_ble_resolvlist(uint8_t process_type,
 #ifdef BD_ADDR_IN_ASCII
   rsi_ascii_dev_address_to_6bytes_rev(resolvlist.remote_dev_addr, remote_dev_address);
 #else
-  memcpy(resolvlist.remote_dev_addr, (int8_t *)remote_dev_address, 6);
+  memcpy(resolvlist.remote_dev_addr, (int8_t *)remote_dev_address, RSI_DEV_ADDR_LEN);
 #endif
-  memcpy(resolvlist.peer_irk, peer_irk, 16);
-  memcpy(resolvlist.local_irk, local_irk, 16);
+  memcpy(resolvlist.peer_irk, peer_irk, RSI_BLE_ENC_KEY_LENGTH);
+  memcpy(resolvlist.local_irk, local_irk, RSI_BLE_ENC_KEY_LENGTH);
   return rsi_bt_driver_send_cmd(RSI_BLE_PROCESS_RESOLV_LIST, &resolvlist, NULL);
 }
 
@@ -1233,7 +1236,7 @@ int32_t rsi_ble_set_privacy_mode(uint8_t remote_dev_addr_type, uint8_t *remote_d
 #ifdef BD_ADDR_IN_ASCII
   rsi_ascii_dev_address_to_6bytes_rev(set_privacy_mode.remote_dev_addr, remote_dev_address);
 #else
-  memcpy(set_privacy_mode.remote_dev_addr, (int8_t *)remote_dev_address, 6);
+  memcpy(set_privacy_mode.remote_dev_addr, (int8_t *)remote_dev_address, RSI_DEV_ADDR_LEN);
 #endif
   set_privacy_mode.privacy_mode = privacy_mode;
   return rsi_bt_driver_send_cmd(RSI_BLE_SET_PRIVACY_MODE, &set_privacy_mode, NULL);
@@ -1258,7 +1261,7 @@ int32_t rsi_ble_readphy(const int8_t *remote_dev_address, rsi_ble_resp_read_phy_
 #ifdef BD_ADDR_IN_ASCII
   rsi_ascii_dev_address_to_6bytes_rev(ble_read_phy.dev_addr, remote_dev_address);
 #else
-  memcpy(ble_read_phy.dev_addr, remote_dev_address, 6);
+  memcpy(ble_read_phy.dev_addr, remote_dev_address, RSI_DEV_ADDR_LEN);
 #endif
 
   // Send connect cancel command
@@ -1304,7 +1307,7 @@ int32_t rsi_ble_setphy(const int8_t *remote_dev_address, uint8_t tx_phy, uint8_t
 #ifdef BD_ADDR_IN_ASCII
   rsi_ascii_dev_address_to_6bytes_rev(set_phy.dev_addr, remote_dev_address);
 #else
-  memcpy(set_phy.dev_addr, remote_dev_address, 6);
+  memcpy(set_phy.dev_addr, remote_dev_address, RSI_DEV_ADDR_LEN);
 #endif
   set_phy.all_phy     = ALL_PHYS;
   set_phy.tx_phy      = tx_phy;
@@ -1345,6 +1348,7 @@ int32_t rsi_ble_setphy(const int8_t *remote_dev_address, uint8_t tx_phy, uint8_t
  * @note       min_int and max_int values ranges from 6 to 3200 (Time = N * 1.25 ms, Time Range: 7.5 ms to 4 s)\n
 		latency : If latency value is greater than 32 ,Limiting the peripheral latency value to 32\n
 		Max supported peripheral latency is 32 when Device is in Peripheral Role.
+ * @note       The host should refrain from sending the same connection parameters as an update request when they match the current connection parameters.
  *
  */
 int32_t rsi_ble_conn_params_update(const uint8_t *remote_dev_address,
@@ -1365,7 +1369,7 @@ int32_t rsi_ble_conn_params_update(const uint8_t *remote_dev_address,
 #ifdef BD_ADDR_IN_ASCII
   rsi_ascii_dev_address_to_6bytes_rev(conn_params_update_cmd.dev_addr, remote_dev_address);
 #else
-  memcpy(conn_params_update_cmd.dev_addr, remote_dev_address, 6);
+  memcpy(conn_params_update_cmd.dev_addr, remote_dev_address, RSI_DEV_ADDR_LEN);
 #endif
   conn_params_update_cmd.min_interval = min_int;
   conn_params_update_cmd.max_interval = max_int;
@@ -1404,7 +1408,7 @@ int32_t rsi_ble_set_data_len(uint8_t *remote_dev_address, uint16_t tx_octets, ui
 #ifdef BD_ADDR_IN_ASCII
   rsi_ascii_dev_address_to_6bytes_rev(lesetdatalen.dev_addr, remote_dev_address);
 #else
-  memcpy(lesetdatalen.dev_addr, (int8_t *)remote_dev_address, 6);
+  memcpy(lesetdatalen.dev_addr, (int8_t *)remote_dev_address, RSI_DEV_ADDR_LEN);
 #endif
   lesetdatalen.txoctets = tx_octets;
   lesetdatalen.txtime   = tx_time;
@@ -1661,11 +1665,11 @@ int32_t rsi_ble_accept_list_using_adv_data(uint8_t enable,
   acceptlist_using_payload.opcode[1] = ((BLE_VENDOR_ACCEPTLIST_USING_ADV_DATA_PAYLOAD >> 8) & 0xFF);
 
   acceptlist_using_payload.enable               = enable;
-  acceptlist_using_payload.total_len            = 31;
+  acceptlist_using_payload.total_len            = RSI_MAX_ADV_REPORT_SIZE;
   acceptlist_using_payload.data_compare_index   = data_compare_index;
   acceptlist_using_payload.len_for_compare_data = len_for_compare_data;
 
-  memcpy(acceptlist_using_payload.adv_data_payload, payload, 31);
+  memcpy(acceptlist_using_payload.adv_data_payload, payload, RSI_MAX_ADV_REPORT_SIZE);
 
   return rsi_bt_driver_send_cmd(RSI_BT_VENDOR_SPECIFIC, &acceptlist_using_payload, NULL);
 }
@@ -1695,7 +1699,7 @@ int32_t rsi_ble_set_coex_roles_priority(const uint8_t *payload)
   coex_roles_priority.opcode[0] = (BLE_VENDOR_SET_COEX_ROLE_PRIORITY & 0xFF);
   coex_roles_priority.opcode[1] = ((BLE_VENDOR_SET_COEX_ROLE_PRIORITY >> 8) & 0xFF);
 
-  memcpy(coex_roles_priority.role_priority_payload, payload, 21);
+  memcpy(coex_roles_priority.role_priority_payload, payload, RSI_BLE_COEX_ROLE_PRIORITY_PAYLOAD_LEN);
 
   return rsi_bt_driver_send_cmd(RSI_BT_VENDOR_SPECIFIC, &coex_roles_priority, NULL);
 }
@@ -1780,11 +1784,11 @@ int32_t rsi_ble_start_encryption(uint8_t *remote_dev_address, uint16_t ediv, con
 #ifdef BD_ADDR_IN_ASCII
   rsi_ascii_dev_address_to_6bytes_rev(encrypt.dev_addr, remote_dev_address);
 #else
-  memcpy(encrypt.dev_addr, (int8_t *)remote_dev_address, 6);
+  memcpy(encrypt.dev_addr, (int8_t *)remote_dev_address, RSI_DEV_ADDR_LEN);
 #endif
   encrypt.ediv = ediv;
-  memcpy(encrypt.rand, rand, 8);
-  memcpy(encrypt.ltk, ltk, 16);
+  memcpy(encrypt.rand, rand, RSI_BLE_RAND_LEN);
+  memcpy(encrypt.ltk, ltk, RSI_BLE_ENC_KEY_LENGTH);
 
   return rsi_bt_driver_send_cmd(RSI_BLE_RSP_START_ENCRYPTION, &encrypt, NULL);
 }
@@ -1805,7 +1809,13 @@ int32_t rsi_ble_start_encryption(uint8_t *remote_dev_address, uint16_t ediv, con
  *                     127  	    BLE HP Mode, Max power supported. \n
  *              #define RSI_BLE_PWR_INX_DBM  1  indicate tx_power in dBm \n
  *              tx_power in dBm (-8 dBm to 18 dBm) \n
- * @note: This API currently supports controlling the tx power in the configured chain during wireless initialization. However, changing the chain from LP to HP or vice versa is not supported.  
+ * @note This API currently supports controlling the tx power in the configured chain during wireless initialization. However, changing the chain from LP to HP or vice versa is not supported.
+ *       For SiW917Y1GA and SiW917Y1GN module boards, region configuration is not supported.
+ *       These boards always use the world_safe region.
+ *       Hence, the maximum TX power is limited by the world_safe regulatory limits.
+ *       When the DUT is connected in AP mode, the output power is the minimum of the host
+ *              transmit power and the maximum power allowed for the country region.
+ *       When it is not connected to an AP, the maximum output power is world_safe.
  * @return      0 - Success \n
  *              Non-Zero Value - Failure \n
  *              0x4E02 	Unknown Connection Identifier \n 
@@ -2215,6 +2225,16 @@ int32_t rsi_ble_extended_connect_with_params(void *ble_extended_conn_params)
  *            !0  = failure \n
  * @section description
  * This function is used to read minimum and maximum transmit powers supported by the controller based on the country region.
+ * @note For SiW917Y1GA and SiW917Y1GN boards:
+ * This API must be invoked only after BLE on-air activity has started (e.g. advertising or scanning).
+ * For dynamic TX power Control, first initiate BLE on-air activity, then call this API.
+ * After that, stop the ongoing on-air activity, update the TX power and finally restart the BLE on-air activity to apply the change.
+ * When the DUT is connected in AP mode, the output power is the minimum of the host
+ * transmit power and the maximum power allowed for the country region.
+ * When it is not connected to an AP, the maximum output power is world_safe.
+ *
+ * The controller returns the minimum and maximum TX power allowed for the current country region.
+ * When WLAN is active, the returned values follow the WLAN country region limits.
  */
 
 int32_t rsi_ble_read_transmit_power(void *resp)
@@ -2265,4 +2285,28 @@ int32_t rsi_ble_write_rf_path_compensation(uint16_t tx_path_value, uint16_t rx_p
   //! Send write rf path compensation cmd
   return rsi_bt_driver_send_cmd(RSI_BLE_CMD_WRITE_RF_PATH_COMP, &rf_path_comp, NULL);
 }
+
+/*==================================================*/
+/**
+ * @fn          int32_t rsi_ble_vendor_set_SMP_min_enc_keysize(uint8_t min_keysize)
+ * @brief       Set minimum encryption key size for SMP pairing.
+ * @param[in]   min_keysize  - Minimum key size (7–16 octets per BLE).
+ * @return      0  =  success \n
+ *             !0  = failure \n
+ * @section description
+ * This function configures the controller minimum acceptable encryption key size during SMP.
+ */
+int32_t rsi_ble_vendor_set_SMP_min_enc_keysize(uint8_t min_keysize)
+{
+  rsi_ble_vendor_set_smp_min_enc_keysize_t ble_vendor_set_smp_min_enc_keysize;
+
+  memset(&ble_vendor_set_smp_min_enc_keysize, 0, sizeof(rsi_ble_vendor_set_smp_min_enc_keysize_t));
+
+  ble_vendor_set_smp_min_enc_keysize.opcode[0]   = (BLE_VENDOR_SET_SMP_MIN_KEYSIZE & 0xFF);
+  ble_vendor_set_smp_min_enc_keysize.opcode[1]   = ((BLE_VENDOR_SET_SMP_MIN_KEYSIZE >> 8) & 0xFF);
+  ble_vendor_set_smp_min_enc_keysize.min_keysize = min_keysize;
+
+  return rsi_bt_driver_send_cmd(RSI_BT_VENDOR_SPECIFIC, &ble_vendor_set_smp_min_enc_keysize, NULL);
+}
+
 /** @} */

@@ -2,7 +2,7 @@ id: si91x_common_flash
 label: Common Flash Component
 package: platform_siwx91x
 description: >
-  Common Flash Component Provides common flash capabilities for the board, If the board supports common flashes install this component.
+  This component enables common flash features for supported boards. Install this component only if the board includes common flash support.
 category: Board|Flash
 quality: production
 metadata:

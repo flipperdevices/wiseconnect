@@ -255,6 +255,11 @@ int si91x_block_device_read(const struct lfs_config *cfg,
                       0,
                       0);
 
+  if (status != QSPI_OK) {
+    SL_PRINT_STRING_ERROR("si91x_block_device_read: QSPI failed st=0x%04lX,line no : %d\r\n",
+                          (unsigned long)status,
+                          (int)__LINE__);
+  }
   return status;
 }
 
@@ -293,6 +298,11 @@ int si91x_block_device_prog(const struct lfs_config *cfg,
                              0,
                              0);
 
+  if (status != QSPI_OK) {
+    SL_PRINT_STRING_ERROR("si91x_block_device_prog: QSPI failed st=0x%04lX,line no : %d\r\n",
+                          (unsigned long)status,
+                          (int)__LINE__);
+  }
   return status;
 }
 
@@ -321,6 +331,11 @@ int si91x_block_device_erase(const struct lfs_config *cfg, lfs_block_t block)
                     DISABLE_HW_CTRL,
                     WRITE_REG_DELAY_NONE);
 
+  if (status != QSPI_OK) {
+    SL_PRINT_STRING_ERROR("si91x_block_device_erase: QSPI failed st=0x%04lX,line no : %d\r\n",
+                          (unsigned long)status,
+                          (int)__LINE__);
+  }
   return status;
 }
 

@@ -40,12 +40,15 @@
 /*******************************************************************************
  *************************** LOCAL VARIABLES   *******************************
  ******************************************************************************/
-static float vref_value                    = (float)VREF_VALUE;
-static boolean_t data_sample_complete_flag = false;
+static float vref_value = (float)VREF_VALUE;
+/* Volatile: written in ADC callback (ISR), read in main loop. Required for LTO. */
+static volatile boolean_t data_sample_complete_flag = false;
+/* Volatile: DMA writes ADC samples; CPU must see them (LTO-safe). */
 static int16_t adc_output[CHANNEL_SAMPLE_LENGTH];
 static uint8_t adc_channel = 0;
 #ifdef DAC_FIFO_MODE_EN
-static boolean_t dac_fifo_intr_flag = false;
+/* Volatile: written in DAC callback (ISR), read in main loop. Required for LTO. */
+static volatile boolean_t dac_fifo_intr_flag = false;
 #endif
 /*******************************************************************************
  **********************  Local Function prototypes   ***************************
@@ -77,71 +80,77 @@ void adc_fifo_mode_example_init(void)
   // These fields MUST be configured before calling sl_si91x_adc_init() and
   // sl_si91x_adc_set_channel_configuration() for FIFO+DMA operation.
   // The init function does NOT automatically set these addresses.
-  sl_adc_channel_config.rx_buf[adc_channel]            = adc_output;
+  sl_adc_channel_config.rx_buf[adc_channel]            = (int16_t *)adc_output;
   sl_adc_channel_config.chnl_ping_address[adc_channel] = ADC_PING_BUFFER; /* ADC Ping address */
   sl_adc_channel_config.chnl_pong_address[adc_channel] =
     ADC_PING_BUFFER + (sl_adc_channel_config.num_of_samples[adc_channel]); /* ADC Pong address */
   do {
     // Version information of ADC driver
     version = sl_si91x_adc_get_version();
-    DEBUGOUT("ADC version is fetched successfully \n");
-    DEBUGOUT("API version is %d.%d.%d\n", version.release, version.major, version.minor);
+    /* Note: All status messages in this example — both success and failure — are
+ * intentionally emitted via SL_PRINT_STRING_ERROR so that they remain visible
+ * on the console at the default log level. This is a demonstration choice, not
+ * a recommendation: in production code, ERROR severity should be reserved for
+ * actual failures, with successful operations logged via SL_PRINT_STRING_INFO
+ * (or SL_PRINT_STRING_DEBUG for verbose trace). */
+    SL_PRINT_STRING_ERROR("ADC version is fetched successfully \n");
+    SL_PRINT_STRING_ERROR("API version is %d.%d.%d\n", version.release, version.major, version.minor);
 
     status = sl_si91x_adc_init(sl_adc_channel_config, sl_adc_config, vref_value);
     /* Due to calling trim_efuse API on ADC init in driver it will change the clock frequency,
       if we are not initialize the debug again it will print the garbage data in console output. */
     DEBUGINIT();
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("sl_si91x_adc_init: Error Code : %lu \n", status);
+      SL_PRINT_STRING_ERROR("sl_si91x_adc_init: Error Code : %lu \n", status);
       break;
     }
-    DEBUGOUT("ADC Initialization Success\n");
+    SL_PRINT_STRING_ERROR("ADC Initialization Success\n");
     // Configure ADC channel.
     status = sl_si91x_adc_set_channel_configuration(sl_adc_channel_config, sl_adc_config);
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("sl_si91x_adc_channel_set_configuration: Error Code : %lu \n", status);
+      SL_PRINT_STRING_ERROR("sl_si91x_adc_channel_set_configuration: Error Code : %lu \n", status);
       break;
     }
-    DEBUGOUT("ADC Channel Configuration Successfully \n");
+    SL_PRINT_STRING_ERROR("ADC Channel Configuration Successfully \n");
     // Register user callback function
     status = sl_si91x_adc_register_event_callback(callback_event);
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("sl_si91x_adc_register_event_callback: Error Code : %lu \n", status);
+      SL_PRINT_STRING_ERROR("sl_si91x_adc_register_event_callback: Error Code : %lu \n", status);
       break;
     }
-    DEBUGOUT("ADC user event callback registered successfully \n");
+    SL_PRINT_STRING_ERROR("ADC user event callback registered successfully \n");
 #ifdef DAC_FIFO_MODE_EN
     //Initializing DAC peripheral
     status = sl_si91x_dac_init(&dac_clock_config);
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("sl_si91x_dac_init: Error Code : %lu \n", status);
+      SL_PRINT_STRING_ERROR("sl_si91x_dac_init: Error Code : %lu \n", status);
       break;
     }
-    DEBUGOUT("SL_DAC initialization is successful \n");
+    SL_PRINT_STRING_ERROR("SL_DAC initialization is successful \n");
     // DAC configuration
     status = sl_si91x_dac_set_configuration(sl_dac_config, vref_value);
     /* Due to calling trim_efuse API on DAC configuration in driver it will change the clock frequency,
       if we are not initialize the debug again it will print the garbage data in console output. */
     DEBUGINIT();
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("sl_si91x_dac_set_configuration: Error Code : %lu \n", status);
+      SL_PRINT_STRING_ERROR("sl_si91x_dac_set_configuration: Error Code : %lu \n", status);
       break;
     }
-    DEBUGOUT("SL_DAC set configuration is successful \n");
+    SL_PRINT_STRING_ERROR("SL_DAC set configuration is successful \n");
     // Register user callback function
     status = sl_si91x_dac_register_event_callback(dac_callback_event);
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("sl_si91x_dac_register_event_callback: Error Code : %lu \n", status);
+      SL_PRINT_STRING_ERROR("sl_si91x_dac_register_event_callback: Error Code : %lu \n", status);
       break;
     }
-    DEBUGOUT("SL_DAC register event callback is successful \n");
+    SL_PRINT_STRING_ERROR("SL_DAC register event callback is successful \n");
 #endif
     status = sl_si91x_adc_start(sl_adc_config);
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("sl_si91x_adc_start: Error Code : %lu \n", status);
+      SL_PRINT_STRING_ERROR("sl_si91x_adc_start: Error Code : %lu \n", status);
       break;
     }
-    DEBUGOUT("ADC started Successfully\n");
+    SL_PRINT_STRING_ERROR("ADC started Successfully\n");
   } while (false);
 }
 
@@ -157,19 +166,19 @@ void adc_fifo_mode_example_process_action(void)
     // ADC operation mode on FIFO mode, it will execute, here it will give equivalent voltage of 12 bit adc output.
     status = sl_si91x_adc_read_data(sl_adc_channel_config, adc_channel);
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("sl_si91x_adc_read_data: Error Code : %lu \n", status);
+      SL_PRINT_STRING_ERROR("sl_si91x_adc_read_data: Error Code : %lu \n", status);
     }
 #ifdef DAC_FIFO_MODE_EN
     if (dac_fifo_intr_flag == false) {
       // DAC input sample data writing
       status = sl_si91x_dac_write_data((int16_t *)adc_output, sl_adc_channel_config.num_of_samples[0]);
       if (status != SL_STATUS_OK) {
-        DEBUGOUT("sl_si91x_dac_write_data: Error Code : %lu \n", status);
+        SL_PRINT_STRING_ERROR("sl_si91x_dac_write_data: Error Code : %lu \n", status);
       }
       // Start DAC peripheral
       status = sl_si91x_dac_start();
       if (status != SL_STATUS_OK) {
-        DEBUGOUT("sl_si91x_dac_start: Error Code : %lu \n", status);
+        SL_PRINT_STRING_ERROR("sl_si91x_dac_start: Error Code : %lu \n", status);
       }
     } else {
       if (dac_fifo_intr_flag == true) {
@@ -177,7 +186,7 @@ void adc_fifo_mode_example_process_action(void)
         // DAC input sample data re-writing
         status = sl_si91x_dac_rewrite_data((int16_t *)adc_output, sl_adc_channel_config.num_of_samples[0]);
         if (status != SL_STATUS_OK) {
-          DEBUGOUT("sl_si91x_dac_rewrite_data: Error Code : %lu \n", status);
+          SL_PRINT_STRING_ERROR("sl_si91x_dac_rewrite_data: Error Code : %lu \n", status);
         }
       }
     }
@@ -196,7 +205,7 @@ void adc_fifo_mode_example_process_action(void)
       if (sl_adc_channel_config.input_type[adc_channel]) {
         vout = vout - (vref_value / 2);
       }
-      DEBUGOUT("ADC Measured input[%ld] :%0.2fV \n", sample_length, (double)vout);
+      SL_PRINT_STRING_ERROR("ADC Measured input[%ld] :%ldmV \n", sample_length, (int32_t)(vout * 1000.0f));
     }
     data_sample_complete_flag = false;
   }

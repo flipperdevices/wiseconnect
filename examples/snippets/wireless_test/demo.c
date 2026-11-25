@@ -11,8 +11,23 @@
  * File Description
  *
  */
-#ifndef SLI_SI91X_MCU_INTERFACE
+#include "sl_component_catalog.h"
 #include "sl_iostream.h"
+#ifdef SLI_SI91X_MCU_INTERFACE
+#include "sl_si91x_iostream_rtt.h"
+// SoC UART log TX depends on si91x_debug (rsi_debug.c): Board_UARTPutChar and
+// si91x_prints_mutex, which DEBUGINIT() initializes. Declare them here instead
+// of including rsi_debug.h so this file does not pick up DEBUGOUT/DEBUGINIT macros.
+void Board_UARTPutChar(uint8_t ch);
+#else
+#include "sl_iostream_handles.h"
+#if defined(SL_CATALOG_IOSTREAM_USART_PRESENT) || defined(SL_CATALOG_IOSTREAM_EUSART_PRESENT)
+#define SLI_WIRELESS_TEST_NCP_VCOM_CLI_PRESENT 1
+#elif defined(__has_include)
+#if __has_include("sl_iostream_init_usart_instances.h") || __has_include("sl_iostream_init_eusart_instances.h")
+#define SLI_WIRELESS_TEST_NCP_VCOM_CLI_PRESENT 1
+#endif
+#endif
 #endif
 #include "console.h"
 #include "sl_constants.h"
@@ -21,13 +36,24 @@
 #include "cmsis_os2.h"
 #include "sl_utility.h"
 #include <stdbool.h>
+#include <stdint.h>
 #include <string.h>
+#ifdef SLI_SI91X_MCU_INTERFACE
+extern osMutexId_t si91x_prints_mutex;
+#endif
 /******************************************************
  *                    Constants
  ******************************************************/
 
 #define BUFFER_SIZE 256
 bool end_of_cmd = false;
+
+#define SL_WIRELESS_TEST_LOG_OUTPUT_UART 0
+#define SL_WIRELESS_TEST_LOG_OUTPUT_RTT  1
+// SoC only: command input is always UART. Set this to SL_WIRELESS_TEST_LOG_OUTPUT_RTT
+// to send command responses to RTT Channel 0 (rebuild and flash after changing).
+// NCP builds always keep logs on RTT regardless of this macro.
+#define SL_WIRELESS_TEST_LOG_OUTPUT SL_WIRELESS_TEST_LOG_OUTPUT_UART
 
 #define MY_ARG_TYPE uart, spi, i2c, tcp
 
@@ -54,6 +80,9 @@ sl_status_t rtt_command_handler(console_args_t *arguments);
 extern void cache_uart_rx_data(const char character);
 
 static void print_command_args(const console_descriptive_command_t *command);
+#if defined(SLI_SI91X_MCU_INTERFACE) && (SL_WIRELESS_TEST_LOG_OUTPUT == SL_WIRELESS_TEST_LOG_OUTPUT_UART)
+static sl_status_t wireless_test_uart_log_write(void *context, const void *buffer, size_t buffer_length);
+#endif
 
 extern sl_status_t process_buffer_line(const console_database_t *command_database,
                                        console_args_t *args,
@@ -66,6 +95,14 @@ extern sl_status_t sl_board_enable_vcom(void);
 /******************************************************
  *               Variable Definitions
  ******************************************************/
+
+#if defined(SLI_SI91X_MCU_INTERFACE) && (SL_WIRELESS_TEST_LOG_OUTPUT == SL_WIRELESS_TEST_LOG_OUTPUT_UART)
+static sl_iostream_t wireless_test_uart_log_stream = {
+  .read    = NULL,
+  .write   = wireless_test_uart_log_write,
+  .context = NULL,
+};
+#endif
 
 /******************************************************
  *               Function Definitions
@@ -80,15 +117,56 @@ const osThreadAttr_t thread_attributes = {
   .stack_size = 3072,
   .priority   = 0,
   .tz_module  = 0,
-  .reserved   = 0,
 };
 
 void app_init(void)
 {
+  extern sl_iostream_t *sl_iostream_recommended_console_stream;
+#ifdef SLI_SI91X_MCU_INTERFACE
+#if (SL_WIRELESS_TEST_LOG_OUTPUT == SL_WIRELESS_TEST_LOG_OUTPUT_RTT)
+  sl_iostream_recommended_console_stream = sl_si91x_iostream_rtt_handle;
+#else
+  // Use the already initialized CLI UART for log TX. This stream deliberately
+  // does not initialize or own UART RX, so the CLI interrupt path remains intact.
+  sl_iostream_recommended_console_stream = &wireless_test_uart_log_stream;
+#endif
+#else
+  // NCP: keep logs on RTT so VCOM is not mixed with HCI/CLI transport bytes.
+  extern sl_iostream_t *sl_iostream_rtt_handle;
+  sl_iostream_recommended_console_stream = sl_iostream_rtt_handle;
+#endif
   osThreadNew((osThreadFunc_t)application_start, NULL, &thread_attributes);
 }
 
-#ifndef SLI_SI91X_MCU_INTERFACE
+#if defined(SLI_SI91X_MCU_INTERFACE) && (SL_WIRELESS_TEST_LOG_OUTPUT == SL_WIRELESS_TEST_LOG_OUTPUT_UART)
+static sl_status_t wireless_test_uart_log_write(void *context, const void *buffer, size_t buffer_length)
+{
+  const uint8_t *data = (const uint8_t *)buffer;
+  bool mutex_acquired = false;
+
+  (void)context;
+
+  if ((buffer == NULL) && (buffer_length > 0)) {
+    return SL_STATUS_INVALID_PARAMETER;
+  }
+
+  if ((osKernelGetState() == osKernelRunning) && (si91x_prints_mutex != NULL)) {
+    mutex_acquired = (osMutexAcquire(si91x_prints_mutex, osWaitForever) == osOK);
+  }
+
+  for (size_t index = 0; index < buffer_length; ++index) {
+    Board_UARTPutChar(data[index]);
+  }
+
+  if (mutex_acquired) {
+    osMutexRelease(si91x_prints_mutex);
+  }
+
+  return SL_STATUS_OK;
+}
+#endif
+
+#if defined(SLI_WIRELESS_TEST_NCP_VCOM_CLI_PRESENT)
 void iostream_usart_init()
 {
   /* Prevent buffering of output/input.*/
@@ -102,39 +180,52 @@ void iostream_rx()
 {
   char c               = 0;
   static uint8_t index = 0;
-  sl_iostream_getchar(SL_IOSTREAM_STDIN, &c);
-  if (c > 0) {
-    cache_uart_rx_data(c);
-    if ((c == '\n')) {
-      index      = 0;
-      end_of_cmd = true;
-    } else {
-      if (index < BUFFER_SIZE - 1) {
-        index++;
+  // Read HCI bytes ONLY from the vcom UART, not from the "default" / "recommended
+  // console" stream. This decouples the HCI pipe from the log pipe so we can
+  // route SL_DEBUG_LOG_V2 output to RTT without corrupting HCI on vcom.
+  size_t total = 0;
+  size_t len   = 1;
+  while (total < len) {
+    size_t got         = 0;
+    sl_status_t retval = sl_iostream_read(sl_iostream_vcom_handle, &c, len - total, &got);
+    if (retval == SL_STATUS_OK) {
+      total += got;
+    } else if (retval != SL_STATUS_EMPTY) {
+      return;
+    }
+    if (c > 0) {
+      cache_uart_rx_data(c);
+      if (c == '\n') {
+        index      = 0;
+        end_of_cmd = true;
+      } else {
+        if (index < BUFFER_SIZE - 1) {
+          index++;
+        }
       }
     }
   }
 }
-#endif
+#endif // SLI_WIRELESS_TEST_NCP_VCOM_CLI_PRESENT
 
 void application_start(const void *unused)
 {
   UNUSED_PARAMETER(unused);
   console_args_t args;
   const console_descriptive_command_t *command;
-#ifndef SLI_SI91X_MCU_INTERFACE
+#if defined(SLI_WIRELESS_TEST_NCP_VCOM_CLI_PRESENT)
   iostream_usart_init();
 #endif
 
-  SL_DEBUG_LOG("app start\n");
+  SL_DEBUG_LOG_V2(INFO, "app start\r\n");
 
-  printf("Ready\r\n");
+  SL_DEBUG_LOG_V2(INFO, "Ready\r\n");
 
   console_line_ready = 0;
 
   while (1) {
-    printf("\r\n> \r\n");
-#ifndef SLI_SI91X_MCU_INTERFACE
+    SL_DEBUG_LOG_V2(INFO, "> \r\n");
+#if defined(SLI_WIRELESS_TEST_NCP_VCOM_CLI_PRESENT)
     while (!end_of_cmd) {
       iostream_rx();
     }
@@ -148,20 +239,20 @@ void application_start(const void *unused)
     sl_status_t result = console_process_buffer(&console_command_database, &args, &command);
 
     if (result == SL_STATUS_OK) {
-      SL_DEBUG_LOG("Processing command\n");
+      SL_DEBUG_LOG_V2(DEBUG, "Processing command\r\n");
       if (command->handler) {
-        printf("\r\n");
+        SL_DEBUG_LOG_V2(INFO, "\r\n");
         uint32_t start_time = osKernelGetTickCount();
         result              = command->handler(&args);
         uint32_t duration   = osKernelGetTickCount() - start_time;
         print_status(result, duration);
       }
     } else if (result == SL_STATUS_COMMAND_IS_INVALID) {
-      printf("\r\nArgs: ");
+      SL_DEBUG_LOG_V2(INFO, "Args: ");
       print_command_args(command);
       print_status(SL_STATUS_INVALID_PARAMETER, 0);
     } else {
-      printf("\r\nNot supported\r\n");
+      SL_DEBUG_LOG_V2(INFO, "Not supported\r\n");
     }
     console_line_ready = 0;
   }
@@ -169,19 +260,26 @@ void application_start(const void *unused)
 
 void print_status(sl_status_t status, uint32_t duration)
 {
-  printf("\r\n0x%05lX: (%lums) %s\r\n", status, duration, (status == SL_STATUS_OK) ? "Success" : "");
+  SL_DEBUG_LOG_V2(INFO,
+                  "0x%05lX: (%lums) %s",
+                  status,
+                  duration,
+                  (uintptr_t)((status == SL_STATUS_OK) ? "Success" : ""));
 }
 
 sl_status_t help_command_handler(console_args_t *arguments)
 {
   UNUSED_PARAMETER(arguments);
   for (uint8_t a = 0; a < console_command_database.length; ++a) {
-    printf("\r\n");
-    printf("%s", console_command_database.entries[a].key);
-    printf("  ");
+    SL_DEBUG_LOG_V2(INFO, "\r\n");
+    SL_DEBUG_LOG_V2(INFO, "%s", (uintptr_t)console_command_database.entries[a].key);
+    SL_DEBUG_LOG_V2(INFO, "  ");
     print_command_args((console_descriptive_command_t *)console_command_database.entries[a].value);
-    printf("\r\n   ");
-    printf(((console_descriptive_command_t *)console_command_database.entries[a].value)->description);
+    SL_DEBUG_LOG_V2(INFO, "   ");
+    SL_DEBUG_LOG_V2(
+      INFO,
+      "%s",
+      (uintptr_t)((console_descriptive_command_t *)console_command_database.entries[a].value)->description);
   }
   return SL_STATUS_OK;
 }
@@ -236,36 +334,39 @@ static void print_command_args(const console_descriptive_command_t *command)
   for (int a = 0; command->argument_list[a] != CONSOLE_ARG_END; ++a) {
     if (command->argument_list[a] & CONSOLE_ARG_OPTIONAL) {
       char option_char[2] = { (char)command->argument_list[a] & CONSOLE_ARG_OPTIONAL_CHARACTER_MASK, 0 };
-      printf("[-");
-      printf("%s", option_char);
-      printf(" ");
+      SL_DEBUG_LOG_V2(INFO, "[-");
+      SL_DEBUG_LOG_V2(INFO, "%s", (uintptr_t)option_char);
+      SL_DEBUG_LOG_V2(INFO, " ");
       is_optional = true;
       continue;
     } else if (command->argument_list[a] & CONSOLE_ARG_ENUM) {
-      printf("{");
+      SL_DEBUG_LOG_V2(INFO, "{");
       uint8_t enum_index = command->argument_list[a] & CONSOLE_ARG_ENUM_INDEX_MASK;
       for (int b = 0; console_argument_types[enum_index][b] != NULL;
            /* Increment occurs in internal logic */) {
-        printf("%s", console_argument_types[enum_index][b]);
+        SL_DEBUG_LOG_V2(INFO, "%s", (uintptr_t)console_argument_types[enum_index][b]);
         if (console_argument_types[enum_index][++b]) {
-          printf("|");
+          SL_DEBUG_LOG_V2(INFO, "|");
         }
       }
-      printf("}");
+      SL_DEBUG_LOG_V2(INFO, "}");
     } else {
-      printf("<");
+      SL_DEBUG_LOG_V2(INFO, "<");
       if (command->argument_help && command->argument_help[a]) {
-        printf("%s", command->argument_help[a]);
+        SL_DEBUG_LOG_V2(INFO, "%s", (uintptr_t)command->argument_help[a]);
       } else {
-        printf(console_argument_type_strings[command->argument_list[a] & CONSOLE_ARG_ENUM_INDEX_MASK]);
+        SL_DEBUG_LOG_V2(
+          INFO,
+          "%s",
+          (uintptr_t)console_argument_type_strings[command->argument_list[a] & CONSOLE_ARG_ENUM_INDEX_MASK]);
       }
-      printf(">");
+      SL_DEBUG_LOG_V2(INFO, ">");
     }
     if (is_optional) {
-      printf("] ");
+      SL_DEBUG_LOG_V2(INFO, "] ");
       is_optional = false;
     } else {
-      printf(" ");
+      SL_DEBUG_LOG_V2(INFO, " ");
     }
   }
 }

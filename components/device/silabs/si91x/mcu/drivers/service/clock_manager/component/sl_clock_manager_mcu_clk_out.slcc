@@ -2,7 +2,7 @@ id: sl_clock_manager_mcu_clk_out
 label: Clock Manager MCU Clock Output
 package: platform_siwx91x
 description: >
-  Provides configuration and control for the MCU clock out.
+  This component provides configuration and control for the MCU clock out.
   This includes selecting the clock source, setting the output frequency, and
   managing the GPIO pins used for the clock output.
 category: Device|Si91x|MCU|Service|Clock Manager

@@ -21,8 +21,10 @@
 #include "rsi_debug.h"
 #include "rsi_rom_clks.h"
 #include "rsi_rom_ulpss_clk.h"
-#include "sl_si91x_sdc_common_config.h"
+#include "sl_log.h"
 #include "sl_sdc_instances.h"
+#include "sl_log_helper.h"
+#include "sl_si91x_sdc_common_config.h"
 #include "sl_si91x_wireless_shutdown.h"
 
 /***************************************************************************************************************************************
@@ -86,7 +88,13 @@ static void process_sdc_samples()
       data = ((float)sdc_read_buffer[i] / (float)SDC_MAX_VALUE) * sdc_vref;
     else if (sl_sdc_pin_config[SDC_CHANNEL1_INDEX].sdc_adc_mode == SL_SDC_DIFFERENTIAL_MODE)
       data = ((((float)sdc_read_buffer[i] / (float)SDC_MAX_VALUE) * sdc_vref) - (sdc_vref / 2));
-    DEBUGOUT("\r\n SDC sample : %f \r\n", data);
+    /* Note: All status messages in this example — both success and failure — are
+ * intentionally emitted via SL_PRINT_STRING_ERROR so that they remain visible
+ * on the console at the default log level. This is a demonstration choice, not
+ * a recommendation: in production code, ERROR severity should be reserved for
+ * actual failures, with successful operations logged via SL_PRINT_STRING_INFO
+ * (or SL_PRINT_STRING_DEBUG for verbose trace). */
+    SL_PRINT_STRING_ERROR("\r\n SDC sample : %ldmV \r\n", (int32_t)(data * 1000.0f));
   }
 }
 
@@ -107,14 +115,14 @@ static void callback_event(uint8_t channel_no, sl_sdc_event_t event)
       break;
     case SDC_EVENT_BUFFER_RESET:
       process_sdc_samples();
-      DEBUGOUT("\r\n Channel %u SDC Buffer reset \r\n", channel_no);
+      SL_PRINT_STRING_ERROR(" Channel %u SDC Buffer reset \r\n", channel_no);
       sdc_current_mode  = SL_SDC_PS1_POWER_TRANSITION;
       sdc_sampling_done = 0;
       sdc_data_ready    = 0;
       break;
 
     case SDC_EVENT_BUFFER_FULL:
-      DEBUGOUT("\r\n Channel %u SDC Buffer full \r\n", channel_no);
+      SL_PRINT_STRING_ERROR("Channel %u SDC Buffer full \r\n", channel_no);
       break;
 
     default:
@@ -142,18 +150,18 @@ void sdc_example_init()
       .clock_division_factor = SDC_CLOCK_DIVISION_FACTOR
 
     };
-    sdc_channel_config.recieve_buffer[SDC_CHANNEL1_INDEX] = sdc_read_buffer;
+    sdc_channel_config.receive_buffer[SDC_CHANNEL1_INDEX] = sdc_read_buffer;
     sdc_channel_config.sample_length[SDC_CHANNEL1_INDEX]  = SDC_NUMBER_OF_SAMPLES;
 
     // Initialize the SDC driver with the reference voltage.
     status = sl_si91x_sdc_driver_init(sdc_vref);
     if (status != SL_STATUS_OK) {
       // If status is not OK, return with the error code.
-      DEBUGOUT("Error Code: 0x%lX, SDC driver init Failed \n", status);
+      SL_PRINT_STRING_ERROR("Error Code: 0x%lX, SDC driver init Failed \n", status);
       sdc_current_mode = SL_SDC_SAMPLING_FAILED;
       break;
     } else {
-      DEBUGOUT("\r\n SDC Driver Init Success \r\n");
+      SL_PRINT_STRING_ERROR(" SDC Driver Init Success \r\n");
     }
 
     // Configure the SDC driver with sampling parameters.
@@ -161,11 +169,11 @@ void sdc_example_init()
 
     if (status != SL_STATUS_OK) {
       // If status is not OK, return with the error code.
-      DEBUGOUT("Error Code: 0x%lX, driver config Failed \n", status);
+      SL_PRINT_STRING_ERROR("Error Code: 0x%lX, driver config Failed \n", status);
       sdc_current_mode = SL_SDC_SAMPLING_FAILED;
       break;
     } else {
-      DEBUGOUT("\r\n SDC Driver Configuration done \r\n");
+      SL_PRINT_STRING_ERROR(" SDC Driver Configuration done \r\n");
     }
 
     // Configure the SDC driver channels with pin configuration and channel settings.
@@ -173,11 +181,11 @@ void sdc_example_init()
 
     if (status != SL_STATUS_OK) {
       // If status is not OK, return with the error code.
-      DEBUGOUT("Error Code: 0x%lX, driver channel config Failed \n", status);
+      SL_PRINT_STRING_ERROR("Error Code: 0x%lX, driver channel config Failed \n", status);
       sdc_current_mode = SL_SDC_SAMPLING_FAILED;
       break;
     } else {
-      DEBUGOUT("\r\n SDC Driver channel Configuration done \r\n");
+      SL_PRINT_STRING_ERROR(" SDC Driver channel Configuration done \r\n");
     }
 
     // Register the callback function for SDC events.
@@ -185,11 +193,11 @@ void sdc_example_init()
 
     if (status != SL_STATUS_OK) {
       // If status is not OK, return with the error code.
-      DEBUGOUT("Error Code: 0x%lX, register callback Failed \n", status);
+      SL_PRINT_STRING_ERROR("Error Code: 0x%lX, register callback Failed \n", status);
       sdc_current_mode = SL_SDC_SAMPLING_FAILED;
       break;
     } else {
-      DEBUGOUT("\r\n SDC Driver Register callback done \r\n");
+      SL_PRINT_STRING_ERROR(" SDC Driver Register callback done \r\n");
     }
   } while (false);
 }
@@ -211,7 +219,7 @@ void sdc_example_app_process_action()
         status = sl_si91x_sdc_driver_read_data_start();
 
         if (status != SL_STATUS_OK) {
-          DEBUGOUT("\r\n SDC read data failed %lu \r\n", status);
+          SL_PRINT_STRING_ERROR(" SDC read data failed %lu \r\n", status);
           sdc_current_mode = SL_SDC_SAMPLING_FAILED;
           break;
         }
@@ -226,7 +234,7 @@ void sdc_example_app_process_action()
         status = sl_si91x_power_manager_add_ps_requirement(SL_SI91X_POWER_MANAGER_PS2);
 
         if (status != SL_STATUS_OK) {
-          DEBUGOUT("sl_si91x_power_manager_add_ps_requirement: Error Code : %lu \n", status);
+          SL_PRINT_STRING_ERROR("sl_si91x_power_manager_add_ps_requirement: Error Code : %lu \n", status);
           sdc_current_mode = SL_SDC_SAMPLING_FAILED;
           break;
         }
@@ -241,7 +249,7 @@ void sdc_example_app_process_action()
         // configuration is complete.
         status = sl_si91x_power_manager_remove_ps_requirement(SL_SI91X_POWER_MANAGER_PS2);
         if (status != SL_STATUS_OK) {
-          DEBUGOUT("sl_si91x_power_manager_add_ps_requirement: Error Code : %lu \n", status);
+          SL_PRINT_STRING_ERROR("sl_si91x_power_manager_add_ps_requirement: Error Code : %lu \n", status);
           break;
         }
         sdc_current_mode = SL_SDC_PS1_POWER_TRANSITION;
@@ -251,15 +259,17 @@ void sdc_example_app_process_action()
         //Set SDC as wakeup source;
         status = sl_si91x_power_manager_set_wakeup_sources(SDCSS_BASED_WAKEUP, 1);
         if (status != SL_STATUS_OK) {
-          printf("\r\n set sdc as wakeup source failed %lu \r\n", status);
+          SL_PRINT_STRING_ERROR("\r\n set sdc as wakeup source failed %lu \r\n", status);
           sdc_current_mode = SL_SDC_SAMPLING_FAILED;
           break;
         }
 
+        (void)sl_log_pre_sleep_process(NULL);
         // PS1 State requirement is added, it transits to PS1 state.
         status = sl_si91x_power_manager_add_ps_requirement(SL_SI91X_POWER_MANAGER_PS1);
+        (void)sl_log_post_sleep_process(NULL);
         if (status != SL_STATUS_OK) {
-          DEBUGOUT("sl_si91x_power_manager_add_ps_requirement123: Error Code : %lu \n", status);
+          SL_PRINT_STRING_ERROR("sl_si91x_power_manager_add_ps_requirement123: Error Code : %lu \n", status);
           sdc_current_mode = SL_SDC_SAMPLING_FAILED;
           break;
         }
@@ -267,8 +277,6 @@ void sdc_example_app_process_action()
         break;
       case SL_SDC_DATA_PROCESSING:
         // Process the SDC data after waking up from PS1 state.
-
-        DEBUGINIT(); // Initialize debug prints after waking up.
 
         if (sdc_data_ready) {
           sl_si91x_sdc_driver_store_data();
@@ -281,14 +289,14 @@ void sdc_example_app_process_action()
         break;
 
       case SL_SDC_SAMPLING_FAILED:
-        DEBUGINIT();
-        DEBUGOUT("\r\n SDC Transmission Failed\n");
+
+        SL_PRINT_STRING_ERROR(" SDC Transmission Failed\n");
         sdc_current_mode = SL_SDC_END_STATE;
         break;
 
       case SL_SDC_SAMPLING_COMPLETED:
-        DEBUGINIT();
-        DEBUGOUT("\r\n SDC Sampling completed \r\n");
+
+        SL_PRINT_STRING_ERROR(" SDC Sampling completed \r\n");
         process_sdc_samples();
         sdc_current_mode = SL_SDC_END_STATE;
         break;
@@ -318,9 +326,9 @@ static void configuring_ps2_power_state(void)
                                                                      // management
   config.ulpss_ram_banks = SL_SI91X_POWER_MANAGER_ULPSS_RAM_BANK_2 | SL_SI91X_POWER_MANAGER_ULPSS_RAM_BANK_3;
   // Ored value for ulpss peripheral.
-  peri.ulpss_peripheral = SL_SI91X_POWER_MANAGER_ULPSS_PG_MISC | SL_SI91X_POWER_MANAGER_ULPSS_PG_SSI
-                          | SL_SI91X_POWER_MANAGER_ULPSS_PG_I2S | SL_SI91X_POWER_MANAGER_ULPSS_PG_I2C
-                          | SL_SI91X_POWER_MANAGER_ULPSS_PG_IR | SL_SI91X_POWER_MANAGER_ULPSS_PG_FIM;
+  peri.ulpss_peripheral = SL_SI91X_POWER_MANAGER_ULPSS_PG_SSI | SL_SI91X_POWER_MANAGER_ULPSS_PG_I2S
+                          | SL_SI91X_POWER_MANAGER_ULPSS_PG_I2C | SL_SI91X_POWER_MANAGER_ULPSS_PG_IR
+                          | SL_SI91X_POWER_MANAGER_ULPSS_PG_FIM;
   // Ored value for npss peripheral.
   peri.npss_peripheral = SL_SI91X_POWER_MANAGER_NPSS_PG_MCUWDT | SL_SI91X_POWER_MANAGER_NPSS_PG_MCUPS
                          | SL_SI91X_POWER_MANAGER_NPSS_PG_MCUTS | SL_SI91X_POWER_MANAGER_NPSS_PG_MCUSTORE2
@@ -330,18 +338,18 @@ static void configuring_ps2_power_state(void)
     status = sl_si91x_power_manager_remove_peripheral_requirement(&peri);
     if (status != SL_STATUS_OK) {
       // If status is not OK, return with the error code.
-      DEBUGOUT("sl_si91x_power_manager_remove_peripheral_requirement failed, "
-               "Error Code: 0x%lX",
-               status);
+      SL_PRINT_STRING_ERROR("sl_si91x_power_manager_remove_peripheral_requirement failed, "
+                            "Error Code: 0x%lX",
+                            status);
       break;
     }
     // RAM retention modes are configured and passed into this API.
     status = sl_si91x_power_manager_configure_ram_retention(&config);
     if (status != SL_STATUS_OK) {
       // If status is not OK, return with the error code.
-      DEBUGOUT("sl_si91x_power_manager_configure_ram_retention failed, Error "
-               "Code: 0x%lX",
-               status);
+      SL_PRINT_STRING_ERROR("sl_si91x_power_manager_configure_ram_retention failed, Error "
+                            "Code: 0x%lX",
+                            status);
       break;
     }
   } while (false);

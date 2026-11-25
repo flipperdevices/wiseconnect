@@ -5,7 +5,7 @@ metadata:
   sbom:
     license: Zlib
 description: >
-  Provides default RAM memory configuration for the Si91x.
+  This component provides default RAM memory configuration for the SiWx91x.
 category: Device|Si91x|Memory Configuration
 quality: production
 requires:

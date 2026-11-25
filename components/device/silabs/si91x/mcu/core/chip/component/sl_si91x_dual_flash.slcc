@@ -2,7 +2,7 @@ id: si91x_dual_flash
 label: Dual Flash Component
 package: platform_siwx91x
 description: >
-  Dual Flash Component Provides Dual flash capabilities for the board, If the board Supports Dual flash install this component.
+  This component provides dual flash capabilities for the board. Install it when the board supports dual flash.
 category: Board|Flash
 quality: production
 metadata:

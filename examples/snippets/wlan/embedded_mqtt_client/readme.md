@@ -1,9 +1,14 @@
 # Wi-Fi - Embedded MQTT Client
 
+## High-Level Overview
+
+SiWx91x embedded MQTT example: Connect to Wi-Fi and an MQTT broker and subscribe and publish on configured topics using the embedded MQTT client in SoC and NCP modes.
+
 ## Table of Contents
 
 - [Wi-Fi - Embedded MQTT Client](#wi-fi---embedded-mqtt-client)
   - [Table of Contents](#table-of-contents)
+  - [High-Level Overview](#high-level-overview)
   - [Purpose/Scope](#purposescope)
   - [Prerequisites/Setup Requirements](#prerequisitessetup-requirements)
     - [Hardware Requirements](#hardware-requirements)
@@ -15,11 +20,62 @@
     - [Procedure for executing the application when enabled with SSL](#procedure-for-executing-the-application-when-enabled-with-ssl)
   - [Additional Information](#additional-information)
     - [Steps to set up MQTT server](#steps-to-set-up-mqtt-server)
+  - [Troubleshooting](#troubleshooting)
+  - [Resources](#resources)
+  - [Report Bugs and Get Support](#report-bugs-and-get-support)
 
 ## Purpose/Scope
 
 This application demonstrates how SiWx91x is configured as an MQTT client, connects to an MQTT broker, subscribes to a topic, and publishes messages on a particular MQTT topic.
 In this application, SiWx91x is configured as a Wi-Fi station and connects to an access point. After successful Wi-Fi connection, the application connects to a MQTT broker and subscribes to the topic called **THERMOSTAT-DATA**. Subsequently, the application publishes a message **"Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do"** on the **WiFiSDK_TOPIC** topic. Finally, the application waits to receive the data published on the subscribed topic by other clients after which it unsubscribes from the topic it has subscribed to and disconnects from MQTT broker.
+
+### Large Payload Support
+
+The SDK supports receiving large incoming MQTT payloads through fragmentation and reassembly:
+
+- **Transparent to Application**: The SDK automatically reassembles fragmented MQTT messages, so applications receive complete messages in their handler callbacks without requiring any special handling.
+
+**Configuration:**
+
+The maximum allowed payload size can be configured via `SL_MQTT_CLIENT_MAX_RX_PAYLOAD_SIZE` (default: 8192 bytes). Set to 0 to disable large payload support.
+
+> **Note:** The application is configured with `SL_MQTT_CLIENT_MAX_RX_PAYLOAD_SIZE` set to **5120 bytes (5 KB)** to demonstrate large payload reception while conserving memory.
+
+```c
+// In your project configuration to limit max payload to 4 KB
+#define SL_MQTT_CLIENT_MAX_RX_PAYLOAD_SIZE 4096
+```
+
+Example of receiving large messages:
+
+```c
+void mqtt_client_message_handler(void *client, sl_mqtt_client_message_t *message, void *context)
+{
+    // message->content contains the complete reassembled payload
+    // message->content_length contains the total payload length (can be > 1400 bytes)
+    printf("Received %lu bytes on topic: %.*s\r\n", 
+           message->content_length, message->topic_length, message->topic);
+}
+```
+
+**Error Handling:**
+
+The SDK reports errors via `SL_MQTT_CLIENT_ERROR_EVENT`. `event_data` points to
+`sl_mqtt_client_error_info_t`, which includes:
+
+- `error_status` — high-level MQTT error classification (for example, `SL_MQTT_CLIENT_CONNECT_FAILED`)
+- `status_code` — underlying SDK/firmware status when available (for example, `0x10085` /
+  `SL_STATUS_SI91X_MQTT_ERROR_NOT_AUTHORIZED` for MQTT CONNACK Not Authorized)
+
+Handle these in your error callback:
+
+- `SL_MQTT_CLIENT_RECEIVE_PAYLOAD_TOO_LARGE` - Payload exceeds `SL_MQTT_CLIENT_MAX_RX_PAYLOAD_SIZE`
+- `SL_MQTT_CLIENT_RECEIVE_MEMORY_ALLOCATION_FAILED` - Failed to allocate reassembly buffer
+- `SL_MQTT_CLIENT_RECEIVE_DATA_CORRUPTED` - Data corruption detected during reassembly
+
+For host-side validation errors with no firmware status, `status_code` is typically
+`SL_STATUS_FAIL`. For `SL_MQTT_CLIENT_RECEIVE_MEMORY_ALLOCATION_FAILED`, it is
+`SL_STATUS_ALLOCATION_FAILED`.
 
 ## Prerequisites/Setup Requirements
 
@@ -30,19 +86,42 @@ In this application, SiWx91x is configured as a Wi-Fi station and connects to an
 - Windows PC1 (for running MQTT broker)
 - Windows PC2 (for running MQTT client utility - MQTT Explorer)
 - SoC Mode:
-  - Silicon Labs [BRD4338A, BRD4343A](https://www.silabs.com/)
+  - BRD4338A [SiWx917-RB4338A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-rb4338a-wifi-6-bluetooth-le-soc-radio-board?tab=overview)
+  - BRD4342A [SiWx917-RB4342A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx91x-rb4342a-wifi-6-bluetooth-le-soc-radio-board?tab=overview)
+  - BRD4339B [SiWx917-RB4339B](https://docs.silabs.com/wiseconnect/latest/wiseconnect-getting-started/getting-started-with-at)
+  - BRD4340A [SiWx917-RB4340A](https://docs.silabs.com/wiseconnect/latest/wiseconnect-getting-started/getting-started-with-at)
+  - BRD4343A [SiWx917-RB4343A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4343a-wi-fi-6-bluetooth-le-8mb-flash-radio-board-for-module?tab=overview)
+  - BRD4343C [SiWx917-RB4343C](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4343c-wi-fi-6-bluetooth-le-8mb-flash-radio-board-for-module?tab=overview)
+  - Kits
+    - SiWG917 Dev Kit [BRD2605A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-dk2605a-wifi-6-bluetooth-le-soc-dev-kit?tab=overview)
+    - SiWG917 Dev Kit [BRD2605B]
   - For Soc Mode, Simplicity Studio Energy Profiler can be used for the current consumption measurement - [Simplicity Studio Energy Profiler](#using-simplicity-studio-energy-profiler-for-current-measurement).
-- NCP Mode:
-  - Silicon Labs [BRD4180B](https://www.silabs.com/) 
-  - Host MCU Eval Kit. This example has been tested with:
-    - Silicon Labs [WSTK + EFR32MG21](https://www.silabs.com/development-tools/wireless/efr32xg21-bluetooth-starter-kit)
-   - Interface and Host MCU Supported
-      - SPI - EFR32 
-      - UART - EFR32
+- **NCP Mode** (select either the EFR32 or STM32 host MCU platform; a single platform is sufficient to run the application):
+  - **Option 1: EFR32 host**
+    - Silicon Labs [BRD4180B](https://www.silabs.com/development-tools/wireless/slwrb4180b-efr32xg21-wireless-gecko-radio-board?tab=overview)
+    - Host MCU Eval Kit. This example has been tested with:
+      - Silicon Labs [WSTK + EFR32MG21](https://www.silabs.com/development-tools/wireless/efr32xg21-bluetooth-starter-kit)
+    - NCP Expansion Kit with NCP Radio Boards
+      - [BRD4346A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-rb4346a-wifi-6-bluetooth-le-soc-4mb-flash-radio-board?tab=overview) + [BRD8045A](https://www.silabs.com/development-tools/wireless/wi-fi/expansion-adapter-board-for-co-processor-radio-boards?tab=overview)
+      - [BRD4357A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4357a-wi-fi-6-bluetooth-le-4mb-flash-radio-board-for-rcp-and-ncp-modules?tab=overview) + [BRD8045A](https://www.silabs.com/development-tools/wireless/wi-fi/expansion-adapter-board-for-co-processor-radio-boards?tab=overview)
+      - [BRD4357C](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4357c-wi-fi-6-bluetooth-le-4mb-flash-radio-board-for-rcp-and-ncp-modules?tab=overview) + [BRD8045A](https://www.silabs.com/development-tools/wireless/wi-fi/expansion-adapter-board-for-co-processor-radio-boards?tab=overview)
+
+  - **Option 2: STM32F411RE host**
+    - [STM32F411RE](https://www.st.com/en/microcontrollers-microprocessors/stm32f411re.html) MCU
+    - NCP Expansion Kit with NCP Radio Boards
+      - [BRD4346A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-rb4346a-wifi-6-bluetooth-le-soc-4mb-flash-radio-board?tab=overview) + [BRD8045C](https://www.silabs.com/development-tools/wireless/wi-fi/shield-adapter-board-for-co-processor-radio-boards?tab=overview)
+      - [BRD4357A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4357a-wi-fi-6-bluetooth-le-4mb-flash-radio-board-for-rcp-and-ncp-modules?tab=overview) + [BRD8045C](https://www.silabs.com/development-tools/wireless/wi-fi/shield-adapter-board-for-co-processor-radio-boards?tab=overview)
+      - [BRD4357C](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4357c-wi-fi-6-bluetooth-le-4mb-flash-radio-board-for-rcp-and-ncp-modules?tab=overview) + [BRD8045C](https://www.silabs.com/development-tools/wireless/wi-fi/shield-adapter-board-for-co-processor-radio-boards?tab=overview)
+
+  - Interface and host MCU supported
+    - SPI : EFR32 and STM32
+    - UART : EFR32
 
 ### Software Requirements
 
 - Simplicity Studio
+
+- [Keil IDE](https://www.keil.com/) (to be used with STM32F411RE MCU)
 
 ### Setup Diagram
 
@@ -72,7 +151,7 @@ In the Project explorer pane, expand the **config** folder and open the ``sl_net
 
 - STA instance related parameters
 
-	- DEFAULT_WIFI_CLIENT_PROFILE_SSID refers to the name with which the Wi-Fi network shall be advertised. The Si91X module is connected to it.
+	- DEFAULT_WIFI_CLIENT_PROFILE_SSID refers to the name with which the Wi-Fi network shall be advertised. The SiWx91x module is connected to it.
 	
 	```c
   	#define DEFAULT_WIFI_CLIENT_PROFILE_SSID               "YOUR_AP_SSID"      
@@ -96,6 +175,14 @@ In the Project explorer pane, expand the **config** folder and open the ``sl_net
    ```c
    #define MQTT_BROKER_PORT                                8886
    ```
+
+  - MQTT_BROKER_HOST refers to the hostname for TLS/SNI connections (used when `ENCRYPT_CONNECTION` is enabled).
+
+   ```c
+   #define MQTT_BROKER_HOST "yourmqtthost.com"
+   ```
+   
+   > **Note**: The hostname length must be at least 1 byte and less than or equal to 252 bytes.
 
   - MQTT_BROKER_IP refers remote peer IP address (Windows PC1) on which MQTT server is running.
 
@@ -327,3 +414,24 @@ Follow the steps below for successful execution of the application:
 >    - `-p 1883`: This is the same as the `-p` option for `mosquitto_sub`, specifying the network port of the MQTT broker.
 >    - `-t THERMOSTAT-DATA`: Specifies the topic that the client should publish the message to.
 >    - `-m "hello"`: Specifies the message to publish. In this case, the message is the string "hello".
+
+## Troubleshooting
+
+If you encounter issues while running this example, check the following:
+
+- Verify Wi-Fi credentials in `sl_net_default_values.h` and MQTT broker IP/port in `app.c`.
+- Confirm the MQTT broker is running and reachable. See [Steps to set up MQTT server](#steps-to-set-up-mqtt-server).
+- If using SSL/TLS, load valid broker and device certificates. Default certificates are for reference only.
+- Ensure your subscribe and publish topic names match the broker configuration.
+
+## Resources
+
+- [WiSeConnect Getting Started Guide](https://docs.silabs.com/wiseconnect/latest/wiseconnect-getting-started/)
+- [WiSeConnect Examples](https://docs.silabs.com/wiseconnect/latest/wiseconnect-examples/#example-folder-structure)
+- [WiSeConnect Recommended Settings Guide](https://docs.silabs.com/wiseconnect/latest/wiseconnect-developers-guide-prog-recommended-settings/)
+
+## Report Bugs and Get Support
+
+Report issues and get help from the Silicon Labs community:
+
+- [Silicon Labs Community](https://www.silabs.com/community)

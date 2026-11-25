@@ -1,8 +1,8 @@
-# SL MESSAGE QUEUE EXAMPLE
+# SiWx91x Platform RTOS Message Queue
 
 ## Table of Contents
 
-- [SL MESSAGE QUEUE EXAMPLE](#sl-message-queue-example)
+- [SiWx91x Platform RTOS Message Queue](#platform-siwx91x-rtos-message-queue)
   - [Table of Contents](#table-of-contents)
   - [Purpose/Scope](#purposescope)
   - [Overview](#overview)
@@ -15,12 +15,14 @@
     - [I2C Pin Configuration](#i2c-pin-configuration)
   - [USART Pin Configuration](#usart-pin-configuration)
   - [Test the Application](#test-the-application)
+  - [Troubleshooting](#troubleshooting)
+  - [Resources](#resources)
+  - [Report Bugs/Support](#report-bugssupport)
 
 ## Purpose/Scope
 
-- The purpose of this application is to demonstrate the use of CMSIS-RTOS concepts embedded with multiple peripherals. The following concepts are demonstrated:
-  - Message Queues
-- This application contains a comprehensive sample application which includes multiple perpherals listed below
+- The purpose of this application is to demonstrate the use of CMSIS-RTOS concepts embedded with multiple peripherals. In this sample application, the Message Queues concepts is demonstrated.
+- This is a comprehensive sample application which includes the following peripherals:
   - I2C (as a Follower)
   - USART
 - This example creates separate threads for each above mentioned peripheral.
@@ -29,11 +31,11 @@
 After transmission the data is compared and result is printed on the console.
 - This application demonstrates how to configure USART In asynchronous mode, it will send and receive data in loopback mode.
 
-> **Note:** 
+> **Note:**
 >
 >- The master-slave terminology is now replaced with leader-follower. Master is now recognized as Leader, and Slave as Follower.
 >- Here the SCL and SDA lines of follower are configured as internal pull-up.
->- Data is transferred from leader to follower and follower to leader. 
+>- Data is transferred from leader to follower and follower to leader.
 
 ## Overview
  - Each of the threads, I2C and USART, creates their own message queues for sharing with other.
@@ -49,7 +51,7 @@ After transmission the data is compared and result is printed on the console.
     5. If the Tx and Rx data comparison passes, it then fills this data into USART's message queue
     6. I2C thread which has been waiting in step-2 has now got the data
     7. I2C thread then sends this data back to Leader, followed by data comparison
-    
+
 **1. I2C**
 - There are three configurable I2C Leader/Follower controllers in M4 - two in the MCU HP peripherals (I2C1, I2C2) and one in the MCU ULP subsystem (ULP_I2C).
 - The I2C interface allows the processor to serve as a leader or follower on the I2C bus.
@@ -78,11 +80,11 @@ After transmission the data is compared and result is printed on the console.
 ### Hardware Requirements
 
 - Windows PC
-- Silicon Labs [WPK(BRD4002) + BRD4338A]. It will act as a leader and follower
+- Silicon Labs SiWx91x Evaluation Kit [[BRD4002](https://www.silabs.com/development-tools/wireless/wireless-pro-kit-mainboard?tab=overview) + [BRD4338A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-rb4338a-wifi-6-bluetooth-le-soc-radio-board?tab=overview) / [BRD4342A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx91x-rb4342a-wifi-6-bluetooth-le-soc-radio-board?tab=overview) / [BRD4343A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4343a-wi-fi-6-bluetooth-le-8mb-flash-radio-board-for-module?tab=overview) / [BRD4343C](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4343c-wi-fi-6-bluetooth-le-8mb-flash-radio-board-for-module?tab=overview)]. It will act as a leader and follower
 
 ### Software Requirements
 
-- Si91x
+- SiWx91x
 - Simplicity Studio
 - Serial console Setup
   - For Serial Console setup instructions, refer to [link name](https://docs.silabs.com/wiseconnect/latest/wiseconnect-developers-guide-developing-for-silabs-hosts/using-the-simplicity-studio-ide#console-input-and-output).
@@ -105,12 +107,34 @@ For details on the project folder structure, see the [WiSeConnect Examples](http
 
 ## Application Build Environment
 
-- After the above UC configurations, also configure following macros in [`i2c_follower_app.c`](https://github.com/SiliconLabs/wiseconnect/blob/v4.0.1-content-for-docs/examples/si91x_soc/cmsis-rtos/sl_si91x_msg_queue/src/i2c_follower_app.c) file and update/modify following macros, if required.
+- Configure the following macros in [`app.h`](app.h) if required.
 
-  ```C
-    #define I2C_INSTANCE_USED        // Update it with i2c instance number used for this application: 0 for i2c0, 1 for i2c1 and 2 for i2c2
-    #define OWN_I2C_ADDR             // Update I2C own address
-    #define I2C_SIZE_BUFFERS         // To change the number of bytes to send and receive.Its value should be less than maximum buffer size macro value.
+- `BUFFER_SIZE`: Specifies the size (in bytes) of the data buffers shared by the I2C and USART threads for send and receive operations. This value must match the buffer size used by the leader application. By default, it is set to 15.
+
+  ```c
+    #define BUFFER_SIZE      15  // Length of sent or received data.
+  ```
+
+- `MSGQUEUE_OBJECTS`: Specifies the maximum number of messages each CMSIS-RTOS2 message queue can hold at any time. By default, it is set to 1.
+
+  ```c
+    #define MSGQUEUE_OBJECTS 1   // Number of message queue objects.
+  ```
+
+- Configure the following macros in [`usart_app.c`](src/usart_app.c) if required.
+
+- `USART_BAUDRATE`: Specifies the USART communication baud rate for asynchronous data transfer. Supported range is 9600-7372800. By default, it is set to 115200.
+
+  ```c
+    #define USART_BAUDRATE        115200 // Baud rate <9600-7372800>
+  ```
+
+- Configure the following macro in [`i2c_follower_app.c`](src/i2c_follower_app.c) if required.
+
+- `OWN_I2C_ADDR`: Specifies the 7-bit I2C follower address assigned to this device. The leader application must target this same address when communicating. By default, it is set to `0x50`.
+
+  ```c
+    #define OWN_I2C_ADDR           0x50    // Own I2C address
   ```
 
 ### I2C Pin Configuration
@@ -148,11 +172,11 @@ For details on the project folder structure, see the [WiSeConnect Examples](http
   | USART PINS     | GPIO    | Breakout pin     | UART-TTL cable |
   | -------------- | ------- | ------------- | -------------- |
   | USART0_TX_PIN  | GPIO_30 |     P35       | RX pin         |
-  | USART0_RX_PIN  | GPIO_29 |     P33       | TX Pin         | 
+  | USART0_RX_PIN  | GPIO_29 |     P33       | TX Pin         |
 
 
  > ![Figure: Build run and Debug](resources/readme/image513d.png)
-  
+
 > **Note**: For recommended settings, please refer the [recommendations guide](https://docs.silabs.com/wiseconnect/latest/wiseconnect-developers-guide-prog-recommended-settings/).
 
 ## Test the Application
@@ -160,16 +184,34 @@ For details on the project folder structure, see the [WiSeConnect Examples](http
 Refer to the instructions [here](https://docs.silabs.com/wiseconnect/latest/wiseconnect-getting-started/) to:
 
 1.Create i2c_driver_leader example and change I2C_BUFFER_SIZE macro value to 15.
-  ```C
+  ```c
     #define I2C_BUFFER_SIZE          15  // Size of data buffer
   ```
 2. Create and build msg_queue application
 3. Connect ULP_GPIO_6 and ULP_GPIO_7 with the leader device for ULP_I2C.  Connect TX pin(GPIO_30) to RX pin(GPIO_29) forming a loopback.
 4. Run both application
-5. After running this application below console output can be observed. 
+5. After running this application below console output can be observed.
 6. When the application runs, it receives and sends data.
 7. After the transfer is completed, it validates the data and prints on the console.
 8. Will get "Test Case Passed" print on console.
 9. After successful program execution the prints in serial console looks as shown below.
 
     ![Figure: Introduction](resources/readme/output.png)
+
+## Troubleshooting
+
+- If the project does not build, ensure Simplicity Studio and the WiSeConnect extension are installed and the board is connected.
+- If the device is not detected, reinstall the connectivity firmware and check USB drivers.
+- If I2C or USART communication fails, verify pin connections (SCL/SDA for I2C, TX/RX loopback for USART) and that the leader application uses the same buffer size and I2C address.
+- If "Test Case Passed" does not appear, check serial console baud rate (115200) and that both msg_queue and I2C leader applications are running.
+
+## Resources
+
+- [WiSeConnect Getting Started](https://docs.silabs.com/wiseconnect/latest/wiseconnect-getting-started/)
+- [WiSeConnect Examples](https://docs.silabs.com/wiseconnect/latest/wiseconnect-examples/)
+- [SiWx91x SoC Documentation](https://docs.silabs.com/wiseconnect/latest/)
+
+## Report Bugs/Support
+
+For issues and support, use the Silicon Labs Community or your normal support channel.
+

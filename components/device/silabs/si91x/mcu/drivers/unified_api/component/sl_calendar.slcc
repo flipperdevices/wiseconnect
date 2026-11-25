@@ -8,8 +8,7 @@ description: >
   RTC time is a free-flowing counter which can count up to 4 Centuries. 
   Conversion to any other format such as Unix/NTP timestamps, are subject to its own range limitation.
   It also supports ULP and UULP power domain.
-  When this component is installed, it will also install the Calendar dependency component(s), 
-  which is used by the driver.
+  When this component is installed, it also installs the RTC component used by the driver.
 category: Device|Si91x|MCU|Peripheral
 quality: production
 metadata:
@@ -27,6 +26,4 @@ provides:
 requires:
   - name: systemlevel_time_period
   - name: systemlevel_rtc
-documentation:
-    docset: wiseconnect
-    document: wiseconnect-api-reference-guide-si91x-peripherals/calendar
+  - name: log_none

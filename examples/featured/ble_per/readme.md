@@ -1,24 +1,34 @@
 # BLE - PER
 
+## High-Level Overview
+
+SiWx91x BLE PER example: configure parameters to transmit or receive BLE PER packets for RF performance testing. Supports SoC and NCP modes using Simplicity Studio or Keil IDE.
+
 ## Table of Contents
 
 - [BLE - PER](#ble---per)
+  - [High-Level Overview](#high-level-overview)
   - [Table of Contents](#table-of-contents)
   - [Purpose/Scope](#purposescope)
   - [Prerequisites/Setup Requirements](#prerequisitessetup-requirements)
     - [Hardware Requirements](#hardware-requirements)
     - [Software Requirements](#software-requirements)
+    - [NCP mode: host application and project files](#ncp-mode-host-application-and-project-files)
     - [Setup Diagram](#setup-diagram)
-  - [Getting Started](#getting-started)
-    - [Instructions for Simplicity Studio IDE and Silicon Labs Devices (SoC and NCP Modes)](#instructions-for-simplicity-studio-ide-and-silicon-labs-devices-soc-and-ncp-modes)
-    - [Instructions for Keil IDE and STM32F411RE MCU (NCP Mode)](#instructions-for-keil-ide-and-stm32f411re-mcu-ncp-mode)
-  - [Application Build Environment](#application-build-environment)
-    - [Application Configuration Parameters](#application-configuration-parameters)
-  - [Test the Application](#test-the-application)
-    - [Instructions for Simplicity Studio IDE and Silicon Labs Devices (SoC and NCP Modes)](#instructions-for-simplicity-studio-ide-and-silicon-labs-devices-soc-and-ncp-modes-1)
-    - [Instructions for Keil IDE and STM32F411RE MCU](#instructions-for-keil-ide-and-stm32f411re-mcu)
-    - [BLE-PER-TX](#ble-per-tx)
-    - [BLE-PER-RX](#ble-per-rx)
+  - [Steps to Run Demo](#steps-to-run-demo)
+    - [Getting Started](#getting-started)
+      - [Instructions for Simplicity Studio IDE and Silicon Labs Devices (SoC and NCP Modes)](#instructions-for-simplicity-studio-ide-and-silicon-labs-devices-soc-and-ncp-modes)
+      - [Instructions for Keil IDE and STM32F411RE MCU (NCP Mode)](#instructions-for-keil-ide-and-stm32f411re-mcu-ncp-mode)
+    - [Configuration and Setup](#configuration-and-setup)
+      - [Application Configuration Parameters](#application-configuration-parameters)
+    - [Steps for Execution](#steps-for-execution)
+      - [Instructions for Simplicity Studio IDE and Silicon Labs Devices (SoC and NCP Modes)](#instructions-for-simplicity-studio-ide-and-silicon-labs-devices-soc-and-ncp-modes-1)
+      - [Instructions for Keil IDE and STM32F411RE MCU](#instructions-for-keil-ide-and-stm32f411re-mcu)
+      - [BLE-PER-TX](#ble-per-tx)
+      - [BLE-PER-RX](#ble-per-rx)
+  - [Troubleshooting](#troubleshooting)
+  - [Resources](#resources)
+  - [Report Bugs and Get Support](#report-bugs-and-get-support)
 
 ## Purpose/Scope
 
@@ -31,46 +41,69 @@ Before running the application, the user will need the following things to setup
 ### Hardware Requirements
 
 - A Windows PC
-- SiWx91x Wi-Fi Evaluation Kit. The SiWx91x supports multiple operating modes. See [Operating Modes](https://docs.silabs.com/wiseconnect/latest/wiseconnect-api-reference-guide-si91x-driver/sl-si91-x-constants#sl-si91x-operation-mode-t) for details.
+- SiWx91x Wi-Fi Evaluation Kit. The SiWx91x supports multiple operating modes. See [Operating Modes](https://docs.silabs.com/wiseconnect/latest/wiseconnect-api-reference-guide-wi-fi/sl-wifi-types#sl-wifi-operation-mode-t) for details.
 - **SoC Mode**:
   - Standalone
-    - BRD4002A Wireless Pro Kit Mainboard [SI-MB4002A]
+    - [BRD4002B](https://www.silabs.com/development-tools/wireless/wireless-pro-kit-mainboard?tab=overview) Wireless Pro Kit Mainboard [SI-MB4002B]
     - Radio Boards 
-  	  - BRD4338A [SiWx917-RB4338A]
-      - BRD4342A [SiWx917-RB4342A]
-      - BRD4343A [SiWx917-RB4343A]
+  	  - [BRD4338A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-rb4338a-wifi-6-bluetooth-le-soc-radio-board?tab=overview) [SiWx917-RB4338A]
+      - [BRD4342A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx91x-rb4342a-wifi-6-bluetooth-le-soc-radio-board?tab=overview) [SiWx917-RB4342A]
+      - [BRD4343A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4343a-wi-fi-6-bluetooth-le-8mb-flash-radio-board-for-module?tab=overview) [SiWx917-RB4343A]
+      - [BRD4343C](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4343c-wi-fi-6-bluetooth-le-8mb-flash-radio-board-for-module?tab=overview) [SiWx917-RB4343C]
   - Kits
+  	- SiWG917 Dev Kit [BRD2605B]
   	- SiWx917 Pro Kit [Si917-PK6031A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-pro-kit?tab=overview)
   	- SiWx917 Pro Kit [Si917-PK6032A]
-    - SiWx917 AC1 Module Explorer Kit (BRD2708A)
+    - SiWx917 AC1 Module Explorer Kit [BRD2708A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-ek2708a-explorer-kit)
   	
-- **NCP Mode**:
-  - Standalone
-    - BRD4002A Wireless pro kit mainboard [SI-MB4002A]
-    - EFR32xG24 Wireless 2.4 GHz +10 dBm Radio Board [xG24-RB4186C](https://www.silabs.com/development-tools/wireless/xg24-rb4186c-efr32xg24-wireless-gecko-radio-board?tab=overview)
-    - NCP Expansion Kit with NCP Radio boards
-      - (BRD4346A + BRD8045A) [SiWx917-EB4346A]
-      - (BRD4357A + BRD8045A) [SiWx917-EB4357A]
-  - Kits
-  	- EFR32xG24 Pro Kit +10 dBm [xG24-PK6009A](https://www.silabs.com/development-tools/wireless/efr32xg24-pro-kit-10-dbm?tab=overview)
-  - Interface and Host MCU Supported
-    - SPI - EFR32 
-    - UART - EFR32
+- **NCP Mode** (select either the EFR32 or STM32 host MCU platform; a single platform is sufficient to run the application):
+  - **Option 1: EFR32 host**
+    - Standalone
+      - [BRD4002B](https://www.silabs.com/development-tools/wireless/wireless-pro-kit-mainboard?tab=overview) Wireless Pro Kit Mainboard [SI-MB4002B]
+      - EFR32xG24 Wireless 2.4 GHz +10 dBm Radio Board [xG24-RB4186C](https://www.silabs.com/development-tools/wireless/xg24-rb4186c-efr32xg24-wireless-gecko-radio-board?tab=overview)
+    - NCP Expansion Kit with NCP Radio Boards
+        - [[BRD8045A](https://www.silabs.com/development-tools/wireless/wi-fi/expansion-adapter-board-for-co-processor-radio-boards?tab=overview) + [BRD4346A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-rb4346a-wifi-6-bluetooth-le-soc-4mb-flash-radio-board?tab=overview) / [BRD4357A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4357a-wi-fi-6-bluetooth-le-4mb-flash-radio-board-for-rcp-and-ncp-modules?tab=overview) / [BRD4357C](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4357c-wi-fi-6-bluetooth-le-4mb-flash-radio-board-for-rcp-and-ncp-modules?tab=overview)]
+    - Kits
+    	- EFR32xG24 Pro Kit +10 dBm [xG24-PK6009A](https://www.silabs.com/development-tools/wireless/efr32xg24-pro-kit-10-dbm?tab=overview)
+
+  - **Option 2: STM32F411RE host**
+    - [STM32F411RE](https://www.st.com/en/microcontrollers-microprocessors/stm32f411re.html) MCU
+    - NCP Expansion Kit with NCP Radio Boards
+      - [BRD4346A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-rb4346a-wifi-6-bluetooth-le-soc-4mb-flash-radio-board?tab=overview) + [BRD8045C](https://www.silabs.com/development-tools/wireless/wi-fi/shield-adapter-board-for-co-processor-radio-boards?tab=overview)
+      - [BRD4357A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4357a-wi-fi-6-bluetooth-le-4mb-flash-radio-board-for-rcp-and-ncp-modules?tab=overview) + [BRD8045C](https://www.silabs.com/development-tools/wireless/wi-fi/shield-adapter-board-for-co-processor-radio-boards?tab=overview)
+      - [BRD4357C](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4357c-wi-fi-6-bluetooth-le-4mb-flash-radio-board-for-rcp-and-ncp-modules?tab=overview) + [BRD8045C](https://www.silabs.com/development-tools/wireless/wi-fi/shield-adapter-board-for-co-processor-radio-boards?tab=overview)
+
+  - Interface and host MCU supported
+    - SPI : EFR32 and STM32
+    - UART : EFR32
 - Spectrum Analyzer
 
 ### Software Requirements
 
 - Simplicity Studio IDE (to be used with Silicon Labs MCU)
-- Keil IDE (to be used with STM32F411RE MCU)
+- [Keil IDE](https://www.keil.com/) (to be used with STM32F411RE MCU)
 - Serial Terminal - [Docklight](https://docklight.de/)/[Tera Term](https://ttssh2.osdn.jp/index.html.en) (to be used with Keil IDE)
+
+### NCP mode: host application and project files
+
+| Mode       | Host / target                                                                           | Project file (this example folder) |
+|------------|-----------------------------------------------------------------------------------------|------------------------------------|
+| SoC        | Application runs on SiWx91x.                                                            | `ble_per_soc.slcp`                 |
+| PSRAM      | Application runs on SiWx91x with PSRAM-capable radio board.                             | `ble_per_psram.slcp`               |
+| NCP (SPI)  | Application runs on **EFR32** host; SiWx917 is the network co-processor over **SPI**.   | `ble_per_ncp.slcp`                 |
+| NCP (UART) | Application runs on **EFR32** host; SiWx917 NCP over **UART**.                          | `ble_per_uart_ncp.slcp`            |
+
+Open the `.slcp` for your kit from `examples/featured/ble_per/` in Simplicity Studio. For NCP, follow [Getting started with NCP mode](https://docs.silabs.com/wiseconnect/latest/wiseconnect-getting-started/getting-started-with-ncp-mode).
 
 ### Setup Diagram
 
   ![Setup Diagram](resources/readme/ble_per_soc_ncp.png)
 
-## Getting Started
+## Steps to Run Demo
 
-### Instructions for Simplicity Studio IDE and Silicon Labs Devices (SoC and NCP Modes)
+### Getting Started
+
+#### Instructions for Simplicity Studio IDE and Silicon Labs Devices (SoC and NCP Modes)
 
   Refer to the instructions [here](https://docs.silabs.com/wiseconnect/latest/wiseconnect-getting-started/) to:
 
@@ -81,7 +114,7 @@ Before running the application, the user will need the following things to setup
    
 For details on the project folder structure, see the [WiSeConnect Examples](https://docs.silabs.com/wiseconnect/latest/wiseconnect-examples/#example-folder-structure) page.   
    
-### Instructions for Keil IDE and STM32F411RE MCU (NCP Mode)
+#### Instructions for Keil IDE and STM32F411RE MCU (NCP Mode)
 
   - Install the [Keil IDE](https://www.keil.com/).
   - Download [WiSeConnect SDK](https://github.com/SiliconLabs/wiseconnect)
@@ -94,9 +127,9 @@ For details on the project folder structure, see the [WiSeConnect Examples](http
    	- Connect the setup to the computer.
   	- Open the BLE PER µVision project - **ble_per.uvprojx** by navigating to **WiSeConnect SDK → examples → featured → ble_per → keil_project**. 
 
-## Application Build Environment
+### Configuration and Setup
 
-### Application Configuration Parameters
+#### Application Configuration Parameters
 
 The application can be configured to suit your requirements and development environment. Read through the following sections and make any changes needed.
 
@@ -377,16 +410,16 @@ uint8_t Si917_BLE_REGION_BASED_LP_CHAIN_10DBM_OFFSET_XX[] = {};  // Fill the use
 > - The Worldwide table is available for BLE only, and must not be modified. 
 > - The values in the worldwide table comply with Bluetooth SIG specifications.
 
-## Test the Application
+### Steps for Execution
 
-### Instructions for Simplicity Studio IDE and Silicon Labs Devices (SoC and NCP Modes)
+#### Instructions for Simplicity Studio IDE and Silicon Labs Devices (SoC and NCP Modes)
 
 Refer to the instructions [here](https://docs.silabs.com/wiseconnect/latest/wiseconnect-getting-started/) to:
 
 - Build the application.
 - Flash, run, and debug the application.
 
-### Instructions for Keil IDE and STM32F411RE MCU
+#### Instructions for Keil IDE and STM32F411RE MCU
 
 - Build the application.
 - Set the Docklight up by connecting STM32's Serial COM port. This enables you to view the application prints.
@@ -405,13 +438,35 @@ Follow the steps as mentioned for the successful execution of the application:
 
 5. After successful program execution, the prints in Tera Term appear as shown in the following images.
 
-### BLE-PER-TX
+#### BLE-PER-TX
 
   ![output](resources/readme/output_1.png)
 
-### BLE-PER-RX
+#### BLE-PER-RX
 
   ![output](resources/readme/output_2.png)
+
+## Troubleshooting
+
+If you encounter issues while running the BLE PER example, check the following:
+
+- Ensure the correct radio board is connected and the connectivity firmware is up to date.
+- Verify that the configuration macros in `app.c` and `ble_config.h` (for example, `RSI_CONFIG_PER_MODE`, `BLE_TX_CHNL_NUM`, `BLE_RX_CHNL_NUM`, `BLE_PHY_RATE`) match your test setup.
+- For NCP mode, confirm the SPI/UART host interface wiring between the host MCU and the SiWx91x NCP is correct.
+- When using a Spectrum Analyzer, ensure the antenna selection (`ANT_SEL`) and RF chain settings match the physical antenna path.
+- If the expected output is not seen in Tera Term/Docklight, verify the COM port, baud rate, and that the device has been flashed successfully.
+
+## Resources
+
+- [WiSeConnect Getting Started Guide](https://docs.silabs.com/wiseconnect/latest/wiseconnect-getting-started/)
+- [WiSeConnect API Reference Guide](https://docs.silabs.com/wiseconnect/latest/wiseconnect-api-reference-guide-si91x-driver/)
+- [WiSeConnect Developers Guide - Recommended Settings](https://docs.silabs.com/wiseconnect/latest/wiseconnect-developers-guide-prog-recommended-settings/)
+
+## Report Bugs and Get Support
+
+Report issues and get help from the Silicon Labs community:
+
+- [Silicon Labs Community](https://www.silabs.com/community)
 
 
 

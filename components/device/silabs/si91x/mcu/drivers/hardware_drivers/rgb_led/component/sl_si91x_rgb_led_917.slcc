@@ -2,13 +2,10 @@ id: sl_si91x_rgb_led_917
 package: platform_siwx91x
 label: RGB LED
 description: >
-  The Simple RGB LED Driver provides an implementation of RGB LED API. 
-  This driver supports controlling GPIO-based on/off type RGB LEDs. 
-  This component is instantiable, but only one named instance can be created - led0.
-  For each instance a configuration is generated along with an initialization struct set according to this configuration.
-  This driver file is now deprecated.
-  To ensure future-proofing and compatibility with upcoming features, 
-  users are encouraged to migrate to the LED driver by taking reference from the sl_si91x_rgb_led application.
+  This component provides a simple GPIO-based on/off RGB LED driver for the SiWx91x.
+  It is instantiable with one named instance (led0). For each instance, a configuration and
+  initialization struct are generated. This driver is deprecated; migrate to the sl_si91x_rgb_led
+  driver for future compatibility.
 category: Device|Si91x|MCU|Hardware
 quality: production
 metadata:
@@ -32,11 +29,12 @@ source:
 requires:
   - name: sl_gpio
   - name: sleeptimer
+  - name: log_none
 provides:
   - name: sl_si91x_rgb_led_917
 define:
   - name: SI917_RGB_DRIVER_OLD
-    value: '1'
+    value: "1"
 template_file:
   - path: "inst/sl_si91x_rgb_led_instances.c.jinja"
     unless: [sl_si91x_led_917]

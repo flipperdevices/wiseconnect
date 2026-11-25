@@ -58,19 +58,25 @@ void icm40627_example_init(void)
     // Enable the sensor
     sl_status = enable_icm40627(true);
     if (sl_status != SL_STATUS_OK) {
-      DEBUGOUT("ICM40627 enable failed, Error Code: 0x%ld \n", sl_status);
+      /* Note: All status messages in this example — both success and failure — are
+ * intentionally emitted via SL_PRINT_STRING_ERROR so that they remain visible
+ * on the console at the default log level. This is a demonstration choice, not
+ * a recommendation: in production code, ERROR severity should be reserved for
+ * actual failures, with successful operations logged via SL_PRINT_STRING_INFO
+ * (or SL_PRINT_STRING_DEBUG for verbose trace). */
+      SL_PRINT_STRING_ERROR("ICM40627 enable failed, Error Code: 0x%ld \n", sl_status);
       break;
     } else {
-      DEBUGOUT("ICM40627 enable successful\n");
+      SL_PRINT_STRING_ERROR("ICM40627 enable successful\n");
     }
 
     // SSI interface init moved to driver API
     sl_status = sl_si91x_icm40627_ssi_interface_init(&ssi_driver_handle, ssi_slave_number);
     if (sl_status != SL_STATUS_OK) {
-      DEBUGOUT("ICM40627 SSI interface init failed, Error Code: 0x%ld \n", sl_status);
+      SL_PRINT_STRING_ERROR("ICM40627 SSI interface init failed, Error Code: 0x%ld \n", sl_status);
       break;
     } else {
-      DEBUGOUT("ICM40627 SSI interface init successful\n");
+      SL_PRINT_STRING_ERROR("ICM40627 SSI interface init successful\n");
     }
 
     //Start 2000 ms periodic timer
@@ -83,28 +89,28 @@ void icm40627_example_init(void)
     // reset the sensor
     sl_status = sl_si91x_icm40627_software_reset(ssi_driver_handle);
     if (sl_status != SL_STATUS_OK) {
-      DEBUGOUT("ICM40627 software reset un-successful, Error Code: 0x%ld \n", sl_status);
+      SL_PRINT_STRING_ERROR("ICM40627 software reset un-successful, Error Code: 0x%ld \n", sl_status);
       break;
     } else {
-      DEBUGOUT("ICM40627 software reset successful\n");
+      SL_PRINT_STRING_ERROR("ICM40627 software reset successful\n");
     }
 
     // Read Who am I register, should get ICM40627_DEVICE_ID
     sl_status = sl_si91x_icm40627_get_device_id(ssi_driver_handle, &dev_id);
     if ((sl_status == SL_STATUS_OK) && (dev_id == ICM40627_DEVICE_ID)) {
-      DEBUGOUT("ICM40627 device ID verification successful \n");
+      SL_PRINT_STRING_ERROR("ICM40627 device ID verification successful \n");
     } else {
-      DEBUGOUT("ICM40627 device ID verification failed\n");
+      SL_PRINT_STRING_ERROR("ICM40627 device ID verification failed\n");
       break;
     }
 
     // Initializes sensor and reads electronic ID 1st byte
     sl_status = sl_si91x_icm40627_init(ssi_driver_handle);
     if (sl_status != SL_STATUS_OK) {
-      DEBUGOUT("ICM40627 initialization failed, Error Code: 0x%ld \n", sl_status);
+      SL_PRINT_STRING_ERROR("ICM40627 initialization failed, Error Code: 0x%ld \n", sl_status);
       break;
     } else {
-      DEBUGOUT("ICM40627 initialization successful\n");
+      SL_PRINT_STRING_ERROR("ICM40627 initialization successful\n");
     }
   } while (false);
 }
@@ -124,33 +130,33 @@ void icm40627_example_process_action(void)
     //Reads temperature data from sensor
     status = sl_si91x_icm40627_get_temperature_data(ssi_driver_handle, &temperature);
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("Temperature read failed, Error Code: 0x%ld \n", status);
+      SL_PRINT_STRING_ERROR("Temperature read failed, Error Code: 0x%ld \n", status);
     } else {
-      DEBUGOUT("Temperature: %0.2lf\n", temperature);
+      SL_PRINT_STRING_ERROR("Temperature: %0.2lf\n", temperature);
     }
 
     //Reads accelerometer data from sensor
     status = sl_si91x_icm40627_get_accel_data(ssi_driver_handle, sensor_data);
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("Acceleration read failed, Error Code: 0x%ld \n", status);
+      SL_PRINT_STRING_ERROR("Acceleration read failed, Error Code: 0x%ld \n", status);
     } else {
-      DEBUGOUT("Acceleration: {  ");
+      SL_PRINT_STRING_ERROR("Acceleration: {  ");
       for (int i = 0; i < 3; i++) {
-        DEBUGOUT("%0.2f  ", sensor_data[i]);
+        SL_PRINT_STRING_ERROR("%0.2f  ", sensor_data[i]);
       }
-      DEBUGOUT("}\n");
+      SL_PRINT_STRING_ERROR("}\n");
     }
 
     //Reads gyro data from sensor
     status = sl_si91x_icm40627_get_gyro_data(ssi_driver_handle, sensor_data);
     if (status != SL_STATUS_OK) {
-      DEBUGOUT("Gyro read failed, Error Code: 0x%ld \n", status);
+      SL_PRINT_STRING_ERROR("Gyro read failed, Error Code: 0x%ld \n", status);
     } else {
-      DEBUGOUT("Gyro: {  ");
+      SL_PRINT_STRING_ERROR("Gyro: {  ");
       for (int i = 0; i < 3; i++) {
-        DEBUGOUT("%0.2f  ", sensor_data[i]);
+        SL_PRINT_STRING_ERROR("%0.2f  ", sensor_data[i]);
       }
-      DEBUGOUT("}\n\n");
+      SL_PRINT_STRING_ERROR("}\n\n");
     }
   }
 }

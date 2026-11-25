@@ -70,19 +70,19 @@ extern "C" {
 #define _GPIO_PORT_K_PIN_MASK 0x0000UL
 
 ///< GPIO pins selection for selected port
-#define _GPIO_PORT_SIZE(port)              \
-  ((port) == 0    ? _GPIO_PORT_A_PIN_COUNT \
-   : (port) == 1  ? _GPIO_PORT_B_PIN_COUNT \
-   : (port) == 2  ? _GPIO_PORT_C_PIN_COUNT \
-   : (port) == 3  ? _GPIO_PORT_D_PIN_COUNT \
-   : (port) == 4  ? _GPIO_PORT_E_PIN_COUNT \
-   : (port) == 5  ? _GPIO_PORT_F_PIN_COUNT \
-   : (port) == 6  ? _GPIO_PORT_G_PIN_COUNT \
-   : (port) == 7  ? _GPIO_PORT_H_PIN_COUNT \
-   : (port) == 8  ? _GPIO_PORT_I_PIN_COUNT \
-   : (port) == 9  ? _GPIO_PORT_J_PIN_COUNT \
-   : (port) == 10 ? _GPIO_PORT_K_PIN_COUNT \
-                  : 0)
+#define _GPIO_PORT_SIZE(port)                              \
+  (((unsigned int)(port)) == 0    ? _GPIO_PORT_A_PIN_COUNT \
+   : ((unsigned int)(port)) == 1  ? _GPIO_PORT_B_PIN_COUNT \
+   : ((unsigned int)(port)) == 2  ? _GPIO_PORT_C_PIN_COUNT \
+   : ((unsigned int)(port)) == 3  ? _GPIO_PORT_D_PIN_COUNT \
+   : ((unsigned int)(port)) == 4  ? _GPIO_PORT_E_PIN_COUNT \
+   : ((unsigned int)(port)) == 5  ? _GPIO_PORT_F_PIN_COUNT \
+   : ((unsigned int)(port)) == 6  ? _GPIO_PORT_G_PIN_COUNT \
+   : ((unsigned int)(port)) == 7  ? _GPIO_PORT_H_PIN_COUNT \
+   : ((unsigned int)(port)) == 8  ? _GPIO_PORT_I_PIN_COUNT \
+   : ((unsigned int)(port)) == 9  ? _GPIO_PORT_J_PIN_COUNT \
+   : ((unsigned int)(port)) == 10 ? _GPIO_PORT_K_PIN_COUNT \
+                                  : 0)
 
 ///< GPIO pins mask for selected port
 #define _GPIO_PORT_MASK(port)                  \
@@ -261,11 +261,26 @@ void sl_gpio_configure_interrupt(sl_gpio_port_t port, uint8_t pin, uint32_t int_
  *                Port 3 has 9 pins.
  *                ULP instance has total 12 pins.
  * @param[in]  mode - The desired pin mode.
- * @param[in]  output_value - A value to set for the pin in the GPIO register.
- *                The GPIO setting is important for some input mode configurations.
+ * @param[in]  output_value - Must be 0 or 1. For \ref SL_GPIO_MODE_DISABLED, \a mode is written first,
+ *                then the latch via \ref sl_gpio_set_pin_output / \ref sl_gpio_clear_pin_output (pull-up
+ *                when DOUT is set, per mode enum), so disabling a driven pin does not briefly drive a new
+ *                level while the previous mode is still active. For all other modes, the latch is programmed
+ *                first, then \a mode. Use \ref sl_gpio_pin_configure_gpio_output_level() before this API when
+ *                the pad must be driven as GPIO before selecting a peripheral mux.
  * @return     None
  ******************************************************************************/
 void sl_gpio_set_pin_mode(sl_gpio_port_t port, uint8_t pin, sl_gpio_mode_t mode, uint32_t output_value);
+
+/***************************************************************************/ /**
+ * @brief      Put the pin in GPIO mode 0, direction output, and drive high or low.
+ * @details    Use before \ref sl_gpio_set_pin_mode when a known GPIO output level is required prior to mux.
+ * @pre   Same as \ref sl_gpio_set_pin_mode (clock, pad selection, pad receiver).
+ * @param[in]  port - HP port 0–3 or \ref SL_GPIO_ULP_PORT as for other GPIO APIs.
+ * @param[in]  pin  - Pin index on that port.
+ * @param[in]  level - 0 = drive low, 1 = drive high (must be 0 or 1).
+ * @return     None
+ ******************************************************************************/
+void sl_gpio_pin_configure_gpio_output_level(sl_gpio_port_t port, uint8_t pin, uint32_t level);
 
 /***************************************************************************/ /**
  * @brief      Get the pin mode (alternate function) of a GPIO for either HP instance or ULP instance as per the port number.
@@ -312,7 +327,7 @@ static __INLINE void sl_gpio_set_pin_output(sl_gpio_port_t port, uint8_t pin)
   if ((port == SL_GPIO_PORT_A) || (port == SL_GPIO_PORT_B) || (port == SL_GPIO_PORT_C) || (port == SL_GPIO_PORT_D)) {
     SL_GPIO_ASSERT(SL_GPIO_NDEBUG_PORT_PIN(port, pin));
     GPIO->PIN_CONFIG[(port * MAX_GPIO_PORT_PIN) + pin].BIT_LOAD_REG = SET;
-  } else if (port == SL_GPIO_ULP_PORT) {
+  } else if ((unsigned int)port == SL_GPIO_ULP_PORT) {
     SL_GPIO_ASSERT(SL_GPIO_VALIDATE_ULP_PORT_PIN(port, pin));
     ULP_GPIO->PIN_CONFIG[pin].BIT_LOAD_REG = SET;
   } else {
@@ -340,7 +355,7 @@ static __INLINE void sl_gpio_set_pin_output(sl_gpio_port_t port, uint8_t pin)
 static __INLINE void sl_gpio_set_port_output(sl_gpio_port_t port, uint32_t pins)
 {
   SL_GPIO_ASSERT(SL_GPIO_VALIDATE_PORT(port));
-  if (port == SL_GPIO_ULP_PORT) {
+  if ((unsigned int)port == SL_GPIO_ULP_PORT) {
     ULP_GPIO->PORT_CONFIG[SL_GPIO_PORT_A].PORT_SET_REG = (pins);
   } else {
     GPIO->PORT_CONFIG[port].PORT_SET_REG = (pins);
@@ -366,7 +381,7 @@ static __INLINE void sl_gpio_set_port_output(sl_gpio_port_t port, uint32_t pins)
 static __INLINE void sl_gpio_set_port_output_value(sl_gpio_port_t port, uint32_t val, uint32_t mask)
 {
   SL_GPIO_ASSERT(SL_GPIO_VALIDATE_PORT(port));
-  if (port == SL_GPIO_ULP_PORT) {
+  if ((unsigned int)port == SL_GPIO_ULP_PORT) {
     ULP_GPIO->PORT_CONFIG[SL_GPIO_PORT_A].PORT_SET_REG = (ULP_GPIO->PORT_CONFIG[port].PORT_SET_REG & ~mask)
                                                          | (val & mask);
   } else {
@@ -414,7 +429,7 @@ static __INLINE void sl_gpio_clear_pin_output(sl_gpio_port_t port, uint8_t pin)
   if ((port == SL_GPIO_PORT_A) || (port == SL_GPIO_PORT_B) || (port == SL_GPIO_PORT_C) || (port == SL_GPIO_PORT_D)) {
     SL_GPIO_ASSERT(SL_GPIO_NDEBUG_PORT_PIN(port, pin));
     GPIO->PIN_CONFIG[(port * MAX_GPIO_PORT_PIN) + pin].BIT_LOAD_REG = CLR;
-  } else if (port == SL_GPIO_ULP_PORT) {
+  } else if ((unsigned int)port == SL_GPIO_ULP_PORT) {
     SL_GPIO_ASSERT(SL_GPIO_VALIDATE_ULP_PORT_PIN(port, pin));
     ULP_GPIO->PIN_CONFIG[pin].BIT_LOAD_REG = CLR;
   } else {
@@ -442,7 +457,7 @@ static __INLINE void sl_gpio_clear_pin_output(sl_gpio_port_t port, uint8_t pin)
 static __INLINE void sl_gpio_clear_port_output(sl_gpio_port_t port, uint32_t pins)
 {
   SL_GPIO_ASSERT(SL_GPIO_VALIDATE_PORT(port));
-  if (port == SL_GPIO_ULP_PORT) {
+  if ((unsigned int)port == SL_GPIO_ULP_PORT) {
     ULP_GPIO->PORT_CONFIG[SL_GPIO_PORT_A].PORT_CLEAR_REG = (pins);
   } else {
     GPIO->PORT_CONFIG[port].PORT_CLEAR_REG = (pins);
@@ -475,7 +490,7 @@ static __INLINE uint8_t sl_gpio_get_pin_input(sl_gpio_port_t port, uint8_t pin)
   if ((port == SL_GPIO_PORT_A) || (port == SL_GPIO_PORT_B) || (port == SL_GPIO_PORT_C) || (port == SL_GPIO_PORT_D)) {
     SL_GPIO_ASSERT(SL_GPIO_NDEBUG_PORT_PIN(port, pin));
     return (uint8_t)GPIO->PIN_CONFIG[(port * MAX_GPIO_PORT_PIN) + pin].BIT_LOAD_REG;
-  } else if (port == SL_GPIO_ULP_PORT) {
+  } else if ((unsigned int)port == SL_GPIO_ULP_PORT) {
     SL_GPIO_ASSERT(SL_GPIO_VALIDATE_ULP_PORT_PIN(port, pin));
     return (uint8_t)ULP_GPIO->PIN_CONFIG[pin].BIT_LOAD_REG;
   } else {
@@ -505,7 +520,7 @@ static __INLINE uint8_t sl_gpio_get_pin_input(sl_gpio_port_t port, uint8_t pin)
 static __INLINE uint8_t sl_gpio_get_pin_output(sl_gpio_port_t port, uint8_t pin)
 {
   SL_GPIO_ASSERT(SL_GPIO_VALIDATE_PORT(port));
-  if (port == SL_GPIO_ULP_PORT) {
+  if ((unsigned int)port == SL_GPIO_ULP_PORT) {
     SL_GPIO_ASSERT(SL_GPIO_VALIDATE_ULP_PORT_PIN(port, pin));
     return (uint8_t)ULP_GPIO->PIN_CONFIG[pin].BIT_LOAD_REG;
   } else {
@@ -531,7 +546,7 @@ static __INLINE uint8_t sl_gpio_get_pin_output(sl_gpio_port_t port, uint8_t pin)
 static __INLINE uint32_t sl_gpio_get_port_input(sl_gpio_port_t port)
 {
   SL_GPIO_ASSERT(SL_GPIO_VALIDATE_PORT(port));
-  if (port == SL_GPIO_ULP_PORT) {
+  if ((unsigned int)port == SL_GPIO_ULP_PORT) {
     return ULP_GPIO->PORT_CONFIG[SL_GPIO_PORT_A].PORT_READ_REG & PORT_MASK;
   } else {
     return GPIO->PORT_CONFIG[port].PORT_READ_REG & PORT_MASK;
@@ -555,7 +570,7 @@ static __INLINE uint32_t sl_gpio_get_port_input(sl_gpio_port_t port)
 static __INLINE uint32_t sl_gpio_get_port_output(sl_gpio_port_t port)
 {
   SL_GPIO_ASSERT(SL_GPIO_VALIDATE_PORT(port));
-  if (port == SL_GPIO_ULP_PORT) {
+  if ((unsigned int)port == SL_GPIO_ULP_PORT) {
     return (ULP_GPIO->PORT_CONFIG[SL_GPIO_PORT_A].PORT_READ_REG & PORT_MASK);
   } else {
     return (GPIO->PORT_CONFIG[port].PORT_READ_REG & PORT_MASK);
@@ -586,7 +601,7 @@ static __INLINE void sl_gpio_toggle_pin_output(sl_gpio_port_t port, uint8_t pin)
   if ((port == SL_GPIO_PORT_A) || (port == SL_GPIO_PORT_B) || (port == SL_GPIO_PORT_C) || (port == SL_GPIO_PORT_D)) {
     SL_GPIO_ASSERT(SL_GPIO_NDEBUG_PORT_PIN(port, pin));
     GPIO->PIN_CONFIG[(port * MAX_GPIO_PORT_PIN) + pin].BIT_LOAD_REG ^= SET;
-  } else if (port == SL_GPIO_ULP_PORT) {
+  } else if ((unsigned int)port == SL_GPIO_ULP_PORT) {
     SL_GPIO_ASSERT(SL_GPIO_VALIDATE_ULP_PORT_PIN(port, pin));
     ULP_GPIO->PIN_CONFIG[pin].BIT_LOAD_REG ^= SET;
   } else {
@@ -614,7 +629,7 @@ static __INLINE void sl_gpio_toggle_pin_output(sl_gpio_port_t port, uint8_t pin)
 static __INLINE void sl_gpio_toggle_port_output(sl_gpio_port_t port, uint32_t pins)
 {
   SL_GPIO_ASSERT(SL_GPIO_VALIDATE_PORT(port));
-  if (port == SL_GPIO_ULP_PORT) {
+  if ((unsigned int)port == SL_GPIO_ULP_PORT) {
     ULP_GPIO->PORT_CONFIG[SL_GPIO_PORT_A].PORT_TOGGLE_REG = pins;
   } else {
     GPIO->PORT_CONFIG[port].PORT_TOGGLE_REG = pins;

@@ -1,14 +1,16 @@
 id: efx32_si91x_wireless_connector
-label: EFx32 - Si91x Connection Configurator
+label: EFx32 - SiWx91x Connection Configurator
 package: platform_siwx91x
 description: >
-  Configures the hardware connections between the EFx32 host and the SiWG91x NCP.
+  This component configures the hardware connections between the EFx32 host and the SiWx91x NCP.
 category: Board|Configuration
 quality: production
 metadata:
   sbom:
     license: Zlib AND Apache-2.0
 component_root_path: "components/board/silabs"
+define:
+  - name: SLI_SI91X_NCP_INTERFACE
 provides:
   - name: efx32_si91x_wireless_connector
 ui_hints:
@@ -56,6 +58,10 @@ include:
       - path: sl_power_manager_config.h
       - path: sl_sleeptimer_config.h
     condition: [brd4187c]
+  - path: "config/brd4120a"
+    file_list:
+      - path: sl_board_configuration.h
+    condition: [brd4120a]
   - path: "config/brd4271a"
     condition: [brd4271a]
     file_list:

@@ -103,7 +103,6 @@ const osThreadAttr_t thread_attributes = {
   .stack_size = 3072,
   .priority   = 0,
   .tz_module  = 0,
-  .reserved   = 0,
 };
 
 void app_init(void)
@@ -152,7 +151,7 @@ void application_start(const void *unused)
   iostream_usart_init();
 #endif
 
-  SL_DEBUG_LOG("app start\n");
+  SL_DEBUG_LOG_V2(INFO, "app start\r\n");
 
   AT_PRINTF("Ready\r\n");
   console_line_ready = 0;
@@ -178,7 +177,7 @@ void application_start(const void *unused)
     sl_status_t result = console_process_at_command_buffer(&console_command_database, &args, &command);
 
     if (result == SL_STATUS_OK) {
-      SL_DEBUG_LOG("Processing command\n");
+      SL_DEBUG_LOG_V2(DEBUG, "Processing command\r\n");
       if (command->handler) {
         result = command->handler(&args);
         print_status(result);
@@ -255,7 +254,7 @@ void print_command_args(const console_descriptive_command_t *command)
       if (command->argument_help && command->argument_help[a]) {
         AT_PRINTF("%s", command->argument_help[a]);
       } else {
-        AT_PRINTF(console_argument_type_strings[command->argument_list[a] & CONSOLE_ARG_ENUM_INDEX_MASK]);
+        AT_PRINTF("%s", console_argument_type_strings[command->argument_list[a] & CONSOLE_ARG_ENUM_INDEX_MASK]);
       }
       AT_PRINTF(">");
     }

@@ -20,6 +20,7 @@
  * This example demonstrates data transfer through SDIO. The device acts as a
  * secondary which interfaces with an external sdio host/master.
 ============================================================================**/
+#include <inttypes.h>
 #include "sdio_secondary_example.h"
 #include "UDMA.h"
 #include "clock_update.h"
@@ -139,9 +140,15 @@ void sdio_secondary_example_init(void)
     sl_si91x_sdio_secondary_register_event_callback(application_callback,
                                                     SL_SDIO_WR_INT_EN | SL_SDIO_RD_INT_EN | SL_SDIO_CMD52_INT_EN);
   if (status != SL_STATUS_OK) {
-    DEBUGOUT("\r\nSDIO Secondary callback function registration failed\r\n");
+    /* Note: All status messages in this example — both success and failure — are
+ * intentionally emitted via SL_PRINT_STRING_ERROR so that they remain visible
+ * on the console at the default log level. This is a demonstration choice, not
+ * a recommendation: in production code, ERROR severity should be reserved for
+ * actual failures, with successful operations logged via SL_PRINT_STRING_INFO
+ * (or SL_PRINT_STRING_DEBUG for verbose trace). */
+    SL_PRINT_STRING_ERROR("\r\nSDIO Secondary callback function registration failed\r\n");
   }
-  DEBUGOUT("\r\nSDIO Secondary callback function registration success\r\n");
+  SL_PRINT_STRING_ERROR("\r\nSDIO Secondary callback function registration success\r\n");
 
   sl_si91x_sdio_secondary_gpdma_register_event_callback(gpdma_callbak);
 
@@ -172,13 +179,13 @@ void sdio_secondary_example_process_action(void)
         if ((GetTickCount() - tt_start) >= 2000) {
 
           tt_end = GetTickCount();
-          DEBUGOUT("Data is received from host->Secondary successfully \n");
-          DEBUGOUT("\r\nPackets received: %ld\r\n", packet_count);
-          DEBUGOUT("Total bits received: %ld \r\n", (packet_count * packet_size * 8));
-          DEBUGOUT("Time diff: %ld ms\r\n", (tt_end - tt_start));
+          SL_PRINT_STRING_ERROR("Data is received from host->Secondary successfully \n");
+          SL_PRINT_STRING_ERROR("\r\nPackets received: %ld\r\n", packet_count);
+          SL_PRINT_STRING_ERROR("Total bits received: %ld \r\n", (packet_count * packet_size * 8));
+          SL_PRINT_STRING_ERROR("Time diff: %ld ms\r\n", (tt_end - tt_start));
 
           throughput = (packet_count * packet_size * 8) / ((tt_end - tt_start) / 1000);
-          DEBUGOUT("Throughput host->secondary = %ld bps \r\n", throughput);
+          SL_PRINT_STRING_ERROR("Throughput host->secondary = %ld bps \r\n", throughput);
 
           packet_count = 0;
           tt_start     = GetTickCount();
@@ -202,7 +209,7 @@ void sdio_secondary_example_process_action(void)
       }
       if (dmaDone) {
         // It waits till i2c_send_complete is true in IRQ handler.
-        DEBUGOUT("Data is transferred from secondary to host successfull \n");
+        SL_PRINT_STRING_ERROR("Data is transferred from secondary to host successfull \n");
         current_mode   = SEND_DATA;
         send_data_flag = true;
         dmaDone        = false;
@@ -210,12 +217,12 @@ void sdio_secondary_example_process_action(void)
 
           tt_end = GetTickCount();
 
-          DEBUGOUT("\r\nPackets sent: %ld\r\n", packet_count);
-          DEBUGOUT("Total bits sent:%ld \r\n", (packet_count * packet_size * 8));
-          DEBUGOUT("Time diff :%ld ms \r\n", (tt_end - tt_start));
+          SL_PRINT_STRING_ERROR("\r\nPackets sent: %ld\r\n", packet_count);
+          SL_PRINT_STRING_ERROR("Total bits sent:%ld \r\n", (packet_count * packet_size * 8));
+          SL_PRINT_STRING_ERROR("Time diff :%ld ms \r\n", (tt_end - tt_start));
 
           throughput = (packet_count * packet_size * 8) / ((tt_end - tt_start) / 1000);
-          DEBUGOUT("Throughput for secondary->host= %ld bps \r\n", throughput);
+          SL_PRINT_STRING_ERROR("Throughput for secondary->host= %ld bps \r\n", throughput);
 
           packet_count = 0;
         }

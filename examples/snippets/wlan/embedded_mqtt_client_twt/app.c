@@ -37,6 +37,7 @@
 #include "sl_wifi.h"
 #include "sl_wifi_device.h"
 #include "string.h"
+#include <inttypes.h>
 #include "sl_wifi_callback_framework.h"
 #include "sl_net_wifi_types.h"
 
@@ -49,6 +50,12 @@
  *                    Constants
  ******************************************************/
 #define ENABLE_MQTT_SUBSCRIBE_PUBLISH 0
+
+/* Defaults migrated from sl_wifi_filter_broadcast(5000, 1, 1). */
+#define BCAST_FILTER_ENABLE      (1U)
+#define MCAST_FILTER_ENABLE      (1U)
+#define FILTER_MODE              (0U)
+#define BEACON_DROP_THRESHOLD_MS (5000U)
 
 #define MQTT_BROKER_PORT 8886
 
@@ -84,16 +91,6 @@
 #define TWT_AUTO_CONFIG  1
 #define TWT_SCAN_TIMEOUT 10000
 
-// Use case based TWT selection params
-#define DEVICE_AVERAGE_THROUGHPUT            20000
-#define ESTIMATE_EXTRA_WAKE_DURATION_PERCENT 0
-#define TWT_TOLERABLE_DEVIATION              10
-#define TWT_DEFAULT_WAKE_INTERVAL_MS         1024     // in milli seconds
-#define TWT_DEFAULT_WAKE_DURATION_MS         8        // in milli seconds
-#define MAX_TX_AND_RX_LATENCY_LIMIT          22118400 // 6hrs in milli seconds
-#define MAX_BEACON_WAKE_UP_AFTER_SP \
-  2 // The number of beacons after the service period completion for which the module wakes up and listens for any pending RX.
-
 /******************************************************
  *               Variable Definitions
  ******************************************************/
@@ -107,7 +104,6 @@ const osThreadAttr_t thread_attributes = {
   .stack_size = 3072,
   .priority   = osPriorityLow,
   .tz_module  = 0,
-  .reserved   = 0,
 };
 
 static sl_wifi_device_configuration_t wifi_mqtt_client_configuration = {
@@ -132,10 +128,13 @@ static sl_wifi_device_configuration_t wifi_mqtt_client_configuration = {
 #endif
                                                   ),
                    .bt_feature_bit_map         = 0,
-                   .ext_tcp_ip_feature_bit_map = (SL_SI91X_CONFIG_FEAT_EXTENTION_VALID | SL_SI91X_EXT_EMB_MQTT_ENABLE),
+                   .ext_tcp_ip_feature_bit_map = (SL_SI91X_CONFIG_FEAT_EXTENSION_VALID | SL_SI91X_EXT_EMB_MQTT_ENABLE),
                    .ble_feature_bit_map        = 0,
                    .ble_ext_feature_bit_map    = 0,
-                   .config_feature_bit_map = (SL_SI91X_FEAT_SLEEP_GPIO_SEL_BITMAP | SL_WIFI_ENABLE_ENHANCED_MAX_PSP) }
+                   .config_feature_bit_map = (SL_SI91X_FEAT_SLEEP_GPIO_SEL_BITMAP | SL_WIFI_ENABLE_ENHANCED_MAX_PSP) },
+  .ta_pool         = { .tx_ratio_in_buffer_pool = 0, .rx_ratio_in_buffer_pool = 0, .global_ratio_in_buffer_pool = 0 },
+  .efuse_data_type = SL_SI91X_EFUSE_MFG_SW_VERSION,
+  .nwp_fw_image_number = SL_SI91X_NWP_FW_IMAGE_NUMBER_0
 };
 
 sl_wifi_twt_request_t default_twt_setup_configuration = {
@@ -160,17 +159,11 @@ sl_wifi_twt_request_t default_twt_setup_configuration = {
   .negotiation_type        = 0,
 };
 
-sl_wifi_twt_selection_t default_twt_selection_configuration = {
-  .twt_enable                            = 1,
-  .average_tx_throughput                 = 1000,
-  .tx_latency                            = 0,
-  .rx_latency                            = 5000,
-  .device_average_throughput             = DEVICE_AVERAGE_THROUGHPUT,
-  .estimated_extra_wake_duration_percent = ESTIMATE_EXTRA_WAKE_DURATION_PERCENT,
-  .twt_tolerable_deviation               = TWT_TOLERABLE_DEVIATION,
-  .default_wake_interval_ms              = TWT_DEFAULT_WAKE_INTERVAL_MS,
-  .default_minimum_wake_duration_ms      = TWT_DEFAULT_WAKE_DURATION_MS,
-  .beacon_wake_up_count_after_sp         = MAX_BEACON_WAKE_UP_AFTER_SP
+sl_wifi_twt_selection_v2_t default_twt_config = {
+  .twt_enable            = 1,
+  .average_tx_throughput = 1000,
+  .tx_latency            = 0,
+  .rx_latency            = 5000,
 };
 
 sl_status_t callback_status = SL_STATUS_OK;
@@ -188,7 +181,7 @@ sl_mqtt_client_configuration_t mqtt_client_configuration = { .is_clean_session =
                                                              .client_id_length = strlen(CLIENT_ID),
                                                              .client_port      = CLIENT_PORT };
 
-sl_mqtt_broker_t mqtt_broker_configuration = {
+sl_mqtt_broker_v2_t mqtt_broker_configuration = {
   .ip                      = SL_IPV4_ADDRESS(192, 168, 1, 13),
   .port                    = MQTT_BROKER_PORT,
   .is_connection_encrypted = ENCRYPT_CONNECTION,
@@ -221,7 +214,7 @@ sl_mqtt_client_last_will_message_t last_will_message = {
 static void application_start(void *argument);
 void mqtt_client_message_handler(void *client, sl_mqtt_client_message_t *message, void *context);
 void mqtt_client_event_handler(void *client, sl_mqtt_client_event_t event, void *event_data, void *context);
-void mqtt_client_error_event_handler(void *client, sl_mqtt_client_error_status_t *error);
+void mqtt_client_error_event_handler(void *client, sl_mqtt_client_error_info_t *error);
 void mqtt_client_cleanup();
 void print_char_buffer(char *buffer, uint32_t buffer_length);
 sl_status_t mqtt_example();
@@ -246,24 +239,24 @@ static void application_start(void *argument)
 
   status = sl_net_init(SL_NET_WIFI_CLIENT_INTERFACE, &wifi_mqtt_client_configuration, NULL, NULL);
   if (status != SL_STATUS_OK && status != SL_STATUS_ALREADY_INITIALIZED) {
-    printf("Failed to start Wi-Fi client interface: 0x%lX\r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "Failed to start Wi-Fi client interface: 0x%" PRIx32 "", (uint32_t)status);
     return;
   }
-  printf("Start Wi-Fi client interface Success \r\n");
+  SL_DEBUG_LOG_V2(INFO, "Start Wi-Fi client interface Success \r\n");
 
   status = sl_net_up(SL_NET_WIFI_CLIENT_INTERFACE, SL_NET_DEFAULT_WIFI_CLIENT_PROFILE_ID);
   if (status != SL_STATUS_OK) {
-    printf("Failed to bring Wi-Fi client interface up: 0x%lX\r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "Failed to bring Wi-Fi client interface up: 0x%" PRIx32 "", (uint32_t)status);
     return;
   }
-  printf("Wi-Fi client connected\r\n");
+  SL_DEBUG_LOG_V2(INFO, "Wi-Fi client connected\r\n");
 
   status = sl_net_get_profile(SL_NET_WIFI_CLIENT_INTERFACE, SL_NET_DEFAULT_WIFI_CLIENT_PROFILE_ID, &profile);
   if (status != SL_STATUS_OK) {
-    printf("Failed to get client profile: 0x%lx\r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "Failed to get client profile: 0x%" PRIx32 "", (uint32_t)status);
     return;
   }
-  printf("\r\nSuccess to get client profile\r\n");
+  SL_DEBUG_LOG_V2(INFO, "Success to get client profile\r\n");
 
   ip_address.type = SL_IPV4;
   memcpy(&ip_address.ip.v4.bytes, &profile.ip.ip.v4.ip_address.bytes, sizeof(sl_ipv4_address_t));
@@ -272,20 +265,14 @@ static void application_start(void *argument)
   mqtt_example();
 
 #ifdef SLI_SI91X_MCU_INTERFACE
-
-#if (SL_SI91X_TICKLESS_MODE == 0)
-  sl_si91x_power_manager_sleep();
-#else
   osSemaphoreId_t wait_semaphore;
   wait_semaphore = osSemaphoreNew(1, 0, NULL);
   if (wait_semaphore == NULL) {
-    printf("Failed to create semaphore\r\n");
+    SL_DEBUG_LOG_V2(ERROR, "Failed to create semaphore\r\n");
     return;
   }
   // Waiting forever using semaphore to put M4 to sleep in tick less mode
   osSemaphoreAcquire(wait_semaphore, osWaitForever);
-#endif
-
 #endif
 }
 
@@ -304,65 +291,65 @@ sl_status_t twt_callback_handler(sl_wifi_event_t event,
 
   switch (event) {
     case SL_WIFI_TWT_RESPONSE_EVENT:
-      printf("\r\nTWT Setup success");
+      SL_DEBUG_LOG_V2(INFO, "TWT Setup success");
       break;
     case SL_WIFI_TWT_UNSOLICITED_SESSION_SUCCESS_EVENT:
-      printf("\r\nUnsolicited TWT Setup success");
+      SL_DEBUG_LOG_V2(INFO, "Unsolicited TWT Setup success");
       break;
     case SL_WIFI_TWT_AP_REJECTED_EVENT:
-      printf("\r\nTWT Setup Failed. TWT Setup rejected by AP");
+      SL_DEBUG_LOG_V2(ERROR, "TWT Setup Failed. TWT Setup rejected by AP");
       break;
     case SL_WIFI_TWT_OUT_OF_TOLERANCE_EVENT:
-      printf("\r\nTWT Setup Failed. TWT response out of tolerance limits");
+      SL_DEBUG_LOG_V2(ERROR, "TWT Setup Failed. TWT response out of tolerance limits");
       break;
     case SL_WIFI_TWT_RESPONSE_NOT_MATCHED_EVENT:
-      printf("\r\nTWT Setup Failed. TWT Response not matched with the request parameters");
+      SL_DEBUG_LOG_V2(ERROR, "TWT Setup Failed. TWT Response not matched with the request parameters");
       break;
     case SL_WIFI_TWT_UNSUPPORTED_RESPONSE_EVENT:
-      printf("\r\nTWT Setup Failed. TWT Response Unsupported");
+      SL_DEBUG_LOG_V2(ERROR, "TWT Setup Failed. TWT Response Unsupported");
       break;
     case SL_WIFI_TWT_FAIL_MAX_RETRIES_REACHED_EVENT:
-      printf("\r\nTWT Setup Failed. Max retries reached");
+      SL_DEBUG_LOG_V2(ERROR, "TWT Setup Failed. Max retries reached");
       break;
     case SL_WIFI_TWT_INACTIVE_DUE_TO_ROAMING_EVENT:
-      printf("\r\nTWT session inactive due to roaming");
+      SL_DEBUG_LOG_V2(WARN, "TWT session inactive due to roaming");
       break;
     case SL_WIFI_TWT_INACTIVE_DUE_TO_DISCONNECT_EVENT:
-      printf("\r\nTWT session inactive due to wlan disconnection");
+      SL_DEBUG_LOG_V2(WARN, "TWT session inactive due to wlan disconnection");
       break;
     case SL_WIFI_TWT_TEARDOWN_SUCCESS_EVENT:
-      printf("\r\nTWT session teardown success");
+      SL_DEBUG_LOG_V2(INFO, "TWT session teardown success");
       break;
     case SL_WIFI_TWT_AP_TEARDOWN_SUCCESS_EVENT:
-      printf("\r\nTWT session teardown from AP");
+      SL_DEBUG_LOG_V2(INFO, "TWT session teardown from AP");
       break;
     case SL_WIFI_TWT_INACTIVE_NO_AP_SUPPORT_EVENT:
-      printf("\r\nConnected AP Does not support TWT");
+      SL_DEBUG_LOG_V2(WARN, "Connected AP Does not support TWT");
       break;
     case SL_WIFI_RESCHEDULE_TWT_SUCCESS_EVENT:
-      printf("\r\nTWT rescheduled");
+      SL_DEBUG_LOG_V2(INFO, "TWT rescheduled");
       break;
     case SL_WIFI_TWT_INFO_FRAME_EXCHANGE_FAILED_EVENT:
-      printf("\r\nTWT rescheduling failed due to a failure in the exchange of TWT information frames.");
+      SL_DEBUG_LOG_V2(WARN, "TWT rescheduling failed due to a failure in the exchange of TWT information frames.");
       break;
     default:
-      printf("\r\nTWT Setup Failed.");
+      SL_DEBUG_LOG_V2(ERROR, "TWT Setup Failed.");
   }
   if (event < SL_WIFI_TWT_TEARDOWN_SUCCESS_EVENT) {
-    printf("\r\n wake duration : 0x%X", result->wake_duration);
-    printf("\r\n wake_duration_unit: 0x%X", result->wake_duration_unit);
-    printf("\r\n wake_int_exp : 0x%X", result->wake_int_exp);
-    printf("\r\n negotiation_type : 0x%X", result->negotiation_type);
-    printf("\r\n wake_int_mantissa : 0x%X", result->wake_int_mantissa);
-    printf("\r\n implicit_twt : 0x%X", result->implicit_twt);
-    printf("\r\n un_announced_twt : 0x%X", result->un_announced_twt);
-    printf("\r\n triggered_twt : 0x%X", result->triggered_twt);
-    printf("\r\n twt_channel : 0x%X", result->twt_channel);
-    printf("\r\n twt_protection : 0x%X", result->twt_protection);
-    printf("\r\n twt_flow_id : 0x%X\r\n", result->twt_flow_id);
+    SL_DEBUG_LOG_V2(DEBUG, " wake duration : 0x%X", result->wake_duration);
+    SL_DEBUG_LOG_V2(DEBUG, " wake_duration_unit: 0x%X", result->wake_duration_unit);
+    SL_DEBUG_LOG_V2(DEBUG, " wake_int_exp : 0x%X", result->wake_int_exp);
+    SL_DEBUG_LOG_V2(DEBUG, " negotiation_type : 0x%X\r\n", result->negotiation_type);
+    SL_DEBUG_LOG_V2(DEBUG, " wake_int_mantissa : 0x%X", result->wake_int_mantissa);
+    SL_DEBUG_LOG_V2(DEBUG, " implicit_twt : 0x%X", result->implicit_twt);
+    SL_DEBUG_LOG_V2(DEBUG, " un_announced_twt : 0x%X", result->un_announced_twt);
+    SL_DEBUG_LOG_V2(DEBUG, " triggered_twt : 0x%X", result->triggered_twt);
+    SL_DEBUG_LOG_V2(DEBUG, " twt_channel : 0x%X", result->twt_channel);
+    SL_DEBUG_LOG_V2(DEBUG, " twt_protection : 0x%X", result->twt_protection);
+    SL_DEBUG_LOG_V2(DEBUG, " twt_flow_id : 0x%X\r\n", result->twt_flow_id);
   } else if (event < SL_WIFI_TWT_EVENTS_END) {
-    printf("\r\n twt_flow_id : 0x%X", result->twt_flow_id);
-    printf("\r\n negotiation_type : 0x%X\r\n", result->negotiation_type);
+    SL_DEBUG_LOG_V2(DEBUG, " twt_flow_id : 0x%X\r\n", result->twt_flow_id);
+    SL_DEBUG_LOG_V2(DEBUG, " negotiation_type : 0x%X\r\n", result->negotiation_type);
   }
   return SL_STATUS_OK;
 }
@@ -378,7 +365,7 @@ void mqtt_client_message_handler(void *client, sl_mqtt_client_message_t *message
   UNUSED_PARAMETER(context);
 
   sl_status_t status;
-  printf("Message Received on Topic: ");
+  SL_DEBUG_LOG_V2(INFO, "Message Received on Topic: ");
 
   print_char_buffer((char *)message->topic, message->topic_length);
   print_char_buffer((char *)message->content, message->content_length);
@@ -390,7 +377,7 @@ void mqtt_client_message_handler(void *client, sl_mqtt_client_message_t *message
                                       0,
                                       TOPIC_TO_BE_SUBSCRIBED);
   if (status != SL_STATUS_IN_PROGRESS) {
-    printf("Failed to unsubscribe : 0x%lX\r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "Failed to unsubscribe : 0x%" PRIx32 "", (uint32_t)status);
 
     mqtt_client_cleanup();
     return;
@@ -400,18 +387,54 @@ void mqtt_client_message_handler(void *client, sl_mqtt_client_message_t *message
 void print_char_buffer(char *buffer, uint32_t buffer_length)
 {
   for (uint32_t index = 0; index < buffer_length; index++) {
-    printf("%c", buffer[index]);
+    SL_DEBUG_LOG_V2(DEBUG, "%c", buffer[index]);
   }
 
-  printf("\r\n");
+  SL_DEBUG_LOG_V2(DEBUG, "\r\n");
 }
 
-void mqtt_client_error_event_handler(void *client, sl_mqtt_client_error_status_t *error)
+void mqtt_client_error_event_handler(void *client, sl_mqtt_client_error_info_t *error)
 {
   UNUSED_PARAMETER(client);
 
-  printf("Terminating program, Error: %d\r\n", *error);
-  mqtt_client_cleanup();
+  if (error == NULL) {
+    SL_DEBUG_LOG_V2(ERROR, "MQTT Error: event data is NULL\r\n");
+    return;
+  }
+
+  switch (error->error_status) {
+    case SL_MQTT_CLIENT_RECEIVE_FAILED:
+      SL_DEBUG_LOG_V2(ERROR, "MQTT Error: Message receive failed with status: 0x%lx\r\n", error->status_code);
+      break;
+
+    case SL_MQTT_CLIENT_RECEIVE_PAYLOAD_TOO_LARGE:
+      SL_DEBUG_LOG_V2(ERROR,
+                      "MQTT Error: Received payload exceeds max size (%u bytes). "
+                      "Increase SL_MQTT_CLIENT_MAX_RX_PAYLOAD_SIZE. Failed with status: 0x%lx",
+                      SL_MQTT_CLIENT_MAX_RX_PAYLOAD_SIZE,
+                      error->status_code);
+      break;
+
+    case SL_MQTT_CLIENT_RECEIVE_MEMORY_ALLOCATION_FAILED:
+      SL_DEBUG_LOG_V2(ERROR,
+                      "MQTT Error: Failed to allocate memory for message reassembly with status: 0x%lx",
+                      error->status_code);
+      break;
+
+    case SL_MQTT_CLIENT_RECEIVE_DATA_CORRUPTED:
+      SL_DEBUG_LOG_V2(ERROR,
+                      "MQTT Error: Data corruption detected during message reassembly with status: 0x%lx",
+                      error->status_code);
+      break;
+
+    default:
+      SL_DEBUG_LOG_V2(ERROR,
+                      "Terminating program due to error: %d, status: 0x%lx\r\n",
+                      error->error_status,
+                      error->status_code);
+      mqtt_client_cleanup();
+      break;
+  }
 }
 
 void mqtt_client_event_handler(void *client, sl_mqtt_client_event_t event, void *event_data, void *context)
@@ -422,7 +445,7 @@ void mqtt_client_event_handler(void *client, sl_mqtt_client_event_t event, void 
 
   switch (event) {
     case SL_MQTT_CLIENT_CONNECTED_EVENT: {
-      printf("MQTT client connection success\r\n");
+      SL_DEBUG_LOG_V2(INFO, "MQTT client connection success\r\n");
 #if ENABLE_MQTT_SUBSCRIBE_PUBLISH
       sl_status_t status;
       status = sl_mqtt_client_subscribe(client,
@@ -433,7 +456,7 @@ void mqtt_client_event_handler(void *client, sl_mqtt_client_event_t event, void 
                                         mqtt_client_message_handler,
                                         TOPIC_TO_BE_SUBSCRIBED);
       if (status != SL_STATUS_IN_PROGRESS) {
-        printf("Failed to subscribe : 0x%lX\r\n", status);
+        SL_DEBUG_LOG_V2(ERROR, "Failed to subscribe : 0x%" PRIx32 "", (uint32_t)status);
 
         mqtt_client_cleanup();
         return;
@@ -441,7 +464,7 @@ void mqtt_client_event_handler(void *client, sl_mqtt_client_event_t event, void 
 
       status = sl_mqtt_client_publish(client, &message_to_be_published, 0, &message_to_be_published);
       if (status != SL_STATUS_IN_PROGRESS) {
-        printf("Failed to publish message: 0x%lX\r\n", status);
+        SL_DEBUG_LOG_V2(ERROR, "Failed to publish message: 0x%" PRIx32 "", (uint32_t)status);
 
         mqtt_client_cleanup();
         return;
@@ -455,7 +478,7 @@ void mqtt_client_event_handler(void *client, sl_mqtt_client_event_t event, void 
     case SL_MQTT_CLIENT_MESSAGE_PUBLISHED_EVENT: {
       sl_mqtt_client_message_t *published_message = (sl_mqtt_client_message_t *)context;
 
-      printf("Published message successfully on topic: ");
+      SL_DEBUG_LOG_V2(INFO, "Published message successfully on topic: ");
       print_char_buffer((char *)published_message->topic, published_message->topic_length);
 
       break;
@@ -464,7 +487,7 @@ void mqtt_client_event_handler(void *client, sl_mqtt_client_event_t event, void 
     case SL_MQTT_CLIENT_SUBSCRIBED_EVENT: {
       char *subscribed_topic = (char *)context;
 
-      printf("Subscribed to Topic: %s\r\n", subscribed_topic);
+      SL_DEBUG_LOG_V2(INFO, "Subscribed to Topic: %s\r\n", (uintptr_t)subscribed_topic);
       break;
     }
 
@@ -472,11 +495,11 @@ void mqtt_client_event_handler(void *client, sl_mqtt_client_event_t event, void 
       char *unsubscribed_topic = (char *)context;
       sl_status_t status;
 
-      printf("Unsubscribed from topic: %s\r\n", unsubscribed_topic);
+      SL_DEBUG_LOG_V2(INFO, "Unsubscribed from topic: %s\r\n", (uintptr_t)unsubscribed_topic);
 
       status = sl_mqtt_client_disconnect(client, 0);
       if (status != SL_STATUS_IN_PROGRESS) {
-        printf("Failed to disconnect : 0x%lX\r\n", status);
+        SL_DEBUG_LOG_V2(ERROR, "Failed to disconnect : 0x%" PRIx32 "", (uint32_t)status);
 
         mqtt_client_cleanup();
         return;
@@ -486,14 +509,14 @@ void mqtt_client_event_handler(void *client, sl_mqtt_client_event_t event, void 
 #endif
 
     case SL_MQTT_CLIENT_DISCONNECTED_EVENT: {
-      printf("Disconnected from MQTT broker\r\n");
+      SL_DEBUG_LOG_V2(INFO, "Disconnected from MQTT broker\r\n");
 
       mqtt_client_cleanup();
       break;
     }
 
     case SL_MQTT_CLIENT_ERROR_EVENT: {
-      mqtt_client_error_event_handler(client, (sl_mqtt_client_error_status_t *)event_data);
+      mqtt_client_error_event_handler(client, (sl_mqtt_client_error_info_t *)event_data);
       break;
     }
 
@@ -508,20 +531,29 @@ sl_status_t mqtt_example()
   sl_status_t status;
   sl_wifi_performance_profile_v2_t performance_profile = { 0 };
 
-  //! Enable Broadcast data filter
-  status = sl_wifi_filter_broadcast(5000, 1, 1);
+  //! Enable groupcast filter and beacon drop threshold
+  sl_wifi_groupcast_filter_config_t groupcast_filter_config = { 0 };
+  groupcast_filter_config.enable_bcast_filter               = (uint8_t)BCAST_FILTER_ENABLE;
+  groupcast_filter_config.enable_mcast_filter               = (uint8_t)MCAST_FILTER_ENABLE;
+  groupcast_filter_config.filter_mode                       = (uint8_t)FILTER_MODE;
+
+  status = sl_wifi_set_groupcast_filter_config(&groupcast_filter_config);
   VERIFY_STATUS_AND_RETURN(status);
-  printf("\r\nEnabled Broadcast Data Filter\n");
+  status = sl_wifi_set_beacon_drop_threshold(SL_WIFI_CLIENT_INTERFACE, (uint16_t)BEACON_DROP_THRESHOLD_MS);
+  VERIFY_STATUS_AND_RETURN(status);
+  SL_DEBUG_LOG_V2(INFO, "Enabled Broadcast Data Filter\r\n");
 
   if (ENCRYPT_CONNECTION) {
     // Load SSL CA certificate
     status =
       sl_net_set_credential(SL_NET_TLS_SERVER_CREDENTIAL_ID(0), SL_NET_SIGNING_CERTIFICATE, cacert, sizeof(cacert) - 1);
     if (status != SL_STATUS_OK) {
-      printf("\r\nLoading TLS CA certificate in to FLASH Failed, Error Code : 0x%lX\r\n", status);
+      SL_DEBUG_LOG_V2(ERROR,
+                      "Loading TLS CA certificate in to FLASH Failed, Error Code : 0x%" PRIx32 "",
+                      (uint32_t)status);
       return status;
     }
-    printf("\r\nLoad TLS CA certificate at index %d Success\r\n", 0);
+    SL_DEBUG_LOG_V2(INFO, "Load TLS CA certificate at index %d Success", 0);
   }
 
   if (SEND_CREDENTIALS) {
@@ -549,7 +581,7 @@ sl_status_t mqtt_example()
 
     if (status != SL_STATUS_OK) {
       mqtt_client_cleanup();
-      printf("Failed to set credentials: 0x%lX\r\n ", status);
+      SL_DEBUG_LOG_V2(ERROR, "Failed to set credentials: 0x%" PRIx32 " ", (uint32_t)status);
 
       return status;
     }
@@ -559,17 +591,17 @@ sl_status_t mqtt_example()
 
   status = sl_mqtt_client_init(&client, mqtt_client_event_handler);
   if (status != SL_STATUS_OK) {
-    printf("Failed to init mqtt client: 0x%lX\r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "Failed to init mqtt client: 0x%" PRIx32 "", (uint32_t)status);
 
     mqtt_client_cleanup();
     return status;
   }
-  printf("\r\nMQTT Client Init Done\r\n");
+  SL_DEBUG_LOG_V2(INFO, "MQTT Client Init Done\r\n");
 
   status =
-    sl_mqtt_client_connect(&client, &mqtt_broker_configuration, &last_will_message, &mqtt_client_configuration, 0);
+    sl_mqtt_client_connect_v2(&client, &mqtt_broker_configuration, &last_will_message, &mqtt_client_configuration, 0);
   if (status != SL_STATUS_IN_PROGRESS) {
-    printf("Failed to connect to mqtt broker: 0x%lX\r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "Failed to connect to mqtt broker: 0x%" PRIx32 "", (uint32_t)status);
 
     mqtt_client_cleanup();
     return status;
@@ -582,8 +614,7 @@ sl_status_t mqtt_example()
   //! Set TWT Config
   sl_wifi_set_twt_config_callback_v2(twt_callback_handler, NULL);
   if (TWT_AUTO_CONFIG == 1) {
-    performance_profile.twt_selection = default_twt_selection_configuration;
-    status                            = sl_wifi_target_wake_time_auto_selection(&performance_profile.twt_selection);
+    status = sl_wifi_target_wake_time_auto_selection_v2(&default_twt_config);
   } else {
     performance_profile.twt_request = default_twt_setup_configuration;
     status                          = sl_wifi_enable_target_wake_time(&performance_profile.twt_request);
@@ -596,12 +627,12 @@ sl_status_t mqtt_example()
   performance_profile.profile = ASSOCIATED_POWER_SAVE_LOW_LATENCY;
   status                      = sl_wifi_set_performance_profile_v2(&performance_profile);
   if (status != SL_STATUS_OK) {
-    printf("\r\nPowersave Configuration Failed, Error Code : 0x%lX\r\n", status);
+    SL_DEBUG_LOG_V2(ERROR, "Powersave Configuration Failed, Error Code : 0x%" PRIx32 "", (uint32_t)status);
     return status;
   }
-  printf("\r\nAssociated Power Save Enabled\n");
+  SL_DEBUG_LOG_V2(INFO, "Associated Power Save Enabled\r\n");
 
-  printf("\r\nExample execution completed \r\n");
+  SL_DEBUG_LOG_V2(INFO, "Example execution completed \r\n");
 
   return SL_STATUS_OK;
 }

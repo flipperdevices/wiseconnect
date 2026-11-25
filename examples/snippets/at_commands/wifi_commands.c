@@ -218,11 +218,14 @@ static const sl_wifi_device_configuration_t sl_wifi_default_client_configuration
                    .bt_feature_bit_map = 0,
                    .ext_tcp_ip_feature_bit_map =
                      (SL_SI91X_EXT_TCP_IP_WINDOW_SCALING | SL_SI91X_EXT_TCP_IP_TOTAL_SELECTS(10)
-                      | SL_SI91X_EXT_FEAT_HTTP_OTAF_SUPPORT | SL_SI91X_CONFIG_FEAT_EXTENTION_VALID
+                      | SL_SI91X_EXT_FEAT_HTTP_OTAF_SUPPORT | SL_SI91X_CONFIG_FEAT_EXTENSION_VALID
                       | SL_SI91X_EXT_TCP_IP_SSL_16K_RECORD),
                    .ble_feature_bit_map     = 0,
                    .ble_ext_feature_bit_map = 0,
-                   .config_feature_bit_map  = (SL_SI91X_FEAT_SLEEP_GPIO_SEL_BITMAP | SL_WIFI_ENABLE_ENHANCED_MAX_PSP) }
+                   .config_feature_bit_map  = (SL_SI91X_FEAT_SLEEP_GPIO_SEL_BITMAP | SL_WIFI_ENABLE_ENHANCED_MAX_PSP) },
+  .ta_pool         = { .tx_ratio_in_buffer_pool = 0, .rx_ratio_in_buffer_pool = 0, .global_ratio_in_buffer_pool = 0 },
+  .efuse_data_type = SL_SI91X_EFUSE_MFG_SW_VERSION,
+  .nwp_fw_image_number = SL_SI91X_NWP_FW_IMAGE_NUMBER_0
 };
 
 /// Wi-Fi AP configuration
@@ -249,7 +252,10 @@ static const sl_wifi_device_configuration_t sl_wifi_default_ap_configuration_cli
                    .ext_tcp_ip_feature_bit_map = SL_SI91X_EXT_TCP_IP_SSL_16K_RECORD,
                    .ble_feature_bit_map        = 0,
                    .ble_ext_feature_bit_map    = 0,
-                   .config_feature_bit_map     = 0 }
+                   .config_feature_bit_map     = 0 },
+  .ta_pool         = { .tx_ratio_in_buffer_pool = 0, .rx_ratio_in_buffer_pool = 0, .global_ratio_in_buffer_pool = 0 },
+  .efuse_data_type = SL_SI91X_EFUSE_MFG_SW_VERSION,
+  .nwp_fw_image_number = SL_SI91X_NWP_FW_IMAGE_NUMBER_0
 };
 
 /// Wi-Fi concurrent (AP + STATION) configuration
@@ -274,10 +280,13 @@ static const sl_wifi_device_configuration_t sl_wifi_default_concurrent_configura
                                                   ),
                    .bt_feature_bit_map = 0,
                    .ext_tcp_ip_feature_bit_map =
-                     (SL_SI91X_CONFIG_FEAT_EXTENTION_VALID | SL_SI91X_EXT_TCP_IP_SSL_16K_RECORD),
+                     (SL_SI91X_CONFIG_FEAT_EXTENSION_VALID | SL_SI91X_EXT_TCP_IP_SSL_16K_RECORD),
                    .ble_feature_bit_map     = 0,
                    .ble_ext_feature_bit_map = 0,
-                   .config_feature_bit_map  = SL_SI91X_FEAT_SLEEP_GPIO_SEL_BITMAP }
+                   .config_feature_bit_map  = SL_SI91X_FEAT_SLEEP_GPIO_SEL_BITMAP },
+  .ta_pool         = { .tx_ratio_in_buffer_pool = 0, .rx_ratio_in_buffer_pool = 0, .global_ratio_in_buffer_pool = 0 },
+  .efuse_data_type = SL_SI91X_EFUSE_MFG_SW_VERSION,
+  .nwp_fw_image_number = SL_SI91X_NWP_FW_IMAGE_NUMBER_0
 };
 
 /// Wi-Fi transmit configuration
@@ -303,10 +312,13 @@ static const sl_wifi_device_configuration_t sl_wifi_default_transmit_test_config
 #endif
                                                   ),
                    .bt_feature_bit_map         = SL_SI91X_BT_RF_TYPE,
-                   .ext_tcp_ip_feature_bit_map = SL_SI91X_CONFIG_FEAT_EXTENTION_VALID,
+                   .ext_tcp_ip_feature_bit_map = SL_SI91X_CONFIG_FEAT_EXTENSION_VALID,
                    .ble_feature_bit_map        = 0,
                    .ble_ext_feature_bit_map    = 0,
-                   .config_feature_bit_map     = SL_SI91X_FEAT_SLEEP_GPIO_SEL_BITMAP }
+                   .config_feature_bit_map     = SL_SI91X_FEAT_SLEEP_GPIO_SEL_BITMAP },
+  .ta_pool         = { .tx_ratio_in_buffer_pool = 0, .rx_ratio_in_buffer_pool = 0, .global_ratio_in_buffer_pool = 0 },
+  .efuse_data_type = SL_SI91X_EFUSE_MFG_SW_VERSION,
+  .nwp_fw_image_number = SL_SI91X_NWP_FW_IMAGE_NUMBER_0
 };
 
 // The oper-mode defaults to 0 (client mode)
@@ -451,7 +463,7 @@ static sl_status_t show_scan_results(sl_wifi_scan_result_t *scan_result)
   SL_WIFI_ARGS_CHECK_NULL_POINTER(scan_result);
   uint8_t *bssid = NULL;
 
-  AT_PRINTF("at+WIFI_SCAN_RESULTS=%lu,,", scan_result->scan_count);
+  AT_PRINTF("at+WIFI_SCAN_RESULTS=%" PRIu32 ",,", scan_result->scan_count);
   if (scan_result->scan_count) {
     for (unsigned int a = 0; a < scan_result->scan_count; ++a) {
       bssid = (uint8_t *)&scan_result->scan_info[a].bssid;
@@ -620,7 +632,7 @@ sl_status_t wifi_get_signal_strength_command_handler(console_args_t *arguments)
   status = sl_wifi_get_signal_strength(interface, &signal_strength);
   VERIFY_STATUS_AND_RETURN(status);
 
-  AT_PRINTF("%ld", signal_strength);
+  AT_PRINTF("%" PRId32, signal_strength);
   return status;
 }
 
@@ -686,12 +698,12 @@ sl_status_t join_callback_handler(sl_wifi_event_t event,
 {
   UNUSED_PARAMETER(arg);
   if (SL_WIFI_CHECK_IF_EVENT_FAILED(event)) {
-    printf("F: Join Event received with %lu bytes payload\n", result_length);
+    SL_DEBUG_LOG_V2(INFO, "F: Join Event received with %lu bytes payload\r\n", result_length);
     callback_status = status_code;
     return status_code;
   }
 
-  printf("%c: Join Event received with %lu bytes payload\n", *result, result_length);
+  SL_DEBUG_LOG_V2(INFO, "%c: Join Event received with %lu bytes payload\r\n", *result, result_length);
 
   callback_status = SL_STATUS_OK;
   return SL_STATUS_OK;
@@ -740,9 +752,9 @@ sl_status_t get_listen_interval_command_handler(const console_args_t *arguments)
 sl_status_t wifi_get_firmware_version_command_handler(console_args_t *arguments)
 {
   UNUSED_PARAMETER(arguments);
-  sl_wifi_firmware_version_t version = { 0 };
+  sl_si91x_firmware_version_t version = { 0 };
 
-  sl_status_t status = sl_wifi_get_firmware_version(&version);
+  sl_status_t status = sl_si91x_get_firmware_version(&version);
   VERIFY_STATUS_AND_RETURN(status);
 
   PRINT_AT_CMD_SUCCESS;
@@ -910,7 +922,7 @@ sl_status_t wifi_get_performance_profile_command_handler(console_args_t *argumen
   VERIFY_STATUS_AND_RETURN(status);
 
   PRINT_AT_CMD_SUCCESS;
-  AT_PRINTF("%d %d %d %ld %d",
+  AT_PRINTF("%d %d %d %" PRIu32 " %d",
             performance_profile.profile,
             performance_profile.dtim_aligned_type,
             performance_profile.num_of_dtim_skip,
@@ -976,7 +988,7 @@ sl_status_t wifi_stop_scan_command_handler(console_args_t *arguments)
 // at+wifi-per-cnf-gen=<interface>,<power>,<rate>,<packet-length>,<mode>,
 //                     <channel>,<rate-flags>,<channel-bw>,<aggr-enable>,
 //                     <reserved>,<pkt-count>,<delay>
-sl_status_t wifi_per_cnf_gen_command_handler(console_args_t *arguments)
+sl_status_t wifi_peripherals_cnf_gen_command_handler(console_args_t *arguments)
 {
   CHECK_ARGUMENT_BITMAP(arguments, 0x0FFF);
 
@@ -1059,7 +1071,7 @@ sl_status_t wifi_per_cnf_gen_command_handler(console_args_t *arguments)
 
 // at+wifi-per-cnf-axppdu=<interface>,<enable-11ax>,<he-ppdu-type>,<ul-dl>,<bw>,
 //                        <coding-type>,<spatial-reuse>,<nominal-pe>,<bss-color>
-sl_status_t wifi_per_cnf_axppdu_command_handler(console_args_t *arguments)
+sl_status_t wifi_peripherals_cnf_axppdu_command_handler(console_args_t *arguments)
 {
   CHECK_ARGUMENT_BITMAP(arguments, 0x1FF);
 
@@ -1113,7 +1125,7 @@ sl_status_t wifi_per_cnf_axppdu_command_handler(console_args_t *arguments)
 // at+wifi-per-cnf-axsiga=<interface>,<gi-ltf>,<num-he-ltf>,<beam-change>,<dcm>,
 //                        <he-siga2-reserved>,<nsts-midamble>,<ru-allocation>,
 //                        <stbc>,<tx-bf>
-sl_status_t wifi_per_cnf_axsiga_command_handler(console_args_t *arguments)
+sl_status_t wifi_peripherals_cnf_axsiga_command_handler(console_args_t *arguments)
 {
   CHECK_ARGUMENT_BITMAP(arguments, 0x03FF);
 
@@ -1177,7 +1189,7 @@ sl_status_t wifi_per_cnf_axsiga_command_handler(console_args_t *arguments)
 
 // at+wifi-per-cnf-axsigb=<interface>,<sigb-compression-field>,<sigb-dcm>,<sigb-mcs>,
 //                        <user-idx>,<user-sta-id>
-sl_status_t wifi_per_cnf_axsigb_command_handler(console_args_t *arguments)
+sl_status_t wifi_peripherals_cnf_axsigb_command_handler(console_args_t *arguments)
 {
   CHECK_ARGUMENT_BITMAP(arguments, 0x03F);
 
@@ -1221,7 +1233,7 @@ sl_status_t wifi_per_cnf_axsigb_command_handler(console_args_t *arguments)
 }
 
 // at+wifi-per-start=<interface>,<enable>
-sl_status_t wifi_per_start_command_handler(console_args_t *arguments)
+sl_status_t wifi_peripherals_start_command_handler(console_args_t *arguments)
 {
   CHECK_ARGUMENT_BITMAP(arguments, 0x03);
 
@@ -1255,7 +1267,7 @@ sl_status_t wifi_per_start_command_handler(console_args_t *arguments)
 }
 
 // at+wifi-per-stop=<interface>
-sl_status_t wifi_per_stop_command_handler(console_args_t *arguments)
+sl_status_t wifi_peripherals_stop_command_handler(console_args_t *arguments)
 {
   CHECK_ARGUMENT_BITMAP(arguments, 0x01);
 

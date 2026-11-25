@@ -5,15 +5,20 @@ description: 'This application demonstrates a blinky application running from PS
   '
 category: example|peripheral
 quality: production
-label: SI91x - SoC Peripheral PSRAM Blinky
+label: SiWx91x Platform - PSRAM Blinky
 component:
 - id: sl_main
 - id: sleeptimer
 - id: data_segment_in_psram
 - id: text_segment_in_psram
 - id: psram_core
-- id: psram_aps6404l_sqh
 - id: syscalls
+- id: si91x_log
+- id: si91x_log_iostream_formatted
+- id: iostream_si91x
+- id: iostream_uart_si91x
+  instance:
+  - vcom
 - id: si91x_memory_default_config
 - id: sl_si91x_led_917
   instance:
@@ -28,7 +33,9 @@ include:
   - path: blinky.h
 toolchain_settings:
 - option: gcc_compiler_option
-  value: -Wall -Werror
+  value: -Wall -Werror -Wno-error=deprecated-declarations
+- option: llvm_compiler_option
+  value: -Wall -Werror -Wno-error=deprecated-declarations
 other_file:
 - path: ./resources/readme/setupdiagram.png
 - path: ./resources/readme/section_component_installation.png
@@ -38,13 +45,26 @@ ui_hints:
     focus: true
 readme:
 - path: readme.md
+filter:
+- name: Device Type
+  value:
+  - SoC
+- name: MCU
+  value:
+  - 32-bit MCU
+- name: Level
+  value:
+  - Beginner
+- name: Wireless Technology
+  value:
+  - Wi-Fi
 post_build:
   profile: wiseconnect_soc
 sdk_extension:
 - id: wiseconnect3_sdk
   vendor: silabs
-  version: 4.0.1
+  version: 4.1.2
 sdk:
   id: simplicity_sdk
   vendor: silabs
-  version: 2025.12.2
+  version: 2026.6.2

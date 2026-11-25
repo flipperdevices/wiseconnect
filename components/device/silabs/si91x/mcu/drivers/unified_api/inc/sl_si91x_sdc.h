@@ -33,6 +33,7 @@
 
 #include "sl_si91x_peripheral_sdc.h"
 #include "sl_si91x_sdc_common_config.h"
+#include "sl_log_helper.h"
 
 /***************************************************************************/
 /**
@@ -139,7 +140,10 @@ typedef struct {
   uint32_t channel_info_bit_field;                 ///<Bit field for tracking transfer complete and auto buffer reset
   uint32_t transfer_count[SDC_NUMBER_OF_CHANNELS]; ///< Transfer count for each channel
   uint32_t sample_length[SDC_NUMBER_OF_CHANNELS];  ///< Transfer length for each channel
-  int16_t *recieve_buffer[SDC_NUMBER_OF_CHANNELS]; ///< Pointer to the receive buffer for SDC data
+  union {
+    int16_t *recieve_buffer[SDC_NUMBER_OF_CHANNELS]; ///< Legacy field name (misspelling); alias of receive_buffer
+    int16_t *receive_buffer[SDC_NUMBER_OF_CHANNELS]; ///< Pointer to the receive buffer for SDC data
+  };
 } sl_si91x_sdc_channel_info_t;
 
 /**

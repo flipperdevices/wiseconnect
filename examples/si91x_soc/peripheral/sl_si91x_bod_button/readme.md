@@ -1,7 +1,8 @@
-# BOD Button 
+# SiWx91x Platform BOD Button
+
 ## Table of Contents
 
-- [BOD Button](#bod-button)
+- [SiWx91x Platform BOD Button](#platform-siwx91x-bod-button)
   - [Table of Contents](#table-of-contents)
   - [Purpose/Scope](#purposescope)
   - [Prerequisites/Setup Requirements](#prerequisitessetup-requirements)
@@ -12,6 +13,9 @@
   - [Application Build Environment](#application-build-environment)
     - [Application Configuration Parameters](#application-configuration-parameters)
   - [Test the Application](#test-the-application)
+  - [Troubleshooting](#troubleshooting)
+  - [Resources](#resources)
+  - [Report Bugs/Support](#report-bugssupport)
 
 ## Purpose/Scope
 
@@ -24,7 +28,7 @@ To use this application, the following hardware, software, and project setup is 
 
 ### Hardware Requirements
 - Windows PC
-- Silicon Labs Si917 Evaluation Kit [[BRD4002](https://www.silabs.com/development-tools/wireless/wireless-pro-kit-mainboard?tab=overview) + [BRD4338A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-rb4338a-wifi-6-bluetooth-le-soc-radio-board?tab=overview) / [BRD4342A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx91x-rb4342a-wifi-6-bluetooth-le-soc-radio-board?tab=overview) / [BRD4343A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4343a-wi-fi-6-bluetooth-le-8mb-flash-radio-board-for-module?tab=overview)]
+- Silicon Labs SiWx91x Evaluation Kit [[BRD4002](https://www.silabs.com/development-tools/wireless/wireless-pro-kit-mainboard?tab=overview) + [BRD4338A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx917-rb4338a-wifi-6-bluetooth-le-soc-radio-board?tab=overview) / [BRD4342A](https://www.silabs.com/development-tools/wireless/wi-fi/siwx91x-rb4342a-wifi-6-bluetooth-le-soc-radio-board?tab=overview) / [BRD4343A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4343a-wi-fi-6-bluetooth-le-8mb-flash-radio-board-for-module?tab=overview) / [BRD4343C](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-rb4343c-wi-fi-6-bluetooth-le-8mb-flash-radio-board-for-module?tab=overview)]
 - SiWx917 AC1 Module Explorer Kit [BRD2708A](https://www.silabs.com/development-tools/wireless/wi-fi/siw917y-ek2708a-explorer-kit)
 
 ### Software Requirements
@@ -51,26 +55,51 @@ For details on the project folder structure, refer to the [WiSeConnect Examples]
 ## Application Build Environment
 
 ### Application Configuration Parameters
-  - **User Input as Percentage:**  
+  - **User Input as Percentage:**
     -  The button voltage regions can also be configured using percentage values through the `sl_bod_button_uc_config_param_t` structure. The application converts these percentage values to actual voltages internally, using the configured VBAT value as a reference.
     -  The voltage ranges for the buttons are mapped and defined in the `sl_si91x_bod.c` file. Users can refer to this file to set appropriate ranges for their application needs.
   - To configure the voltage range for three buttons, define the following macros in `bod_button_example.h`:
   - **Button 1:**
-    ```
-    #define SL_BOD_BUTTON1_MIN_VOLTAGE_PERCENTAGE <value> ///< Minimum voltage percentage for Button 1
-    #define SL_BOD_BUTTON1_MAX_VOLTAGE_PERCENTAGE <value> ///< Maximum voltage percentage for Button 1
-    ```
-  - **Button 2:**
-    ```
-    #define SL_BOD_BUTTON2_MIN_VOLTAGE_PERCENTAGE <value> ///< Minimum voltage percentage for Button 2
-    #define SL_BOD_BUTTON2_MAX_VOLTAGE_PERCENTAGE <value> ///< Maximum voltage percentage for Button 2
 
-    ```
+- `SL_BOD_BUTTON1_MIN_VOLTAGE_PERCENTAGE`: Minimum voltage for Button 1, expressed as a percentage of VBAT, used as the lower bound of Button 1's detection region.
+
+  ```c
+    #define SL_BOD_BUTTON1_MIN_VOLTAGE_PERCENTAGE <value> ///< Minimum voltage percentage for Button 1
+  ```
+
+- `SL_BOD_BUTTON1_MAX_VOLTAGE_PERCENTAGE`: Maximum voltage for Button 1, expressed as a percentage of VBAT, used as the upper bound of Button 1's detection region.
+
+  ```c
+    #define SL_BOD_BUTTON1_MAX_VOLTAGE_PERCENTAGE <value> ///< Maximum voltage percentage for Button 1
+  ```
+
+  - **Button 2:**
+
+- `SL_BOD_BUTTON2_MIN_VOLTAGE_PERCENTAGE`: Minimum voltage for Button 2, expressed as a percentage of VBAT, used as the lower bound of Button 2's detection region.
+
+  ```c
+    #define SL_BOD_BUTTON2_MIN_VOLTAGE_PERCENTAGE <value> ///< Minimum voltage percentage for Button 2
+  ```
+
+- `SL_BOD_BUTTON2_MAX_VOLTAGE_PERCENTAGE`: Maximum voltage for Button 2, expressed as a percentage of VBAT, used as the upper bound of Button 2's detection region.
+
+  ```c
+    #define SL_BOD_BUTTON2_MAX_VOLTAGE_PERCENTAGE <value> ///< Maximum voltage percentage for Button 2
+  ```
+
   - **Button 3:**
-    ```
+
+- `SL_BOD_BUTTON3_MIN_VOLTAGE_PERCENTAGE`: Minimum voltage for Button 3, expressed as a percentage of VBAT, used as the lower bound of Button 3's detection region.
+
+  ```c
     #define SL_BOD_BUTTON3_MIN_VOLTAGE_PERCENTAGE <value> ///< Minimum voltage percentage for Button 3
+  ```
+
+- `SL_BOD_BUTTON3_MAX_VOLTAGE_PERCENTAGE`: Maximum voltage for Button 3, expressed as a percentage of VBAT, used as the upper bound of Button 3's detection region.
+
+  ```c
     #define SL_BOD_BUTTON3_MAX_VOLTAGE_PERCENTAGE <value> ///< Maximum voltage percentage for Button 3
-      ```
+  ```
 **To configure the voltage range for three button using UC**:
 
  - Open  the **sl_si91x_bod_button.slcp** project file, select the **Software Component** tab and search for the **BOD** in search bar.
@@ -78,10 +107,10 @@ For details on the project folder structure, refer to the [WiSeConnect Examples]
 - Use the configuration wizard to set the voltage percentage parameters for each button as needed. The configuration screen below shows the available options for customization.
   ![Figure: BOD Button UC Configuration Screen](resources/uc_screen/bod_button_uc_screen.png)
 
-  - The `Button 1 Min Voltage Percentage` and `Button 1 Max Voltage Percentage` fields correspond to the `SL_BOD_BUTTON1_MIN_VOLTAGE_PERCENTAGE` and `SL_BOD_BUTTON1_MAX_VOLTAGE_PERCENTAGE` macros, respectively. The same mapping applies for Button 2 and Button 3. These parameters are configurable only when `Enable BOD Button Wakeup` is enabled. 
-  - Each button's voltage percentage must be set within the supported range of 33% to 66% of VBAT. 
-  
-  > **Note:**  
+  - The `Button 1 Min Voltage Percentage` and `Button 1 Max Voltage Percentage` fields correspond to the `SL_BOD_BUTTON1_MIN_VOLTAGE_PERCENTAGE` and `SL_BOD_BUTTON1_MAX_VOLTAGE_PERCENTAGE` macros, respectively. The same mapping applies for Button 2 and Button 3. These parameters are configurable only when `Enable BOD Button Wakeup` is enabled.
+  - Each button's voltage percentage must be set within the supported range of 33% to 66% of VBAT.
+
+  > **Note:**
   > This application supports detection of up to three buttons based on voltage regions defined by resistor values.
   >
   > - Each button is mapped to a specific voltage range, determined by the `Resbank_Output_Fraction` in the resistor bank configuration.
@@ -110,3 +139,19 @@ The console will as below. (Interrupt operations are not there in the Console Ou
     > ![Figure: bod_button_result_console](resources/readme/bod_button_result_console.png)
 
 > **Note:** Interrupt handlers are implemented in the driver layer, and user callbacks are provided for custom code. If you want to write your own interrupt handler instead of using the default one, make the driver interrupt handler a weak handler. Then, copy the necessary code from the driver handler to your custom interrupt handler.
+
+## Troubleshooting
+
+- If the project does not build, ensure Simplicity Studio and the WiSeConnect extension are installed and the board is connected.
+- If the device is not detected, reinstall the connectivity firmware and check USB drivers.
+
+## Resources
+
+- [WiSeConnect Getting Started](https://docs.silabs.com/wiseconnect/latest/wiseconnect-getting-started/)
+- [WiSeConnect Examples](https://docs.silabs.com/wiseconnect/latest/wiseconnect-examples/)
+- [SiWx91x SoC Documentation](https://docs.silabs.com/wiseconnect/latest/)
+
+## Report Bugs/Support
+
+For issues and support, use the Silicon Labs Community or your normal support channel.
+

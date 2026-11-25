@@ -13,14 +13,18 @@ provides:
 - name: nvm3_network_config_manager
 - name: network_config_manager
 source:
-- path: src/sl_net_credentials.c
+- path: src/sli_net_credentials.c
+- path: src/si91x/sl_net_credentials.c
+  condition: ["sl_si91x_wireless"]
 - path: src/sl_net_nvm_profiles.c
 define:
-- name: SL_SI91X_NVM3_CONFIG_MANAGER
+- name: SLI_NVM3_CONFIG_MANAGER
 - name: NVM3_LOCK_OVERRIDE
 requires:
 - name: network_manager
 - name: nvm3_credential_manager
 - name: nvm3_lib
+- name: log_none
+  condition: ["device_si91x"]
 conflicts:
 - name: basic_network_config_manager

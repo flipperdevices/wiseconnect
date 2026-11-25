@@ -65,6 +65,19 @@
 #define TX_TIME 0x0148
 
 /*=======================================================================*/
+//! BLE Security Mode Levels and Attribute Configuration Flags
+/*=======================================================================*/
+#define ATT_REC_MAINTAIN_IN_HOST BIT(0) ///< Attribute record maintained in Host
+#define SEC_MODE_1_LEVEL_1       BIT(1) ///< NO Auth and No Enc
+#define SEC_MODE_1_LEVEL_2       BIT(2) ///< UnAUTH with Enc
+#define SEC_MODE_1_LEVEL_3       BIT(3) ///< AUTH with Enc
+#define SEC_MODE_1_LEVEL_4       BIT(4) ///< AUTH LE_SC Pairing with Enc
+#define ON_BR_EDR_LINK_ONLY      BIT(5) ///< BR/EDR link-only mode
+#define ON_LE_LINK_ONLY          BIT(6) ///< LE link-only mode
+#define VARIABLE_ATT_CHAR_VAL    BIT(7) ///< Variable characteristic value length
+/*=======================================================================*/
+
+/*=======================================================================*/
 // Advertising command parameters
 /*=======================================================================*/
 

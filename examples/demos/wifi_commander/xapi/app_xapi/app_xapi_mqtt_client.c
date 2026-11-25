@@ -48,6 +48,8 @@ static sl_mqtt_client_configuration_t mqtt_client_configuration = { 0 };
 
 static sl_mqtt_broker_t mqtt_broker_configuration = { 0 };
 
+static sl_mqtt_broker_v2_t mqtt_broker_configuration_v2 = { 0 };
+
 static sl_mqtt_client_message_t mqtt_message = { 0 };
 
 static sl_mqtt_client_last_will_message_t last_will_message = { 0 };
@@ -126,9 +128,13 @@ void mqtt_client_event_handler(void *client, sl_mqtt_client_event_t event, void 
     }
 
     // An error occurred in the MQTT client
-    case SL_MQTT_CLIENT_ERROR_EVENT:
-      app_wifi_evt_mqtt_client_error_event((sl_mqtt_client_error_status_t)event_data);
+    case SL_MQTT_CLIENT_ERROR_EVENT: {
+      sl_mqtt_client_error_info_t *error = (sl_mqtt_client_error_info_t *)event_data;
+      if (error != NULL) {
+        app_wifi_evt_mqtt_client_error_event((uint16_t)error->error_status);
+      }
       break;
+    }
 
     // Default case for any unhandled events
     default:
@@ -352,9 +358,23 @@ void app_wifi_cmd_mqtt_client_connect(const void *nil)
 {
   (void)nil; // Unused parameter
 
+  // Get reference to broker configuration
+  sl_mqtt_broker_t *broker_config       = &mqtt_broker_configuration;
+  sl_mqtt_broker_v2_t *broker_config_v2 = &mqtt_broker_configuration_v2;
+
+  broker_config_v2->port                    = broker_config->port;
+  broker_config_v2->is_connection_encrypted = broker_config->is_connection_encrypted;
+  broker_config_v2->connect_timeout         = broker_config->connect_timeout;
+  broker_config_v2->keep_alive_interval     = broker_config->keep_alive_interval;
+  broker_config_v2->keep_alive_retries      = broker_config->keep_alive_retries;
+  broker_config_v2->ip                      = broker_config->ip;
+
   // Initiates a connection to the configured MQTT broker.
-  sl_status_t status =
-    sl_mqtt_client_connect(&client, &mqtt_broker_configuration, &last_will_message, &mqtt_client_configuration, 0);
+  sl_status_t status = sl_mqtt_client_connect_v2(&client,
+                                                 &mqtt_broker_configuration_v2,
+                                                 &last_will_message,
+                                                 &mqtt_client_configuration,
+                                                 0);
 
   if (status == SL_STATUS_IN_PROGRESS) {
     status = SL_STATUS_OK;

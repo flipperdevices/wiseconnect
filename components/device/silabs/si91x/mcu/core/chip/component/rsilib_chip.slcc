@@ -2,7 +2,7 @@ id: rsilib_chip
 label: Core
 package: platform_siwx91x
 description: >
-  Provides the Si91x SoC MCU core functionalities.
+  This component provides the SiWx91x SoC MCU core functionalities.
 category: Device|Si91x|MCU|Core
 quality: production
 metadata:
@@ -14,7 +14,8 @@ ui_hints:
 define:
   - name: SL_SI91X_SOC_MODE
   - name: SLI_SI91X_MCU_ENABLE_IPMU_APIS
-  - name: SLI_CODE_CLASSIFICATION_DISABLE  
+  - name: SL_CODE_COMPONENT_RSILIB_CHIP
+    value: rsilib_chip
 source:
   - path: "src/rsi_ps_ram_func.c"
   - path: "src/iPMU_prog/iPMU_dotc/rsi_system_config_917.c"
@@ -45,7 +46,10 @@ requires:
   - name: systemlevel_temp_sensor
   - name: sl_bjt_temperature_sensor 
   - name: sl_clock_manager
+  - name: code_classification
 template_contribution:
+  - name: code_classification_components
+    value: rsilib_chip
   - name: event_handler
     value:
       event: platform_init

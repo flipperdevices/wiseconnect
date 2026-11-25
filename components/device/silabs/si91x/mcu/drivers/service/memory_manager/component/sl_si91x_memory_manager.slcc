@@ -1,9 +1,8 @@
 id: sl_si91x_memory_manager
-label: Si91x Memory Manager
+label: Memory Manager
 package: platform_siwx91x
 description: >
-  Si91x wrapper for memory manager heap statistics functions.
-  Maps application heap statistics requirements to FreeRTOS heap utilities.
+  This component provides heap statistics by mapping application requirements to FreeRTOS heap utilities.
 category: Device|Si91x|MCU|Service
 quality: production
 metadata:

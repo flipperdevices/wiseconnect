@@ -289,6 +289,9 @@ static sl_status_t hspi_gpdma_init(void)
   // Get needed size for driver context memory
   hspi_memSize = RSI_GPDMA_GetMemSize();
   if (hspi_memSize > sizeof(hspi_memBuff)) {
+    SL_PRINT_STRING_ERROR("hspi_gpdma_init: mem size too large st=0x%04lX,line no : %d\r\n",
+                          (unsigned long)SL_STATUS_INVALID_CONFIGURATION,
+                          (int)__LINE__);
     return SL_STATUS_INVALID_CONFIGURATION;
   }
 
@@ -303,6 +306,9 @@ static sl_status_t hspi_gpdma_init(void)
   // Initialize driver
   GPDMAHandle = RSI_GPDMA_Init(devMem_p, &GPDMAInit);
   if (GPDMAHandle == NULL) {
+    SL_PRINT_STRING_ERROR("hspi_gpdma_init: RSI_GPDMA_Init failed st=0x%04lX,line no : %d\r\n",
+                          (unsigned long)SL_STATUS_NULL_POINTER,
+                          (int)__LINE__);
     return SL_STATUS_NULL_POINTER;
   }
 
@@ -326,13 +332,19 @@ sl_status_t sl_si91x_hspi_secondary_receive_non_blocking(void *data_buf)
   sl_status_t status = SL_STATUS_OK;
   // Validate pointers, if the parameter is NULL, return an error code
   if (data_buf == NULL) {
+    SL_PRINT_STRING_ERROR("sl_si91x_hspi_secondary_receive_non_blocking: data_buf is NULL,line no : %d\r\n",
+                          (int)__LINE__);
     return SL_STATUS_NULL_POINTER;
   }
   setup_gpdma_rx_channel_desc(data_buf);
 
   // Trigger channel
   status = RSI_GPDMA_DMAChannelTrigger(GPDMAHandle, GPDMA_CHNL1);
-
+  if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si91x_hspi_secondary_receive_non_blocking: trigger failed st=0x%04lX,line no : %d\r\n",
+                          (unsigned long)status,
+                          (int)__LINE__);
+  }
   return status;
 }
 
@@ -345,13 +357,19 @@ sl_status_t sl_si91x_hspi_secondary_send_non_blocking(void *data_buf)
   sl_status_t status = SL_STATUS_OK;
   // Validate pointers, if the parameter is NULL, return an error code
   if (data_buf == NULL) {
+    SL_PRINT_STRING_ERROR("sl_si91x_hspi_secondary_send_non_blocking: data_buf is NULL,line no : %d\r\n",
+                          (int)__LINE__);
     return SL_STATUS_NULL_POINTER;
   }
   setup_gpdma_tx_channel_desc(data_buf);
 
   // Trigger channel
   status = RSI_GPDMA_DMAChannelTrigger(GPDMAHandle, GPDMA_CHNL0);
-
+  if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si91x_hspi_secondary_send_non_blocking: trigger failed st=0x%04lX,line no : %d\r\n",
+                          (unsigned long)status,
+                          (int)__LINE__);
+  }
   return status;
 }
 #endif
@@ -373,6 +391,9 @@ sl_status_t sl_si91x_hspi_secondary_init(void)
   // Initialize the GPDMA
   status = hspi_gpdma_init();
   if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si91x_hspi_secondary_init: hspi_gpdma_init failed st=0x%04lX,line no : %d\r\n",
+                          (unsigned long)status,
+                          (int)__LINE__);
     return status;
   }
 #endif
@@ -399,6 +420,7 @@ sl_status_t sl_si91x_hspi_secondary_deinit(void)
     if (user_gpdma_callback == NULL)
 #endif
     {
+      SL_PRINT_STRING_ERROR("sl_si91x_hspi_secondary_deinit: callback is NULL,line no : %d\r\n", (int)__LINE__);
       return SL_STATUS_NULL_POINTER;
     } else {
       //  Unregisters the callback, i.e., clear the callback function address
@@ -419,6 +441,8 @@ sl_status_t sl_si91x_hspi_secondary_register_event_callback(sl_hspi_secondary_ca
   do {
     // Validate the null pointer, if true return an error code
     if (callback_event == NULL) {
+      SL_PRINT_STRING_ERROR("sl_si91x_hspi_secondary_register_event_callback: callback_event is NULL,line no : %d\r\n",
+                            (int)__LINE__);
       status = SL_STATUS_NULL_POINTER;
       break;
     }
@@ -430,6 +454,9 @@ sl_status_t sl_si91x_hspi_secondary_register_event_callback(sl_hspi_secondary_ca
     // Validate the function pointer, if the parameter is not NULL, return an error code
     if (sl_hspi_user_callback != NULL) {
       status = SL_STATUS_BUSY;
+      SL_PRINT_STRING_ERROR(
+        "sl_si91x_hspi_secondary_register_event_callback: callback is already registered,line no : %d\r\n",
+        (int)__LINE__);
       break;
     }
     // User callback address is passed to the static variable which is called at the time of interrupt
@@ -439,6 +466,9 @@ sl_status_t sl_si91x_hspi_secondary_register_event_callback(sl_hspi_secondary_ca
     // Validate the function pointer, if the parameter is not NULL, return an error code
     if (user_gpdma_callback != NULL) {
       status = SL_STATUS_BUSY;
+      SL_PRINT_STRING_ERROR(
+        "sl_si91x_hspi_secondary_register_event_callback: callback is already registered,line no : %d\r\n",
+        (int)__LINE__);
       break;
     }
     // Enable user callbacks for non-blocking calls
@@ -447,6 +477,11 @@ sl_status_t sl_si91x_hspi_secondary_register_event_callback(sl_hspi_secondary_ca
     // Return SL_STATUS_OK if the callback is successfully registered
     status = SL_STATUS_OK;
   } while (false);
+  if (status != SL_STATUS_OK) {
+    SL_PRINT_STRING_ERROR("sl_si91x_hspi_secondary_register_event_callback: failed st=0x%04lX,line no : %d\r\n",
+                          (unsigned long)status,
+                          (int)__LINE__);
+  }
   return status;
 }
 
@@ -479,6 +514,7 @@ uint32_t sl_si91x_hspi_secondary_send_blocking(const void *data)
 
   // Validate pointers, if the parameter is NULL, return an error code
   if (data == NULL) {
+    SL_PRINT_STRING_ERROR("sl_si91x_hspi_secondary_send_blocking: data is NULL,line no : %d\r\n", (int)__LINE__);
     return SL_STATUS_NULL_POINTER;
   }
 
@@ -507,6 +543,7 @@ uint32_t sl_si91x_hspi_secondary_receive_blocking(void *data)
   uint32_t num = 0;
   // Validate pointers, if the parameter is NULL, return an error code
   if (data == NULL) {
+    SL_PRINT_STRING_ERROR("sl_si91x_hspi_secondary_receive_blocking: data is NULL,line no : %d\r\n", (int)__LINE__);
     return SL_STATUS_NULL_POINTER;
   }
   num = hspi_secondary_get_data_len();

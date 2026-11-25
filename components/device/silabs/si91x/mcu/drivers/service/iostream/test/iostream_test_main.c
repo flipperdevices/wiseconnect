@@ -1,7 +1,7 @@
 /***************************************************************************/
 /**
  * @file iostream_usart_test_main.c
- * @brief IOStream USART Unity Test Functions
+ * @brief IO Stream USART Unity test functions for SiWx91x.
  *******************************************************************************
  * # License
  * <b>Copyright 2023 Silicon Laboratories Inc. www.silabs.com</b>

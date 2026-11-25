@@ -33,6 +33,7 @@
 #include "sl_board_configuration.h"
 #include "sl_constants.h"
 #include "sl_wifi.h"
+#include "sl_si91x_driver.h"
 #include "sl_wifi_callback_framework.h"
 #include "cmsis_os2.h"
 #include "sl_utility.h"
@@ -41,6 +42,7 @@
 #include "rsi_common_app.h"
 #include <string.h>
 #include <stdio.h>
+#include <inttypes.h>
 #include "ble_config.h"
 #include <rsi_ble.h>
 #include "rsi_ble_apis.h"
@@ -103,76 +105,82 @@ int32_t rsi_ble_dual_role(void);
 #endif
 osThreadId_t wifi_app_thread_id;
 osThreadId_t ble_app_thread_id;
-static const sl_wifi_device_configuration_t
-  config = { .boot_option = LOAD_NWP_FW,
-             .mac_address = NULL,
-             .band        = SL_SI91X_WIFI_BAND_2_4GHZ,
-             .region_code = US,
-             .boot_config = {
-               .oper_mode = SL_SI91X_CLIENT_MODE,
-               .coex_mode = SL_SI91X_WLAN_BLE_MODE,
+static const sl_wifi_device_configuration_t config = {
+  .boot_option = LOAD_NWP_FW,
+  .mac_address = NULL,
+  .band        = SL_SI91X_WIFI_BAND_2_4GHZ,
+  .region_code = US,
+  .boot_config = { .oper_mode = SL_SI91X_CLIENT_MODE,
+                   .coex_mode = SL_SI91X_WLAN_BLE_MODE,
 #ifdef SLI_SI91X_MCU_INTERFACE
-               .feature_bit_map = (SL_WIFI_FEAT_WPS_DISABLE | SL_SI91X_FEAT_ULP_GPIO_BASED_HANDSHAKE
-                                   | SL_WIFI_FEAT_AGGREGATION | SL_SI91X_FEAT_DEV_TO_HOST_ULP_GPIO_1),
+                   .feature_bit_map = (SL_WIFI_FEAT_WPS_DISABLE | SL_SI91X_FEAT_ULP_GPIO_BASED_HANDSHAKE
+                                       | SL_WIFI_FEAT_AGGREGATION | SL_SI91X_FEAT_DEV_TO_HOST_ULP_GPIO_1),
 #else
-               .feature_bit_map        = SL_SI91X_FEAT_ULP_GPIO_BASED_HANDSHAKE | SL_SI91X_FEAT_DEV_TO_HOST_ULP_GPIO_1,
+                   .feature_bit_map = SL_SI91X_FEAT_ULP_GPIO_BASED_HANDSHAKE | SL_SI91X_FEAT_DEV_TO_HOST_ULP_GPIO_1,
 #endif
 #if RSI_DISABLE
-               .tcp_ip_feature_bit_map = SL_SI91X_TCP_IP_FEAT_DHCPV4_CLIENT
+                   .tcp_ip_feature_bit_map = SL_SI91X_TCP_IP_FEAT_DHCPV4_CLIENT
 #else
-               .tcp_ip_feature_bit_map = (SL_SI91X_TCP_IP_FEAT_DHCPV4_CLIENT | SL_SI91X_TCP_IP_FEAT_EXTENSION_VALID)
+                   .tcp_ip_feature_bit_map = (SL_SI91X_TCP_IP_FEAT_DHCPV4_CLIENT | SL_SI91X_TCP_IP_FEAT_EXTENSION_VALID)
 #endif
-                                         | SL_SI91X_TCP_IP_FEAT_DNS_CLIENT | SL_SI91X_TCP_IP_FEAT_SSL,
+                                             | SL_SI91X_TCP_IP_FEAT_DNS_CLIENT | SL_SI91X_TCP_IP_FEAT_SSL,
 
-               .custom_feature_bit_map =
-                 (SL_WIFI_SYSTEM_CUSTOM_FEAT_EXTENSION_VALID | SL_WIFI_SYSTEM_CUSTOM_FEAT_EXTENSION_VALID),
-               .ext_custom_feature_bit_map =
-                 (SL_WIFI_SYSTEM_EXT_FEAT_LOW_POWER_MODE | SL_SI91X_EXT_FEAT_XTAL_CLK | MEMORY_CONFIG
-                  | SL_SI91X_EXT_FEAT_FRONT_END_SWITCH_PINS_ULP_GPIO_4_5_0 | SL_SI91X_EXT_FEAT_BT_CUSTOM_FEAT_ENABLE),
+                   .custom_feature_bit_map =
+                     (SL_WIFI_SYSTEM_CUSTOM_FEAT_EXTENSION_VALID | SL_WIFI_SYSTEM_CUSTOM_FEAT_EXTENSION_VALID),
+                   .ext_custom_feature_bit_map =
+                     (SL_WIFI_SYSTEM_EXT_FEAT_LOW_POWER_MODE | SL_SI91X_EXT_FEAT_XTAL_CLK | MEMORY_CONFIG
+                      | SL_SI91X_EXT_FEAT_FRONT_END_SWITCH_PINS_ULP_GPIO_4_5_0
+                      | SL_SI91X_EXT_FEAT_BT_CUSTOM_FEAT_ENABLE),
 #ifdef RSI_PROCESS_MAX_RX_DATA
-               .ext_tcp_ip_feature_bit_map = (SL_SI91X_CONFIG_FEAT_EXTENTION_VALID | SL_SI91X_EXT_TCP_MAX_RECV_LENGTH),
+                   .ext_tcp_ip_feature_bit_map =
+                     (SL_SI91X_CONFIG_FEAT_EXTENSION_VALID | SL_SI91X_EXT_TCP_MAX_RECV_LENGTH),
 #else
-               .ext_tcp_ip_feature_bit_map = SL_SI91X_CONFIG_FEAT_EXTENTION_VALID,
+                   .ext_tcp_ip_feature_bit_map = SL_SI91X_CONFIG_FEAT_EXTENSION_VALID,
 #endif
-               .bt_feature_bit_map = ((SL_SI91X_BT_RF_TYPE | SL_SI91X_ENABLE_BLE_PROTOCOL)),
-               /*Enable BLE custom feature bitmap*/
-               .ble_feature_bit_map =
-                 (SL_SI91X_BLE_MAX_NBR_PERIPHERALS(RSI_BLE_MAX_NBR_PERIPHERALS)
-                  | SL_SI91X_BLE_MAX_NBR_CENTRALS(RSI_BLE_MAX_NBR_CENTRALS)
-                  | SL_SI91X_BLE_MAX_NBR_ATT_SERV(RSI_BLE_MAX_NBR_ATT_SERV)
-                  | SL_SI91X_BLE_MAX_NBR_ATT_REC(RSI_BLE_MAX_NBR_ATT_REC)
-                  | SL_SI91X_FEAT_BLE_CUSTOM_FEAT_EXTENTION_VALID | SL_SI91X_BLE_PWR_INX(RSI_BLE_PWR_INX)
-                  | SL_SI91X_BLE_PWR_SAVE_OPTIONS(RSI_BLE_PWR_SAVE_OPTIONS) | SL_SI91X_916_BLE_COMPATIBLE_FEAT_ENABLE
+                   .bt_feature_bit_map = ((SL_SI91X_BT_RF_TYPE | SL_SI91X_ENABLE_BLE_PROTOCOL)),
+                   /*Enable BLE custom feature bitmap*/
+                   .ble_feature_bit_map =
+                     (SL_SI91X_BLE_MAX_NBR_PERIPHERALS(RSI_BLE_MAX_NBR_PERIPHERALS)
+                      | SL_SI91X_BLE_MAX_NBR_CENTRALS(RSI_BLE_MAX_NBR_CENTRALS)
+                      | SL_SI91X_BLE_MAX_NBR_ATT_SERV(RSI_BLE_MAX_NBR_ATT_SERV)
+                      | SL_SI91X_BLE_MAX_NBR_ATT_REC(RSI_BLE_MAX_NBR_ATT_REC)
+                      | SL_SI91X_FEAT_BLE_CUSTOM_FEAT_EXTENSION_VALID | SL_SI91X_BLE_PWR_INX(RSI_BLE_PWR_INX)
+                      | SL_SI91X_BLE_PWR_SAVE_OPTIONS(RSI_BLE_PWR_SAVE_OPTIONS)
+                      | SL_SI91X_916_BLE_COMPATIBLE_FEAT_ENABLE
 #if RSI_BLE_GATT_ASYNC_ENABLE
-                  | SL_SI91X_BLE_GATT_ASYNC_ENABLE
+                      | SL_SI91X_BLE_GATT_ASYNC_ENABLE
 #endif
-                  ),
-               .ble_ext_feature_bit_map =
-                 (SL_SI91X_BLE_NUM_CONN_EVENTS(RSI_BLE_NUM_CONN_EVENTS)
-                  | SL_SI91X_BLE_NUM_REC_BYTES(RSI_BLE_NUM_REC_BYTES)
+                      ),
+                   .ble_ext_feature_bit_map =
+                     (SL_SI91X_BLE_NUM_CONN_EVENTS(RSI_BLE_NUM_CONN_EVENTS)
+                      | SL_SI91X_BLE_NUM_REC_BYTES(RSI_BLE_NUM_REC_BYTES)
 #if RSI_BLE_INDICATE_CONFIRMATION_FROM_HOST
-                  | SL_SI91X_BLE_INDICATE_CONFIRMATION_FROM_HOST //indication response from app
+                      | SL_SI91X_BLE_INDICATE_CONFIRMATION_FROM_HOST //indication response from app
 #endif
 #if RSI_BLE_MTU_EXCHANGE_FROM_HOST
-                  | SL_SI91X_BLE_MTU_EXCHANGE_FROM_HOST //MTU Exchange request initiation from app
+                      | SL_SI91X_BLE_MTU_EXCHANGE_FROM_HOST //MTU Exchange request initiation from app
 #endif
 #if RSI_BLE_SET_SCAN_RESP_DATA_FROM_HOST
-                  | (SL_SI91X_BLE_SET_SCAN_RESP_DATA_FROM_HOST) //Set SCAN Resp Data from app
+                      | (SL_SI91X_BLE_SET_SCAN_RESP_DATA_FROM_HOST) //Set SCAN Resp Data from app
 #endif
 #if RSI_BLE_DISABLE_CODED_PHY_FROM_HOST
-                  | (SL_SI91X_BLE_DISABLE_CODED_PHY_FROM_HOST) //Disable Coded PHY from app
+                      | (SL_SI91X_BLE_DISABLE_CODED_PHY_FROM_HOST) //Disable Coded PHY from app
 #endif
 #if BLE_SIMPLE_GATT
-                  | SL_SI91X_BLE_GATT_INIT
+                      | SL_SI91X_BLE_GATT_INIT
 #endif
 #if RSI_BLE_ENABLE_ADV_EXTN
-                  | SL_SI91X_BLE_ENABLE_ADV_EXTN
+                      | SL_SI91X_BLE_ENABLE_ADV_EXTN
 #endif
 #if RSI_BLE_AE_MAX_ADV_SETS
-                  | SL_SI91X_BLE_AE_MAX_ADV_SETS(RSI_BLE_AE_MAX_ADV_SETS)
+                      | SL_SI91X_BLE_AE_MAX_ADV_SETS(RSI_BLE_AE_MAX_ADV_SETS)
 #endif
-                    ),
-               .config_feature_bit_map = (SL_SI91X_FEAT_SLEEP_GPIO_SEL_BITMAP | SL_WIFI_ENABLE_ENHANCED_MAX_PSP) } };
+                        ),
+                   .config_feature_bit_map = (SL_SI91X_FEAT_SLEEP_GPIO_SEL_BITMAP | SL_WIFI_ENABLE_ENHANCED_MAX_PSP) },
+  .ta_pool         = { .tx_ratio_in_buffer_pool = 0, .rx_ratio_in_buffer_pool = 0, .global_ratio_in_buffer_pool = 0 },
+  .efuse_data_type = SL_SI91X_EFUSE_MFG_SW_VERSION,
+  .nwp_fw_image_number = SL_SI91X_NWP_FW_IMAGE_NUMBER_0
+};
 
 const osThreadAttr_t thread_attributes = {
   .name       = "common_thread",
@@ -183,7 +191,6 @@ const osThreadAttr_t thread_attributes = {
   .stack_size = 3072,
   .priority   = osPriorityNormal,
   .tz_module  = 0,
-  .reserved   = 0,
 };
 
 const osThreadAttr_t ui_thread_attributes = {
@@ -195,7 +202,6 @@ const osThreadAttr_t ui_thread_attributes = {
   .stack_size = 3072,
   .priority   = osPriorityNormal,
   .tz_module  = 0,
-  .reserved   = 0,
 };
 const osThreadAttr_t ble_thread_attributes = {
   .name       = "ble_thread",
@@ -206,7 +212,6 @@ const osThreadAttr_t ble_thread_attributes = {
   .stack_size = 3072,
   .priority   = osPriorityNormal,
   .tz_module  = 0,
-  .reserved   = 0,
 };
 
 const osThreadAttr_t wifi_thread_attributes = {
@@ -218,7 +223,6 @@ const osThreadAttr_t wifi_thread_attributes = {
   .stack_size = 3072,
   .priority   = osPriorityNormal,
   .tz_module  = 0,
-  .reserved   = 0,
 };
 rsi_ble_att_list_t *rsi_gatt_get_attribute_from_list(rsi_ble_t *p_val, uint16_t handle)
 {
@@ -1391,7 +1395,7 @@ void rsi_ble_main_app_task(void)
   sl_wifi_firmware_version_t version = { 0 };
   status                             = sl_wifi_init(&config, NULL, sl_wifi_default_event_handler);
   if (status != SL_STATUS_OK) {
-    printf("\r\nWi-Fi Initialization Failed, Error Code : 0x%lX\r\n", status);
+    printf("\r\nWi-Fi Initialization Failed, Error Code : 0x%" PRIX32 "\r\n", (uint32_t)status);
     return;
   } else {
     printf("\r\n Wi-Fi Initialization Success\n");
@@ -1400,9 +1404,17 @@ void rsi_ble_main_app_task(void)
   //! Firmware version Prints
   status = sl_wifi_get_firmware_version(&version);
   if (status != SL_STATUS_OK) {
-    printf("\r\nFirmware version Failed, Error Code : 0x%lX\r\n", status);
+    printf("\r\nFirmware version Failed, Error Code : 0x%" PRIX32 "\r\n", (uint32_t)status);
   } else {
-    print_firmware_version(&version);
+    printf("\r\nFirmware version is: %x%x.%d.%d.%d.%d.%d.%d\r\n",
+           version.chip_id,
+           version.rom_id,
+           version.major,
+           version.minor,
+           version.security_version,
+           version.patch_num,
+           version.customer_id,
+           version.build_num);
   }
 #endif
   printf("\r\n BLE Main Task Invoked\r\n");
@@ -1436,7 +1448,7 @@ void rsi_ble_main_app_task(void)
 
   status = rsi_app_common_event_loop(&ble_generic_cb);
 
-  printf("\r\n BLE task excution fails with error status 0X%lx \r\n", status);
+  printf("\r\n BLE task excution fails with error status 0X%" PRIX32 " \r\n", (uint32_t)status);
   while (1)
     ;
 }
@@ -1521,7 +1533,7 @@ int32_t rsi_ble_dual_role(void)
   //! get the local device address(MAC address).
   status = rsi_bt_get_local_device_address(rsi_app_resp_get_dev_addr);
   if (status != RSI_SUCCESS) {
-    printf("\n rsi_bt_get_local_device_address failed with 0x%lX \n", status);
+    printf("\n rsi_bt_get_local_device_address failed with 0x%" PRIX32 " \n", (uint32_t)status);
   } else {
     rsi_6byte_dev_address_to_ascii(local_dev_addr, rsi_app_resp_get_dev_addr);
     printf("\n Local device address = %s", local_dev_addr);
@@ -1532,7 +1544,7 @@ int32_t rsi_ble_dual_role(void)
   printf("\r\n Setting the Local IRK Value\r\n");
   status = rsi_ble_set_local_irk_value(local_irk);
   if (status != RSI_SUCCESS) {
-    printf("\r\n Setting the Local IRK Value Failed = %lx\r\n", status);
+    printf("\r\n Setting the Local IRK Value Failed = %" PRIX32 "\r\n", (uint32_t)status);
     return status;
   }
   uint8_t role_priority_payload[21] = {
@@ -1543,10 +1555,10 @@ int32_t rsi_ble_dual_role(void)
   };
   status = rsi_ble_set_coex_roles_priority(role_priority_payload);
   if (status != RSI_SUCCESS) {
-    printf("\r\n Setting the coex roles priority Failed = %lx\r\n", status);
+    printf("\r\n Setting the coex roles priority Failed = %" PRIX32 "\r\n", (uint32_t)status);
     return status;
   } else {
-    printf("\r\n Setting the coex roles priority Successful = %lx\r\n", status);
+    printf("\r\n Setting the coex roles priority Successful = %" PRIX32 "\r\n", (uint32_t)status);
   }
   smp_capabilities.io_capability = RSI_BLE_SMP_IO_CAPABILITY;
   smp_capabilities.oob_data_flag = LOCAL_OOB_DATA_FLAG_NOT_PRESENT;
@@ -1558,7 +1570,7 @@ int32_t rsi_ble_dual_role(void)
   smp_capabilities.auth_req             = AUTH_REQ_BITS;
   status                                = rsi_ble_set_smp_pairing_cap_data(&smp_capabilities);
   if (status != RSI_SUCCESS) {
-    printf("\n rsi_ble_set_smp_pairing_cap_data = %lx", status);
+    printf("\n rsi_ble_set_smp_pairing_cap_data = %" PRIX32 "", (uint32_t)status);
     return status;
   }
 
@@ -1579,7 +1591,7 @@ int32_t rsi_ble_dual_role(void)
   status = rsi_ble_get_max_adv_data_len((uint8_t *)&rsi_app_resp_max_adv_data_len);
 
   if (status != RSI_SUCCESS) {
-    printf("get max adv data length failed with 0x%lX \n", status);
+    printf("get max adv data length failed with 0x%" PRIX32 " \n", (uint32_t)status);
   } else {
     printf("Max supported Adv Data length is %d \n", (uint8_t)rsi_app_resp_max_adv_data_len);
   }
@@ -1587,23 +1599,23 @@ int32_t rsi_ble_dual_role(void)
   //! get the Max no.of supported adv sets
   status = rsi_ble_get_max_no_of_supp_adv_sets((uint8_t *)&rsi_app_resp_max_no_of_supp_adv_sets);
   if (status != RSI_SUCCESS) {
-    printf("get max supported adv sets failed with 0x%lX\n", status);
+    printf("get max supported adv sets failed with 0x%" PRIX32 "\n", (uint32_t)status);
   } else {
-    printf("Max number of supported Adv sets are %ld  \n", rsi_app_resp_max_no_of_supp_adv_sets);
+    printf("Max number of supported Adv sets are %" PRIu32 "  \n", rsi_app_resp_max_no_of_supp_adv_sets);
   }
 
 #if ADV_ENABLED_DEFAULT
 
   status = ble_ae_set_1_parameters();
   if (status != RSI_SUCCESS) {
-    printf("set ae params failed with 0x%lX \n", status);
+    printf("set ae params failed with 0x%" PRIX32 " \n", (uint32_t)status);
   } else {
     printf("Setting AE params of set 1 successful and selected TX Power is %d dbm \n", rsi_app_resp_tx_power);
   }
 #if PERIODIC_ADV_EN
   status = ble_ae_set_periodic_parameters();
   if (status != RSI_SUCCESS) {
-    printf("set ae Periodic adv data failed with 0x%lX\n", status);
+    printf("set ae Periodic adv data failed with 0x%" PRIX32 "\n", (uint32_t)status);
   } else {
     printf("set ae periodic adv data success \n");
   }
@@ -1611,7 +1623,7 @@ int32_t rsi_ble_dual_role(void)
   //SAPI Function call for periodic advertising enable
   status = rsi_ble_app_set_periodic_ae_enable(BLE_AE_PER_ADV_EN, BLE_AE_ADV_HNDL_SET_1);
   if (status != RSI_SUCCESS) {
-    printf("set ae Periodic adv enable failed with 0x%lX\n", status);
+    printf("set ae Periodic adv enable failed with 0x%" PRIX32 "\n", (uint32_t)status);
   } else {
     //adv_state_dut = adv_enabled;
     printf("set ae periodic adv enable success \n");
@@ -1620,7 +1632,7 @@ int32_t rsi_ble_dual_role(void)
 #if ADV_SET2
   status = ble_ae_set_2_parameters();
   if (status != RSI_SUCCESS) {
-    printf("set ae params failed with 0x%lX \n", status);
+    printf("set ae params failed with 0x%" PRIX32 " \n", (uint32_t)status);
   } else {
     printf("Setting AE params of set 2 successful and selected TX Power is %d dbm \n", rsi_app_resp_tx_power);
   }
@@ -1630,7 +1642,7 @@ int32_t rsi_ble_dual_role(void)
 #if PERIODIC_ADV_EN
   status = ble_ae_set_periodic_data();
   if (status != RSI_SUCCESS) {
-    printf("set ae adv enable failed with status 0x%lX\n", status);
+    printf("set ae adv enable failed with status 0x%" PRIX32 "\n", (uint32_t)status);
   } else {
     printf("set ae adv enable success \n");
   }
@@ -1638,14 +1650,14 @@ int32_t rsi_ble_dual_role(void)
 
   status = ble_ae_set_1_adv_data();
   if (status != RSI_SUCCESS) {
-    printf("set ae adv data for set 1 failed with status 0x%lX\n", status);
+    printf("set ae adv data for set 1 failed with status 0x%" PRIX32 "\n", (uint32_t)status);
   } else {
     printf("set ae adv data for set 1 success \n");
   }
 
   status = ble_ae_set_1_scan_resp_data();
   if (status != RSI_SUCCESS) {
-    printf("set ae scan resp data for set 1 failed with 0x%lX\n", status);
+    printf("set ae scan resp data for set 1 failed with 0x%" PRIX32 "\n", (uint32_t)status);
   } else {
     printf("set ae scan resp data for set 1 success \n");
   }
@@ -1655,14 +1667,14 @@ int32_t rsi_ble_dual_role(void)
 
   status = ble_ae_set_2_adv_data();
   if (status != RSI_SUCCESS) {
-    printf("set ae adv data for set 2 failed with status 0x%lX\n", status);
+    printf("set ae adv data for set 2 failed with status 0x%" PRIX32 "\n", (uint32_t)status);
   } else {
     printf("set ae adv data for set 2 success \n");
   }
 
   status = ble_ae_set_2_scan_resp_data();
   if (status != RSI_SUCCESS) {
-    printf("set ae scan resp data for set 2 failed with 0x%lX\n", status);
+    printf("set ae scan resp data for set 2 failed with 0x%" PRIX32 "\n", (uint32_t)status);
   } else {
     printf("set ae scan resp data for set 2 success \n");
   }
@@ -1672,14 +1684,14 @@ int32_t rsi_ble_dual_role(void)
   //! set AE set random address
   status = rsi_ble_set_ae_set_random_address(BLE_AE_ADV_HNDL_SET_1, rand_addr);
   if (status != RSI_SUCCESS) {
-    printf("set ae set random address failed with 0x%lX \n", status);
+    printf("set ae set random address failed with 0x%" PRIX32 " \n", (uint32_t)status);
   } else {
     printf("set ae set random address successful \n");
   }
 
   status = ble_ae_set_1_advertising_enable();
   if (status != RSI_SUCCESS) {
-    printf("set 1 ae adv enable failed with status 0x%lX\n", status);
+    printf("set 1 ae adv enable failed with status 0x%" PRIX32 "\n", (uint32_t)status);
   } else {
     printf("set 1 ae adv enable success \n");
   }
@@ -1688,7 +1700,7 @@ int32_t rsi_ble_dual_role(void)
 
   status = ble_ae_set_2_advertising_enable();
   if (status != RSI_SUCCESS) {
-    printf("set 2 ae adv enable failed with status 0x%lX\n", status);
+    printf("set 2 ae adv enable failed with status 0x%" PRIX32 "\n", (uint32_t)status);
   } else {
     printf("set 2 ae adv enable success \n");
   }
@@ -1702,14 +1714,14 @@ int32_t rsi_ble_dual_role(void)
 
   status = ble_ext_scan_params();
   if (status != RSI_SUCCESS) {
-    printf(" \n set ae scan params failed with status 0x%lX\n", status);
+    printf(" \n set ae scan params failed with status 0x%" PRIX32 "\n", (uint32_t)status);
   } else {
     printf(" \n set ae scan params success \n");
   }
 
   status = ble_ext_scan_enable();
   if (status != RSI_SUCCESS) {
-    printf(" \n set ae scan enable failed with 0x%lX \n", status);
+    printf(" \n set ae scan enable failed with 0x%" PRIX32 " \n", (uint32_t)status);
   } else {
     scan_state_dut = connectable_scan;
     printf(" \n set ae scan enable success \n");
@@ -1726,21 +1738,29 @@ int32_t rsi_ble_dual_role(void)
 }
 void rsi_wlan_ble_app_init(void)
 {
-  int32_t status                     = RSI_SUCCESS;
-  sl_wifi_firmware_version_t version = { 0 };
+  int32_t status                      = RSI_SUCCESS;
+  sl_si91x_firmware_version_t version = { 0 };
   //! WiSeConnect initialization
   status = sl_wifi_init(&config, NULL, sl_wifi_default_event_handler);
   if (status != SL_STATUS_OK) {
-    printf("\r\nWi-Fi Initialization Failed, Error Code : 0x%lX\r\n", status);
+    printf("\r\nWi-Fi Initialization Failed, Error Code : 0x%" PRIX32 "\r\n", (uint32_t)status);
     return;
   }
   printf("\r\nWi-Fi initialization is successful\n");
   //! Firmware version Prints
-  status = sl_wifi_get_firmware_version(&version);
+  status = sl_si91x_get_firmware_version(&version);
   if (status != SL_STATUS_OK) {
-    printf("\r\nFirmware version Failed, Error Code : 0x%lX\r\n", status);
+    printf("\r\nFirmware version Failed, Error Code : 0x%" PRIX32 "\r\n", (uint32_t)status);
   } else {
-    print_firmware_version(&version);
+    printf("\r\nFirmware version is: %x%x.%d.%d.%d.%d.%d.%d\r\n",
+           version.chip_id,
+           version.rom_id,
+           version.major,
+           version.minor,
+           version.security_version,
+           version.patch_num,
+           version.customer_id,
+           version.build_num);
   }
 
 #if ENABLE_NWP_POWER_SAVE

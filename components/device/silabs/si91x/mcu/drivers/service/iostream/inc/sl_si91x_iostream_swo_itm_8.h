@@ -1,6 +1,6 @@
 /***************************************************************************/ /**
  * @file
- * @brief SI91x IO Stream SWO ITM Component header.
+ * @brief SiWx91x IO Stream SWO ITM component header.
  *******************************************************************************
  * # License
  * <b>Copyright 2019 Silicon Laboratories Inc. www.silabs.com</b>
@@ -41,7 +41,8 @@ extern "C" {
 typedef enum {
   SI91X_DEBUG_PRINTF          = 0x0002,
   SI91X_DEBUG_VIRTUAL_UART_TX = 0x0011,
-  SI91X_DEBUG_VIRTUAL_UART_RX = 0x0012
+  SI91X_DEBUG_VIRTUAL_UART_RX = 0x0012,
+  SI91X_DEBUG_ML_PROFILER     = 0x0090
 } sl_si91x_iostream_swo_itm_8_msg_type_t;
 
 #ifdef __cplusplus
